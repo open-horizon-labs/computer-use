@@ -174,6 +174,10 @@ class DispatchGates(unittest.TestCase):
             typed('2:30 PM', {'type': 'duration_minutes'})
         self.assertEqual(typed('0.5 hours', {'type': 'duration_minutes'}), 30)
 
+    def test_hyphenated_duration_adjectives_normalize_to_minutes(self):
+        self.assertEqual(typed('30-minute', {'type': 'duration_minutes'}), 30)
+        self.assertEqual(typed('1.5-hour', {'type': 'duration_minutes'}), 90)
+
     def test_disabled_action_or_provider_failure_never_executes(self):
         request = example()
         request['actions'][1]['enabled'] = False

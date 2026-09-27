@@ -90,7 +90,7 @@ def typed(value, spec):
     if kind == 'duration_minutes':
         if isinstance(value, (int, float)):
             return Decimal(str(value))
-        match = re.fullmatch(r'(\d+(?:\.\d+)?)\s*(minutes?|mins?|hours?|hrs?)', text, re.I)
+        match = re.fullmatch(r'(\d+(?:\.\d+)?)\s*[- ]?\s*(minutes?|mins?|hours?|hrs?)', text, re.I)
         if not match:
             raise ValueError('missing or unsupported duration unit')
         return Decimal(match[1]) * (60 if match[2].lower().startswith('h') else 1)

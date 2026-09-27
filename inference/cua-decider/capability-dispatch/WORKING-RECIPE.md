@@ -19,6 +19,8 @@ predicate to the same candidate, and selects only a unique best match. Missing,
 conflicting, or ambiguous evidence recovers through Jev once; Jev cannot resolve
 an incomplete scope or invent a tie-breaker. Requests outside this contract
 continue through the generic dispatcher (Jev, with its existing Qwen escalation).
+Duration normalization accepts `30 minutes` and the common adjective form
+`30-minute`.
 
 ## Model and schema
 
