@@ -1,0 +1,184 @@
+{
+  "reviewer": "Codex capable-model self-review, same assistant as implementer; not an independent reviewer",
+  "scope": "Review current case outputs against S4, distinct from exact-output gate. Cycle artifacts preserve incremental deterministic results; this review is final and not backdated to intermediate cycles.",
+  "cases": [
+    {
+      "case": "SIM-001-default-jev",
+      "judgment": "conforms on exercised trace",
+      "reason": "Omitted kind reaches generic selector; offered control and operation preserved (S4.3).",
+      "trace": "final.json#SIM-001-default-jev"
+    },
+    {
+      "case": "SIM-002-unavailable-specialist",
+      "judgment": "conforms on exercised trace",
+      "reason": "Missing specialist reaches bounded generic recovery with current intent (S4.3).",
+      "trace": "final.json#SIM-002-unavailable-specialist"
+    },
+    {
+      "case": "SIM-003-specialist-error",
+      "judgment": "conforms on exercised trace",
+      "reason": "Provider exception does not terminate recoverable selection or recursively retry (S4.3).",
+      "trace": "final.json#SIM-003-specialist-error"
+    },
+    {
+      "case": "SIM-004-incomplete-extraction",
+      "judgment": "conforms on exercised trace",
+      "reason": "Missing required field is uncertainty; generic recovery receives original constraints (S4.2.4/S4.3).",
+      "trace": "final.json#SIM-004-incomplete-extraction"
+    },
+    {
+      "case": "SIM-005-healthy-specialist",
+      "judgment": "conforms on exercised trace",
+      "reason": "Complete matching evidence yields unique control without generic overhead (S4.2.4\u20135).",
+      "trace": "final.json#SIM-005-healthy-specialist"
+    },
+    {
+      "case": "SIM-006-binding-mutation",
+      "judgment": "conforms on exercised trace",
+      "reason": "Selection alone cannot authorize altered arguments; executor refuses changed binding (S4.2.6).",
+      "trace": "final.json#SIM-006-binding-mutation"
+    },
+    {
+      "case": "SIM-007-nan-span-score",
+      "judgment": "conforms on exercised trace",
+      "reason": "Nonfinite span score cannot establish required evidence (S4.2.3\u20134).",
+      "trace": "final.json#SIM-007-nan-span-score"
+    },
+    {
+      "case": "SIM-008-nan-class-score",
+      "judgment": "conforms on exercised trace",
+      "reason": "Nonfinite class confidence cannot authorize mapped action (S4.2.3).",
+      "trace": "final.json#SIM-008-nan-class-score"
+    },
+    {
+      "case": "SIM-009-classification-map",
+      "judgment": "conforms on exercised trace",
+      "reason": "Accepted described class maps only to caller-authorized current action (S4.1).",
+      "trace": "final.json#SIM-009-classification-map"
+    },
+    {
+      "case": "SIM-010-ranking-only",
+      "judgment": "conforms on exercised trace",
+      "reason": "No predicate is required when caller supplies an unambiguous ranking; numeric best is selected (S4.2.4).",
+      "trace": "final.json#SIM-010-ranking-only"
+    },
+    {
+      "case": "SIM-011-partial-hybrid-failure",
+      "judgment": "conforms on exercised trace",
+      "reason": "Successful hybrid evidence survives another provider failure and constrains generic recovery (S4.3).",
+      "trace": "final.json#SIM-011-partial-hybrid-failure"
+    },
+    {
+      "case": "SIM-012-stale-request",
+      "judgment": "conforms on exercised trace",
+      "reason": "Stale observation refuses selection without inference (S4.2.1).",
+      "trace": "final.json#SIM-012-stale-request"
+    },
+    {
+      "case": "SIM-013-stale-before-execution",
+      "judgment": "conforms on exercised trace",
+      "reason": "Observation race after selection refuses execution (S4.2.6).",
+      "trace": "final.json#SIM-013-stale-before-execution"
+    },
+    {
+      "case": "SIM-014-invented-jev-action",
+      "judgment": "conforms on exercised trace",
+      "reason": "Generic output cannot invent an executable action (S4.2.6).",
+      "trace": "final.json#SIM-014-invented-jev-action"
+    },
+    {
+      "case": "SIM-015-no-effect-not-success",
+      "judgment": "conforms on exercised trace",
+      "reason": "No observed effect means no verified progress even after valid selection (S4.2.7).",
+      "trace": "final.json#SIM-015-no-effect-not-success"
+    },
+    {
+      "case": "SIM-016-exact-no-model",
+      "judgment": "conforms on exercised trace",
+      "reason": "Unique exact control bypasses inference (S4.1).",
+      "trace": "final.json#SIM-016-exact-no-model"
+    },
+    {
+      "case": "SIM-route-simple-ner",
+      "judgment": "conforms on exercised trace",
+      "reason": "Route matches the declared evidence capability (S4.1); supplied grounded evidence preserves same-record matching. Controlled provider only: this does not qualify actual checkpoint performance.",
+      "trace": "final.json#SIM-route-simple-ner"
+    },
+    {
+      "case": "SIM-route-records",
+      "judgment": "conforms on exercised trace",
+      "reason": "Route matches the declared evidence capability (S4.1); supplied grounded evidence preserves same-record matching. Controlled provider only: this does not qualify actual checkpoint performance.",
+      "trace": "final.json#SIM-route-records"
+    },
+    {
+      "case": "SIM-route-relations",
+      "judgment": "conforms on exercised trace",
+      "reason": "Route matches the declared evidence capability (S4.1); supplied grounded evidence preserves same-record matching. Controlled provider only: this does not qualify actual checkpoint performance.",
+      "trace": "final.json#SIM-route-relations"
+    },
+    {
+      "case": "SIM-route-multilingual",
+      "judgment": "conforms on exercised trace",
+      "reason": "Route matches the declared evidence capability (S4.1); supplied grounded evidence preserves same-record matching. Controlled provider only: this does not qualify actual checkpoint performance.",
+      "trace": "final.json#SIM-route-multilingual"
+    },
+    {
+      "case": "SIM-017-tie-is-not-permission",
+      "judgment": "conforms on exercised trace",
+      "reason": "Jev cannot manufacture authority to choose among unresolved equivalent ties (S4.2.5/S4.3).",
+      "trace": "final.json#SIM-017-tie-is-not-permission"
+    },
+    {
+      "case": "SIM-018-malformed-contract",
+      "judgment": "conforms on exercised trace",
+      "reason": "Malformed comparison cannot produce an executable choice (S4.2.1/6); validation currently occurs after extraction, a speed improvement opportunity.",
+      "trace": "final.json#SIM-018-malformed-contract"
+    },
+    {
+      "case": "SIM-019-no-revive-known-exclusion",
+      "judgment": "conforms on exercised trace",
+      "reason": "Known predicate failures remain exclusions and do not call generic recovery (S4.2.4/S4.3).",
+      "trace": "final.json#SIM-019-no-revive-known-exclusion"
+    },
+    {
+      "case": "SIM-020-changing-state-flow",
+      "judgment": "conforms on exercised trace",
+      "reason": "Changed-state flow binds each subsequent action to its current observation; sandbox verifies effects separately (S4.2.6\u20137). This is exact-control flow, not a claim of semantic confirmation extraction coverage.",
+      "trace": "final.json#SIM-020-changing-state-flow"
+    },
+    {
+      "case": "SIM-021-product-prices",
+      "judgment": "conforms on exercised trace",
+      "reason": "With correct injected spans, caller brand equality and currency ordering select cheaper same-record match (S4.2.4). Actual model failure is separately pending.",
+      "trace": "final.json#SIM-021-product-prices"
+    },
+    {
+      "case": "SIM-022-strict-time-boundary",
+      "judgment": "conforms on exercised trace",
+      "reason": "Strict caller time predicate rejects boundary equality before ranking (S4.2.4).",
+      "trace": "final.json#SIM-022-strict-time-boundary"
+    },
+    {
+      "case": "SIM-023-failed-fallback-stops",
+      "judgment": "conforms on exercised trace",
+      "reason": "Generic failure ends with deferral; no recursion or fabricated success (S4.3).",
+      "trace": "final.json#SIM-023-failed-fallback-stops"
+    },
+    {
+      "case": "SIM-024-invalid-kind-no-fallback",
+      "judgment": "conforms on exercised trace",
+      "reason": "Unsupported explicit kind remains invalid, distinct from omitted/default kind (S4.2.1/S4.3).",
+      "trace": "final.json#SIM-024-invalid-kind-no-fallback"
+    }
+  ],
+  "metamorphic_review": "Opaque IDs, renamed fields and ordering do not change semantic target. No booking constants or oracle inputs introduced.",
+  "description_contract_review": "Provider must preserve caller label descriptions; upstream wire schema now carries entity_descriptions. Contract test and fresh inference support conformance.",
+  "live_review": {
+    "current": "3/4; product over-wide identity remains a policy boundary rather than a passing result.",
+    "proposed": "4/4 with candidate boundary recheck; conforms to proposed clause only, not approved as current S4.",
+    "historical": "35/35 fresh booking request decisions retain selected controls; no new desktop integration claim."
+  },
+  "accepted_archive": "../COUNTEREXAMPLES.json",
+  "policy_approval": "CE-SIM-006 approved by user and promoted to S4.4; Engine default enabled. Prior proposed-policy review now applies to authorized clause.",
+  "sufficiency_limit": "No clean-room regeneration from S+K performed; sketch sufficiency remains unproven."
+}

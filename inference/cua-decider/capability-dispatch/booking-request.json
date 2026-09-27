@@ -1,0 +1,26 @@
+{
+  "provenance": "Task contract authored by the controlling assistant from the user goal and observed accessible labels; fixed before this live evaluation. Task-specific data resides here, not in dispatch.py.",
+  "goal": "Book the earliest available 30-minute appointment strictly after 2 PM with Alex. If none exists, join the waitlist. Confirm the booking when asked.",
+  "candidate_prefix": "Click Book ",
+  "fallback_description": "Click Join waitlist",
+  "confirmation_description": "Click Confirm booking",
+  "confirmation_heading_prefix": "Confirm ",
+  "request": {
+    "kind": "match",
+    "operation": "click",
+    "shape": "spans",
+    "language": "en",
+    "coverage_complete": true,
+    "fields": {
+      "person": {"description": "Name of the provider or staff member offered in this specific appointment option.", "type": "text"},
+      "duration": {"description": "Length of the appointment offered in this specific option, expressed in minutes.", "type": "duration_minutes"},
+      "time": {"description": "Start time of the appointment offered in this specific option, such as 2:15 PM.", "type": "time"}
+    },
+    "predicates": [
+      {"field": "person", "op": "eq", "value": "Alex"},
+      {"field": "duration", "op": "eq", "value": 30},
+      {"field": "time", "op": "gt", "value": "2:00 PM"}
+    ],
+    "order_by": [{"field": "time", "direction": "asc"}]
+  }
+}

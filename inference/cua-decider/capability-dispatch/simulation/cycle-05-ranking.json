@@ -1,0 +1,2262 @@
+{
+  "mode": "controlled-provider state simulation; no computer use",
+  "results": [
+    {
+      "id": "SIM-001-default-jev",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "a"
+        ],
+        "routes": [
+          "jev"
+        ]
+      },
+      "actual_effects": [
+        "a"
+      ],
+      "routes": [
+        "jev"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "operation": "click",
+            "goal": "Open the settings page.",
+            "observation": "Navigation: Settings, Reports",
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Settings",
+                "role": "button",
+                "description": "Settings",
+                "evidence_text": "Settings",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Reports",
+                "role": "button",
+                "description": "Reports",
+                "evidence_text": "Reports",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a",
+            "reason": "semantic_choice",
+            "decision_ms": 0.17962499987334013,
+            "binding_digest": "b6d5457d0b3ef4005992d3bf084964cbc52567fd606fecef4a303d5512562a68"
+          },
+          "execution": {
+            "observed_effects": [
+              "a"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "jev",
+          "step": {
+            "model": "jev",
+            "method": "choose"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "operation": "click",
+            "goal": "Open the settings page.",
+            "observation": "Navigation: Settings, Reports",
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Settings",
+                "role": "button",
+                "description": "Settings",
+                "evidence_text": "Settings",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Reports",
+                "role": "button",
+                "description": "Reports",
+                "evidence_text": "Reports",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-002-unavailable-specialist",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "b"
+        ],
+        "routes": [
+          "jev"
+        ]
+      },
+      "actual_effects": [
+        "b"
+      ],
+      "routes": [
+        "jev"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "b"
+              }
+            ],
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "decision_ms": 0.12604199582710862,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc",
+            "fallback_from": {
+              "snapshot_id": "s1",
+              "action_authorized": false,
+              "plan": {
+                "steps": [
+                  {
+                    "model": "gliner2",
+                    "method": "extract",
+                    "fields": {
+                      "owner": {
+                        "description": "Owner of this item",
+                        "type": "text"
+                      },
+                      "stock": {
+                        "description": "Number of units",
+                        "type": "number"
+                      }
+                    },
+                    "shape": "spans",
+                    "language": "en"
+                  }
+                ],
+                "reducer": "match",
+                "models": [
+                  "gliner2"
+                ]
+              },
+              "status": "defer",
+              "reason": "provider_unavailable",
+              "unavailable": [
+                "gliner2"
+              ],
+              "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc"
+            }
+          },
+          "execution": {
+            "observed_effects": [
+              "b"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "jev",
+          "step": {
+            "model": "jev",
+            "method": "choose"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "semantic",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ],
+            "specialist_context": {
+              "reason": "provider_unavailable",
+              "checks": {},
+              "evidence": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-003-specialist-error",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "b"
+        ],
+        "routes": [
+          "gliner2",
+          "jev"
+        ]
+      },
+      "actual_effects": [
+        "b"
+      ],
+      "routes": [
+        "gliner2",
+        "jev"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "b"
+              }
+            ],
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "decision_ms": 0.32362499041482806,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc",
+            "fallback_from": {
+              "snapshot_id": "s1",
+              "action_authorized": false,
+              "plan": {
+                "steps": [
+                  {
+                    "model": "gliner2",
+                    "method": "extract",
+                    "fields": {
+                      "owner": {
+                        "description": "Owner of this item",
+                        "type": "text"
+                      },
+                      "stock": {
+                        "description": "Number of units",
+                        "type": "number"
+                      }
+                    },
+                    "shape": "spans",
+                    "language": "en"
+                  }
+                ],
+                "reducer": "match",
+                "models": [
+                  "gliner2"
+                ]
+              },
+              "status": "defer",
+              "reason": "provider_failed",
+              "error": "RuntimeError",
+              "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc"
+            }
+          },
+          "execution": {
+            "observed_effects": [
+              "b"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "gliner2",
+          "step": {
+            "model": "gliner2",
+            "method": "extract",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "shape": "spans",
+            "language": "en"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "family": "jev",
+          "step": {
+            "model": "jev",
+            "method": "choose"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "semantic",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ],
+            "specialist_context": {
+              "reason": "provider_failed",
+              "checks": {},
+              "evidence": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-004-incomplete-extraction",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "b"
+        ],
+        "routes": [
+          "gliner2",
+          "jev"
+        ]
+      },
+      "actual_effects": [
+        "b"
+      ],
+      "routes": [
+        "gliner2",
+        "jev"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "b"
+              }
+            ],
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "decision_ms": 0.24512497475370765,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc",
+            "fallback_from": {
+              "snapshot_id": "s1",
+              "action_authorized": false,
+              "plan": {
+                "steps": [
+                  {
+                    "model": "gliner2",
+                    "method": "extract",
+                    "fields": {
+                      "owner": {
+                        "description": "Owner of this item",
+                        "type": "text"
+                      },
+                      "stock": {
+                        "description": "Number of units",
+                        "type": "number"
+                      }
+                    },
+                    "shape": "spans",
+                    "language": "en"
+                  }
+                ],
+                "reducer": "match",
+                "models": [
+                  "gliner2"
+                ]
+              },
+              "provider_outputs": [
+                {
+                  "evidence": {
+                    "a": {
+                      "owner": [
+                        {
+                          "text": "Morgan",
+                          "start": 0,
+                          "end": 6,
+                          "confidence": 0.99
+                        }
+                      ],
+                      "stock": [
+                        {
+                          "text": "12",
+                          "start": 7,
+                          "end": 9,
+                          "confidence": 0.99
+                        }
+                      ]
+                    },
+                    "b": {
+                      "owner": [
+                        {
+                          "text": "Morgan",
+                          "start": 0,
+                          "end": 6,
+                          "confidence": 0.99
+                        }
+                      ]
+                    }
+                  }
+                }
+              ],
+              "evidence": {
+                "a": {
+                  "owner": [
+                    {
+                      "text": "Morgan",
+                      "start": 0,
+                      "end": 6,
+                      "confidence": 0.99
+                    }
+                  ],
+                  "stock": [
+                    {
+                      "text": "12",
+                      "start": 7,
+                      "end": 9,
+                      "confidence": 0.99
+                    }
+                  ]
+                },
+                "b": {
+                  "owner": [
+                    {
+                      "text": "Morgan",
+                      "start": 0,
+                      "end": 6,
+                      "confidence": 0.99
+                    }
+                  ]
+                }
+              },
+              "status": "defer",
+              "reason": "incomplete_or_conflicting_evidence",
+              "checks": {
+                "a": {
+                  "state": "eligible",
+                  "values": {
+                    "owner": "morgan",
+                    "stock": "12"
+                  },
+                  "gaps": []
+                },
+                "b": {
+                  "state": "unknown",
+                  "values": {
+                    "owner": "morgan"
+                  },
+                  "gaps": [
+                    "stock"
+                  ]
+                }
+              },
+              "decision_ms": 0.1507079869043082,
+              "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc"
+            }
+          },
+          "execution": {
+            "observed_effects": [
+              "b"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "gliner2",
+          "step": {
+            "model": "gliner2",
+            "method": "extract",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "shape": "spans",
+            "language": "en"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "family": "jev",
+          "step": {
+            "model": "jev",
+            "method": "choose"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "semantic",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ],
+            "specialist_context": {
+              "reason": "incomplete_or_conflicting_evidence",
+              "checks": {
+                "a": {
+                  "state": "eligible",
+                  "values": {
+                    "owner": "morgan",
+                    "stock": "12"
+                  },
+                  "gaps": []
+                },
+                "b": {
+                  "state": "unknown",
+                  "values": {
+                    "owner": "morgan"
+                  },
+                  "gaps": [
+                    "stock"
+                  ]
+                }
+              },
+              "evidence": {
+                "a": {
+                  "owner": [
+                    {
+                      "text": "Morgan",
+                      "start": 0,
+                      "end": 6,
+                      "confidence": 0.99
+                    }
+                  ],
+                  "stock": [
+                    {
+                      "text": "12",
+                      "start": 7,
+                      "end": 9,
+                      "confidence": 0.99
+                    }
+                  ]
+                },
+                "b": {
+                  "owner": [
+                    {
+                      "text": "Morgan",
+                      "start": 0,
+                      "end": 6,
+                      "confidence": 0.99
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-005-healthy-specialist",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "b"
+        ],
+        "routes": [
+          "gliner2"
+        ]
+      },
+      "actual_effects": [
+        "b"
+      ],
+      "routes": [
+        "gliner2"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "gliner2",
+                  "method": "extract",
+                  "fields": {
+                    "owner": {
+                      "description": "Owner of this item",
+                      "type": "text"
+                    },
+                    "stock": {
+                      "description": "Number of units",
+                      "type": "number"
+                    }
+                  },
+                  "shape": "spans",
+                  "language": "en"
+                }
+              ],
+              "reducer": "match",
+              "models": [
+                "gliner2"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "evidence": {
+                  "a": {
+                    "owner": [
+                      {
+                        "text": "Morgan",
+                        "start": 0,
+                        "end": 6,
+                        "confidence": 0.99
+                      }
+                    ],
+                    "stock": [
+                      {
+                        "text": "12",
+                        "start": 7,
+                        "end": 9,
+                        "confidence": 0.99
+                      }
+                    ]
+                  },
+                  "b": {
+                    "owner": [
+                      {
+                        "text": "Morgan",
+                        "start": 0,
+                        "end": 6,
+                        "confidence": 0.99
+                      }
+                    ],
+                    "stock": [
+                      {
+                        "text": "7",
+                        "start": 7,
+                        "end": 8,
+                        "confidence": 0.99
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "evidence": {
+              "a": {
+                "owner": [
+                  {
+                    "text": "Morgan",
+                    "start": 0,
+                    "end": 6,
+                    "confidence": 0.99
+                  }
+                ],
+                "stock": [
+                  {
+                    "text": "12",
+                    "start": 7,
+                    "end": 9,
+                    "confidence": 0.99
+                  }
+                ]
+              },
+              "b": {
+                "owner": [
+                  {
+                    "text": "Morgan",
+                    "start": 0,
+                    "end": 6,
+                    "confidence": 0.99
+                  }
+                ],
+                "stock": [
+                  {
+                    "text": "7",
+                    "start": 7,
+                    "end": 8,
+                    "confidence": 0.99
+                  }
+                ]
+              }
+            },
+            "status": "selected",
+            "action_id": "b",
+            "reason": "unique_match",
+            "checks": {
+              "a": {
+                "state": "eligible",
+                "values": {
+                  "owner": "morgan",
+                  "stock": "12"
+                },
+                "gaps": []
+              },
+              "b": {
+                "state": "eligible",
+                "values": {
+                  "owner": "morgan",
+                  "stock": "7"
+                },
+                "gaps": []
+              }
+            },
+            "decision_ms": 0.09204199886880815,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc"
+          },
+          "execution": {
+            "observed_effects": [
+              "b"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "gliner2",
+          "step": {
+            "model": "gliner2",
+            "method": "extract",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "shape": "spans",
+            "language": "en"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-006-binding-mutation",
+      "passed": true,
+      "approved": {
+        "effects": [],
+        "routes": []
+      },
+      "actual_effects": [],
+      "routes": [],
+      "verified": false,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "exact",
+            "operation": "click",
+            "goal": "Activate the current named control.",
+            "target": {
+              "id": "a"
+            },
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Save",
+                "role": "button",
+                "description": "Save",
+                "evidence_text": "Save",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [],
+              "reducer": "exact",
+              "models": []
+            },
+            "status": "selected",
+            "action_id": "a",
+            "reason": "exact_control",
+            "decision_ms": 0.003082997864112258,
+            "binding_digest": "fc057a2b864ce5bb555eb6dca11249c7493ea954a145623a0ec9b79675457c91"
+          },
+          "execution_rejected": "ValueError"
+        }
+      ],
+      "provider_calls": []
+    },
+    {
+      "id": "SIM-007-nan-span-score",
+      "passed": true,
+      "approved": {
+        "effects": [],
+        "routes": [
+          "gliner2"
+        ]
+      },
+      "actual_effects": [],
+      "routes": [
+        "gliner2"
+      ],
+      "verified": false,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "gliner2",
+                  "method": "extract",
+                  "fields": {
+                    "owner": {
+                      "description": "Owner of this item",
+                      "type": "text"
+                    },
+                    "stock": {
+                      "description": "Number of units",
+                      "type": "number"
+                    }
+                  },
+                  "shape": "spans",
+                  "language": "en"
+                }
+              ],
+              "reducer": "match",
+              "models": [
+                "gliner2"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "evidence": {
+                  "a": {
+                    "owner": [
+                      {
+                        "text": "Morgan",
+                        "start": 0,
+                        "end": 6,
+                        "confidence": 0.99
+                      }
+                    ],
+                    "stock": [
+                      {
+                        "text": "12",
+                        "start": 7,
+                        "end": 9,
+                        "confidence": 0.99
+                      }
+                    ]
+                  },
+                  "b": {
+                    "owner": [
+                      {
+                        "text": "Morgan",
+                        "start": 0,
+                        "end": 6,
+                        "confidence": NaN
+                      }
+                    ],
+                    "stock": [
+                      {
+                        "text": "7",
+                        "start": 7,
+                        "end": 8,
+                        "confidence": 0.99
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "evidence": {
+              "a": {
+                "owner": [
+                  {
+                    "text": "Morgan",
+                    "start": 0,
+                    "end": 6,
+                    "confidence": 0.99
+                  }
+                ],
+                "stock": [
+                  {
+                    "text": "12",
+                    "start": 7,
+                    "end": 9,
+                    "confidence": 0.99
+                  }
+                ]
+              },
+              "b": {
+                "owner": [
+                  {
+                    "text": "Morgan",
+                    "start": 0,
+                    "end": 6,
+                    "confidence": NaN
+                  }
+                ],
+                "stock": [
+                  {
+                    "text": "7",
+                    "start": 7,
+                    "end": 8,
+                    "confidence": 0.99
+                  }
+                ]
+              }
+            },
+            "status": "defer",
+            "reason": "incomplete_or_conflicting_evidence",
+            "checks": {
+              "a": {
+                "state": "eligible",
+                "values": {
+                  "owner": "morgan",
+                  "stock": "12"
+                },
+                "gaps": []
+              },
+              "b": {
+                "state": "unknown",
+                "values": {
+                  "stock": "7"
+                },
+                "gaps": [
+                  "owner"
+                ]
+              }
+            },
+            "decision_ms": 0.09545800276100636,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc"
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "gliner2",
+          "step": {
+            "model": "gliner2",
+            "method": "extract",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "shape": "spans",
+            "language": "en"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-008-nan-class-score",
+      "passed": true,
+      "approved": {
+        "effects": [],
+        "routes": [
+          "decide"
+        ]
+      },
+      "actual_effects": [],
+      "routes": [
+        "decide"
+      ],
+      "verified": false,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "classify",
+            "operation": "click",
+            "goal": "Route the billing issue.",
+            "labels": {
+              "billing": "Invoice/payment issue"
+            },
+            "label_actions": {
+              "billing": "a"
+            },
+            "min_confidence": 0.9,
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Billing",
+                "role": "button",
+                "description": "Billing",
+                "evidence_text": "Billing",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "decide",
+                  "method": "classify"
+                }
+              ],
+              "reducer": "class_to_action",
+              "models": [
+                "decide"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "label": "billing",
+                "confidence": NaN
+              }
+            ],
+            "status": "defer",
+            "reason": "classification_unaccepted",
+            "decision_ms": 0.0629170099273324,
+            "binding_digest": "14a3d9a5784da40753098e0884820f61b2885dd9969b60250cc349a1c2422fdb"
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "decide",
+          "step": {
+            "model": "decide",
+            "method": "classify"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "classify",
+            "operation": "click",
+            "goal": "Route the billing issue.",
+            "labels": {
+              "billing": "Invoice/payment issue"
+            },
+            "label_actions": {
+              "billing": "a"
+            },
+            "min_confidence": 0.9,
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Billing",
+                "role": "button",
+                "description": "Billing",
+                "evidence_text": "Billing",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-009-classification-map",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "a"
+        ],
+        "routes": [
+          "decide"
+        ]
+      },
+      "actual_effects": [
+        "a"
+      ],
+      "routes": [
+        "decide"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "classify",
+            "operation": "click",
+            "goal": "Route the billing issue.",
+            "labels": {
+              "billing": "Invoice/payment issue"
+            },
+            "label_actions": {
+              "billing": "a"
+            },
+            "min_confidence": 0.9,
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Billing",
+                "role": "button",
+                "description": "Billing",
+                "evidence_text": "Billing",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "decide",
+                  "method": "classify"
+                }
+              ],
+              "reducer": "class_to_action",
+              "models": [
+                "decide"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "label": "billing",
+                "confidence": 0.97
+              }
+            ],
+            "status": "selected",
+            "action_id": "a",
+            "reason": "mapped_class",
+            "decision_ms": 0.058874982642009854,
+            "binding_digest": "14a3d9a5784da40753098e0884820f61b2885dd9969b60250cc349a1c2422fdb"
+          },
+          "execution": {
+            "observed_effects": [
+              "a"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "decide",
+          "step": {
+            "model": "decide",
+            "method": "classify"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "classify",
+            "operation": "click",
+            "goal": "Route the billing issue.",
+            "labels": {
+              "billing": "Invoice/payment issue"
+            },
+            "label_actions": {
+              "billing": "a"
+            },
+            "min_confidence": 0.9,
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Billing",
+                "role": "button",
+                "description": "Billing",
+                "evidence_text": "Billing",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-010-ranking-only",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "b"
+        ],
+        "routes": [
+          "gliner2"
+        ]
+      },
+      "actual_effects": [
+        "b"
+      ],
+      "routes": [
+        "gliner2"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the item with fewest units, regardless of owner.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "gliner2",
+                  "method": "extract",
+                  "fields": {
+                    "owner": {
+                      "description": "Owner of this item",
+                      "type": "text"
+                    },
+                    "stock": {
+                      "description": "Number of units",
+                      "type": "number"
+                    }
+                  },
+                  "shape": "spans",
+                  "language": "en"
+                }
+              ],
+              "reducer": "match",
+              "models": [
+                "gliner2"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "evidence": {
+                  "a": {
+                    "owner": [
+                      {
+                        "text": "Morgan",
+                        "start": 0,
+                        "end": 6,
+                        "confidence": 0.99
+                      }
+                    ],
+                    "stock": [
+                      {
+                        "text": "12",
+                        "start": 7,
+                        "end": 9,
+                        "confidence": 0.99
+                      }
+                    ]
+                  },
+                  "b": {
+                    "owner": [
+                      {
+                        "text": "Morgan",
+                        "start": 0,
+                        "end": 6,
+                        "confidence": 0.99
+                      }
+                    ],
+                    "stock": [
+                      {
+                        "text": "7",
+                        "start": 7,
+                        "end": 8,
+                        "confidence": 0.99
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "evidence": {
+              "a": {
+                "owner": [
+                  {
+                    "text": "Morgan",
+                    "start": 0,
+                    "end": 6,
+                    "confidence": 0.99
+                  }
+                ],
+                "stock": [
+                  {
+                    "text": "12",
+                    "start": 7,
+                    "end": 9,
+                    "confidence": 0.99
+                  }
+                ]
+              },
+              "b": {
+                "owner": [
+                  {
+                    "text": "Morgan",
+                    "start": 0,
+                    "end": 6,
+                    "confidence": 0.99
+                  }
+                ],
+                "stock": [
+                  {
+                    "text": "7",
+                    "start": 7,
+                    "end": 8,
+                    "confidence": 0.99
+                  }
+                ]
+              }
+            },
+            "status": "selected",
+            "action_id": "b",
+            "reason": "unique_match",
+            "checks": {
+              "a": {
+                "state": "eligible",
+                "values": {
+                  "stock": "12"
+                },
+                "gaps": []
+              },
+              "b": {
+                "state": "eligible",
+                "values": {
+                  "stock": "7"
+                },
+                "gaps": []
+              }
+            },
+            "decision_ms": 0.08512500789947808,
+            "binding_digest": "45fba03f3a9742710e40760262d31e8b81576d2e2906b47cccecb440d127218a"
+          },
+          "execution": {
+            "observed_effects": [
+              "b"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "gliner2",
+          "step": {
+            "model": "gliner2",
+            "method": "extract",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "shape": "spans",
+            "language": "en"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the item with fewest units, regardless of owner.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

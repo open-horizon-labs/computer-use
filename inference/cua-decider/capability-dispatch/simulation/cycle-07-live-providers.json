@@ -1,0 +1,1022 @@
+{
+  "mode": "real provider inference, simulated state; no computer use",
+  "results": [
+    {
+      "id": "SIM-001-default-jev",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "a"
+        ],
+        "routes": [
+          "jev"
+        ]
+      },
+      "actual_effects": [
+        "a"
+      ],
+      "routes": [
+        "jev"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "operation": "click",
+            "goal": "Open the settings page.",
+            "observation": "Navigation: Settings, Reports",
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Settings",
+                "role": "button",
+                "description": "Settings",
+                "evidence_text": "Settings",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Reports",
+                "role": "button",
+                "description": "Reports",
+                "evidence_text": "Reports",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a",
+                "route": "fast",
+                "reason": "fast_confident",
+                "requires_verification": true,
+                "trace": [
+                  {
+                    "provider": "Jev",
+                    "ms": 1128.7706669827458,
+                    "choice": "a",
+                    "confidence": 0.99,
+                    "probabilities": {
+                      "b": 0.0,
+                      "a": 1.0,
+                      "reobserve": 0.0,
+                      "abstain": 0.0
+                    },
+                    "model": "jev-1.13.0"
+                  }
+                ]
+              }
+            ],
+            "status": "selected",
+            "action_id": "a",
+            "reason": "semantic_choice",
+            "decision_ms": 1198.1004580156878,
+            "binding_digest": "b6d5457d0b3ef4005992d3bf084964cbc52567fd606fecef4a303d5512562a68"
+          },
+          "execution": {
+            "observed_effects": [
+              "a"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "jev",
+          "step": {
+            "model": "jev",
+            "method": "choose"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "operation": "click",
+            "goal": "Open the settings page.",
+            "observation": "Navigation: Settings, Reports",
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Settings",
+                "role": "button",
+                "description": "Settings",
+                "evidence_text": "Settings",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Reports",
+                "role": "button",
+                "description": "Reports",
+                "evidence_text": "Reports",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-002-unavailable-specialist",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "b"
+        ],
+        "routes": [
+          "jev"
+        ]
+      },
+      "actual_effects": [
+        "b"
+      ],
+      "routes": [
+        "jev"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "b",
+                "route": "fallback",
+                "reason": "low_confidence_or_defer",
+                "requires_verification": true,
+                "trace": [
+                  {
+                    "provider": "Jev",
+                    "ms": 835.8131669810973,
+                    "choice": "abstain",
+                    "confidence": 0.36,
+                    "probabilities": {
+                      "b": 0.05,
+                      "abstain": 0.52,
+                      "reobserve": 0.39,
+                      "a": 0.04
+                    },
+                    "model": "jev-1.13.0"
+                  },
+                  {
+                    "provider": "Qwen",
+                    "ms": 630.5846670002211,
+                    "choice": "b",
+                    "confidence": null,
+                    "model": "qwen3.8-27b-exl3-mtp",
+                    "usage": {
+                      "prompt_tokens": 278,
+                      "completion_tokens": 2,
+                      "total_tokens": 280
+                    },
+                    "thinking_mode": "none"
+                  }
+                ]
+              }
+            ],
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "decision_ms": 1514.6585000038613,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc",
+            "fallback_from": {
+              "snapshot_id": "s1",
+              "action_authorized": false,
+              "plan": {
+                "steps": [
+                  {
+                    "model": "gliner2",
+                    "method": "extract",
+                    "fields": {
+                      "owner": {
+                        "description": "Owner of this item",
+                        "type": "text"
+                      },
+                      "stock": {
+                        "description": "Number of units",
+                        "type": "number"
+                      }
+                    },
+                    "shape": "spans",
+                    "language": "en"
+                  }
+                ],
+                "reducer": "match",
+                "models": [
+                  "gliner2"
+                ]
+              },
+              "status": "defer",
+              "reason": "provider_unavailable",
+              "unavailable": [
+                "gliner2"
+              ],
+              "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc"
+            }
+          },
+          "execution": {
+            "observed_effects": [
+              "b"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "jev",
+          "step": {
+            "model": "jev",
+            "method": "choose"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "semantic",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ],
+            "specialist_context": {
+              "reason": "provider_unavailable",
+              "checks": {},
+              "evidence": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-005-healthy-specialist",
+      "passed": true,
+      "approved": {
+        "effects": [
+          "b"
+        ],
+        "routes": [
+          [
+            "gliner2"
+          ],
+          [
+            "gliner2",
+            "jev"
+          ]
+        ]
+      },
+      "actual_effects": [
+        "b"
+      ],
+      "routes": [
+        "gliner2"
+      ],
+      "verified": true,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "gliner2",
+                  "method": "extract",
+                  "fields": {
+                    "owner": {
+                      "description": "Owner of this item",
+                      "type": "text"
+                    },
+                    "stock": {
+                      "description": "Number of units",
+                      "type": "number"
+                    }
+                  },
+                  "shape": "spans",
+                  "language": "en"
+                }
+              ],
+              "reducer": "match",
+              "models": [
+                "gliner2"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "evidence": {
+                  "a": {
+                    "owner": [
+                      {
+                        "text": "Morgan",
+                        "confidence": 0.999880313873291,
+                        "start": 0,
+                        "end": 6
+                      }
+                    ],
+                    "stock": [
+                      {
+                        "text": "12",
+                        "confidence": 0.9999927282333374,
+                        "start": 7,
+                        "end": 9
+                      }
+                    ]
+                  },
+                  "b": {
+                    "owner": [
+                      {
+                        "text": "Morgan",
+                        "confidence": 0.9999567270278931,
+                        "start": 0,
+                        "end": 6
+                      }
+                    ],
+                    "stock": [
+                      {
+                        "text": "7",
+                        "confidence": 0.9999949932098389,
+                        "start": 7,
+                        "end": 8
+                      }
+                    ]
+                  }
+                },
+                "model": "fastino/gliner2-base-v1",
+                "inference_ms": 128.81992396432906
+              }
+            ],
+            "evidence": {
+              "a": {
+                "owner": [
+                  {
+                    "text": "Morgan",
+                    "confidence": 0.999880313873291,
+                    "start": 0,
+                    "end": 6
+                  }
+                ],
+                "stock": [
+                  {
+                    "text": "12",
+                    "confidence": 0.9999927282333374,
+                    "start": 7,
+                    "end": 9
+                  }
+                ]
+              },
+              "b": {
+                "owner": [
+                  {
+                    "text": "Morgan",
+                    "confidence": 0.9999567270278931,
+                    "start": 0,
+                    "end": 6
+                  }
+                ],
+                "stock": [
+                  {
+                    "text": "7",
+                    "confidence": 0.9999949932098389,
+                    "start": 7,
+                    "end": 8
+                  }
+                ]
+              }
+            },
+            "status": "selected",
+            "action_id": "b",
+            "reason": "unique_match",
+            "checks": {
+              "a": {
+                "state": "eligible",
+                "values": {
+                  "stock": "12",
+                  "owner": "morgan"
+                },
+                "gaps": []
+              },
+              "b": {
+                "state": "eligible",
+                "values": {
+                  "stock": "7",
+                  "owner": "morgan"
+                },
+                "gaps": []
+              }
+            },
+            "decision_ms": 132.33029199182056,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc"
+          },
+          "execution": {
+            "observed_effects": [
+              "b"
+            ],
+            "scene_revision": 1
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "gliner2",
+          "step": {
+            "model": "gliner2",
+            "method": "extract",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "shape": "spans",
+            "language": "en"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Select the Morgan-owned item with the fewest units.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "owner": {
+                "description": "Owner of this item",
+                "type": "text"
+              },
+              "stock": {
+                "description": "Number of units",
+                "type": "number"
+              }
+            },
+            "predicates": [
+              {
+                "field": "owner",
+                "value": "Morgan"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "stock",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Morgan 12",
+                "role": "button",
+                "description": "Morgan 12",
+                "evidence_text": "Morgan 12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Morgan 7",
+                "role": "button",
+                "description": "Morgan 7",
+                "evidence_text": "Morgan 7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "SIM-021-product-prices",
+      "passed": false,
+      "approved": {
+        "effects": [
+          "b"
+        ],
+        "routes": [
+          [
+            "gliner2"
+          ],
+          [
+            "gliner2",
+            "jev"
+          ]
+        ]
+      },
+      "actual_effects": [],
+      "routes": [
+        "gliner2"
+      ],
+      "verified": false,
+      "trace": [
+        {
+          "frame": 0,
+          "observation": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Choose the cheaper Acme product.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "brand": {
+                "description": "Manufacturer or brand name",
+                "type": "text"
+              },
+              "price": {
+                "description": "Price in US dollars",
+                "type": "money",
+                "currency": "USD"
+              }
+            },
+            "predicates": [
+              {
+                "field": "brand",
+                "value": "Acme"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "price",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Acme product: $12",
+                "role": "button",
+                "description": "Acme product: $12",
+                "evidence_text": "Acme product: $12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Acme product: $7",
+                "role": "button",
+                "description": "Acme product: $7",
+                "evidence_text": "Acme product: $7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          },
+          "selection": {
+            "snapshot_id": "s1",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "gliner2",
+                  "method": "extract",
+                  "fields": {
+                    "brand": {
+                      "description": "Manufacturer or brand name",
+                      "type": "text"
+                    },
+                    "price": {
+                      "description": "Price in US dollars",
+                      "type": "money",
+                      "currency": "USD"
+                    }
+                  },
+                  "shape": "spans",
+                  "language": "en"
+                }
+              ],
+              "reducer": "match",
+              "models": [
+                "gliner2"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "evidence": {
+                  "a": {
+                    "brand": [
+                      {
+                        "text": "Acme product",
+                        "confidence": 0.9998329877853394,
+                        "start": 0,
+                        "end": 12
+                      }
+                    ],
+                    "price": [
+                      {
+                        "text": "$12",
+                        "confidence": 1.0,
+                        "start": 14,
+                        "end": 17
+                      }
+                    ]
+                  },
+                  "b": {
+                    "brand": [
+                      {
+                        "text": "Acme product",
+                        "confidence": 0.9994931221008301,
+                        "start": 0,
+                        "end": 12
+                      }
+                    ],
+                    "price": [
+                      {
+                        "text": "$7",
+                        "confidence": 0.9999996423721313,
+                        "start": 14,
+                        "end": 16
+                      }
+                    ]
+                  }
+                },
+                "model": "fastino/gliner2-base-v1",
+                "inference_ms": 53.14112501218915
+              }
+            ],
+            "evidence": {
+              "a": {
+                "brand": [
+                  {
+                    "text": "Acme product",
+                    "confidence": 0.9998329877853394,
+                    "start": 0,
+                    "end": 12
+                  }
+                ],
+                "price": [
+                  {
+                    "text": "$12",
+                    "confidence": 1.0,
+                    "start": 14,
+                    "end": 17
+                  }
+                ]
+              },
+              "b": {
+                "brand": [
+                  {
+                    "text": "Acme product",
+                    "confidence": 0.9994931221008301,
+                    "start": 0,
+                    "end": 12
+                  }
+                ],
+                "price": [
+                  {
+                    "text": "$7",
+                    "confidence": 0.9999996423721313,
+                    "start": 14,
+                    "end": 16
+                  }
+                ]
+              }
+            },
+            "status": "defer",
+            "reason": "no_match",
+            "checks": {
+              "a": {
+                "state": "excluded",
+                "values": {
+                  "price": "12",
+                  "brand": "acme product"
+                },
+                "gaps": []
+              },
+              "b": {
+                "state": "excluded",
+                "values": {
+                  "price": "7",
+                  "brand": "acme product"
+                },
+                "gaps": []
+              }
+            },
+            "decision_ms": 57.446416991297156,
+            "binding_digest": "a31f23a65c6757d134a55c82aca232c1d23c906494be59f50662e14fe770334e"
+          }
+        }
+      ],
+      "provider_calls": [
+        {
+          "family": "gliner2",
+          "step": {
+            "model": "gliner2",
+            "method": "extract",
+            "fields": {
+              "brand": {
+                "description": "Manufacturer or brand name",
+                "type": "text"
+              },
+              "price": {
+                "description": "Price in US dollars",
+                "type": "money",
+                "currency": "USD"
+              }
+            },
+            "shape": "spans",
+            "language": "en"
+          },
+          "request": {
+            "snapshot_id": "s1",
+            "kind": "match",
+            "operation": "click",
+            "coverage_complete": true,
+            "goal": "Choose the cheaper Acme product.",
+            "observation": "Inventory rows, each with its own select control.",
+            "fields": {
+              "brand": {
+                "description": "Manufacturer or brand name",
+                "type": "text"
+              },
+              "price": {
+                "description": "Price in US dollars",
+                "type": "money",
+                "currency": "USD"
+              }
+            },
+            "predicates": [
+              {
+                "field": "brand",
+                "value": "Acme"
+              }
+            ],
+            "order_by": [
+              {
+                "field": "price",
+                "direction": "asc"
+              }
+            ],
+            "candidate_ids": [
+              "a",
+              "b"
+            ],
+            "actions": [
+              {
+                "id": "a",
+                "operation": "click",
+                "name": "Acme product: $12",
+                "role": "button",
+                "description": "Acme product: $12",
+                "evidence_text": "Acme product: $12",
+                "enabled": true,
+                "arguments": {
+                  "target": "a"
+                }
+              },
+              {
+                "id": "b",
+                "operation": "click",
+                "name": "Acme product: $7",
+                "role": "button",
+                "description": "Acme product: $7",
+                "evidence_text": "Acme product: $7",
+                "enabled": true,
+                "arguments": {
+                  "target": "b"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "issue": "Initial live stock case inherited exact specialist-only route from controlled perfect-evidence case.",
+  "decision": "Live providers may legitimately require Jev recovery under approved S4.3; live oracle permits either specialist alone or specialist then Jev, while still requiring the same effect.",
+  "authority": "Review correction, no sketch policy change.",
+  "preserved_original": "live-providers.json",
+  "corrected_run": "cycle-07-live-providers.json",
+  "prohibition": "Expected effects and provider-visible criteria unchanged."
+}

@@ -1,0 +1,137 @@
+[
+  {
+    "description": "The manufacturer or brand name only, excluding generic product nouns and surrounding words.",
+    "output": {
+      "evidence": {
+        "a": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9797639846801758,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$12",
+              "confidence": 0.9999997615814209,
+              "start": 14,
+              "end": 17
+            }
+          ]
+        },
+        "b": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9721989631652832,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$7",
+              "confidence": 0.9999983310699463,
+              "start": 14,
+              "end": 16
+            }
+          ]
+        }
+      },
+      "model": "fastino/gliner2-base-v1",
+      "inference_ms": 127.69585405476391
+    }
+  },
+  {
+    "description": "Proper name of the company that manufactured this item. Do not include the word product.",
+    "output": {
+      "evidence": {
+        "a": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9797639846801758,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$12",
+              "confidence": 0.9999997615814209,
+              "start": 14,
+              "end": 17
+            }
+          ]
+        },
+        "b": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9721989631652832,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$7",
+              "confidence": 0.9999983310699463,
+              "start": 14,
+              "end": 16
+            }
+          ]
+        }
+      },
+      "model": "fastino/gliner2-base-v1",
+      "inference_ms": 51.71150097157806
+    }
+  },
+  {
+    "description": "Brand name, for example Acme or Contoso.",
+    "output": {
+      "evidence": {
+        "a": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9797639846801758,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$12",
+              "confidence": 0.9999997615814209,
+              "start": 14,
+              "end": 17
+            }
+          ]
+        },
+        "b": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9721989631652832,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$7",
+              "confidence": 0.9999983310699463,
+              "start": 14,
+              "end": 16
+            }
+          ]
+        }
+      },
+      "model": "fastino/gliner2-base-v1",
+      "inference_ms": 9.304624982178211
+    }
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "description": "The manufacturer or brand name only, excluding generic product nouns and surrounding words.",
+    "output": {
+      "evidence": {
+        "a": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9999420642852783,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$12",
+              "confidence": 1.0,
+              "start": 14,
+              "end": 17
+            }
+          ]
+        },
+        "b": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9999289512634277,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$7",
+              "confidence": 0.9999998807907104,
+              "start": 14,
+              "end": 16
+            }
+          ]
+        }
+      },
+      "model": "fastino/gliner2-base-v1",
+      "inference_ms": 130.2817570976913
+    }
+  },
+  {
+    "description": "Proper name of the company that manufactured this item. Do not include the word product.",
+    "output": {
+      "evidence": {
+        "a": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.9999990463256836,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$12",
+              "confidence": 1.0,
+              "start": 14,
+              "end": 17
+            }
+          ]
+        },
+        "b": {
+          "brand": [
+            {
+              "text": "Acme product",
+              "confidence": 0.999998927116394,
+              "start": 0,
+              "end": 12
+            }
+          ],
+          "price": [
+            {
+              "text": "$7",
+              "confidence": 1.0,
+              "start": 14,
+              "end": 16
+            }
+          ]
+        }
+      },
+      "model": "fastino/gliner2-base-v1",
+      "inference_ms": 53.909552982077
+    }
+  }
+]

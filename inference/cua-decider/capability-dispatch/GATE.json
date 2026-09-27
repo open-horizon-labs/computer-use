@@ -1,0 +1,281 @@
+{
+  "baseline": {
+    "passed": true,
+    "tests": 19,
+    "failures": 0,
+    "errors": 0,
+    "log": "test_ce_cap_001_extract_then_compare (test_dispatch.DispatchGates.test_ce_cap_001_extract_then_compare) ... ok\ntest_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) ... ok\ntest_changed_values_and_reverse_order (test_dispatch.DispatchGates.test_changed_values_and_reverse_order) ... ok\ntest_classification_maps_labels_only (test_dispatch.DispatchGates.test_classification_maps_labels_only) ... ok\ntest_conflicting_spans_are_unknown (test_dispatch.DispatchGates.test_conflicting_spans_are_unknown) ... ok\ntest_disabled_action_or_provider_failure_never_executes (test_dispatch.DispatchGates.test_disabled_action_or_provider_failure_never_executes) ... ok\ntest_exact_control_bypasses_models_and_binds_payload (test_dispatch.DispatchGates.test_exact_control_bypasses_models_and_binds_payload) ... ok\ntest_fabricated_offsets_do_not_ground_values (test_dispatch.DispatchGates.test_fabricated_offsets_do_not_ground_values) ... ok\ntest_fields_must_match_on_same_record (test_dispatch.DispatchGates.test_fields_must_match_on_same_record) ... ok\ntest_hybrid_extraction_and_classification_join_by_record (test_dispatch.DispatchGates.test_hybrid_extraction_and_classification_join_by_record) ... ok\ntest_id_and_serialization_order_are_not_evidence (test_dispatch.DispatchGates.test_id_and_serialization_order_are_not_evidence) ... ok\ntest_invalid_time_and_wrong_duration_units_rejected (test_dispatch.DispatchGates.test_invalid_time_and_wrong_duration_units_rejected) ... ok\ntest_known_failure_excludes_otherwise_unknown_record (test_dispatch.DispatchGates.test_known_failure_excludes_otherwise_unknown_record) ... ok\ntest_missing_evidence_is_not_no_match (test_dispatch.DispatchGates.test_missing_evidence_is_not_no_match) ... ok\ntest_provider_availability_does_not_change_capability (test_dispatch.DispatchGates.test_provider_availability_does_not_change_capability) ... ok\ntest_semantic_choice_still_requires_current_allowed_operation (test_dispatch.DispatchGates.test_semantic_choice_still_requires_current_allowed_operation) ... ok\ntest_tied_values_do_not_use_id_order (test_dispatch.DispatchGates.test_tied_values_do_not_use_id_order) ... ok\ntest_visual_only_not_sent_to_text_model (test_dispatch.DispatchGates.test_visual_only_not_sent_to_text_model) ... ok\ntest_wrong_sibling_operation_excluded (test_dispatch.DispatchGates.test_wrong_sibling_operation_excluded) ... ok\n\n----------------------------------------------------------------------\nRan 19 tests in 0.002s\n\nOK\n"
+  },
+  "mutations": {
+    "always_gliner2": {
+      "rejected": true,
+      "passed": false,
+      "tests": 1,
+      "failures": 8,
+      "errors": 0,
+      "log": "test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) ... \n  test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'kind': 'exact'}) ... FAIL\n  test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'type': 'text'}, 'count': {'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}]}) ... FAIL\n  test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'description': 'Account owner name', 'type': 'text'}, 'count': {'description': 'Units remaining', 'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}], 'shape': 'records'}) ... FAIL\n  test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'description': 'Account owner name', 'type': 'text'}, 'count': {'description': 'Units remaining', 'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}], 'shape': 'relations'}) ... FAIL\n  test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'description': 'Account owner name', 'type': 'text'}, 'count': {'description': 'Units remaining', 'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}], 'shape': 'long_spans'}) ... FAIL\n  test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'description': 'Account owner name', 'type': 'text'}, 'count': {'description': 'Units remaining', 'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}], 'language': 'es'}) ... FAIL\n  test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'kind': 'classify', 'labels': {'urgent': 'Needs immediate attention'}, 'label_actions': {'urgent': 'a'}}) ... FAIL\n  test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'kind': 'semantic'}) ... FAIL\n\n======================================================================\nFAIL: test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'kind': 'exact'})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 53, in test_ce_cap_002_complete_request_taxonomy\n    self.assertEqual(compile_plan(request)['models'], models)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['gliner2'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'gliner2'\n\n- ['gliner2']\n+ []\n\n======================================================================\nFAIL: test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'type': 'text'}, 'count': {'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}]})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 53, in test_ce_cap_002_complete_request_taxonomy\n    self.assertEqual(compile_plan(request)['models'], models)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['gliner2'] != ['gliner']\n\nFirst differing element 0:\n'gliner2'\n'gliner'\n\n- ['gliner2']\n?         -\n\n+ ['gliner']\n\n======================================================================\nFAIL: test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'description': 'Account owner name', 'type': 'text'}, 'count': {'description': 'Units remaining', 'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}], 'shape': 'records'})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 53, in test_ce_cap_002_complete_request_taxonomy\n    self.assertEqual(compile_plan(request)['models'], models)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['gliner2'] != ['gliner2.5']\n\nFirst differing element 0:\n'gliner2'\n'gliner2.5'\n\n- ['gliner2']\n+ ['gliner2.5']\n?          ++\n\n\n======================================================================\nFAIL: test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'description': 'Account owner name', 'type': 'text'}, 'count': {'description': 'Units remaining', 'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}], 'shape': 'relations'})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 53, in test_ce_cap_002_complete_request_taxonomy\n    self.assertEqual(compile_plan(request)['models'], models)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['gliner2'] != ['gliner2.5']\n\nFirst differing element 0:\n'gliner2'\n'gliner2.5'\n\n- ['gliner2']\n+ ['gliner2.5']\n?          ++\n\n\n======================================================================\nFAIL: test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'description': 'Account owner name', 'type': 'text'}, 'count': {'description': 'Units remaining', 'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}], 'shape': 'long_spans'})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 53, in test_ce_cap_002_complete_request_taxonomy\n    self.assertEqual(compile_plan(request)['models'], models)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['gliner2'] != ['gliner2.5']\n\nFirst differing element 0:\n'gliner2'\n'gliner2.5'\n\n- ['gliner2']\n+ ['gliner2.5']\n?          ++\n\n\n======================================================================\nFAIL: test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'snapshot_id': 'now', 'kind': 'match', 'operation': 'click', 'coverage_complete': True, 'fields': {'owner': {'description': 'Account owner name', 'type': 'text'}, 'count': {'description': 'Units remaining', 'type': 'number'}}, 'predicates': [{'field': 'owner', 'value': 'Morgan'}], 'order_by': [{'field': 'count', 'direction': 'asc'}], 'candidate_ids': ['first', 'second', 'third'], 'fallback_id': 'fallback', 'actions': [{'id': 'first', 'operation': 'click', 'evidence_text': 'Morgan 12'}, {'id': 'second', 'operation': 'click', 'evidence_text': 'Morgan 7'}, {'id': 'third', 'operation': 'click', 'evidence_text': 'Taylor 2'}, {'id': 'fallback', 'operation': 'click', 'evidence_text': 'Notify me'}], 'language': 'es'})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 53, in test_ce_cap_002_complete_request_taxonomy\n    self.assertEqual(compile_plan(request)['models'], models)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['gliner2'] != ['gliner2.5']\n\nFirst differing element 0:\n'gliner2'\n'gliner2.5'\n\n- ['gliner2']\n+ ['gliner2.5']\n?          ++\n\n\n======================================================================\nFAIL: test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'kind': 'classify', 'labels': {'urgent': 'Needs immediate attention'}, 'label_actions': {'urgent': 'a'}})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 53, in test_ce_cap_002_complete_request_taxonomy\n    self.assertEqual(compile_plan(request)['models'], models)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['gliner2'] != ['decide']\n\nFirst differing element 0:\n'gliner2'\n'decide'\n\n- ['gliner2']\n+ ['decide']\n\n======================================================================\nFAIL: test_ce_cap_002_complete_request_taxonomy (test_dispatch.DispatchGates.test_ce_cap_002_complete_request_taxonomy) (request={'kind': 'semantic'})\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 53, in test_ce_cap_002_complete_request_taxonomy\n    self.assertEqual(compile_plan(request)['models'], models)\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: Lists differ: ['gliner2'] != ['jev']\n\nFirst differing element 0:\n'gliner2'\n'jev'\n\n- ['gliner2']\n+ ['jev']\n\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nFAILED (failures=8)\n"
+    },
+    "first_candidate": {
+      "rejected": true,
+      "passed": false,
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "log": "test_ce_cap_001_extract_then_compare (test_dispatch.DispatchGates.test_ce_cap_001_extract_then_compare) ... FAIL\n\n======================================================================\nFAIL: test_ce_cap_001_extract_then_compare (test_dispatch.DispatchGates.test_ce_cap_001_extract_then_compare)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 60, in test_ce_cap_001_extract_then_compare\n    self.assertEqual(result['action_id'], 'second')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'first' != 'second'\n- first\n+ second\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nFAILED (failures=1)\n"
+    },
+    "always_fallback": {
+      "rejected": true,
+      "passed": false,
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "log": "test_ce_cap_001_extract_then_compare (test_dispatch.DispatchGates.test_ce_cap_001_extract_then_compare) ... FAIL\n\n======================================================================\nFAIL: test_ce_cap_001_extract_then_compare (test_dispatch.DispatchGates.test_ce_cap_001_extract_then_compare)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/Users/muness1/src/open-horizon-labs/homelab-infra/inference/cua-decider/capability-dispatch/test_dispatch.py\", line 60, in test_ce_cap_001_extract_then_compare\n    self.assertEqual(result['action_id'], 'second')\n    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 'fallback' != 'second'\n- fallback\n+ second\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nFAILED (failures=1)\n"
+    }
+  },
+  "regression_case": {
+    "id": "CE-CAP-001",
+    "request": {
+      "snapshot_id": "now",
+      "kind": "match",
+      "operation": "click",
+      "coverage_complete": true,
+      "fields": {
+        "owner": {
+          "description": "Account owner name",
+          "type": "text"
+        },
+        "count": {
+          "description": "Units remaining",
+          "type": "number"
+        }
+      },
+      "predicates": [
+        {
+          "field": "owner",
+          "value": "Morgan"
+        }
+      ],
+      "order_by": [
+        {
+          "field": "count",
+          "direction": "asc"
+        }
+      ],
+      "candidate_ids": [
+        "first",
+        "second",
+        "third"
+      ],
+      "fallback_id": "fallback",
+      "actions": [
+        {
+          "id": "first",
+          "operation": "click",
+          "evidence_text": "Morgan 12"
+        },
+        {
+          "id": "second",
+          "operation": "click",
+          "evidence_text": "Morgan 7"
+        },
+        {
+          "id": "third",
+          "operation": "click",
+          "evidence_text": "Taylor 2"
+        },
+        {
+          "id": "fallback",
+          "operation": "click",
+          "evidence_text": "Notify me"
+        }
+      ]
+    },
+    "observed": {
+      "snapshot_id": "now",
+      "action_authorized": true,
+      "plan": {
+        "steps": [
+          {
+            "model": "gliner2",
+            "method": "extract",
+            "fields": {
+              "owner": {
+                "description": "Account owner name",
+                "type": "text"
+              },
+              "count": {
+                "description": "Units remaining",
+                "type": "number"
+              }
+            },
+            "shape": "spans",
+            "language": "en"
+          }
+        ],
+        "reducer": "match",
+        "models": [
+          "gliner2"
+        ]
+      },
+      "provider_outputs": [
+        {
+          "evidence": {
+            "first": {
+              "owner": [
+                {
+                  "text": "Morgan",
+                  "start": 0,
+                  "end": 6,
+                  "confidence": 0.99
+                }
+              ],
+              "count": [
+                {
+                  "text": "12",
+                  "start": 7,
+                  "end": 9,
+                  "confidence": 0.99
+                }
+              ]
+            },
+            "second": {
+              "owner": [
+                {
+                  "text": "Morgan",
+                  "start": 0,
+                  "end": 6,
+                  "confidence": 0.99
+                }
+              ],
+              "count": [
+                {
+                  "text": "7",
+                  "start": 7,
+                  "end": 8,
+                  "confidence": 0.99
+                }
+              ]
+            },
+            "third": {
+              "owner": [
+                {
+                  "text": "Taylor",
+                  "start": 0,
+                  "end": 6,
+                  "confidence": 0.99
+                }
+              ],
+              "count": [
+                {
+                  "text": "2",
+                  "start": 7,
+                  "end": 8,
+                  "confidence": 0.99
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "evidence": {
+        "first": {
+          "owner": [
+            {
+              "text": "Morgan",
+              "start": 0,
+              "end": 6,
+              "confidence": 0.99
+            }
+          ],
+          "count": [
+            {
+              "text": "12",
+              "start": 7,
+              "end": 9,
+              "confidence": 0.99
+            }
+          ]
+        },
+        "second": {
+          "owner": [
+            {
+              "text": "Morgan",
+              "start": 0,
+              "end": 6,
+              "confidence": 0.99
+            }
+          ],
+          "count": [
+            {
+              "text": "7",
+              "start": 7,
+              "end": 8,
+              "confidence": 0.99
+            }
+          ]
+        },
+        "third": {
+          "owner": [
+            {
+              "text": "Taylor",
+              "start": 0,
+              "end": 6,
+              "confidence": 0.99
+            }
+          ],
+          "count": [
+            {
+              "text": "2",
+              "start": 7,
+              "end": 8,
+              "confidence": 0.99
+            }
+          ]
+        }
+      },
+      "status": "selected",
+      "action_id": "second",
+      "reason": "unique_match",
+      "checks": {
+        "first": {
+          "state": "eligible",
+          "values": {
+            "count": "12",
+            "owner": "morgan"
+          },
+          "gaps": []
+        },
+        "second": {
+          "state": "eligible",
+          "values": {
+            "count": "7",
+            "owner": "morgan"
+          },
+          "gaps": []
+        },
+        "third": {
+          "state": "excluded",
+          "values": {
+            "count": "2",
+            "owner": "taylor"
+          },
+          "gaps": []
+        }
+      },
+      "decision_ms": 0.10554198524914682,
+      "binding_digest": "a2af85e7543210b1906ddef6449019e25c8adfd403a84667927a21826fc4b14e"
+    },
+    "approved": {
+      "action_id": "second",
+      "models": [
+        "gliner2"
+      ],
+      "method": "extract"
+    }
+  },
+  "active_case": {
+    "id": "CE-CAP-002",
+    "check": "test_ce_cap_002_complete_request_taxonomy"
+  },
+  "semantic_review": "Separate capable-model review recorded in SKETCH-REVIEW.json"
+}

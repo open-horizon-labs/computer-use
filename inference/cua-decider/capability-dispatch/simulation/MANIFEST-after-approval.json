@@ -1,0 +1,16 @@
+{
+  "sha256": {
+    "simulation.py": "d375baf8a6e522527e788aefab773b04246975026f61ddc9abffb58350495414",
+    "test_dispatch.py": "0322855fb6ff34bb235a4fd84ceb886fcf0ae63e62da7fca26a1b7ef622e7fdb",
+    "simulate_live.py": "fe14d6e479e40202612c04d400bfd1b7f058226038ff9828969cf0613b969c99",
+    "dispatch.py": "18e32ae8f5957005626a8478fe0c730c77eff54228dcd4ad0592b6d8d94b9679",
+    "run_booking.py": "a9584433530a3442d8d8842cd49d5a04f0ec123adb194d96d2d7fce00309a30c",
+    "compare_jev.py": "d660d88375feefbd0736ea82dcf9e29ba1676e266bc0d496e2654dbd6c69c5ff",
+    "providers.py": "d9cff394d2576458df72a60796c238abb672a76c21aebcebec759589c3570b35",
+    "gate.py": "fba7a53f8c9909738740831407e987f2f49e6ef187e874e2f25af5c02ed221fe",
+    "simulation_gate.py": "a33b3d9ccd324b3daff1b1a57e27721889207d8b92ec61ff6ae6daf0b0c37a84",
+    "SKETCH.md": "1bfc57f798571dd7c3d47afb9ab3255c1de93236ac05716a3250b5d4185dd511",
+    "COUNTEREXAMPLES.json": "9aa4f4560c2b32746b0420f23b1d1fc9770538cdf3a943e77a549356ffc568cd",
+    "simulation/JEV-COMPARISON.md": "7e304dff8a5d9a171fdb160a4254a14011373e880d3eb70e335d40db7e707468"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "purpose": "Post-simulation source/artifact fingerprints; does not retroactively describe baseline execution",
+  "sha256": {
+    "simulation.py": "d375baf8a6e522527e788aefab773b04246975026f61ddc9abffb58350495414",
+    "test_dispatch.py": "0322855fb6ff34bb235a4fd84ceb886fcf0ae63e62da7fca26a1b7ef622e7fdb",
+    "simulate_live.py": "2b0001d2281c3f0fe8364791f53987fcec41f0b9442b4f8eba0fd1eb1b1e8074",
+    "dispatch.py": "fa30d370937bb8f06852b4c1f66883df502d8fa53ef8148d53d0523345a331e6",
+    "run_booking.py": "a9584433530a3442d8d8842cd49d5a04f0ec123adb194d96d2d7fce00309a30c",
+    "providers.py": "8a8f5e8b9f593d860be2190a2011a87fa7e83470feb580de32fa99d52cc32fc7",
+    "gate.py": "fba7a53f8c9909738740831407e987f2f49e6ef187e874e2f25af5c02ed221fe",
+    "simulation_gate.py": "ee26b581d51f1171e41e04e0f1bf27a771426f126f5c4dfee7f3ab2e9b49483b",
+    "SKETCH.md": "f9d9d8c3a32e6d2ccbe1650bd0a5d4472dbbee14230df04231348c03c242c6fa",
+    "COUNTEREXAMPLES.json": "db0e4e3fb9c2a8b3d8efd40ac6a2e83387c7e809694e67d06b396df45eb419dc",
+    "simulation/REPORT.md": "0179a888cb29e13a14287fdcdb3f5c1cb688f31f06389b9f8fea1290892f126f",
+    "simulation/PROPOSED-SKETCH.md": "b60654199970fb372232f1e7f1dd3c1e213f4dc20c4faaa1d197cbd53a379ef6"
+  }
+}

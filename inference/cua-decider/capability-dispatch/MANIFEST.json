@@ -1,0 +1,12 @@
+{
+  "current_source_sha256": {
+    "test_dispatch.py": "85c18b74c6c21367a051334d094215aa7e3d4926006d264a5a3c74576b910261",
+    "dispatch.py": "072a99e0aecb611e081673a99e7f1fce4585ab0262ba2684754ae960e92bcddd",
+    "run_booking.py": "a9584433530a3442d8d8842cd49d5a04f0ec123adb194d96d2d7fce00309a30c",
+    "providers.py": "e1f645171e613a14e59665783fc6787db83d18e43ef8e1b2487f5bed86458c81",
+    "gate.py": "fba7a53f8c9909738740831407e987f2f49e6ef187e874e2f25af5c02ed221fe"
+  },
+  "request_sha256": "1f57ea9541059a076fcb7ecb86c1e21c7f40d5412564f30dc2b3058fa0f81128",
+  "live_trace_sha256": "f07fbc10748b42c24d6082472c6ae733aa8a8231782aa134a67a95f265ec270b",
+  "live_source_note": "Live run preceded disabled-action/provider-error guards. Current projection was replayed over all 35 live decisions, with identical selected IDs; see REPLAY.json."
+}

@@ -1,0 +1,482 @@
+{
+  "reviewer": "Current Codex assistant; capable-model sketch review, same agent as implementer; not an independent second reviewer",
+  "sketch": "SKETCH.md S4",
+  "policy_change_authority": "User corrections CE-CAP-001 and CE-CAP-002; review adds no policy",
+  "active": {
+    "id": "CE-CAP-002",
+    "verdict": "pass",
+    "clauses": [
+      "S4.1",
+      "S4.2.1",
+      "S4.2.2"
+    ],
+    "reason": "Requests distinguish identity span extraction, described fields, structured/relational or multilingual evidence, category mapping and semantic action choice. Exact-control path bypasses inference. Dispatch tests cover every requested family plus hybrid evidence steps; no universal model or implicit version ladder."
+  },
+  "retained_regressions": [
+    {
+      "id": "CE-CAP-001",
+      "verdict": "pass",
+      "clauses": [
+        "S4.1 described field match",
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5"
+      ],
+      "reason": "Morgan/Taylor inventory replay uses explicit caller owner/count schema. Both Morgan rows satisfy identity, 7 sorts before 12, and Taylor 2 is excluded. Extraction provider returns grounded fields; the reducer picks second. Renaming/order and reversed ranking tests preserve caller semantics. Whole-action classification and fixture constants are absent from the engine."
+    }
+  ],
+  "inherited_boundary_review": {
+    "verdict": "pass for tested inputs",
+    "clauses": [
+      "S4.2.3",
+      "S4.2.4",
+      "S4.2.5",
+      "S4.2.6"
+    ],
+    "reason": "Test cases preserve same-record evidence and exact operation; unknown or conflicting possible competitors and ties defer; known mismatches can be excluded; nonexistent class/action IDs, wrong source offsets, disabled and stale actions are rejected. Typed duration rejects clock time. These checks follow the current sketch, not a new policy invented from tests."
+  },
+  "live_cases": [
+    {
+      "seed": 100,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "All live candidate rows show Sam, while caller requests Alex; all excluded by an explicit name mismatch, so the offered waitlist is the authorized fallback.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "waitlist"
+        ],
+        "outcome": "waitlist"
+      }
+    },
+    {
+      "seed": 101,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "3",
+          "confirm"
+        ],
+        "outcome": "3"
+      }
+    },
+    {
+      "seed": 102,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action selects earliest eligible Alex 30-minute record. On explicit slot-loss observation, current controls omit the lost record; extraction and comparisons select the next earliest remaining eligible option. No stale action ID is reused.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "0",
+          "1"
+        ],
+        "outcome": "1"
+      }
+    },
+    {
+      "seed": 103,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "3",
+          "confirm"
+        ],
+        "outcome": "3"
+      }
+    },
+    {
+      "seed": 104,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "All live candidate rows show Sam, while caller requests Alex; all excluded by an explicit name mismatch, so the offered waitlist is the authorized fallback.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "waitlist"
+        ],
+        "outcome": "waitlist"
+      }
+    },
+    {
+      "seed": 105,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "2",
+          "confirm"
+        ],
+        "outcome": "2"
+      }
+    },
+    {
+      "seed": 106,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action selects earliest eligible Alex 30-minute record. On explicit slot-loss observation, current controls omit the lost record; extraction and comparisons select the next earliest remaining eligible option. No stale action ID is reused.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "1",
+          "2"
+        ],
+        "outcome": "2"
+      }
+    },
+    {
+      "seed": 107,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "4",
+          "confirm"
+        ],
+        "outcome": "4"
+      }
+    },
+    {
+      "seed": 108,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "All live candidate rows show Sam, while caller requests Alex; all excluded by an explicit name mismatch, so the offered waitlist is the authorized fallback.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "waitlist"
+        ],
+        "outcome": "waitlist"
+      }
+    },
+    {
+      "seed": 109,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "1",
+          "confirm"
+        ],
+        "outcome": "1"
+      }
+    },
+    {
+      "seed": 110,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action selects earliest eligible Alex 30-minute record. On explicit slot-loss observation, current controls omit the lost record; extraction and comparisons select the next earliest remaining eligible option. No stale action ID is reused.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "4",
+          "1"
+        ],
+        "outcome": "1"
+      }
+    },
+    {
+      "seed": 111,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "0",
+          "confirm"
+        ],
+        "outcome": "0"
+      }
+    },
+    {
+      "seed": 112,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "All live candidate rows show Sam, while caller requests Alex; all excluded by an explicit name mismatch, so the offered waitlist is the authorized fallback.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "waitlist"
+        ],
+        "outcome": "waitlist"
+      }
+    },
+    {
+      "seed": 113,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "0",
+          "confirm"
+        ],
+        "outcome": "0"
+      }
+    },
+    {
+      "seed": 114,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action selects earliest eligible Alex 30-minute record. On explicit slot-loss observation, current controls omit the lost record; extraction and comparisons select the next earliest remaining eligible option. No stale action ID is reused.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "1",
+          "0"
+        ],
+        "outcome": "0"
+      }
+    },
+    {
+      "seed": 115,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "1",
+          "confirm"
+        ],
+        "outcome": "1"
+      }
+    },
+    {
+      "seed": 116,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "All live candidate rows show Sam, while caller requests Alex; all excluded by an explicit name mismatch, so the offered waitlist is the authorized fallback.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "waitlist"
+        ],
+        "outcome": "waitlist"
+      }
+    },
+    {
+      "seed": 117,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "1",
+          "confirm"
+        ],
+        "outcome": "1"
+      }
+    },
+    {
+      "seed": 118,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action selects earliest eligible Alex 30-minute record. On explicit slot-loss observation, current controls omit the lost record; extraction and comparisons select the next earliest remaining eligible option. No stale action ID is reused.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "0",
+          "1"
+        ],
+        "outcome": "1"
+      }
+    },
+    {
+      "seed": 119,
+      "verdict": "pass",
+      "clauses": [
+        "S4.2.3",
+        "S4.2.4",
+        "S4.2.5",
+        "S4.2.6",
+        "S4.2.7"
+      ],
+      "reason": "First action is the earliest eligible Alex 30-minute record. Current confirmation heading provides fresh name/time/duration, each agreeing with the selected record; only then is the current confirmation button clicked.",
+      "independent_outcome": {
+        "done": true,
+        "correct": true,
+        "mistakes": 0,
+        "actions": [
+          "1",
+          "confirm"
+        ],
+        "outcome": "1"
+      }
+    }
+  ],
+  "limitations": [
+    "No independent reviewer",
+    "No runtime controller contract-generation evaluation",
+    "Other model families tested as dispatch/provider contracts, not live inference",
+    "Long input and unsupported provider qualification still open",
+    "Fresh independent regeneration not performed"
+  ]
+}

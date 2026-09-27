@@ -1,0 +1,251 @@
+{
+  "cases": [
+    {
+      "seed": 100,
+      "turn": 0,
+      "expected_action_id": "a6",
+      "actual_action_id": "a6",
+      "passed": true
+    },
+    {
+      "seed": 101,
+      "turn": 0,
+      "expected_action_id": "a4",
+      "actual_action_id": "a4",
+      "passed": true
+    },
+    {
+      "seed": 101,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 102,
+      "turn": 0,
+      "expected_action_id": "a1",
+      "actual_action_id": "a1",
+      "passed": true
+    },
+    {
+      "seed": 102,
+      "turn": 1,
+      "expected_action_id": "a3",
+      "actual_action_id": "a3",
+      "passed": true
+    },
+    {
+      "seed": 103,
+      "turn": 0,
+      "expected_action_id": "a1",
+      "actual_action_id": "a1",
+      "passed": true
+    },
+    {
+      "seed": 103,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 104,
+      "turn": 0,
+      "expected_action_id": "a6",
+      "actual_action_id": "a6",
+      "passed": true
+    },
+    {
+      "seed": 105,
+      "turn": 0,
+      "expected_action_id": "a2",
+      "actual_action_id": "a2",
+      "passed": true
+    },
+    {
+      "seed": 105,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 106,
+      "turn": 0,
+      "expected_action_id": "a1",
+      "actual_action_id": "a1",
+      "passed": true
+    },
+    {
+      "seed": 106,
+      "turn": 1,
+      "expected_action_id": "a2",
+      "actual_action_id": "a2",
+      "passed": true
+    },
+    {
+      "seed": 107,
+      "turn": 0,
+      "expected_action_id": "a5",
+      "actual_action_id": "a5",
+      "passed": true
+    },
+    {
+      "seed": 107,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 108,
+      "turn": 0,
+      "expected_action_id": "a6",
+      "actual_action_id": "a6",
+      "passed": true
+    },
+    {
+      "seed": 109,
+      "turn": 0,
+      "expected_action_id": "a4",
+      "actual_action_id": "a4",
+      "passed": true
+    },
+    {
+      "seed": 109,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 110,
+      "turn": 0,
+      "expected_action_id": "a4",
+      "actual_action_id": "a4",
+      "passed": true
+    },
+    {
+      "seed": 110,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 111,
+      "turn": 0,
+      "expected_action_id": "a2",
+      "actual_action_id": "a2",
+      "passed": true
+    },
+    {
+      "seed": 111,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 112,
+      "turn": 0,
+      "expected_action_id": "a6",
+      "actual_action_id": "a6",
+      "passed": true
+    },
+    {
+      "seed": 113,
+      "turn": 0,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 113,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 114,
+      "turn": 0,
+      "expected_action_id": "a2",
+      "actual_action_id": "a2",
+      "passed": true
+    },
+    {
+      "seed": 114,
+      "turn": 1,
+      "expected_action_id": "a4",
+      "actual_action_id": "a4",
+      "passed": true
+    },
+    {
+      "seed": 115,
+      "turn": 0,
+      "expected_action_id": "a5",
+      "actual_action_id": "a5",
+      "passed": true
+    },
+    {
+      "seed": 115,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 116,
+      "turn": 0,
+      "expected_action_id": "a6",
+      "actual_action_id": "a6",
+      "passed": true
+    },
+    {
+      "seed": 117,
+      "turn": 0,
+      "expected_action_id": "a5",
+      "actual_action_id": "a5",
+      "passed": true
+    },
+    {
+      "seed": 117,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 118,
+      "turn": 0,
+      "expected_action_id": "a3",
+      "actual_action_id": "a3",
+      "passed": true
+    },
+    {
+      "seed": 118,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 119,
+      "turn": 0,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    },
+    {
+      "seed": 119,
+      "turn": 1,
+      "expected_action_id": "a0",
+      "actual_action_id": "a0",
+      "passed": true
+    }
+  ],
+  "passed": 35,
+  "failed": 0
+}
