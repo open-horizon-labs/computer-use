@@ -26,7 +26,7 @@ For extraction, describe each field's meaning. Keep desired values in caller pre
 
 ## Select, bind, verify
 
-Call `Engine.decide` with providers configured by the integration. Exact-control and successful specialist paths need no generic call. Missing evidence or approved boundary uncertainty can invoke Jev once while preserving known exclusions. Overlapping text does not itself establish equality. Ties or missing scope do not grant new permission.
+Call `Strangler.from_config` with the configured providers, then `decide` with the typed request and current snapshot. The active config sends only `described-span-match/en` to the qualified GLiNER2 extractor and typed matcher. Exact-control and successful specialist paths need no generic call. Missing evidence or approved boundary uncertainty can invoke Jev once while preserving known exclusions. Overlapping text does not itself establish equality. Ties or missing scope do not grant new permission.
 
 Before execution, validate a fresh snapshot and the unchanged request with `execute_bound`. Keep model outputs separate from tool arguments. `reobserve` and `abstain` never execute. Independently observe the result before reporting success or retrying. Bound attempts and reconcile uncertain side effects.
 

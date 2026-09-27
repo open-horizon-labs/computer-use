@@ -1,13 +1,13 @@
 {
   "contract": "described-span-match/en",
-  "stage": "shadow",
+  "stage": "active",
   "incumbent": "jev",
   "specialist": "gliner2",
   "promotion": {
-    "authorized_by": "User instruction: try the CESS-governed specialist strangler (2026-09-27)",
+    "authorized_by": "User instruction: switch described-span-match specialist to GLiNER2 in the dispatcher (2026-09-27)",
     "accepted_ce": "CE-CAP-001",
     "qualification_report": "inference/cua-decider/capability-dispatch/STRANGLER-TRIAL.md",
     "checkpoint": "sha256:afd0555f56b8f2e357e4544c0f81ffa80c90cb05f935affc5afff8e3334bc68f"
   },
-  "authority_note": "Shadow mode only. Active mode requires a user authorization, an accepted CESS counterexample reference, a qualification report, and exact checkpoint identity. Disagreements remain review proposals until independent outcome verification and CESS review."
+  "authority_note": "Active only for described-span-match/en requests with caller-described span fields and typed predicates or ordering. All other requests retain the existing dispatcher route. Provider failure, missing/conflicting evidence, ties, or incomplete scope recover through Jev once; unresolved authority or scope defers. This promotion is qualified only on the saved booking fixture described in STRANGLER-TRIAL.md and does not install or alter the Mac's standalone select-fleet process."
 }

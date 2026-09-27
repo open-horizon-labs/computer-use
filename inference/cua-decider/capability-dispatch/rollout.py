@@ -79,7 +79,14 @@ class Strangler:
             return Engine(ordinary).decide(request, current_snapshot)
         specialist_providers = {k: v for k, v in self.providers.items() if k != 'incumbent_jev'}
         if self.stage == 'active':
-            specialist = Engine(specialist_providers).decide(request, current_snapshot)
+            # Keep Jev available as the single recovery path for incomplete or
+            # conflicting specialist evidence. It is not the primary route for
+            # requests inside this qualified contract.
+            active_providers = dict(specialist_providers)
+            incumbent = self.providers.get('incumbent_jev', self.providers.get('jev'))
+            if incumbent is not None:
+                active_providers['jev'] = incumbent
+            specialist = Engine(active_providers).decide(request, current_snapshot)
             return {**specialist, 'rollout': {'contract': CONTRACT, 'stage': 'active'}}
 
         # Jev stays authoritative during shadow. The specialist sees the same

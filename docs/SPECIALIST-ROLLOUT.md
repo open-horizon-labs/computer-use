@@ -1,6 +1,6 @@
 # CESS governed Jev specialist rollout
 
-Status: a GLiNER2 described-field contract has completed shadow comparison and active saved-request replay. `ROLLOUT.json` stays `shadow` by default. The experimental `Strangler` active path requires a reviewed promotion record and retains Jev recovery. No installed Cua service or stock Driver was switched.
+Status: a GLiNER2 described-field contract completed shadow comparison and active saved-request replay. After the user's instruction to switch this role, `ROLLOUT.json` activates the narrow contract in the repo dispatcher and retains Jev recovery. The installed Mac `select-fleet` process and stock Cua Driver have not been switched or modified.
 
 ## Start with tasks Jev already handles
 
@@ -39,7 +39,7 @@ S is the current capability sketch and approved contract boundaries. P is the di
 
 For each failure: retain the request and observed effect; distinguish bad projection from missing policy; repair existing-policy violations or propose the smallest policy change; rerun active case and R; review against S. Extra epochs do not authorize a scope change. Newly discovered evaluation cases may join training only after that evaluation is retired and a fresh holdout is frozen.
 
-The first slice is `described-span-match/en`: caller-described short English fields extracted by GLiNER2 and matched by the typed reducer. The shadow replay got 35/35 saved booking decisions across 20 tasks; Jev alone got 21/35. The active saved-request replay reproduced 35/35 and checked the current request binding. See [the trial report](../inference/cua-decider/capability-dispatch/STRANGLER-TRIAL.md). The underlying corpus is reused and its steps are correlated, so this qualifies only the narrow experimental route. The default remains shadow. Next, capture fresh independently verified Driver outcomes for this same contract before changing the default or broadening the scope.
+The first slice is `described-span-match/en`: caller-described short English fields extracted by GLiNER2 and matched by the typed reducer. The shadow replay got 35/35 saved booking decisions across 20 tasks; Jev alone got 21/35. The active saved-request replay reproduced 35/35 and checked the current request binding. See [the trial report](../inference/cua-decider/capability-dispatch/STRANGLER-TRIAL.md) and [working recipe](../inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). The underlying corpus is reused and its steps are correlated, so the active route remains limited to this narrow contract. Capture fresh independently verified Driver outcomes before broadening it.
 
 ## Proposed counterexamples for the rollout boundary
 
@@ -52,6 +52,6 @@ These are rollout design cases, not automatic additions to the accepted policy a
 
 ## First experiment outcome
 
-The [precision comparison](../experiments/decide-precision-2026-09-27/RESULTS.md) did not qualify a broad Decide compatibility classifier for takeover. Six epochs, descriptions and 41 reviewed negative replacements did not improve the original pairwise precision. No calibration policy qualified, and candidate-by-candidate scoring was slower than Jev. Use these failures to prioritize a narrow, verified contract with a cheaper one-call formulation; none of these checkpoints is active.
+The [precision comparison](../experiments/decide-precision-2026-09-27/RESULTS.md) did not qualify a broad Decide compatibility classifier for takeover. Six epochs, descriptions and 41 reviewed negative replacements did not improve the original pairwise precision. No calibration policy qualified, and candidate-by-candidate scoring was slower than Jev. The tested Decide checkpoints remain inactive; the qualified GLiNER2 route is a separate extraction-plus-matching specialist.
 
-The separate [GLiNER2 strangler trial](../inference/cua-decider/capability-dispatch/STRANGLER-TRIAL.md) did qualify one experimental role on the saved booking corpus. Its shadow and active modes are executable in `inference/cua-decider/capability-dispatch/rollout.py`; `ROLLOUT.json` stays shadow by default until fresh Driver outcomes expand the evidence.
+The separate [GLiNER2 strangler trial](../inference/cua-decider/capability-dispatch/STRANGLER-TRIAL.md) qualified one experimental role on the saved booking corpus. Its shadow and active modes are executable in `inference/cua-decider/capability-dispatch/rollout.py`; `ROLLOUT.json` now activates only that contract. The standalone Fleet selector and installed Driver still require a runtime integration to use this repo dispatcher.

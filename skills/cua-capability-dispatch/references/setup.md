@@ -104,8 +104,8 @@ Existing Fleet users can omit direct keys/files and set `TYPESAFE_CONNECT_SSH` t
 
 ## 4. Connect the stock driver
 
-Use the stock computer-use skill and driver to observe the actual desktop. Build the typed request from the fresh observation. Import `Engine` and `execute_bound` from `inference/cua-decider/capability-dispatch/dispatch.py`; inject configured providers. The examples in `simulation.py` show request shapes; `run_booking.py` is a task-specific integration example, not a general API server.
+Use the stock computer-use skill and driver to observe the actual desktop. Build the typed request from the fresh observation. Configure `RemoteSpans` with a cached `fastino/gliner2-base-v1` CUDA worker and `FleetGeneric` with the Jev/Qwen selector. Import `Strangler` from `inference/cua-decider/capability-dispatch/rollout.py` and `execute_bound` from `dispatch.py`; load `ROLLOUT.json` so only the qualified described-English-span contract uses GLiNER2, with Jev as one recovery call. See the [working recipe](../../../inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). The examples in `simulation.py` show request shapes; `run_booking.py` is a task-specific integration example, not a general API server.
 
-Call `Engine.decide(request, current_snapshot)`. Before any action, obtain a current snapshot and pass the unchanged request and selection through `execute_bound` with a driver callback. Independently verify the result. Keep one generic selector process per task; close it after the task and do not share feedback state across independent tasks.
+Call `Strangler.from_config(providers).decide(request, current_snapshot)`. Before any action, obtain a current snapshot and pass the unchanged request and selection through `execute_bound` with a driver callback. Independently verify the result. Keep one generic selector process per task; close it after the task and do not share feedback state across independent tasks.
 
 The controller must bind and verify: installing this skill alone does not cause tool calls to use the dispatcher. A one-call hosted API is not deployed by this repository.

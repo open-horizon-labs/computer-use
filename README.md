@@ -41,7 +41,7 @@ export CUA_CAPABILITY_ROOT="$PWD"
 python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 ```
 
-The offline check needs only Python 3.10+. For real inference, follow the [setup reference](skills/cua-capability-dispatch/references/setup.md): provision a cached GLiNER2 CUDA worker, configure `CUA_SPAN_COMMAND`, configure the Jev/Qwen selector with `CUA_SELECTOR_COMMAND` and runtime credential access, then connect `Engine` to the stock driver. Provider setup is explicit; no services are deployed by installing the skill.
+The offline check needs only Python 3.10+. For real inference, follow the [setup reference](skills/cua-capability-dispatch/references/setup.md): provision a cached GLiNER2 CUDA worker, configure `CUA_SPAN_COMMAND`, configure the Jev/Qwen selector with `CUA_SELECTOR_COMMAND` and runtime credential access, then connect the dispatcher to the stock driver. The active `described-span-match/en` route and measured inference recipe are documented in [WORKING-RECIPE.md](inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). Installing the skill does not deploy services or modify the standalone Fleet selector.
 
 ## Jev API and endpoint setup
 

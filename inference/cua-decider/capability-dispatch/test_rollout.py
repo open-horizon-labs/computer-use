@@ -46,6 +46,11 @@ class StranglerChecks(unittest.TestCase):
         structured = copy.deepcopy(self.request); structured['shape'] = 'records'
         self.assertFalse(applies(structured))
 
+    def test_repo_config_activates_only_the_qualified_contract(self):
+        policy = Strangler.from_config(self.providers)
+        self.assertEqual(policy.stage, 'active')
+        self.assertTrue(applies(self.request))
+
     def test_active_takeover_requires_explicit_review_record(self):
         with self.assertRaises(ValueError):
             Strangler(self.providers, stage='active')
@@ -68,6 +73,16 @@ class StranglerChecks(unittest.TestCase):
         self.assertEqual(result['action_id'], 'b')
         self.assertEqual(result['rollout']['stage'], 'active')
         self.assertEqual(self.calls, ['gliner2'])
+
+    def test_active_incomplete_scope_consults_jev_but_still_defers(self):
+        promotion = {'authorized_by': 'user', 'accepted_ce': 'CE-CAP-001',
+                     'qualification_report': 'experiments/decide-precision-2026-09-27/RESULTS.md',
+                     'checkpoint': 'sha256:' + 'a' * 64}
+        request = {**self.request, 'coverage_complete': False}
+        result = Strangler(self.providers, stage='active', promotion=promotion).decide(request, 's1')
+        self.assertFalse(result['action_authorized'])
+        self.assertEqual(result['reason'], 'generic_choice_cannot_resolve_missing_authority_or_scope')
+        self.assertEqual(self.calls, ['gliner2', 'jev'])
 
 
 if __name__ == '__main__':

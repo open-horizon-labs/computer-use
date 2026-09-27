@@ -1,6 +1,6 @@
 # CESS strangler trial: described span matching
 
-This is the first executable specialist takeover cohort. The existing CESS sketch sends caller-described short English fields to GLiNER2, compares grounded values within their source control, and binds one current action. This trial wrapped that route in an explicit Jev shadow/active transition.
+This is the first executable specialist takeover cohort. The existing CESS sketch sends caller-described short English fields to GLiNER2, compares grounded values within their source control, and binds one current action. This trial wrapped that route in an explicit Jev shadow/active transition. Following the user's switch instruction, `ROLLOUT.json` now activates this narrow contract in the repo dispatcher; no installed Cua service or stock Driver was switched by this repo change.
 
 ## Shadow result
 
@@ -18,7 +18,7 @@ Warm decision latency excludes GLiNER2 model startup (4.58 seconds). The 35 step
 
 ## Active replay
 
-The promotion record binds this cohort to accepted CE-CAP-001, this report, and the aggregate SHA-256 of the exact cached `fastino/gliner2-base-v1` checkpoint. `run_strangler_active.py` explicitly invoked `stage='active'` on the saved decisions. It selected 35/35 recorded actions across all 20 tasks, with 35/35 IDs still bound to their request snapshot. It did not issue desktop actions. The tracked default in `ROLLOUT.json` remains `shadow`; a caller must explicitly choose active mode for this request contract.
+The promotion record binds this cohort to accepted CE-CAP-001, this report, and the aggregate SHA-256 of the exact cached `fastino/gliner2-base-v1` checkpoint. `run_strangler_active.py` explicitly invoked `stage='active'` on the saved decisions. It selected 35/35 recorded actions across all 20 tasks, with 35/35 IDs still bound to their request snapshot. It did not issue desktop actions. The tracked default in `ROLLOUT.json` is now `active` for this request contract; see [the working recipe](WORKING-RECIPE.md) for provider setup and integration boundaries.
 
 In active mode the specialist's valid unique match or authorized explicit fallback becomes the returned decision. Missing evidence, provider errors, and ambiguous matches go to Jev once under S4.3. All requests outside this contract keep the existing dispatcher behavior. `Strangler` never executes actions. The caller must still revalidate and execute through stock Cua Driver, then independently check progress.
 
