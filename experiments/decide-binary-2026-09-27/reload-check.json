@@ -1,0 +1,23 @@
+{
+  "reload": {
+    "correct": 157,
+    "n": 200,
+    "seconds": 7.883182714926079,
+    "false_positive": 14,
+    "false_negative": 29
+  },
+  "prediction_agreement": 200,
+  "n": 200,
+  "versions": {
+    "gliner2": "2.0.0",
+    "torch": "2.14.0+cu130",
+    "transformers": "5.17.0",
+    "peft": "0.21.0"
+  },
+  "reversed_label_order_agreement_32": 32,
+  "adapter_sha256": {
+    "adapter/final/adapter_model.safetensors": "e46a1c29dc235a7528cf13828532b574e0d2115066e55092849d162aaefbd686",
+    "adapter/final/README.md": "2ba4e08b99a6e10e7db9614eee5aabc6bde258589278a1e128f2fe28f631b1b6",
+    "adapter/final/adapter_config.json": "39f9db8ced6c0f623382ec8dc37af9855e62d23f82ddcd897a1d429cb607ed1b"
+  }
+}
