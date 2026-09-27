@@ -54,6 +54,54 @@ The included selector supports runtime `TYPESAFE_API_KEY`/`QWEN_API_KEY`, creden
 
 Original GLiNER, structured/relational GLiNER2.5 and Decide are dispatch contracts requiring qualified live adapters, not automatically installed services. Do not infer complete multi-model deployment from a successful skill install.
 
+### Jev: API key, endpoint and model
+
+Obtain a Jev API key through your [TypeSafe account](https://console.typesafe.ai) or organization administrator. This is a TypeSafe key, not an OpenAI or Qwen key. The hosted API uses bearer authentication and `POST /v1/systemone`; see the [official API reference](https://api.typesafe.ai/docs).
+
+| Setting | Value / purpose |
+|---|---|
+| `TYPESAFE_API_KEY` | Jev API key supplied at runtime |
+| `TYPESAFE_API_KEY_FILE` | Alternative: absolute path to a file containing only the key |
+| `TYPESAFE_BASE_URL` | `https://api.typesafe.ai` (SDK default; no `/v1` suffix) |
+| `TYPESAFE_DEFAULT_MODEL` | `jev-latest` (SDK default); use an available model ID to pin a version |
+
+The SDK appends `/v1/systemone`. Do not set the base URL to the full endpoint or to your local Qwen server. There is no separate Jev “endpoint key”: the TypeSafe API key authenticates requests to this endpoint. The adapter checks the direct key first, then the key file, then optional Fleet SSH retrieval.
+
+Recommended file-based configuration (replace the path with your existing secret file):
+
+```sh
+export TYPESAFE_API_KEY_FILE="$HOME/.config/computer-use/jev-api-key"
+export TYPESAFE_BASE_URL='https://api.typesafe.ai'
+export TYPESAFE_DEFAULT_MODEL='jev-latest'
+```
+
+Store only the key in that file, outside the checkout, with permissions limited to your user (`chmod 600`). Alternatively, export `TYPESAFE_API_KEY` from your secret manager into the process environment. The adapter reads the file; the SDK itself does not implement the `_FILE` convention.
+
+After installing the selector dependencies, test Jev directly from the runtime checkout:
+
+```sh
+"$HOME/.local/share/fleet-cua-decider/.venv/bin/python" scripts/check_jev.py
+```
+
+This makes one small hosted inference call, prints only the offered choice and confidence, and never invokes Qwen or clicks anything. It uses the same credential resolver as the adapter. If authentication fails, check that the key belongs to TypeSafe and that the account has API access; if a pinned model fails, consult `GET /v1/models` in the API reference. The default alias can change versions over time.
+
+### Qwen escalation: separate endpoint and key
+
+The shipped cascade can escalate even its first Jev request. Configure Qwen before using the cascade; the Jev-only check above does not require it.
+
+```sh
+export QWEN_BASE_URL='http://YOUR-QWEN-HOST:8080/v1'
+export QWEN_API_KEY_FILE="$HOME/.config/computer-use/qwen-api-key"
+export QWEN_MODEL='YOUR-SERVED-MODEL-ID'
+export CUA_QWEN_THINKING='none'
+```
+
+`QWEN_BASE_URL` **includes `/v1`**; the adapter appends `/chat/completions`. `QWEN_API_KEY` is the direct-environment alternative to the file. This key belongs to your Qwen gateway and is independent of the hosted Jev key. The backend must accept this adapter's chat-completion and thinking parameters. Replace both example host and model ID with actual service values.
+
+### Fleet credential retrieval (optional)
+
+Existing Fleet users can omit direct keys/files and set `TYPESAFE_CONNECT_SSH` to the authorized SSH host that can run `op read 'op://Fleet/Typesafe.ai Jev API Key/credential'`. Qwen's `QWEN_SECRET_SSH` host must expose the documented `~/.codex/secrets/fleet-inference-key`. The `select-fleet` launcher supplies the original homelab host defaults; external users should supply direct keys/files or their own credential integration. Secrets are captured internally, never printed. If you already exported a direct key, it takes precedence over a file or SSH lookup.
+
 ## 4. Connect the stock driver
 
 Use the stock computer-use skill and driver to observe the actual desktop. Build the typed request from the fresh observation. Import `Engine` and `execute_bound` from `inference/cua-decider/capability-dispatch/dispatch.py`; inject configured providers. The examples in `simulation.py` show request shapes; `run_booking.py` is a task-specific integration example, not a general API server.

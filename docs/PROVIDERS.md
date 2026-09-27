@@ -1,5 +1,7 @@
 # Provider configuration
 
+For hosted Jev, start with the [API key, endpoint and model setup](../skills/cua-capability-dispatch/references/setup.md#jev-api-key-endpoint-and-model). It also documents the separate Qwen key and endpoint, credential precedence, and a Jev-only smoke check.
+
 Offline tests use injected responses. Live calls require explicit runtime configuration and credentials; extracting this repo does not deploy anything.
 
 `RemoteSpans` reads `CUA_SPAN_COMMAND`, a JSON argv array, and appends the model ID. Example on a CUDA worker with pre-cached weights and installed `torch`/`gliner2`:

@@ -43,6 +43,20 @@ python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 
 The offline check needs only Python 3.10+. For real inference, follow the [setup reference](skills/cua-capability-dispatch/references/setup.md): provision a cached GLiNER2 CUDA worker, configure `CUA_SPAN_COMMAND`, configure the Jev/Qwen selector with `CUA_SELECTOR_COMMAND` and runtime credential access, then connect `Engine` to the stock driver. Provider setup is explicit; no services are deployed by installing the skill.
 
+## Jev API and endpoint setup
+
+Get a TypeSafe API key through your [TypeSafe account](https://console.typesafe.ai) or administrator. Configure it separately from the Qwen fallback:
+
+```sh
+export TYPESAFE_API_KEY_FILE="$HOME/.config/computer-use/jev-api-key"
+export TYPESAFE_BASE_URL='https://api.typesafe.ai'
+export TYPESAFE_DEFAULT_MODEL='jev-latest'
+```
+
+The file must already contain your key. `TYPESAFE_API_KEY` is the direct-environment alternative. Jev's SDK calls `https://api.typesafe.ai/v1/systemone`; the base URL has **no `/v1` suffix**. Qwen instead uses `QWEN_BASE_URL` **with `/v1`**, plus its own `QWEN_API_KEY` or `QWEN_API_KEY_FILE`. Both providers need configuration for the cascade.
+
+See [full key/endpoint setup and Jev-only smoke check](skills/cua-capability-dispatch/references/setup.md#jev-api-key-endpoint-and-model), including secret-file precedence and optional Fleet retrieval. Installing the skill does not create API accounts or credentials.
+
 ## Start here
 
 - [Custom skill](skills/cua-capability-dispatch/SKILL.md): request construction and safe integration with stock tools.
