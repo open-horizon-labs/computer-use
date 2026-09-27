@@ -1,0 +1,14 @@
+{
+  "training_pairs": 1500,
+  "reviewed_negatives": 43,
+  "changed_negatives": 41,
+  "calibration_tasks": 24,
+  "test_tasks": 24,
+  "split": "application-disjoint calibration/test, both disjoint from training; existing exploratory validation corpus, not claimed untouched",
+  "seed": 929,
+  "evaluation": "all offered candidates plus paired target-removed no-demonstrated-target probes; no model receives expected IDs",
+  "hashes": {
+    "hard-train.jsonl": "7b224abba305d5e729fe8cd7d29e51dfd5e36eb08e22dea78b73d647347049ff",
+    "pool-splits.json": "678274f29e20fa02354d157da259ae5c253350b15f7dddab7c1fa00c242e55c7"
+  }
+}

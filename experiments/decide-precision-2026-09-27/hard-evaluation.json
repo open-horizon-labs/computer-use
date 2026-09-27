@@ -1,0 +1,4746 @@
+{
+  "variant": "hard",
+  "schema": {
+    "json_structures": [],
+    "classifications": [
+      {
+        "task": "label",
+        "labels": [
+          "matches",
+          "does_not_match"
+        ],
+        "multi_label": false,
+        "cls_threshold": 0.5,
+        "true_label": [
+          "N/A"
+        ]
+      }
+    ],
+    "entities": {},
+    "relations": [],
+    "json_descriptions": {},
+    "entity_descriptions": {},
+    "relation_descriptions": {}
+  },
+  "splits": {
+    "calibration": [
+      {
+        "id": "92ea96b936a1b53b8ae90d8726046d9288d0836a855fe0617e2ee7a3c4cfe814",
+        "gold": 2,
+        "max_tokens": 141,
+        "n": 9,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 178.95885196048766
+      },
+      {
+        "id": "c95bab52ead496b64903d1fd1203b910248defd4455c6d4be77a7bd408de6491",
+        "gold": 21,
+        "max_tokens": 449,
+        "n": 32,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 1360.9787969617173
+      },
+      {
+        "id": "8be2cee0f4fd556d019ac774503dbe9be9397afef93cdb07f40708a7c1fcecf9",
+        "gold": 22,
+        "max_tokens": 328,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1226.3989839702845
+      },
+      {
+        "id": "1a9e5f40bd05bc17a23921211438d42d8bfd7a3af4e3de5f039e432c842525e7",
+        "gold": 0,
+        "max_tokens": 415,
+        "n": 31,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1320.9496260387823
+      },
+      {
+        "id": "548eaa297cbda68bafe19912fa71963f9f99e70771051a494cbcdf56d3e19673",
+        "gold": 9,
+        "max_tokens": 219,
+        "n": 27,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.992911159992218
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9909995198249817
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9918999671936035
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9874847531318665
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 668.1212120456621
+      },
+      {
+        "id": "c2f33f25c12746aceb43c291827480bf7e966658b3221539e4b5f695ecb5460f",
+        "gold": 17,
+        "max_tokens": 457,
+        "n": 31,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1413.9911950333044
+      },
+      {
+        "id": "ebfee47d1f0d3ba686fadfc449f8d61ee57fa7221f61aa2e2b5a530b992b8245",
+        "gold": 19,
+        "max_tokens": 2761,
+        "n": 32,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "2b2a11b075765a56a8ca5fe4167b6955b51b19f6145bb7d0401ad84bd603f686",
+        "gold": 20,
+        "max_tokens": 413,
+        "n": 31,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1314.7115010069683
+      },
+      {
+        "id": "32e4c28670fc33e808fc507455a73d1678884f88d3799151748571e6135cb6be",
+        "gold": 22,
+        "max_tokens": 222,
+        "n": 27,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.989503026008606
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9937300682067871
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9921901822090149
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9819404482841492
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 668.8085770001635
+      },
+      {
+        "id": "8087aac6708e01c4379d0c1f3248aae96b61200cf471d782b8f048f508254c35",
+        "gold": 27,
+        "max_tokens": 884,
+        "n": 31,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "19434f8e872a68102faf470afa810d1d583fad1654bed7759613c3019d6f0292",
+        "gold": 25,
+        "max_tokens": 185,
+        "n": 32,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 653.5255280323327
+      },
+      {
+        "id": "1e41324cb0330af0f0299dd1fa3882a164102e37a834c8e03c480a3e84260c33",
+        "gold": 10,
+        "max_tokens": 421,
+        "n": 27,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 1164.6731470245868
+      },
+      {
+        "id": "f9d6355ed71c12e87b77f58dbee9eeb3d696e92454edee1c4397b0bb107c140e",
+        "gold": 19,
+        "max_tokens": 3169,
+        "n": 32,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "deb7c871c6b187c3e58a2ef88a93cb45e3189ce363cbb242b328dad3b190ff69",
+        "gold": 4,
+        "max_tokens": 420,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          }
+        ],
+        "ms": 1358.7050129426643
+      },
+      {
+        "id": "505b5ceb27b6d8a63292209c821aad00ffc16857b647d77c6f922f045b78e3c1",
+        "gold": 8,
+        "max_tokens": 419,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1426.8918939633295
+      },
+      {
+        "id": "fe357ad4b49bff1509e949aacc8004cd5dea9bbed519e9405f0cc4fdd52984a3",
+        "gold": 19,
+        "max_tokens": 693,
+        "n": 31,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "aaed6d8cd2f91468cdeda95cdfca9b470c277d067bb43573a3112a9ff6495723",
+        "gold": 23,
+        "max_tokens": 184,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 653.0246740439907
+      },
+      {
+        "id": "707430b79c7f855a50096d8d50e522125e2715bf4dbd0b6ce621f765f871f1dd",
+        "gold": 1,
+        "max_tokens": 186,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 663.8318490004167
+      },
+      {
+        "id": "dfbe26d826f85cd3d1a4eabce03c32a0ca66e17d64595bfa29a58d4a1521a479",
+        "gold": 19,
+        "max_tokens": 887,
+        "n": 31,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "94168e5922570baa2273be93099a2198c415f2bd4489b986bc522ca157f8d425",
+        "gold": 5,
+        "max_tokens": 254,
+        "n": 19,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 460.2025490021333
+      },
+      {
+        "id": "2db0f1405b6039e568f8b6dd57437a094d4e6d1dc2ddfe02e59b6c73e26fa33f",
+        "gold": 7,
+        "max_tokens": 412,
+        "n": 31,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 1210.3165589505807
+      },
+      {
+        "id": "c52bf19c3a04b6a9a3c0141852cff2b4e70d9880b2fc439dcf1d2bb29cde6db0",
+        "gold": 10,
+        "max_tokens": 167,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9937498569488525
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9857369661331177
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9939875602722168
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9939688444137573
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 604.4915779493749
+      },
+      {
+        "id": "5213637ae82c6948777550a154f2d2e0459800c2d2356c385db89d6274ba24c4",
+        "gold": 30,
+        "max_tokens": 233,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9987633228302002
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 752.4484390160069
+      },
+      {
+        "id": "73c3c37ce5e50e20745bd791bde6332e2a7844a2a71a823dce3311ca41cdb021",
+        "gold": 3,
+        "max_tokens": 348,
+        "n": 25,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 903.9948839927092
+      }
+    ],
+    "test": [
+      {
+        "id": "64060c58e2d41c7973bf0992f80527605844d4d4a53f7865ab3afd43ea7a9b5a",
+        "gold": 2,
+        "max_tokens": 378,
+        "n": 32,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1476.3991859508678
+      },
+      {
+        "id": "c4cf161c67695dd75f6f7b1516d68502a09f2a02d95142aedc04eff373639f69",
+        "gold": 5,
+        "max_tokens": 233,
+        "n": 27,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9827044606208801
+          },
+          {
+            "label": "matches",
+            "score": 0.9850524067878723
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9857416152954102
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.987220048904419
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 665.0167220504954
+      },
+      {
+        "id": "fd168b8d66c98430495cf92ad21d86ab6e49b2ab612ecf4357b3cced9484103d",
+        "gold": 23,
+        "max_tokens": 1004,
+        "n": 32,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "4ac761eee25dc3308366c055507ea6f4c58a7d7ecf51fe59f9d40aacf6e30db6",
+        "gold": 25,
+        "max_tokens": 381,
+        "n": 32,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1495.0027430895716
+      },
+      {
+        "id": "f564d31cde573e1a92cba1c8dc1be2a113bfd76bda1b5bd5535c51104a3a82b7",
+        "gold": 6,
+        "max_tokens": 160,
+        "n": 11,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9992095232009888
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 224.82467093504965
+      },
+      {
+        "id": "4e7cc21208d53cf1fd0af5912b70f5bfb6e01d6040d246cacddab63f67fe4f14",
+        "gold": 2,
+        "max_tokens": 242,
+        "n": 26,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 652.3542610229924
+      },
+      {
+        "id": "4f82a4e27537b0fdf69be95811889f5a3f329acbc06cba67e6327aa577ae0c52",
+        "gold": 1,
+        "max_tokens": 133,
+        "n": 4,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 76.61839097272605
+      },
+      {
+        "id": "b661a1f3813467d67d8df2537cfe1acc44cece4e42abf4476f8b4cf12b35628b",
+        "gold": 28,
+        "max_tokens": 1063,
+        "n": 31,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "78887972071193f2222dfb1b9b2167151763336a6cbd904261ede0a75c2bbd61",
+        "gold": 24,
+        "max_tokens": 382,
+        "n": 32,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1498.77873796504
+      },
+      {
+        "id": "ca43fc45184ad994380eb329698e17fc149c3bba72fb67d5430bf773f3175017",
+        "gold": 20,
+        "max_tokens": 876,
+        "n": 31,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "8713d3def3be7c5130505f2e59ca123929385d9a6250cced4a1a1885db00eeb1",
+        "gold": 25,
+        "max_tokens": 379,
+        "n": 32,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1485.3617049520835
+      },
+      {
+        "id": "a0c726cd8e8e549ea53345e91f2ce687d4fac3ec0b5beb2ed8f76231859d3ac4",
+        "gold": 29,
+        "max_tokens": 868,
+        "n": 31,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "dac3bb91fdb89f41334d918c58366159947f3d097e247d1ed64aa2097518a68a",
+        "gold": 9,
+        "max_tokens": 175,
+        "n": 11,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 236.53101990930736
+      },
+      {
+        "id": "c22e1c404325df8278b7ea037a8951d0741e2e78d99ccf17bf471f507d978985",
+        "gold": 2,
+        "max_tokens": 135,
+        "n": 5,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 90.53128794766963
+      },
+      {
+        "id": "348ae45a02c718226b6cb860cb6082b8658f789146ae790f9718364a90a6a5a8",
+        "gold": 26,
+        "max_tokens": 224,
+        "n": 32,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 689.9414910003543
+      },
+      {
+        "id": "ead719ce8b3236b253da4d7536b7de42572a09e62aec28132ce36b09ce423f43",
+        "gold": 13,
+        "max_tokens": 293,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 794.3022890249267
+      },
+      {
+        "id": "8df6597da7c2ecb90158ba9baada0dffb34b70ae1fa894f63c60b2f1dbde0cdd",
+        "gold": 2,
+        "max_tokens": 2300,
+        "n": 31,
+        "deferred": "token_budget"
+      },
+      {
+        "id": "7ed55dd85aff1f1a23148ce81e74802a0d7456ba6cf8be27f3744f4e88b85234",
+        "gold": 4,
+        "max_tokens": 264,
+        "n": 5,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 170.71525705978274
+      },
+      {
+        "id": "340f07d6018bbef8bd0962327b95fa0e56741126d08e8cd7e4bc3e2fc96f8e71",
+        "gold": 2,
+        "max_tokens": 233,
+        "n": 27,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9857417345046997
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.987220048904419
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9827044606208801
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9850524067878723
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 707.9370910068974
+      },
+      {
+        "id": "d2b13ae354f774a65f8b9b5603b71c0c4fecfc1af9d98d46babfc21f88a5809d",
+        "gold": 1,
+        "max_tokens": 226,
+        "n": 21,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 521.5747390175238
+      },
+      {
+        "id": "f00f0efa175f26c2743aeb5d5bbdf653395409c8b67b8499958126a9df351da7",
+        "gold": 28,
+        "max_tokens": 292,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9819487929344177
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9825006127357483
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9823881983757019
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 928.8181910524145
+      },
+      {
+        "id": "16323668a7147088e15cd9d0632a3148a458209b0546701364e634454d2a1763",
+        "gold": 12,
+        "max_tokens": 379,
+        "n": 32,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          }
+        ],
+        "ms": 1490.7589360373095
+      },
+      {
+        "id": "6175039095118cf0c740fc28f23253561af363c7ee20f7d9a9b87ee21dbb2d35",
+        "gold": 20,
+        "max_tokens": 203,
+        "n": 31,
+        "scores": [
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9712807536125183
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9926022887229919
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.9894165396690369
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 735.8058670070022
+      },
+      {
+        "id": "6cf31bd3f093e94772cd63a413f7281e979b3b7dacb15a628751822c1e44eb9c",
+        "gold": 30,
+        "max_tokens": 204,
+        "n": 31,
+        "scores": [
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9509472250938416
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5000000596046448
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9814655780792236
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.9957984089851379
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          },
+          {
+            "label": "does_not_match",
+            "score": 0
+          },
+          {
+            "label": "matches",
+            "score": 0.5
+          }
+        ],
+        "ms": 736.6725100437179
+      }
+    ]
+  },
+  "paired": {
+    "n": 200,
+    "correct": 139,
+    "tp": 73,
+    "fp": 34,
+    "precision": 0.6822429906542056,
+    "recall": 0.73
+  },
+  "calibration_grid": [
+    {
+      "threshold": 0.5,
+      "margin": 0,
+      "tasks": 24,
+      "accepted": 7,
+      "correct": 1,
+      "wrong": 6,
+      "precision": 0.14285714285714285,
+      "coverage": 0.2916666666666667,
+      "target_removed_acceptances": 7
+    },
+    {
+      "threshold": 0.5,
+      "margin": 0.001,
+      "tasks": 24,
+      "accepted": 3,
+      "correct": 0,
+      "wrong": 3,
+      "precision": 0.0,
+      "coverage": 0.125,
+      "target_removed_acceptances": 4
+    },
+    {
+      "threshold": 0.5,
+      "margin": 0.01,
+      "tasks": 24,
+      "accepted": 1,
+      "correct": 0,
+      "wrong": 1,
+      "precision": 0.0,
+      "coverage": 0.041666666666666664,
+      "target_removed_acceptances": 2
+    },
+    {
+      "threshold": 0.5,
+      "margin": 0.1,
+      "tasks": 24,
+      "accepted": 1,
+      "correct": 0,
+      "wrong": 1,
+      "precision": 0.0,
+      "coverage": 0.041666666666666664,
+      "target_removed_acceptances": 2
+    },
+    {
+      "threshold": 0.9,
+      "margin": 0,
+      "tasks": 24,
+      "accepted": 4,
+      "correct": 0,
+      "wrong": 4,
+      "precision": 0.0,
+      "coverage": 0.16666666666666666,
+      "target_removed_acceptances": 4
+    },
+    {
+      "threshold": 0.9,
+      "margin": 0.001,
+      "tasks": 24,
+      "accepted": 3,
+      "correct": 0,
+      "wrong": 3,
+      "precision": 0.0,
+      "coverage": 0.125,
+      "target_removed_acceptances": 3
+    },
+    {
+      "threshold": 0.9,
+      "margin": 0.01,
+      "tasks": 24,
+      "accepted": 1,
+      "correct": 0,
+      "wrong": 1,
+      "precision": 0.0,
+      "coverage": 0.041666666666666664,
+      "target_removed_acceptances": 1
+    },
+    {
+      "threshold": 0.9,
+      "margin": 0.1,
+      "tasks": 24,
+      "accepted": 1,
+      "correct": 0,
+      "wrong": 1,
+      "precision": 0.0,
+      "coverage": 0.041666666666666664,
+      "target_removed_acceptances": 1
+    },
+    {
+      "threshold": 0.95,
+      "margin": 0,
+      "tasks": 24,
+      "accepted": 4,
+      "correct": 0,
+      "wrong": 4,
+      "precision": 0.0,
+      "coverage": 0.16666666666666666,
+      "target_removed_acceptances": 4
+    },
+    {
+      "threshold": 0.95,
+      "margin": 0.001,
+      "tasks": 24,
+      "accepted": 3,
+      "correct": 0,
+      "wrong": 3,
+      "precision": 0.0,
+      "coverage": 0.125,
+      "target_removed_acceptances": 3
+    },
+    {
+      "threshold": 0.95,
+      "margin": 0.01,
+      "tasks": 24,
+      "accepted": 1,
+      "correct": 0,
+      "wrong": 1,
+      "precision": 0.0,
+      "coverage": 0.041666666666666664,
+      "target_removed_acceptances": 1
+    },
+    {
+      "threshold": 0.95,
+      "margin": 0.1,
+      "tasks": 24,
+      "accepted": 1,
+      "correct": 0,
+      "wrong": 1,
+      "precision": 0.0,
+      "coverage": 0.041666666666666664,
+      "target_removed_acceptances": 1
+    },
+    {
+      "threshold": 0.99,
+      "margin": 0,
+      "tasks": 24,
+      "accepted": 4,
+      "correct": 0,
+      "wrong": 4,
+      "precision": 0.0,
+      "coverage": 0.16666666666666666,
+      "target_removed_acceptances": 4
+    },
+    {
+      "threshold": 0.99,
+      "margin": 0.001,
+      "tasks": 24,
+      "accepted": 3,
+      "correct": 0,
+      "wrong": 3,
+      "precision": 0.0,
+      "coverage": 0.125,
+      "target_removed_acceptances": 3
+    },
+    {
+      "threshold": 0.99,
+      "margin": 0.01,
+      "tasks": 24,
+      "accepted": 1,
+      "correct": 0,
+      "wrong": 1,
+      "precision": 0.0,
+      "coverage": 0.041666666666666664,
+      "target_removed_acceptances": 1
+    },
+    {
+      "threshold": 0.99,
+      "margin": 0.1,
+      "tasks": 24,
+      "accepted": 1,
+      "correct": 0,
+      "wrong": 1,
+      "precision": 0.0,
+      "coverage": 0.041666666666666664,
+      "target_removed_acceptances": 1
+    },
+    {
+      "threshold": 0.999,
+      "margin": 0,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.999,
+      "margin": 0.001,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.999,
+      "margin": 0.01,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.999,
+      "margin": 0.1,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.9999,
+      "margin": 0,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.9999,
+      "margin": 0.001,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.9999,
+      "margin": 0.01,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.9999,
+      "margin": 0.1,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.99999,
+      "margin": 0,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.99999,
+      "margin": 0.001,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.99999,
+      "margin": 0.01,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    },
+    {
+      "threshold": 0.99999,
+      "margin": 0.1,
+      "tasks": 24,
+      "accepted": 0,
+      "correct": 0,
+      "wrong": 0,
+      "precision": null,
+      "coverage": 0.0,
+      "target_removed_acceptances": 0
+    }
+  ],
+  "selected": null,
+  "test_default": {
+    "tasks": 24,
+    "accepted": 9,
+    "correct": 2,
+    "wrong": 7,
+    "precision": 0.2222222222222222,
+    "coverage": 0.375,
+    "target_removed_acceptances": 8
+  },
+  "test_gated": {
+    "tasks": 24,
+    "accepted": 0,
+    "coverage": 0,
+    "precision": null,
+    "reason": "no_calibration_policy_qualified"
+  }
+}

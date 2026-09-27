@@ -1,0 +1,142 @@
+{
+  "variant": "described",
+  "status": "completed",
+  "epochs_requested": 3,
+  "max_encoded_tokens": 432,
+  "gpu": "NVIDIA GeForce RTX 3060 Ti",
+  "train_n": 1500,
+  "training_seconds": 326.6219570928952,
+  "epochs": 3,
+  "steps": 1125,
+  "training_result": {
+    "total_steps": 1125,
+    "total_epochs": 3,
+    "total_time_seconds": 326.6037585735321,
+    "samples_per_second": 13.7781635448842,
+    "best_metric": Infinity,
+    "train_metrics_history": [
+      {
+        "loss": 4.339991092681885,
+        "classification_loss": 2.793455123901367,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.00044642857142857147,
+        "epoch": 0.264,
+        "step": 100,
+        "samples_seen": 400,
+        "throughput": 13.6776711953494
+      },
+      {
+        "loss": 5.708504676818848,
+        "classification_loss": 21.113147735595703,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.0004565646594274432,
+        "epoch": 0.5306666666666666,
+        "step": 200,
+        "samples_seen": 800,
+        "throughput": 13.70646137570628
+      },
+      {
+        "loss": 4.59395170211792,
+        "classification_loss": 4.370259761810303,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.0004072063178677197,
+        "epoch": 0.7973333333333333,
+        "step": 300,
+        "samples_seen": 1200,
+        "throughput": 13.9006953089037
+      },
+      {
+        "loss": 4.271240711212158,
+        "classification_loss": 4.164743423461914,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.00035784797630799604,
+        "epoch": 1.064,
+        "step": 400,
+        "samples_seen": 1600,
+        "throughput": 13.845991207797365
+      },
+      {
+        "loss": 4.288804054260254,
+        "classification_loss": 4.216872215270996,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.00030848963474827245,
+        "epoch": 1.3306666666666667,
+        "step": 500,
+        "samples_seen": 2000,
+        "throughput": 13.943539119142132
+      },
+      {
+        "loss": 4.123817443847656,
+        "classification_loss": 2.7725014686584473,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.0002591312931885489,
+        "epoch": 1.5973333333333333,
+        "step": 600,
+        "samples_seen": 2400,
+        "throughput": 13.799543207030567
+      },
+      {
+        "loss": 4.048556327819824,
+        "classification_loss": 2.637631893157959,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.0002097729516288253,
+        "epoch": 1.8639999999999999,
+        "step": 700,
+        "samples_seen": 2800,
+        "throughput": 13.799471089400429
+      },
+      {
+        "loss": 4.615509033203125,
+        "classification_loss": 6.122615814208984,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.00016041461006910168,
+        "epoch": 2.1306666666666665,
+        "step": 800,
+        "samples_seen": 3200,
+        "throughput": 13.769381327305556
+      },
+      {
+        "loss": 4.528554439544678,
+        "classification_loss": 5.950744152069092,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 0.00011105626850937808,
+        "epoch": 2.397333333333333,
+        "step": 900,
+        "samples_seen": 3600,
+        "throughput": 13.750353333306396
+      },
+      {
+        "loss": 3.719937562942505,
+        "classification_loss": 10.590635299682617,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 6.16979269496545e-05,
+        "epoch": 2.664,
+        "step": 1000,
+        "samples_seen": 4000,
+        "throughput": 13.723106428712935
+      },
+      {
+        "loss": 5.106232643127441,
+        "classification_loss": 2.2970075607299805,
+        "structure_loss": 0.0,
+        "count_loss": 0.0,
+        "learning_rate": 1.23395853899309e-05,
+        "epoch": 2.9306666666666668,
+        "step": 1100,
+        "samples_seen": 4400,
+        "throughput": 13.770410213057783
+      }
+    ],
+    "eval_metrics_history": []
+  }
+}

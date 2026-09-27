@@ -1,0 +1,966 @@
+{
+  "calibration": [
+    {
+      "id": "92ea96b936a1b53b8ae90d8726046d9288d0836a855fe0617e2ee7a3c4cfe814",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "2",
+      "model": "jev-1.13.0",
+      "confidence": 0.97,
+      "ms": 923.9403340034187
+    },
+    {
+      "id": "92ea96b936a1b53b8ae90d8726046d9288d0836a855fe0617e2ee7a3c4cfe814",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.75,
+      "ms": 140.78070799587294
+    },
+    {
+      "id": "c95bab52ead496b64903d1fd1203b910248defd4455c6d4be77a7bd408de6491",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "28",
+      "model": "jev-1.13.0",
+      "confidence": 0.51,
+      "ms": 178.4762080060318
+    },
+    {
+      "id": "c95bab52ead496b64903d1fd1203b910248defd4455c6d4be77a7bd408de6491",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "28",
+      "model": "jev-1.13.0",
+      "confidence": 0.53,
+      "ms": 165.81991701968946
+    },
+    {
+      "id": "8be2cee0f4fd556d019ac774503dbe9be9397afef93cdb07f40708a7c1fcecf9",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "22",
+      "model": "jev-1.13.0",
+      "confidence": 0.98,
+      "ms": 204.68087497283705
+    },
+    {
+      "id": "8be2cee0f4fd556d019ac774503dbe9be9397afef93cdb07f40708a7c1fcecf9",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "6",
+      "model": "jev-1.13.0",
+      "confidence": 0.48,
+      "ms": 182.51308298204094
+    },
+    {
+      "id": "1a9e5f40bd05bc17a23921211438d42d8bfd7a3af4e3de5f039e432c842525e7",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "0",
+      "model": "jev-1.13.0",
+      "confidence": 0.93,
+      "ms": 167.63041602098383
+    },
+    {
+      "id": "1a9e5f40bd05bc17a23921211438d42d8bfd7a3af4e3de5f039e432c842525e7",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "11",
+      "model": "jev-1.13.0",
+      "confidence": 0.66,
+      "ms": 200.7803329906892
+    },
+    {
+      "id": "548eaa297cbda68bafe19912fa71963f9f99e70771051a494cbcdf56d3e19673",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "9",
+      "model": "jev-1.13.0",
+      "confidence": 0.83,
+      "ms": 175.45975002576597
+    },
+    {
+      "id": "548eaa297cbda68bafe19912fa71963f9f99e70771051a494cbcdf56d3e19673",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.59,
+      "ms": 139.88345800316893
+    },
+    {
+      "id": "c2f33f25c12746aceb43c291827480bf7e966658b3221539e4b5f695ecb5460f",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "21",
+      "model": "jev-1.13.0",
+      "confidence": 0.94,
+      "ms": 203.21499998681247
+    },
+    {
+      "id": "c2f33f25c12746aceb43c291827480bf7e966658b3221539e4b5f695ecb5460f",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "21",
+      "model": "jev-1.13.0",
+      "confidence": 0.89,
+      "ms": 148.12508301110938
+    },
+    {
+      "id": "ebfee47d1f0d3ba686fadfc449f8d61ee57fa7221f61aa2e2b5a530b992b8245",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "19",
+      "model": "jev-1.13.0",
+      "confidence": 0.68,
+      "ms": 186.5313750167843
+    },
+    {
+      "id": "ebfee47d1f0d3ba686fadfc449f8d61ee57fa7221f61aa2e2b5a530b992b8245",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "11",
+      "model": "jev-1.13.0",
+      "confidence": 0.76,
+      "ms": 191.01383301313035
+    },
+    {
+      "id": "2b2a11b075765a56a8ca5fe4167b6955b51b19f6145bb7d0401ad84bd603f686",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.32,
+      "ms": 178.96112499875017
+    },
+    {
+      "id": "2b2a11b075765a56a8ca5fe4167b6955b51b19f6145bb7d0401ad84bd603f686",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.48,
+      "ms": 176.9880419888068
+    },
+    {
+      "id": "32e4c28670fc33e808fc507455a73d1678884f88d3799151748571e6135cb6be",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "22",
+      "model": "jev-1.13.0",
+      "confidence": 0.82,
+      "ms": 170.4599579970818
+    },
+    {
+      "id": "32e4c28670fc33e808fc507455a73d1678884f88d3799151748571e6135cb6be",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "16",
+      "model": "jev-1.13.0",
+      "confidence": 0.25,
+      "ms": 177.8308330103755
+    },
+    {
+      "id": "8087aac6708e01c4379d0c1f3248aae96b61200cf471d782b8f048f508254c35",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "27",
+      "model": "jev-1.13.0",
+      "confidence": 0.41,
+      "ms": 160.50179200829007
+    },
+    {
+      "id": "8087aac6708e01c4379d0c1f3248aae96b61200cf471d782b8f048f508254c35",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.49,
+      "ms": 208.55370900244452
+    },
+    {
+      "id": "19434f8e872a68102faf470afa810d1d583fad1654bed7759613c3019d6f0292",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.6,
+      "ms": 170.6752919999417
+    },
+    {
+      "id": "19434f8e872a68102faf470afa810d1d583fad1654bed7759613c3019d6f0292",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.92,
+      "ms": 153.5080420144368
+    },
+    {
+      "id": "1e41324cb0330af0f0299dd1fa3882a164102e37a834c8e03c480a3e84260c33",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.33,
+      "ms": 174.73129098652862
+    },
+    {
+      "id": "1e41324cb0330af0f0299dd1fa3882a164102e37a834c8e03c480a3e84260c33",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "13",
+      "model": "jev-1.13.0",
+      "confidence": 0.44,
+      "ms": 190.40587500785477
+    },
+    {
+      "id": "f9d6355ed71c12e87b77f58dbee9eeb3d696e92454edee1c4397b0bb107c140e",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.35,
+      "ms": 179.7525830043014
+    },
+    {
+      "id": "f9d6355ed71c12e87b77f58dbee9eeb3d696e92454edee1c4397b0bb107c140e",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.34,
+      "ms": 181.6603750048671
+    },
+    {
+      "id": "deb7c871c6b187c3e58a2ef88a93cb45e3189ce363cbb242b328dad3b190ff69",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "4",
+      "model": "jev-1.13.0",
+      "confidence": 0.93,
+      "ms": 166.25670899520628
+    },
+    {
+      "id": "deb7c871c6b187c3e58a2ef88a93cb45e3189ce363cbb242b328dad3b190ff69",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "14",
+      "model": "jev-1.13.0",
+      "confidence": 0.4,
+      "ms": 173.02929199649952
+    },
+    {
+      "id": "505b5ceb27b6d8a63292209c821aad00ffc16857b647d77c6f922f045b78e3c1",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "8",
+      "model": "jev-1.13.0",
+      "confidence": 0.95,
+      "ms": 188.35787498392165
+    },
+    {
+      "id": "505b5ceb27b6d8a63292209c821aad00ffc16857b647d77c6f922f045b78e3c1",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "21",
+      "model": "jev-1.13.0",
+      "confidence": 0.54,
+      "ms": 162.88545800489374
+    },
+    {
+      "id": "fe357ad4b49bff1509e949aacc8004cd5dea9bbed519e9405f0cc4fdd52984a3",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "19",
+      "model": "jev-1.13.0",
+      "confidence": 0.81,
+      "ms": 149.13779200287536
+    },
+    {
+      "id": "fe357ad4b49bff1509e949aacc8004cd5dea9bbed519e9405f0cc4fdd52984a3",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "4",
+      "model": "jev-1.13.0",
+      "confidence": 0.72,
+      "ms": 163.88345800805837
+    },
+    {
+      "id": "aaed6d8cd2f91468cdeda95cdfca9b470c277d067bb43573a3112a9ff6495723",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "15",
+      "model": "jev-1.13.0",
+      "confidence": 0.77,
+      "ms": 137.7947500150185
+    },
+    {
+      "id": "aaed6d8cd2f91468cdeda95cdfca9b470c277d067bb43573a3112a9ff6495723",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "15",
+      "model": "jev-1.13.0",
+      "confidence": 0.96,
+      "ms": 165.2750420034863
+    },
+    {
+      "id": "707430b79c7f855a50096d8d50e522125e2715bf4dbd0b6ce621f765f871f1dd",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "19",
+      "model": "jev-1.13.0",
+      "confidence": 0.84,
+      "ms": 181.09512500814162
+    },
+    {
+      "id": "707430b79c7f855a50096d8d50e522125e2715bf4dbd0b6ce621f765f871f1dd",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "19",
+      "model": "jev-1.13.0",
+      "confidence": 0.9,
+      "ms": 155.1350410154555
+    },
+    {
+      "id": "dfbe26d826f85cd3d1a4eabce03c32a0ca66e17d64595bfa29a58d4a1521a479",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "7",
+      "model": "jev-1.13.0",
+      "confidence": 0.93,
+      "ms": 182.7472499862779
+    },
+    {
+      "id": "dfbe26d826f85cd3d1a4eabce03c32a0ca66e17d64595bfa29a58d4a1521a479",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "7",
+      "model": "jev-1.13.0",
+      "confidence": 0.93,
+      "ms": 179.73841697676107
+    },
+    {
+      "id": "94168e5922570baa2273be93099a2198c415f2bd4489b986bc522ca157f8d425",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "16",
+      "model": "jev-1.13.0",
+      "confidence": 0.62,
+      "ms": 151.34820900857449
+    },
+    {
+      "id": "94168e5922570baa2273be93099a2198c415f2bd4489b986bc522ca157f8d425",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "16",
+      "model": "jev-1.13.0",
+      "confidence": 0.97,
+      "ms": 166.02120801690035
+    },
+    {
+      "id": "2db0f1405b6039e568f8b6dd57437a094d4e6d1dc2ddfe02e59b6c73e26fa33f",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.38,
+      "ms": 172.42695798631757
+    },
+    {
+      "id": "2db0f1405b6039e568f8b6dd57437a094d4e6d1dc2ddfe02e59b6c73e26fa33f",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.5,
+      "ms": 150.15562498592772
+    },
+    {
+      "id": "c52bf19c3a04b6a9a3c0141852cff2b4e70d9880b2fc439dcf1d2bb29cde6db0",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "10",
+      "model": "jev-1.13.0",
+      "confidence": 0.55,
+      "ms": 154.41575000295416
+    },
+    {
+      "id": "c52bf19c3a04b6a9a3c0141852cff2b4e70d9880b2fc439dcf1d2bb29cde6db0",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "1",
+      "model": "jev-1.13.0",
+      "confidence": 0.45,
+      "ms": 146.47770900046453
+    },
+    {
+      "id": "5213637ae82c6948777550a154f2d2e0459800c2d2356c385db89d6274ba24c4",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "30",
+      "model": "jev-1.13.0",
+      "confidence": 0.75,
+      "ms": 193.0592079879716
+    },
+    {
+      "id": "5213637ae82c6948777550a154f2d2e0459800c2d2356c385db89d6274ba24c4",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.64,
+      "ms": 185.05879200529307
+    },
+    {
+      "id": "73c3c37ce5e50e20745bd791bde6332e2a7844a2a71a823dce3311ca41cdb021",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.35,
+      "ms": 151.1977080081124
+    },
+    {
+      "id": "73c3c37ce5e50e20745bd791bde6332e2a7844a2a71a823dce3311ca41cdb021",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "17",
+      "model": "jev-1.13.0",
+      "confidence": 0.43,
+      "ms": 153.0174580111634
+    }
+  ],
+  "test": [
+    {
+      "id": "64060c58e2d41c7973bf0992f80527605844d4d4a53f7865ab3afd43ea7a9b5a",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.86,
+      "ms": 169.06558300252073
+    },
+    {
+      "id": "64060c58e2d41c7973bf0992f80527605844d4d4a53f7865ab3afd43ea7a9b5a",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.89,
+      "ms": 216.91041698795743
+    },
+    {
+      "id": "c4cf161c67695dd75f6f7b1516d68502a09f2a02d95142aedc04eff373639f69",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.6,
+      "ms": 160.38154100533575
+    },
+    {
+      "id": "c4cf161c67695dd75f6f7b1516d68502a09f2a02d95142aedc04eff373639f69",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.59,
+      "ms": 149.34029200230725
+    },
+    {
+      "id": "fd168b8d66c98430495cf92ad21d86ab6e49b2ab612ecf4357b3cced9484103d",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.65,
+      "ms": 183.22133299079724
+    },
+    {
+      "id": "fd168b8d66c98430495cf92ad21d86ab6e49b2ab612ecf4357b3cced9484103d",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.67,
+      "ms": 178.05112499627285
+    },
+    {
+      "id": "4ac761eee25dc3308366c055507ea6f4c58a7d7ecf51fe59f9d40aacf6e30db6",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.82,
+      "ms": 285.05304199643433
+    },
+    {
+      "id": "4ac761eee25dc3308366c055507ea6f4c58a7d7ecf51fe59f9d40aacf6e30db6",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.86,
+      "ms": 173.83079099818133
+    },
+    {
+      "id": "f564d31cde573e1a92cba1c8dc1be2a113bfd76bda1b5bd5535c51104a3a82b7",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "6",
+      "model": "jev-1.13.0",
+      "confidence": 0.98,
+      "ms": 138.19545798469335
+    },
+    {
+      "id": "f564d31cde573e1a92cba1c8dc1be2a113bfd76bda1b5bd5535c51104a3a82b7",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.41,
+      "ms": 143.64258298883215
+    },
+    {
+      "id": "4e7cc21208d53cf1fd0af5912b70f5bfb6e01d6040d246cacddab63f67fe4f14",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "2",
+      "model": "jev-1.13.0",
+      "confidence": 0.73,
+      "ms": 195.38337501580827
+    },
+    {
+      "id": "4e7cc21208d53cf1fd0af5912b70f5bfb6e01d6040d246cacddab63f67fe4f14",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.84,
+      "ms": 175.1918329973705
+    },
+    {
+      "id": "4f82a4e27537b0fdf69be95811889f5a3f329acbc06cba67e6327aa577ae0c52",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "1",
+      "model": "jev-1.13.0",
+      "confidence": 0.86,
+      "ms": 200.44454201706685
+    },
+    {
+      "id": "4f82a4e27537b0fdf69be95811889f5a3f329acbc06cba67e6327aa577ae0c52",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.55,
+      "ms": 128.8164170109667
+    },
+    {
+      "id": "b661a1f3813467d67d8df2537cfe1acc44cece4e42abf4476f8b4cf12b35628b",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.28,
+      "ms": 150.64725000411272
+    },
+    {
+      "id": "b661a1f3813467d67d8df2537cfe1acc44cece4e42abf4476f8b4cf12b35628b",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "13",
+      "model": "jev-1.13.0",
+      "confidence": 0.34,
+      "ms": 184.0402920206543
+    },
+    {
+      "id": "78887972071193f2222dfb1b9b2167151763336a6cbd904261ede0a75c2bbd61",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.88,
+      "ms": 171.18308300268836
+    },
+    {
+      "id": "78887972071193f2222dfb1b9b2167151763336a6cbd904261ede0a75c2bbd61",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.89,
+      "ms": 166.16270801750943
+    },
+    {
+      "id": "ca43fc45184ad994380eb329698e17fc149c3bba72fb67d5430bf773f3175017",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "20",
+      "model": "jev-1.13.0",
+      "confidence": 0.9,
+      "ms": 185.84429199108854
+    },
+    {
+      "id": "ca43fc45184ad994380eb329698e17fc149c3bba72fb67d5430bf773f3175017",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "8",
+      "model": "jev-1.13.0",
+      "confidence": 0.29,
+      "ms": 163.9275419875048
+    },
+    {
+      "id": "8713d3def3be7c5130505f2e59ca123929385d9a6250cced4a1a1885db00eeb1",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.85,
+      "ms": 178.12587498337962
+    },
+    {
+      "id": "8713d3def3be7c5130505f2e59ca123929385d9a6250cced4a1a1885db00eeb1",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.82,
+      "ms": 186.94620797759853
+    },
+    {
+      "id": "a0c726cd8e8e549ea53345e91f2ce687d4fac3ec0b5beb2ed8f76231859d3ac4",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "29",
+      "model": "jev-1.13.0",
+      "confidence": 0.95,
+      "ms": 172.8616670006886
+    },
+    {
+      "id": "a0c726cd8e8e549ea53345e91f2ce687d4fac3ec0b5beb2ed8f76231859d3ac4",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.43,
+      "ms": 146.502083982341
+    },
+    {
+      "id": "dac3bb91fdb89f41334d918c58366159947f3d097e247d1ed64aa2097518a68a",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "10",
+      "model": "jev-1.13.0",
+      "confidence": 0.88,
+      "ms": 132.83212500391528
+    },
+    {
+      "id": "dac3bb91fdb89f41334d918c58366159947f3d097e247d1ed64aa2097518a68a",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "10",
+      "model": "jev-1.13.0",
+      "confidence": 0.83,
+      "ms": 135.55741601157933
+    },
+    {
+      "id": "c22e1c404325df8278b7ea037a8951d0741e2e78d99ccf17bf471f507d978985",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "2",
+      "model": "jev-1.13.0",
+      "confidence": 0.98,
+      "ms": 190.6101249915082
+    },
+    {
+      "id": "c22e1c404325df8278b7ea037a8951d0741e2e78d99ccf17bf471f507d978985",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.8,
+      "ms": 195.37712499732152
+    },
+    {
+      "id": "348ae45a02c718226b6cb860cb6082b8658f789146ae790f9718364a90a6a5a8",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "9",
+      "model": "jev-1.13.0",
+      "confidence": 0.49,
+      "ms": 172.24816701491363
+    },
+    {
+      "id": "348ae45a02c718226b6cb860cb6082b8658f789146ae790f9718364a90a6a5a8",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "9",
+      "model": "jev-1.13.0",
+      "confidence": 0.48,
+      "ms": 147.70362499984913
+    },
+    {
+      "id": "ead719ce8b3236b253da4d7536b7de42572a09e62aec28132ce36b09ce423f43",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "13",
+      "model": "jev-1.13.0",
+      "confidence": 0.99,
+      "ms": 140.09520801482722
+    },
+    {
+      "id": "ead719ce8b3236b253da4d7536b7de42572a09e62aec28132ce36b09ce423f43",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.69,
+      "ms": 153.70941697619855
+    },
+    {
+      "id": "8df6597da7c2ecb90158ba9baada0dffb34b70ae1fa894f63c60b2f1dbde0cdd",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "2",
+      "model": "jev-1.13.0",
+      "confidence": 0.91,
+      "ms": 210.71879199007526
+    },
+    {
+      "id": "8df6597da7c2ecb90158ba9baada0dffb34b70ae1fa894f63c60b2f1dbde0cdd",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "23",
+      "model": "jev-1.13.0",
+      "confidence": 0.58,
+      "ms": 200.42054101941176
+    },
+    {
+      "id": "7ed55dd85aff1f1a23148ce81e74802a0d7456ba6cf8be27f3744f4e88b85234",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "4",
+      "model": "jev-1.13.0",
+      "confidence": 0.9,
+      "ms": 201.6424160101451
+    },
+    {
+      "id": "7ed55dd85aff1f1a23148ce81e74802a0d7456ba6cf8be27f3744f4e88b85234",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "0",
+      "model": "jev-1.13.0",
+      "confidence": 0.63,
+      "ms": 143.17816597758792
+    },
+    {
+      "id": "340f07d6018bbef8bd0962327b95fa0e56741126d08e8cd7e4bc3e2fc96f8e71",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.8,
+      "ms": 155.92837499571033
+    },
+    {
+      "id": "340f07d6018bbef8bd0962327b95fa0e56741126d08e8cd7e4bc3e2fc96f8e71",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.72,
+      "ms": 170.82387499976903
+    },
+    {
+      "id": "d2b13ae354f774a65f8b9b5603b71c0c4fecfc1af9d98d46babfc21f88a5809d",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "1",
+      "model": "jev-1.13.0",
+      "confidence": 1.0,
+      "ms": 164.1853750043083
+    },
+    {
+      "id": "d2b13ae354f774a65f8b9b5603b71c0c4fecfc1af9d98d46babfc21f88a5809d",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.79,
+      "ms": 149.59504100261256
+    },
+    {
+      "id": "f00f0efa175f26c2743aeb5d5bbdf653395409c8b67b8499958126a9df351da7",
+      "target_removed": false,
+      "accepted": true,
+      "correct": false,
+      "choice": "10",
+      "model": "jev-1.13.0",
+      "confidence": 0.44,
+      "ms": 198.91262499731965
+    },
+    {
+      "id": "f00f0efa175f26c2743aeb5d5bbdf653395409c8b67b8499958126a9df351da7",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "10",
+      "model": "jev-1.13.0",
+      "confidence": 0.88,
+      "ms": 183.96687498898245
+    },
+    {
+      "id": "16323668a7147088e15cd9d0632a3148a458209b0546701364e634454d2a1763",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.76,
+      "ms": 184.34962502215058
+    },
+    {
+      "id": "16323668a7147088e15cd9d0632a3148a458209b0546701364e634454d2a1763",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.75,
+      "ms": 169.3075420043897
+    },
+    {
+      "id": "6175039095118cf0c740fc28f23253561af363c7ee20f7d9a9b87ee21dbb2d35",
+      "target_removed": false,
+      "accepted": true,
+      "correct": true,
+      "choice": "20",
+      "model": "jev-1.13.0",
+      "confidence": 0.97,
+      "ms": 201.85562502592802
+    },
+    {
+      "id": "6175039095118cf0c740fc28f23253561af363c7ee20f7d9a9b87ee21dbb2d35",
+      "target_removed": true,
+      "accepted": true,
+      "correct": false,
+      "choice": "22",
+      "model": "jev-1.13.0",
+      "confidence": 0.64,
+      "ms": 151.42720798030496
+    },
+    {
+      "id": "6cf31bd3f093e94772cd63a413f7281e979b3b7dacb15a628751822c1e44eb9c",
+      "target_removed": false,
+      "accepted": false,
+      "correct": false,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.63,
+      "ms": 136.66516600642353
+    },
+    {
+      "id": "6cf31bd3f093e94772cd63a413f7281e979b3b7dacb15a628751822c1e44eb9c",
+      "target_removed": true,
+      "accepted": false,
+      "correct": true,
+      "choice": "abstain",
+      "model": "jev-1.13.0",
+      "confidence": 0.67,
+      "ms": 140.3944999910891
+    }
+  ]
+}

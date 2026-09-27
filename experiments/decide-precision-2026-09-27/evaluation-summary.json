@@ -1,0 +1,110 @@
+{
+  "pilot": {
+    "paired": {
+      "n": 200,
+      "correct": 157,
+      "tp": 71,
+      "fp": 14,
+      "precision": 0.8352941176470589,
+      "recall": 0.71
+    },
+    "selected": null,
+    "test_default": {
+      "tasks": 24,
+      "accepted": 14,
+      "correct": 9,
+      "wrong": 5,
+      "precision": 0.6428571428571429,
+      "coverage": 0.5833333333333334,
+      "target_removed_acceptances": 11
+    },
+    "test_gated": {
+      "tasks": 24,
+      "accepted": 0,
+      "coverage": 0,
+      "precision": null,
+      "reason": "no_calibration_policy_qualified"
+    }
+  },
+  "six": {
+    "paired": {
+      "n": 200,
+      "correct": 157,
+      "tp": 74,
+      "fp": 17,
+      "precision": 0.8131868131868132,
+      "recall": 0.74
+    },
+    "selected": null,
+    "test_default": {
+      "tasks": 24,
+      "accepted": 10,
+      "correct": 8,
+      "wrong": 2,
+      "precision": 0.8,
+      "coverage": 0.4166666666666667,
+      "target_removed_acceptances": 6
+    },
+    "test_gated": {
+      "tasks": 24,
+      "accepted": 0,
+      "coverage": 0,
+      "precision": null,
+      "reason": "no_calibration_policy_qualified"
+    }
+  },
+  "described": {
+    "paired": {
+      "n": 200,
+      "correct": 153,
+      "tp": 74,
+      "fp": 21,
+      "precision": 0.7789473684210526,
+      "recall": 0.74
+    },
+    "selected": null,
+    "test_default": {
+      "tasks": 24,
+      "accepted": 14,
+      "correct": 8,
+      "wrong": 6,
+      "precision": 0.5714285714285714,
+      "coverage": 0.5833333333333334,
+      "target_removed_acceptances": 11
+    },
+    "test_gated": {
+      "tasks": 24,
+      "accepted": 0,
+      "coverage": 0,
+      "precision": null,
+      "reason": "no_calibration_policy_qualified"
+    }
+  },
+  "hard": {
+    "paired": {
+      "n": 200,
+      "correct": 139,
+      "tp": 73,
+      "fp": 34,
+      "precision": 0.6822429906542056,
+      "recall": 0.73
+    },
+    "selected": null,
+    "test_default": {
+      "tasks": 24,
+      "accepted": 9,
+      "correct": 2,
+      "wrong": 7,
+      "precision": 0.2222222222222222,
+      "coverage": 0.375,
+      "target_removed_acceptances": 8
+    },
+    "test_gated": {
+      "tasks": 24,
+      "accepted": 0,
+      "coverage": 0,
+      "precision": null,
+      "reason": "no_calibration_policy_qualified"
+    }
+  }
+}

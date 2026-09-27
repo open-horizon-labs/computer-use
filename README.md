@@ -63,6 +63,8 @@ See [full key/endpoint setup and Jev-only smoke check](skills/cua-capability-dis
 - [Sketch S](inference/cua-decider/capability-dispatch/SKETCH.md): authorized routing and matching policy, including approved boundary recheck.
 - [Counterexamples A](inference/cua-decider/capability-dispatch/COUNTEREXAMPLES.json): accepted failures and their authority.
 - [Projection P](inference/cua-decider/capability-dispatch/dispatch.py): dispatch, matching, recovery and binding.
+- [Decide precision experiments](experiments/decide-precision-2026-09-27/RESULTS.md): six epochs, label descriptions and reviewed hard negatives, with a paired Jev control.
+- [Gradual specialist rollout](docs/SPECIALIST-ROLLOUT.md): shadow Jev, qualify a task contract, then propose selective takeover.
 - [Salvage](docs/SALVAGE.md): what to retain, mistakes to avoid, next experiments.
 - [Evidence](inference/cua-decider/capability-dispatch/simulation/JEV-COMPARISON.md): bounded comparison, not a general CUA benchmark.
 

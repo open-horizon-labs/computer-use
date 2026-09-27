@@ -1,0 +1,13 @@
+# Precision comparisons and gradual specialist adoption
+
+User authorized the proposed three experiments and consideration of a strangler approach. Preserve the running Qwen/SystemOne service. Use idle3060Ti; each independent fit has660seconds maximum. No deployment, task-specific matcher hacks or teacher-output training.
+
+Arms: six epochs from fresh base on the same1500 pairs; three epochs with described fixed labels at both train/inference; three epochs with43 reviewed hard negatives (41 actual replacements), keeping1500 rows. Compare with the original three-epoch checkpoint. Six-epoch schedule stretches warmup/decay across2250 steps: epoch count and schedule duration change together. Described/hard arms use3epochs1125steps. No accuracy-selected early stop.
+
+Hard-negative review was performed by Codex from source task and explicit labels. Declined ambiguous same-meaning controls and unclear visual/icon cases. Existing unmodified labels are not claimed fully reviewed. 43/750 negatives is a modest targeted intervention, not a wholesale hard-negative curriculum. Review archive remains on NAS to avoid publishing source UI data.
+
+Frozen application-disjoint calibration/test:24tasks each from existing exploratory validation corpus, all disjoint from training applications. Score complete offered candidate pools. Requests exceeding512 encoded tokens defer as whole tasks; no silent truncation. Target-removed probes remove the demonstrated target from scored candidates; other valid controls may remain, so these are no-demonstrated-target stress tests, NOT independently verified no-valid-action examples.
+
+Acceptance grid fixed before evaluation: thresholds .5,.9,.95,.99,.999,.9999,.99999 and margins0,.001,.01,.1. Unique maximum required. Choose on calibration only, requiring >=5 accepts, >=95% empirical precision, zero target-removed acceptances; maximize coverage then precision/threshold. If none qualify, defer all. These small-sample criteria are experimental selection rules, not a production promotion guarantee. Report test coverage, precision and failures; do not tune after viewing test labels. Evaluate paired200 old cases separately for continuity.
+
+Risks: false negatives in demonstration labels; correlated tasks; high-confidence errors; per-pair accuracy hiding candidate-pool errors; checkpoint absence/timecap; schema-description loss. Tests/audits: reviewed explicit mismatches; application-disjoint partition; full scores and calibration grid; whole-pool/removed-target evaluation; fit completion metadata; schema serialization captured. Driver task completion, independent human label review and broad statistical qualification remain outside this experiment.

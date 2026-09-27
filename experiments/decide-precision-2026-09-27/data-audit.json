@@ -1,0 +1,13 @@
+{
+  "frozen_hashes_match": true,
+  "positive_rows_identical": 750,
+  "changed_negative_texts": 41,
+  "labels_preserved": true,
+  "source_disjoint": true,
+  "application_disjoint": true,
+  "pool_task_counts": {
+    "calibration": 24,
+    "test": 24
+  },
+  "max_candidates": 32
+}

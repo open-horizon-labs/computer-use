@@ -1,0 +1,11 @@
+{
+  "six/adapter/final/adapter_model.safetensors": "ce31100c261ee5d8973afd962a2b0edb2084c3dad932166adb24c029e41ba94c",
+  "six/adapter/final/adapter_config.json": "38cefe9e194cf37e977a0f6f09ceaa7d17c7cfccd3aa14de98ea9f47cc6bfa66",
+  "six/adapter/final/README.md": "2ba4e08b99a6e10e7db9614eee5aabc6bde258589278a1e128f2fe28f631b1b6",
+  "described/adapter/final/adapter_model.safetensors": "8b8c07dc71cf1b225b6ce1827d2c449e655a018b0f456a9ccbe04f5060f51dc6",
+  "described/adapter/final/README.md": "2ba4e08b99a6e10e7db9614eee5aabc6bde258589278a1e128f2fe28f631b1b6",
+  "described/adapter/final/adapter_config.json": "054dfc55aa0e6c99cb72f95e47990ea4158607dd459066db643220c7b6526692",
+  "hard/adapter/final/README.md": "2ba4e08b99a6e10e7db9614eee5aabc6bde258589278a1e128f2fe28f631b1b6",
+  "hard/adapter/final/adapter_config.json": "ab6ff95e61bc1900383d505ee4591e56896132f25933ecb08237cc269f7824e3",
+  "hard/adapter/final/adapter_model.safetensors": "ba075039a24ddbff04b8339b36e9b8a3b4cb8049052703b91e3c9c18c5476021"
+}
