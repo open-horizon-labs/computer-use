@@ -1,0 +1,2764 @@
+{
+  "mode": "paired real inference over fixed observations; no desktop execution",
+  "extractor_startup_ms": 4582.890625024447,
+  "results": [
+    {
+      "id": "SIM-001-default-jev",
+      "expected": "a",
+      "arms": {
+        "capability": {
+          "ms": 1051.964875019621,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a",
+                "confidence": 0.99,
+                "probabilities": {
+                  "abstain": 0.0,
+                  "b": 0.0,
+                  "a": 1.0,
+                  "reobserve": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a",
+            "reason": "semantic_choice",
+            "decision_ms": 1051.627125008963,
+            "binding_digest": "b6d5457d0b3ef4005992d3bf084964cbc52567fd606fecef4a303d5512562a68"
+          }
+        },
+        "jev_only": {
+          "ms": 1051.964875019621,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a",
+                "confidence": 0.99,
+                "probabilities": {
+                  "abstain": 0.0,
+                  "b": 0.0,
+                  "a": 1.0,
+                  "reobserve": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a",
+            "reason": "semantic_choice",
+            "decision_ms": 1051.627125008963,
+            "binding_digest": "b6d5457d0b3ef4005992d3bf084964cbc52567fd606fecef4a303d5512562a68"
+          }
+        }
+      }
+    },
+    {
+      "id": "SIM-002-unavailable-specialist",
+      "expected": "b",
+      "arms": {
+        "capability": {
+          "ms": 1514.0024579886813,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "action_authorized": true,
+            "decision_ms": 1514.0024579886813
+          }
+        },
+        "jev_only": {
+          "ms": 147.49875001143664,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "b",
+                "confidence": 0.31,
+                "probabilities": {
+                  "b": 0.48,
+                  "a": 0.06,
+                  "reobserve": 0.28,
+                  "abstain": 0.18
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "decision_ms": 147.49875001143664,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "cc3955f97e9f597bd7e75be83c0715a5f773a17611a21f73bae3e361b9864cdf",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "SIM-005-healthy-specialist",
+      "expected": "b",
+      "arms": {
+        "capability": {
+          "ms": 133.86679100221954,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "b",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 133.86679100221954
+          }
+        },
+        "jev_only": {
+          "ms": 124.02770802145824,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "b",
+                "confidence": 0.24,
+                "probabilities": {
+                  "b": 0.42,
+                  "a": 0.06,
+                  "reobserve": 0.31,
+                  "abstain": 0.21
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "decision_ms": 124.02770802145824,
+            "binding_digest": "85857107b0d58165b035fe0f7a28b4e89483292e1e324beb43035fdd3d0ab0cc",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "cc3955f97e9f597bd7e75be83c0715a5f773a17611a21f73bae3e361b9864cdf",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "SIM-021-product-prices",
+      "expected": "b",
+      "arms": {
+        "capability": {
+          "ms": 926.4430830080528,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "action_authorized": true,
+            "decision_ms": 926.4430830080528
+          }
+        },
+        "jev_only": {
+          "ms": 253.5345829965081,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "s1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "b",
+                "confidence": 0.3,
+                "probabilities": {
+                  "reobserve": 0.32,
+                  "abstain": 0.14,
+                  "a": 0.07,
+                  "b": 0.47
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "b",
+            "reason": "semantic_choice",
+            "decision_ms": 253.5345829965081,
+            "binding_digest": "a31f23a65c6757d134a55c82aca232c1d23c906494be59f50662e14fe770334e",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "2203696399ca588019a10a5f13b0a3f62eaaa728daef81341ececa02af86ca48",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-100-0",
+      "expected": "a6",
+      "arms": {
+        "capability": {
+          "ms": 49.38595800194889,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a6",
+            "reason": "explicit_fallback",
+            "action_authorized": true,
+            "decision_ms": 49.38595800194889
+          }
+        },
+        "jev_only": {
+          "ms": 143.68195901624858,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "d197a98e5c80a1656b81c80ef8d4575b1ddfddf5f135f5d813a239160a0b9597",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.5,
+                "probabilities": {
+                  "a0": 0.01,
+                  "a3": 0.0,
+                  "reobserve": 0.55,
+                  "abstain": 0.2,
+                  "a2": 0.08,
+                  "a1": 0.0,
+                  "a4": 0.01,
+                  "a6": 0.15,
+                  "a5": 0.0
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 143.68195901624858,
+            "binding_digest": "db39d3d1c1f4f07dce9fa712fbc459f8049513e2a537318cf6a43bb1fbc690be",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "efd8b45746369e2ed86128b77113b8767c19901d03d4f79304c41ce28045633d",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-101-0",
+      "expected": "a4",
+      "arms": {
+        "capability": {
+          "ms": 99.19312500278465,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a4",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 99.19312500278465
+          }
+        },
+        "jev_only": {
+          "ms": 139.69212499796413,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "a85ac1febc28d6bb80f2e1ecb3083c65170004bfe52528eba260f800dd7e0710",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a4",
+                "confidence": 0.4,
+                "probabilities": {
+                  "a0": 0.01,
+                  "a1": 0.0,
+                  "a2": 0.13,
+                  "reobserve": 0.35,
+                  "a3": 0.0,
+                  "a4": 0.48,
+                  "a6": 0.01,
+                  "abstain": 0.02,
+                  "a5": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a4",
+            "reason": "semantic_choice",
+            "decision_ms": 139.69212499796413,
+            "binding_digest": "3192f6734e90340d5063fa2cd1d0f910a7c9b9e9d4bcf9074734c9d1c72d21d1",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "3a9d4728a36afbd29c60fba2a316456dfcd594b519ee4ebeaa0215831e19cff1",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-101-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 15.66554099554196,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 15.66554099554196
+          }
+        },
+        "jev_only": {
+          "ms": 111.66475000209175,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "d3c7e4e9800f8bed43f0594b4f5ea69d3cdb94302cfd827b846f6b307cac901f",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.16,
+                "probabilities": {
+                  "reobserve": 0.44,
+                  "abstain": 0.15,
+                  "a0": 0.41
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 111.66475000209175,
+            "binding_digest": "40a1d7a0aea568e783735f99a9303ae13b60305f98169221522c98c4153f9cf0",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "087b18da489e1daf8f81510f1389dfb47b59dda8d1a687fc1c18d2e7dee3c6c1",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-102-0",
+      "expected": "a1",
+      "arms": {
+        "capability": {
+          "ms": 28.989957994781435,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a1",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 28.989957994781435
+          }
+        },
+        "jev_only": {
+          "ms": 113.78537499695085,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "a66836ee15936149fc996b4820e7470f54231efe12b6b630dd4dbc7a5046155a",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a1",
+                "confidence": 0.93,
+                "probabilities": {
+                  "a4": 0.0,
+                  "a3": 0.0,
+                  "reobserve": 0.04,
+                  "a6": 0.0,
+                  "a0": 0.0,
+                  "a5": 0.0,
+                  "a1": 0.95,
+                  "a2": 0.0,
+                  "abstain": 0.01
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a1",
+            "reason": "semantic_choice",
+            "decision_ms": 113.78537499695085,
+            "binding_digest": "22db407c50cf615abb583c4ef4e5ff6340333bff16d0bdd2d88241cb9630f844",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "606668d07784fd159bb978f4d200aaee5184eb75d5efb16f3808392016fa0bee",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-102-1",
+      "expected": "a3",
+      "arms": {
+        "capability": {
+          "ms": 26.871707988902926,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a3",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 26.871707988902926
+          }
+        },
+        "jev_only": {
+          "ms": 122.90116600343026,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "3872cf9f24f94bb6966eb833e621d14456b2bc96b8a73b3e3851d4d23f1bda42",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a3",
+                "confidence": 0.8,
+                "probabilities": {
+                  "a0": 0.0,
+                  "abstain": 0.03,
+                  "a4": 0.0,
+                  "a5": 0.02,
+                  "a3": 0.82,
+                  "a2": 0.0,
+                  "reobserve": 0.13,
+                  "a1": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a3",
+            "reason": "semantic_choice",
+            "decision_ms": 122.90116600343026,
+            "binding_digest": "b5925374c8a36ec3f1b6d0e28ccd61fd9eeb990d6c89115b487146c342a1d10f",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "64747437ceb4ed3b0e6c20b96396d1917bb6719e732395c76d25c776598f76e0",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-103-0",
+      "expected": "a1",
+      "arms": {
+        "capability": {
+          "ms": 30.175875028362498,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a1",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 30.175875028362498
+          }
+        },
+        "jev_only": {
+          "ms": 153.09745800914243,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "eba58e3e0fefcd56b5c6bec70ac177e522bfa2eb5f9303a3be8fb7dac0b2d354",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a1",
+                "confidence": 0.6,
+                "probabilities": {
+                  "a4": 0.0,
+                  "reobserve": 0.28,
+                  "a1": 0.64,
+                  "a3": 0.0,
+                  "a6": 0.01,
+                  "a0": 0.04,
+                  "a5": 0.0,
+                  "abstain": 0.03,
+                  "a2": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a1",
+            "reason": "semantic_choice",
+            "decision_ms": 153.09745800914243,
+            "binding_digest": "c4f5ab424f6c9f6778c6a30732ef2f50171f5db81767671c744b9d2b72d3f258",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "9d765b631f390fc526816c88cd8c5c08f37f5eeb9cc14ddead301e715380bfc9",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-103-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 14.235167007427663,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 14.235167007427663
+          }
+        },
+        "jev_only": {
+          "ms": 117.36599999130704,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "d3c7e4e9800f8bed43f0594b4f5ea69d3cdb94302cfd827b846f6b307cac901f",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.14,
+                "probabilities": {
+                  "abstain": 0.23,
+                  "reobserve": 0.42,
+                  "a0": 0.35
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 117.36599999130704,
+            "binding_digest": "40a1d7a0aea568e783735f99a9303ae13b60305f98169221522c98c4153f9cf0",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "087b18da489e1daf8f81510f1389dfb47b59dda8d1a687fc1c18d2e7dee3c6c1",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-104-0",
+      "expected": "a6",
+      "arms": {
+        "capability": {
+          "ms": 29.391165997367352,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a6",
+            "reason": "explicit_fallback",
+            "action_authorized": true,
+            "decision_ms": 29.391165997367352
+          }
+        },
+        "jev_only": {
+          "ms": 141.68670799699612,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "54c45e91a372f9293f72804d1587d8226d843e79d3672e73cbe040f4b5afb93e",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.59,
+                "probabilities": {
+                  "a6": 0.09,
+                  "a0": 0.0,
+                  "a1": 0.05,
+                  "a4": 0.0,
+                  "abstain": 0.18,
+                  "a2": 0.0,
+                  "reobserve": 0.65,
+                  "a5": 0.02,
+                  "a3": 0.01
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 141.68670799699612,
+            "binding_digest": "d8b6da2208081e7617f6c9db4c0e9ec20aeba27a34e8921022ecfc0ec3d41130",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "40039d068d8b4e70dc04c63a6132966294cb94e5a210a75cdb6a4b385c63fd87",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-105-0",
+      "expected": "a2",
+      "arms": {
+        "capability": {
+          "ms": 30.231209006160498,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a2",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 30.231209006160498
+          }
+        },
+        "jev_only": {
+          "ms": 127.6146250020247,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "e407f94aca6a32c50627462f8c2def19088b58af55c7c3a0f2f5a8bfb9e0529d",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.29,
+                "probabilities": {
+                  "reobserve": 0.33,
+                  "a2": 0.25,
+                  "a5": 0.0,
+                  "a6": 0.01,
+                  "a4": 0.0,
+                  "abstain": 0.04,
+                  "a0": 0.37,
+                  "a3": 0.0,
+                  "a1": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 127.6146250020247,
+            "binding_digest": "29de1743aaca434dbcfad6dea408d419d878c083de07c05dc96a3ff506cb6fcd",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "216c3eaf3e70cf6a6cc1533f84f201901b589b8cc17285bfda3da3f06735faba",
+        "agreement": false,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-105-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 14.303333999123424,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 14.303333999123424
+          }
+        },
+        "jev_only": {
+          "ms": 139.89333299105056,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "d3c7e4e9800f8bed43f0594b4f5ea69d3cdb94302cfd827b846f6b307cac901f",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.23,
+                "probabilities": {
+                  "abstain": 0.19,
+                  "reobserve": 0.49,
+                  "a0": 0.32
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 139.89333299105056,
+            "binding_digest": "40a1d7a0aea568e783735f99a9303ae13b60305f98169221522c98c4153f9cf0",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "087b18da489e1daf8f81510f1389dfb47b59dda8d1a687fc1c18d2e7dee3c6c1",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-106-0",
+      "expected": "a1",
+      "arms": {
+        "capability": {
+          "ms": 29.13091701338999,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a1",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 29.13091701338999
+          }
+        },
+        "jev_only": {
+          "ms": 118.75908300862648,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "31d4a221a402da360c38ad9c543a46c2e5bd993102c29eabf685dc86aebb6982",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a1",
+                "confidence": 0.69,
+                "probabilities": {
+                  "a3": 0.0,
+                  "a5": 0.0,
+                  "a4": 0.0,
+                  "a0": 0.01,
+                  "a2": 0.0,
+                  "a1": 0.74,
+                  "a6": 0.0,
+                  "reobserve": 0.23,
+                  "abstain": 0.02
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a1",
+            "reason": "semantic_choice",
+            "decision_ms": 118.75908300862648,
+            "binding_digest": "b42da1b3fd59c7721c0aa6efa91f966a6746e737df9c232665bc44d64eed02cd",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "b31b131ee7d5591af8a5ee5e96ce64b36f50b350aaa795d32c3d1daa324c6679",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-106-1",
+      "expected": "a2",
+      "arms": {
+        "capability": {
+          "ms": 26.103458978468552,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a2",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 26.103458978468552
+          }
+        },
+        "jev_only": {
+          "ms": 167.73154100519605,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "df0218a3f9b7c840b0f8e10c480b552f80a672c023cd5ff855023dc6724dac5c",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a2",
+                "confidence": 0.81,
+                "probabilities": {
+                  "a1": 0.0,
+                  "a5": 0.01,
+                  "a0": 0.01,
+                  "a2": 0.82,
+                  "a4": 0.0,
+                  "a3": 0.0,
+                  "reobserve": 0.13,
+                  "abstain": 0.03
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a2",
+            "reason": "semantic_choice",
+            "decision_ms": 167.73154100519605,
+            "binding_digest": "87a3778557e50e6a0521f598a68bf8ac51cc819766efc90ae9394cb749b8edb8",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "99a85bba3b11b44b9f7b811f6c06836237b1e96dd6f15030012540439b163513",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-107-0",
+      "expected": "a5",
+      "arms": {
+        "capability": {
+          "ms": 31.884791009360924,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a5",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 31.884791009360924
+          }
+        },
+        "jev_only": {
+          "ms": 144.58491699770093,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "3a6eea9842b2e7e8e5cbb38fdbb7682de1b97191c7e4118bd1d91fcd7b805dc7",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a5",
+                "confidence": 0.72,
+                "probabilities": {
+                  "a0": 0.0,
+                  "abstain": 0.02,
+                  "a4": 0.0,
+                  "a5": 0.75,
+                  "a3": 0.0,
+                  "a2": 0.0,
+                  "reobserve": 0.19,
+                  "a6": 0.0,
+                  "a1": 0.04
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a5",
+            "reason": "semantic_choice",
+            "decision_ms": 144.58491699770093,
+            "binding_digest": "3345eb5cbf26acb547124584e9caf183be137edb2f229ccb5751de6b600069f4",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "5f8a39c6fa6dcd9f3c747c00e63d848680371ebfd6bc257bf863ec5b9492e4b6",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-107-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 14.928707998478785,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 14.928707998478785
+          }
+        },
+        "jev_only": {
+          "ms": 202.4860420206096,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "6d6d868b5d0995ff693567968c8bd84086e9cbc01abe20f1eda54f59df58aeca",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.25,
+                "probabilities": {
+                  "reobserve": 0.4,
+                  "a0": 0.5,
+                  "abstain": 0.1
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 202.4860420206096,
+            "binding_digest": "5e094572590cc0a58c4b5f3f1e9a67c4adf7095f817518bfe4a3a7a202490de7",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "a762da452c4911b2f8460f1d403e624382135a41bfd3184b18cdce44a0584543",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-108-0",
+      "expected": "a6",
+      "arms": {
+        "capability": {
+          "ms": 30.813999997917563,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a6",
+            "reason": "explicit_fallback",
+            "action_authorized": true,
+            "decision_ms": 30.813999997917563
+          }
+        },
+        "jev_only": {
+          "ms": 161.8431669776328,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "fba43cf8022e1eb7396bc476a2af36a5ab784891f7cfc06a76573873c1a09874",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.52,
+                "probabilities": {
+                  "a3": 0.01,
+                  "a4": 0.0,
+                  "a0": 0.01,
+                  "a6": 0.14,
+                  "a5": 0.0,
+                  "a1": 0.04,
+                  "a2": 0.0,
+                  "abstain": 0.23,
+                  "reobserve": 0.57
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 161.8431669776328,
+            "binding_digest": "f0cf171ae8cb6971f8d1495ea7e5c2309d91cb905b7587274c4e30d7c8b43c00",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "930860c24dd2a52518f37265a80586afa8f11528dc25e7c02d0fb39fc565514e",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-109-0",
+      "expected": "a4",
+      "arms": {
+        "capability": {
+          "ms": 31.019458023365587,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a4",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 31.019458023365587
+          }
+        },
+        "jev_only": {
+          "ms": 118.78279197844677,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "822c525bb5af2d2a36dbaf5ff3050982c691fb4f5dd28d3b4d59a5335a595d15",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.56,
+                "probabilities": {
+                  "a6": 0.01,
+                  "a1": 0.0,
+                  "a5": 0.0,
+                  "a0": 0.6,
+                  "a2": 0.0,
+                  "a4": 0.21,
+                  "a3": 0.0,
+                  "reobserve": 0.17,
+                  "abstain": 0.01
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 118.78279197844677,
+            "binding_digest": "ec9e7986ef806a5a23e004b3026807952d81d396fc578becf3196bd4d7b219b0",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "092514eb1d582ae763b3e6ec838c0db495c758c6cefd2eec56b964ec994b0c3b",
+        "agreement": false,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-109-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 15.115042013349012,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 15.115042013349012
+          }
+        },
+        "jev_only": {
+          "ms": 116.0772500152234,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "04e4e70b80d409a34fa0defa07341a38584e13eb183ad921d7f5205615e76fe2",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.23,
+                "probabilities": {
+                  "reobserve": 0.49,
+                  "a0": 0.38,
+                  "abstain": 0.13
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 116.0772500152234,
+            "binding_digest": "ad437af877e0046314da9fb6e6431cbc343425a9b37ef91500f3731bf6ef22f3",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "8fe30022f47e75e78c55d4cca172a54baa3fd74bd38fb2200986056ab8acee9b",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-110-0",
+      "expected": "a4",
+      "arms": {
+        "capability": {
+          "ms": 30.056999996304512,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a4",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 30.056999996304512
+          }
+        },
+        "jev_only": {
+          "ms": 121.37154201627709,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "8b68573f73bfd29c5bc2f7591ff55b4b83abeaa8a8ea67008924b0ee883cc5a1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a4",
+                "confidence": 0.46,
+                "probabilities": {
+                  "a6": 0.0,
+                  "a1": 0.0,
+                  "abstain": 0.01,
+                  "a4": 0.52,
+                  "a5": 0.0,
+                  "a0": 0.34,
+                  "a3": 0.0,
+                  "reobserve": 0.13,
+                  "a2": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a4",
+            "reason": "semantic_choice",
+            "decision_ms": 121.37154201627709,
+            "binding_digest": "2dfd2a7eaa8ad9b125906f38f43e3fe0277acd26e0e4fa9761ccb160812bba76",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "aa743d81328aaf26dc3d031e75cf33bde9bde0ee28e1ab481244fb86efb19477",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-110-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 26.90220798831433,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 26.90220798831433
+          }
+        },
+        "jev_only": {
+          "ms": 270.476540987147,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "a854e19612baa713cd37e8bfa4a79b35ccec385885390a477776bbb38d4b09e4",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.91,
+                "probabilities": {
+                  "a2": 0.0,
+                  "a5": 0.01,
+                  "a3": 0.0,
+                  "abstain": 0.02,
+                  "a1": 0.0,
+                  "reobserve": 0.05,
+                  "a4": 0.0,
+                  "a0": 0.92
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 270.476540987147,
+            "binding_digest": "40b86581aeeefdd79505173424606ff5d49ea7b55d5661e02c3b45df5ae8e9b0",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "cddc4a6d9598528ae54d9c856560b51867b361620e3dc208b830969684a02603",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-111-0",
+      "expected": "a2",
+      "arms": {
+        "capability": {
+          "ms": 30.657750001410022,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a2",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 30.657750001410022
+          }
+        },
+        "jev_only": {
+          "ms": 162.6387909927871,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "44b92dca9c3895e6f517a43189ae46c43927258d4e00367bbe6eeb8e259ac6af",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a2",
+                "confidence": 0.78,
+                "probabilities": {
+                  "a3": 0.01,
+                  "a4": 0.0,
+                  "a0": 0.0,
+                  "a6": 0.0,
+                  "a5": 0.0,
+                  "a1": 0.01,
+                  "a2": 0.81,
+                  "abstain": 0.01,
+                  "reobserve": 0.16
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a2",
+            "reason": "semantic_choice",
+            "decision_ms": 162.6387909927871,
+            "binding_digest": "585583984f9e7a67f8626dbf71142c4bdf6d3eed9c3b5782d5095da576a02a5d",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "53316535968dcb833ed57e01fe94741b649d3647509c2beb457debf7971a9749",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-111-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 14.815791975706816,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 14.815791975706816
+          }
+        },
+        "jev_only": {
+          "ms": 163.62412500893697,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "04e4e70b80d409a34fa0defa07341a38584e13eb183ad921d7f5205615e76fe2",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.2,
+                "probabilities": {
+                  "a0": 0.38,
+                  "abstain": 0.15,
+                  "reobserve": 0.47
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 163.62412500893697,
+            "binding_digest": "ad437af877e0046314da9fb6e6431cbc343425a9b37ef91500f3731bf6ef22f3",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "8fe30022f47e75e78c55d4cca172a54baa3fd74bd38fb2200986056ab8acee9b",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-112-0",
+      "expected": "a6",
+      "arms": {
+        "capability": {
+          "ms": 30.304249987239018,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a6",
+            "reason": "explicit_fallback",
+            "action_authorized": true,
+            "decision_ms": 30.304249987239018
+          }
+        },
+        "jev_only": {
+          "ms": 122.44054101756774,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "4d38f23b990e55b1539dda3365dd99f96f332b79062653d0c3a2445b56c08f2b",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.5,
+                "probabilities": {
+                  "abstain": 0.21,
+                  "a1": 0.0,
+                  "a0": 0.01,
+                  "a2": 0.06,
+                  "a6": 0.16,
+                  "a3": 0.0,
+                  "reobserve": 0.56,
+                  "a5": 0.0,
+                  "a4": 0.0
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 122.44054101756774,
+            "binding_digest": "9506e45b041521945b17c15b0e7e07de93df46ffb0afecd43e52f2484d5e36e7",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "974619f6265a4ee52e56c8afaa609464dd8328a5b99d892834c7abd5ed4e9311",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-113-0",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 29.546040983404964,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 29.546040983404964
+          }
+        },
+        "jev_only": {
+          "ms": 134.8753750207834,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "66fb0ba7cdd85a49f1fc5fdec4133e31c178c739e727ca735a4ada4c0325cb16",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.79,
+                "probabilities": {
+                  "a0": 0.81,
+                  "a1": 0.01,
+                  "a3": 0.0,
+                  "a6": 0.01,
+                  "a5": 0.0,
+                  "reobserve": 0.14,
+                  "a2": 0.0,
+                  "abstain": 0.02,
+                  "a4": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 134.8753750207834,
+            "binding_digest": "cd721e6d7d5fa12e29b2647c0dc7bfe89f61c35d2bfdd5f14f954d82d59afecc",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "060d268adc85d59835a6f48c6dadb0067a49d4316fc43c351fb86d2f2d046188",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-113-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 16.40779199078679,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 16.40779199078679
+          }
+        },
+        "jev_only": {
+          "ms": 140.16458299010992,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "d3c7e4e9800f8bed43f0594b4f5ea69d3cdb94302cfd827b846f6b307cac901f",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.14,
+                "probabilities": {
+                  "reobserve": 0.39,
+                  "abstain": 0.18,
+                  "a0": 0.43
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 140.16458299010992,
+            "binding_digest": "16b60887accd0095a1e95b93e3e546941a4515f778232b7e63ccb50accc6d159",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "087b18da489e1daf8f81510f1389dfb47b59dda8d1a687fc1c18d2e7dee3c6c1",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-114-0",
+      "expected": "a2",
+      "arms": {
+        "capability": {
+          "ms": 30.792417004704475,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a2",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 30.792417004704475
+          }
+        },
+        "jev_only": {
+          "ms": 122.36295800539665,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "368eb5275109f61f06043a519a1a32fe31ab6e374021fb6a3bd219a9d9c2d73a",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a2",
+                "confidence": 0.79,
+                "probabilities": {
+                  "a3": 0.0,
+                  "a5": 0.01,
+                  "a4": 0.0,
+                  "a0": 0.0,
+                  "a2": 0.8,
+                  "a1": 0.0,
+                  "a6": 0.01,
+                  "reobserve": 0.16,
+                  "abstain": 0.02
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a2",
+            "reason": "semantic_choice",
+            "decision_ms": 122.36295800539665,
+            "binding_digest": "46453ea550a72dbaabc1ca13088fe87a6635d0eace686a8ba27fcc948f5915ff",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "b74598da6e1999a52114a927cc489f99dbfb5972b95bbe5a6e50583a664b0876",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-114-1",
+      "expected": "a4",
+      "arms": {
+        "capability": {
+          "ms": 26.17249998729676,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a4",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 26.17249998729676
+          }
+        },
+        "jev_only": {
+          "ms": 124.4907499931287,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "8a1771e142609c93ead3c62cf9ebff3973be9a2faab1cd6c4e8150b053a54e82",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a4",
+                "confidence": 0.79,
+                "probabilities": {
+                  "a3": 0.0,
+                  "a4": 0.81,
+                  "a0": 0.0,
+                  "a5": 0.03,
+                  "a1": 0.0,
+                  "a2": 0.0,
+                  "abstain": 0.04,
+                  "reobserve": 0.11
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a4",
+            "reason": "semantic_choice",
+            "decision_ms": 124.4907499931287,
+            "binding_digest": "98301c0072e598602d633a5e16e3333071c9ea707c004a2e7c88edd2f269ae68",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "b6627ff14d32073c4578e330d0914048b03fb2455d32753ac801d3e364be76b2",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-115-0",
+      "expected": "a5",
+      "arms": {
+        "capability": {
+          "ms": 29.90383398719132,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a5",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 29.90383398719132
+          }
+        },
+        "jev_only": {
+          "ms": 120.08854100713506,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "1cfb53812bd38f044fd0a9ac880c17f8789216e170d2d5891c738084bad95529",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a5",
+                "confidence": 0.56,
+                "probabilities": {
+                  "a6": 0.0,
+                  "a1": 0.0,
+                  "a3": 0.13,
+                  "abstain": 0.01,
+                  "a0": 0.0,
+                  "a5": 0.62,
+                  "reobserve": 0.24,
+                  "a4": 0.0,
+                  "a2": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a5",
+            "reason": "semantic_choice",
+            "decision_ms": 120.08854100713506,
+            "binding_digest": "35828c177a6920c508eff642b16426ab1965f1b3b2fce00ce150603ad345610b",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "dd1eaff9f09667f657ddc7ab5d3da9f4167089c4faf9d643b082f67632770641",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-115-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 15.427042002556846,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 15.427042002556846
+          }
+        },
+        "jev_only": {
+          "ms": 135.54720801766962,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "04e4e70b80d409a34fa0defa07341a38584e13eb183ad921d7f5205615e76fe2",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.26,
+                "probabilities": {
+                  "reobserve": 0.51,
+                  "abstain": 0.15,
+                  "a0": 0.34
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 135.54720801766962,
+            "binding_digest": "ad437af877e0046314da9fb6e6431cbc343425a9b37ef91500f3731bf6ef22f3",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "8fe30022f47e75e78c55d4cca172a54baa3fd74bd38fb2200986056ab8acee9b",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-116-0",
+      "expected": "a6",
+      "arms": {
+        "capability": {
+          "ms": 30.53600000566803,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a6",
+            "reason": "explicit_fallback",
+            "action_authorized": true,
+            "decision_ms": 30.53600000566803
+          }
+        },
+        "jev_only": {
+          "ms": 137.49108300544322,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "e5c766078a262267e23a2d7bc73957db4a672b38b23e39e88cfac671fd0949b7",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.54,
+                "probabilities": {
+                  "a5": 0.0,
+                  "a1": 0.05,
+                  "a6": 0.16,
+                  "a0": 0.01,
+                  "a2": 0.0,
+                  "a3": 0.0,
+                  "reobserve": 0.6,
+                  "abstain": 0.18,
+                  "a4": 0.0
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 137.49108300544322,
+            "binding_digest": "6d05696605c9cf53c8326fca7f93741bf33dd87cc439a59bbf7a491979b24fc8",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "08d262df33ee6790117c7918f0cbb53427ee8803350c4bb598155c8508f69b25",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-117-0",
+      "expected": "a5",
+      "arms": {
+        "capability": {
+          "ms": 30.0508750078734,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a5",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 30.0508750078734
+          }
+        },
+        "jev_only": {
+          "ms": 132.20449999789707,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "fb14b8eeb1edf7fabb1f1545c41d5edab04057c8643e0b222268114877963877",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a5",
+                "confidence": 0.73,
+                "probabilities": {
+                  "a3": 0.0,
+                  "a5": 0.77,
+                  "a4": 0.0,
+                  "a0": 0.0,
+                  "a2": 0.03,
+                  "a1": 0.0,
+                  "a6": 0.0,
+                  "reobserve": 0.18,
+                  "abstain": 0.02
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a5",
+            "reason": "semantic_choice",
+            "decision_ms": 132.20449999789707,
+            "binding_digest": "844c1b87e837f2215ab8262f5752111e66e14b47612106a7584c4895c9049a3a",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "5df10006161787ceb5db02046b649f0a3f92cf3ef9d050728b3946f68daf1456",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-117-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 14.67037500697188,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 14.67037500697188
+          }
+        },
+        "jev_only": {
+          "ms": 135.1937919971533,
+          "correct": false,
+          "decision": {
+            "snapshot_id": "6634a5dc98f2fe64dc381b0cd9e1a295529176017a16d3aada0165584f7a0e9d",
+            "action_authorized": false,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "reobserve",
+                "confidence": 0.18,
+                "probabilities": {
+                  "a0": 0.45,
+                  "abstain": 0.09,
+                  "reobserve": 0.46
+                },
+                "model": "jev-1.13.0",
+                "action_authorized": false
+              }
+            ],
+            "status": "defer",
+            "reason": "semantic_unaccepted",
+            "decision_ms": 135.1937919971533,
+            "binding_digest": "242f3762c6d929808a9c881a2b88dd0b5d1a261b6bd625850e79a309a070bd1c",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "bcb171ff27fd375e9a1c80179724d3f26fa7884e1d6b1cc8fe49627e422fd2b4",
+        "agreement": null,
+        "counterexample_status": "needs_independent_outcome_and_CESS_review"
+      }
+    },
+    {
+      "id": "booking-118-0",
+      "expected": "a3",
+      "arms": {
+        "capability": {
+          "ms": 29.88337498391047,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a3",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 29.88337498391047
+          }
+        },
+        "jev_only": {
+          "ms": 138.21300002746284,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "deb4663af6b55b9236b800f152951e99f7c7bb91623049b0a8a2dba62e4723cc",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a3",
+                "confidence": 0.85,
+                "probabilities": {
+                  "a2": 0.0,
+                  "a0": 0.03,
+                  "a6": 0.0,
+                  "a4": 0.0,
+                  "a5": 0.0,
+                  "a1": 0.0,
+                  "abstain": 0.0,
+                  "reobserve": 0.1,
+                  "a3": 0.87
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a3",
+            "reason": "semantic_choice",
+            "decision_ms": 138.21300002746284,
+            "binding_digest": "394a2f9843f649034241fe9fdcf68d5efa2fa0dde079d763a59cdec618966c91",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "5fcb0b3e082b775874de2490c66ff2fcb7f8b58992d616ccdb5a2b4b099c56fa",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-118-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 27.362332999473438,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 27.362332999473438
+          }
+        },
+        "jev_only": {
+          "ms": 114.58037499687634,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "51ed1ed05b9c211e4232a2a8af4ee634a38582a877ff89660d04e67b92cd36dd",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.88,
+                "probabilities": {
+                  "a2": 0.0,
+                  "a5": 0.01,
+                  "reobserve": 0.08,
+                  "a0": 0.89,
+                  "a3": 0.0,
+                  "abstain": 0.02,
+                  "a1": 0.0,
+                  "a4": 0.0
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 114.58037499687634,
+            "binding_digest": "97869b9ef37a66b282610a6070976330e0cf9cd33772faa9f46aba6cdff362f4",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "88fabe051574e51b1761f55496b60e04c6c79deabbe77b67d250d7d94a9d1263",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-119-0",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 29.935041995486245,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 29.935041995486245
+          }
+        },
+        "jev_only": {
+          "ms": 123.99679198279046,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "961d5981e65a3e5b66f77465bfc0457a1fe51aec6a463385558bf2af7a0068d1",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.78,
+                "probabilities": {
+                  "a2": 0.0,
+                  "a3": 0.0,
+                  "a6": 0.01,
+                  "a4": 0.0,
+                  "a5": 0.0,
+                  "abstain": 0.02,
+                  "a1": 0.0,
+                  "a0": 0.81,
+                  "reobserve": 0.15
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 123.99679198279046,
+            "binding_digest": "17bca45ffc48eae6c1b58576fb4e7d8115240218c823151396ee4be769111763",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "aafaa152f45d19f4d2db8efa6d43a4866a6ba38d9ace9904dc002e6071e343cc",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    },
+    {
+      "id": "booking-119-1",
+      "expected": "a0",
+      "arms": {
+        "capability": {
+          "ms": 15.521332999924198,
+          "correct": true,
+          "decision": {
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "unique_match",
+            "action_authorized": true,
+            "decision_ms": 15.521332999924198
+          }
+        },
+        "jev_only": {
+          "ms": 178.68779099080712,
+          "correct": true,
+          "decision": {
+            "snapshot_id": "6634a5dc98f2fe64dc381b0cd9e1a295529176017a16d3aada0165584f7a0e9d",
+            "action_authorized": true,
+            "plan": {
+              "steps": [
+                {
+                  "model": "jev",
+                  "method": "choose"
+                }
+              ],
+              "reducer": "offered_choice",
+              "models": [
+                "jev"
+              ]
+            },
+            "provider_outputs": [
+              {
+                "choice": "a0",
+                "confidence": 0.31,
+                "probabilities": {
+                  "reobserve": 0.37,
+                  "a0": 0.54,
+                  "abstain": 0.09
+                },
+                "model": "jev-1.13.0"
+              }
+            ],
+            "status": "selected",
+            "action_id": "a0",
+            "reason": "semantic_choice",
+            "decision_ms": 178.68779099080712,
+            "binding_digest": "cbc48b685a1b389bd5550bf38ec49c4382293ef6e6e2fd1d9e73d4a81c5df34a",
+            "rollout": {
+              "contract": "described-span-match/en",
+              "stage": "shadow",
+              "specialist_observed": true
+            }
+          }
+        }
+      },
+      "shadow": {
+        "contract": "described-span-match/en",
+        "stage": "shadow",
+        "request_digest": "bcb171ff27fd375e9a1c80179724d3f26fa7884e1d6b1cc8fe49627e422fd2b4",
+        "agreement": true,
+        "counterexample_status": null
+      }
+    }
+  ],
+  "summary": {
+    "capability": {
+      "correct": 39,
+      "total": 39,
+      "median_ms": 29.88337498391047,
+      "mean_ms": 118.0169892815264,
+      "total_ms": 4602.66258197953,
+      "first_request_ms": 1051.964875019621,
+      "median_excluding_first_ms": 29.714707983657718
+    },
+    "jev_only": {
+      "correct": 25,
+      "total": 39,
+      "median_ms": 135.54720801766962,
+      "mean_ms": 166.59288449012914,
+      "total_ms": 6497.122495115036,
+      "first_request_ms": 1051.964875019621,
+      "median_excluding_first_ms": 135.37050000741147
+    }
+  }
+}

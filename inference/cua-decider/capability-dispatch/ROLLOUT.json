@@ -1,0 +1,13 @@
+{
+  "contract": "described-span-match/en",
+  "stage": "shadow",
+  "incumbent": "jev",
+  "specialist": "gliner2",
+  "promotion": {
+    "authorized_by": "User instruction: try the CESS-governed specialist strangler (2026-09-27)",
+    "accepted_ce": "CE-CAP-001",
+    "qualification_report": "inference/cua-decider/capability-dispatch/STRANGLER-TRIAL.md",
+    "checkpoint": "sha256:afd0555f56b8f2e357e4544c0f81ffa80c90cb05f935affc5afff8e3334bc68f"
+  },
+  "authority_note": "Shadow mode only. Active mode requires a user authorization, an accepted CESS counterexample reference, a qualification report, and exact checkpoint identity. Disagreements remain review proposals until independent outcome verification and CESS review."
+}

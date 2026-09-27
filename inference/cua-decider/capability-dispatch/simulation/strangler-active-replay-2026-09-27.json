@@ -1,0 +1,449 @@
+{
+  "mode": "active specialist replay; current-request binding check; no desktop execution",
+  "contract": "described-span-match/en",
+  "tasks": [
+    {
+      "task_ref": "100",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a6",
+          "selected_id": "a6",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "explicit_fallback",
+          "decision_ms": 145.22120798937976
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "101",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a4",
+          "selected_id": "a4",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 69.31945797987282
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 15.347833017585799
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "102",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a1",
+          "selected_id": "a1",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 27.011457976186648
+        },
+        {
+          "turn": 1,
+          "expected_id": "a3",
+          "selected_id": "a3",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 24.11450000363402
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "103",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a1",
+          "selected_id": "a1",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 30.658624978968874
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 34.820666012819856
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "104",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a6",
+          "selected_id": "a6",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "explicit_fallback",
+          "decision_ms": 27.512375003425404
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "105",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a2",
+          "selected_id": "a2",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 27.582415990764275
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 13.378541014390066
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "106",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a1",
+          "selected_id": "a1",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 26.353708002716303
+        },
+        {
+          "turn": 1,
+          "expected_id": "a2",
+          "selected_id": "a2",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 22.788000002037734
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "107",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a5",
+          "selected_id": "a5",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 25.17945898580365
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 11.728374985978007
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "108",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a6",
+          "selected_id": "a6",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "explicit_fallback",
+          "decision_ms": 27.937832986935973
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "109",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a4",
+          "selected_id": "a4",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 25.907000002916902
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 13.991292013088241
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "110",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a4",
+          "selected_id": "a4",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 26.216208992991596
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 23.047041991958395
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "111",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a2",
+          "selected_id": "a2",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 25.536874978570268
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 12.832167005399242
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "112",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a6",
+          "selected_id": "a6",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "explicit_fallback",
+          "decision_ms": 26.60041701165028
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "113",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 26.00279200123623
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 12.402707972796634
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "114",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a2",
+          "selected_id": "a2",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 26.726874988526106
+        },
+        {
+          "turn": 1,
+          "expected_id": "a4",
+          "selected_id": "a4",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 23.769541003275663
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "115",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a5",
+          "selected_id": "a5",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 27.670250012306497
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 27.11695898324251
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "116",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a6",
+          "selected_id": "a6",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "explicit_fallback",
+          "decision_ms": 27.41541701834649
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "117",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a5",
+          "selected_id": "a5",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 25.730167020810768
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 11.915708018932492
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "118",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a3",
+          "selected_id": "a3",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 27.365417015971616
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 24.322999990545213
+        }
+      ],
+      "all_correct": true
+    },
+    {
+      "task_ref": "119",
+      "decisions": [
+        {
+          "turn": 0,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 29.186750005465
+        },
+        {
+          "turn": 1,
+          "expected_id": "a0",
+          "selected_id": "a0",
+          "correct": true,
+          "current_request_binding_valid": true,
+          "reason": "unique_match",
+          "decision_ms": 14.101125008892268
+        }
+      ],
+      "all_correct": true
+    }
+  ],
+  "summary": {
+    "tasks": 20,
+    "tasks_all_correct": 20,
+    "decisions": 35,
+    "correct": 35,
+    "binding_valid": 35,
+    "median_warm_decision_ms": 26.00279200123623
+  }
+}

@@ -1,6 +1,6 @@
-# Gradually replace Jev on qualified task types
+# CESS governed Jev specialist rollout
 
-Status: rollout design requested by the user; no trained specialist is promoted by this document. Current dispatcher behavior remains unchanged. Jev is the generic fallback, with its existing Qwen escalation.
+Status: a GLiNER2 described-field contract has completed shadow comparison and active saved-request replay. `ROLLOUT.json` stays `shadow` by default. The experimental `Strangler` active path requires a reviewed promotion record and retains Jev recovery. No installed Cua service or stock Driver was switched.
 
 ## Start with tasks Jev already handles
 
@@ -18,7 +18,7 @@ Identify repeated request contracts from verified task traces. A slice is a sema
 
 The binary Decide experiments are a candidate for one row, not a new universal next-click model.
 
-## Four stages
+## Rollout stages
 
 1. **Observe:** retain task request, provider/version, latency, choice and independently observed outcome. Redact before storage. Known failures become proposed CEs; log uncertainty rather than inventing labels.
 2. **Shadow:** run the specialist on the same request alongside the incumbent. Only the incumbent path may authorize the action. Measure disagreement and full decision latency. Missing capability, input overflow or failed evidence stays with Jev. Shadow inference costs extra compute and is an evaluation stage, not a speed claim.
@@ -39,7 +39,7 @@ S is the current capability sketch and approved contract boundaries. P is the di
 
 For each failure: retain the request and observed effect; distinguish bad projection from missing policy; repair existing-policy violations or propose the smallest policy change; rerun active case and R; review against S. Extra epochs do not authorize a scope change. Newly discovered evaluation cases may join training only after that evaluation is retired and a fresh holdout is frozen.
 
-Next step after these runs: identify a narrow slice with sufficient independently verified examples, compare its specialist with Jev in shadow, and submit a concrete promotion record. There is no automatic rollout from the present exploratory scores.
+The first slice is `described-span-match/en`: caller-described short English fields extracted by GLiNER2 and matched by the typed reducer. The shadow replay got 35/35 saved booking decisions across 20 tasks; Jev alone got 21/35. The active saved-request replay reproduced 35/35 and checked the current request binding. See [the trial report](../inference/cua-decider/capability-dispatch/STRANGLER-TRIAL.md). The underlying corpus is reused and its steps are correlated, so this qualifies only the narrow experimental route. The default remains shadow. Next, capture fresh independently verified Driver outcomes for this same contract before changing the default or broadening the scope.
 
 ## Proposed counterexamples for the rollout boundary
 
@@ -53,3 +53,5 @@ These are rollout design cases, not automatic additions to the accepted policy a
 ## First experiment outcome
 
 The [precision comparison](../experiments/decide-precision-2026-09-27/RESULTS.md) did not qualify a broad Decide compatibility classifier for takeover. Six epochs, descriptions and 41 reviewed negative replacements did not improve the original pairwise precision. No calibration policy qualified, and candidate-by-candidate scoring was slower than Jev. Use these failures to prioritize a narrow, verified contract with a cheaper one-call formulation; none of these checkpoints is active.
+
+The separate [GLiNER2 strangler trial](../inference/cua-decider/capability-dispatch/STRANGLER-TRIAL.md) did qualify one experimental role on the saved booking corpus. Its shadow and active modes are executable in `inference/cua-decider/capability-dispatch/rollout.py`; `ROLLOUT.json` stays shadow by default until fresh Driver outcomes expand the evidence.

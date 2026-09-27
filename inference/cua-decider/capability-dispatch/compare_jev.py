@@ -1,4 +1,5 @@
 """Paired recorded-observation comparison; real inference, no desktop actions."""
+import argparse
 import copy
 import json
 import os
@@ -10,9 +11,9 @@ import time
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parent))
 from decision_providers import Jev
-from dispatch import Engine
 from providers import FleetGeneric, RemoteSpans
 from simulation import corpus
+from rollout import Strangler
 
 class JevOnly:
     def __init__(self): self.client=Jev()
@@ -27,6 +28,9 @@ class JevOnly:
     def close(self):self.client.close()
 
 def main():
+    parser=argparse.ArgumentParser()
+    parser.add_argument('--output',type=Path,default=HERE/'simulation/jev-comparison.json')
+    args=parser.parse_args()
     os.environ.setdefault('TYPESAFE_CONNECT_SSH','homelab-personal-assembler')
     selected={'SIM-001-default-jev','SIM-002-unavailable-specialist','SIM-005-healthy-specialist','SIM-021-product-prices'}
     cases=[]
@@ -37,18 +41,24 @@ def main():
         for i,s in enumerate(row['steps']):cases.append((f"booking-{row['seed']}-{i}",s['model']['request'],s['choice'],False))
     start=time.perf_counter();spans=RemoteSpans();startup=(time.perf_counter()-start)*1000
     jev=JevOnly();generic=FleetGeneric();results=[]
-    output=HERE/'simulation/jev-comparison.json'
+    output=args.output
     try:
         for index,(cid,req,expected,unavailable) in enumerate(cases):
             generic.close();generic=FleetGeneric() # Independent cases must not inherit unverified progress.
             row={'id':cid,'expected':expected,'arms':{}}
-            for arm in (['capability','jev_only'] if index%2==0 else ['jev_only','capability']):
-                request=copy.deepcopy(req)
-                if arm=='jev_only':request['kind']='semantic';providers={'jev':jev}
-                else:providers={'jev':generic,**({} if unavailable else {'gliner2':spans})}
-                start=time.perf_counter()
-                answer=Engine(providers).decide(request,request['snapshot_id'])
-                row['arms'][arm]={'ms':(time.perf_counter()-start)*1000,'correct':answer.get('action_id')==expected,'decision':answer}
+            request=copy.deepcopy(req)
+            providers={'jev':generic,'incumbent_jev':jev,**({} if unavailable else {'gliner2':spans})}
+            shadow=Strangler.from_config(providers)
+            start=time.perf_counter();incumbent=shadow.decide(request,request['snapshot_id']);elapsed=(time.perf_counter()-start)*1000
+            event=shadow.last_audit
+            if event:
+                specialist=event['specialist']
+                row['arms']['capability']={'ms':specialist.get('decision_ms',0),'correct':specialist.get('action_id')==expected,'decision':specialist}
+                row['arms']['jev_only']={'ms':incumbent.get('decision_ms',0),'correct':incumbent.get('action_id')==expected,'decision':incumbent}
+                row['shadow']={k:v for k,v in event.items() if k not in ('incumbent','specialist')}
+            else:
+                row['arms']['capability']={'ms':elapsed,'correct':incumbent.get('action_id')==expected,'decision':incumbent}
+                row['arms']['jev_only']={'ms':elapsed,'correct':incumbent.get('action_id')==expected,'decision':incumbent}
             results.append(row)
             output.write_text(json.dumps({'mode':'paired real inference over fixed observations; no desktop execution','extractor_startup_ms':startup,'results':results},indent=2)+'\n')
             print(json.dumps({'id':cid,**{k:{'correct':v['correct'],'ms':round(v['ms'])} for k,v in row['arms'].items()}}),flush=True)
