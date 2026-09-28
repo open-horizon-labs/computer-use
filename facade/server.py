@@ -120,4 +120,9 @@ def register_advanced():
 
 if ADVANCED:register_advanced()
 
+import os
+if os.environ.get('CUA_TASK_EXPERIMENTAL_AGENT')=='1':
+    from experimental import register
+    register(mcp,lambda:facade)  # experimental option D, docs/AGENT-D.md
+
 if __name__=='__main__':mcp.run()

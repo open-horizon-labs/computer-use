@@ -81,6 +81,31 @@ def surface_violations(source, budget=None):
         if name not in default and not doc.startswith('Advanced'):out.append('%s is neither a default-path tool nor marked Advanced' % name)
         if name in default and (doc.startswith('Advanced') or nested):out.append('%s is a default-path tool but is marked Advanced or nested' % name)
     if not guard_present(source):out.append('register_advanced() must be called only under `if ADVANCED:` where ADVANCED reads CUA_TASK_ADVANCED')
+    out += experimental_guard_violations(source)
+    return out
+
+
+EXPERIMENTAL_FLAG = 'CUA_TASK_EXPERIMENTAL_AGENT'
+EXPERIMENTAL = HERE / 'experimental.py'
+
+
+def experimental_guard_violations(source):
+    """Any import of the experimental module in server.py must sit inside an `if` that tests the experimental env flag."""
+    out = []
+    for stmt in ast.parse(source).body:
+        if isinstance(stmt, ast.If) and EXPERIMENTAL_FLAG in ast.unparse(stmt.test):
+            continue  # the guarded block may import it
+        if any(isinstance(n, (ast.Import, ast.ImportFrom)) and 'experimental' in ast.unparse(n) for n in ast.walk(stmt)):
+            out.append('experimental tools are imported outside an %s guard' % EXPERIMENTAL_FLAG)
+    return out
+
+
+def experimental_violations(source):
+    """Every tool registered by facade/experimental.py must be documented as Experimental."""
+    out = []
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.FunctionDef) and any('tool' in ast.dump(d) for d in node.decorator_list):
+            if not (ast.get_docstring(node) or '').startswith('Experimental'):out.append('%s is an experimental tool but its docstring does not start with Experimental' % node.name)
     return out
 
 
@@ -303,6 +328,6 @@ def table(budget=None, measured=None):
 
 
 def all_violations():
-    problems = budget_violations() + surface_violations(SERVER.read_text()) + skill_violations(SKILL.read_text())
+    problems = budget_violations() + surface_violations(SERVER.read_text()) + experimental_violations(EXPERIMENTAL.read_text()) + skill_violations(SKILL.read_text())
     rows, measured_problems = table()
     return rows, problems + measured_problems

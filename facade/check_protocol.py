@@ -53,7 +53,16 @@ async def advanced_mode():
    done=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':SPEC,'expect':None});assert json.loads(done.content[0].text)['selected']['id']=='e3'
    fin=json.loads((await s.call_tool('cua_finish',{})).content[0].text)
    assert 'perception_version' in fin and 'perception_state' in fin
+async def experimental_mode():
+ async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT),env={'CUA_TASK_EXPERIMENTAL_AGENT':'1'})) as (r,w):
+  async with ClientSession(r,w) as s:
+   await s.initialize();ts=(await s.list_tools()).tools
+   assert ts[0].name=='cua_do' and ts[0].description.startswith('Default path.'),[t.name for t in ts]
+   agent=[t for t in ts if t.name=='cua_agent']
+   assert len(agent)==1 and agent[0].description.startswith('Experimental'),[t.name for t in ts]
+   assert {'goal','title','expect'}<=set(agent[0].inputSchema['required']),agent[0].inputSchema['required']
+   assert sorted(t.name for t in ts)==['cua_agent','cua_do'],[t.name for t in ts]  # no primitives without CUA_TASK_ADVANCED
 async def main():
- await default_mode();await advanced_mode()
- print('Protocol checks passed in both modes. Default: cua_do is the only tool, expect is required, delivered_unverified/verify/leak paths, primitives not callable. CUA_TASK_ADVANCED=1: nine tools all Advanced but cua_do, title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
+ await default_mode();await advanced_mode();await experimental_mode()
+ print('Protocol checks passed in all three modes (experimental: cua_agent only behind CUA_TASK_EXPERIMENTAL_AGENT=1). Default: cua_do is the only tool, expect is required, delivered_unverified/verify/leak paths, primitives not callable. CUA_TASK_ADVANCED=1: nine tools all Advanced but cua_do, title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
 asyncio.run(main())

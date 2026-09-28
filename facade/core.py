@@ -1991,6 +1991,25 @@ class Facade:
             return finish('failed', reason='provider_failure', error_type=type(error).__name__, attempts=tries.get(ctx['stage'], 1),
                           retryable=ctx['delivery'] == 'none')
 
+    def agent_bind(self, snapshot, goal, picked, candidate_ids, operation='click', route='agent_policy'):
+        """EXPERIMENTAL option D (docs/AGENT-D.md): bind ONE policy pick, offered among candidate_ids, into a single-use
+        selection with the usual content-scope binding. The policy's pick never leaves the offered set."""
+        state = self.state(snapshot);self.reject_answer_leak(state, goal)
+        actions = self.actions(state, candidate_ids, operation, None)
+        if picked not in {a['id'] for a in actions}:raise Gap('The pick is not an offered, enabled, compatible control')
+        request = {'snapshot_id': state['raw']['snapshot_id'], 'kind': 'semantic', 'operation': operation, 'goal': goal,
+                   'actions': actions, 'observation': '\n'.join(a['description'] for a in actions)}
+        decision = {'status': 'selected', 'action_id': picked, 'action_authorized': True, 'reason': route,
+                    'snapshot_id': request['snapshot_id'], 'binding_digest': request_digest(request), 'provider_outputs': []}
+        self.event('choose', snapshot=snapshot, route=route, models=[], mode='semantic', authorized=True, offered=len(actions), caller_preselected=False)
+        return self.issue(snapshot, request, decision, 'semantic', operation, None,
+                          {'status': 'selected', 'route': route, 'decision': decision, 'snapshot': snapshot, 'offered_count': len(actions)})
+
+    def agent_run(self, *args, **kwargs):
+        """EXPERIMENTAL option D: the server-side task agent loop (facade/agent.py). Off unless the tool is enabled."""
+        from agent import run_agent
+        with self.lock:return run_agent(self, *args, **kwargs)
+
     def close(self):
         for provider in self.providers.values():
             try:provider.close()
