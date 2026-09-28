@@ -77,3 +77,5 @@ Use the configured GitHub connector or authenticated `gh` with explicit `--repo 
 ## Improve from failure
 
 Retain input/output traces without secrets. Compare behavior against the sketch: repair projection defects under existing policy; propose genuinely new rules separately for user approval. Preserve accepted CEs and a curated regression rejecting the tempting wrong repair. Run the offline gate and separately review active/regression traces against the sketch. Green finite tests do not establish general computer-use correctness. See `docs/SALVAGE.md` in the runtime checkout.
+
+Before merging a change to this stack, get an independent review from a fresh sub-agent rather than the author: run `/oh-review` against the PR's stated requirements, then `/dissent` on its riskiest decisions (policy additions, safety guards, anything touching binding or the user's windows). Post the findings on the PR, and fix or explicitly accept each one before merging. This replaces superego (`sg review`). A self-review by the author does not count.
