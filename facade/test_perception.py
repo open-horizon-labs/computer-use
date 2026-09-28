@@ -126,6 +126,51 @@ class PerceptionRouteTests(unittest.TestCase):
         self.assertIn('Provider B', described['e3']['description'])
         self.assertNotIn('Provider A', described['e3']['description'])
 
+    def test_unique_control_never_triggers_a_perception_parse(self):
+        # Live CE 2026-09-28: the confirm dialog's unique "Yes, cancel order" button
+        # triggered a live parse that failed and killed cua_choose. Tempting wrong
+        # patch: keep parsing first and only then check whether the control repeats.
+        self.driver.capture_id = 'cap_1'; self.driver.parse_result = BOOK_REGIONS
+        self.driver.observe = lambda *a: flat_two_book_window()
+        state = self.f.state(self.f.observe(1, 2)['snapshot'])
+        unique = {'element_index': 40, 'parent_index': 0, 'role': 'AXButton', 'label': 'Yes, cancel order',
+                  'actions': ['AXPress'], 'enabled': True, 'element_token': state['raw']['snapshot_id'] + ':40',
+                  'frame': {'x': 10, 'y': 10, 'w': 50, 'h': 20}}
+        state['nodes'][40] = unique
+        described = self.f.actions(state, ['e40'], 'click', None)
+        self.assertEqual(described[0]['description'], 'Yes, cancel order')
+        self.assertEqual(self.driver.parse_calls, [])
+
+    def test_perception_parse_failure_degrades_instead_of_crashing_choose(self):
+        # Tempting wrong patch: catching only Gap, so a Driver exit status 1
+        # (CalledProcessError) escapes the fallback and fails the whole choose.
+        import subprocess
+        self.driver.capture_id = 'cap_1'
+        self.driver.observe = lambda *a: flat_two_book_window()
+        real_call = self.driver.call
+        def failing(tool, args, timeout=20):
+            if tool == 'parse_visual_regions':
+                raise subprocess.CalledProcessError(1, ['cua-driver'], stderr='capture unavailable')
+            return real_call(tool, args, timeout)
+        self.driver.call = failing
+        state = self.f.state(self.f.observe(1, 2)['snapshot'])
+        described = {a['id']: a for a in self.f.actions(state, ['e2', 'e3'], 'click', None)}
+        self.assertNotIn('record:', described['e2']['description'])
+        self.assertNotIn('record_basis', described['e2'])
+
+    def test_explicit_regions_parse_failure_is_a_clean_gap(self):
+        import subprocess
+        self.driver.capture_id = 'cap_1'
+        real_call = self.driver.call
+        def failing(tool, args, timeout=20):
+            if tool == 'parse_visual_regions':
+                raise subprocess.CalledProcessError(1, ['cua-driver'], stderr='extension crashed')
+            return real_call(tool, args, timeout)
+        self.driver.call = failing
+        obs = self.f.observe(1, 2)['snapshot']
+        with self.assertRaisesRegex(Gap, 'perception_parse_failed.*extension crashed'):
+            self.f.regions(obs)
+
     def test_perception_fallback_never_overrides_valid_ax_grouping(self):
         # Tempting wrong patch: always consulting perception layout, which could
         # silently replace a correct AX-derived record with mis-OCR'd text.
