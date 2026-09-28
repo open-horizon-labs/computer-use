@@ -84,7 +84,7 @@ def cua_verify(pid:int,window_id:int,postcondition:str,mode:Literal['exact','vis
 @mcp.tool(annotations=READ)
 def cua_trace() -> dict:
     """Return content-free actual routes, provider starts, timing, bypass reasons, caller_preselected flags, the detected driver_version and verification outcomes for this task."""
-    with facade.lock:return {'events':list(facade.events),'driver_version':facade.driver_version}
+    with facade.lock:return {'events':list(facade.events),'driver_version':facade.driver_version,'driver_version_state':facade.driver_version_state}
 
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False,destructiveHint=False,idempotentHint=True))
 def cua_finish() -> dict:

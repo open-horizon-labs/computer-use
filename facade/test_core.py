@@ -280,6 +280,31 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(result['selected_id'],'e3')
         self.assertIn('selection',result)
 
+    def test_visual_quoted_corroboration_ignored_for_caller_narrowed_scope(self):
+        # Review P1. Tempting wrong patch: checking uniqueness only among the
+        # caller's offered subset, so a singleton plus its own quote passes.
+        result=self.f.choose(self.obs,'Inspect the "Used $80" one',candidate_ids=['e3'],mode='visual')
+        self.assertEqual(result['reason'],'visual_uncorroborated')
+        self.assertNotIn('selection',result)
+
+    def test_record_context_nested_groups_stop_at_record(self):
+        # Review P3: date groups each holding several records must not make a
+        # whole group (two providers) the record.
+        nodes=[{'element_index':0,'parent_index':None,'role':'AXWindow','label':'Inbox'}];index=1;books=[]
+        for day,people in (('Monday',('Ana','Ben')),('Tuesday',('Cy','Di'))):
+            group=index;nodes.append({'element_index':group,'parent_index':0,'role':'AXGroup','label':day});index+=1
+            for person in people:
+                rec=index;nodes.append({'element_index':rec,'parent_index':group,'role':'AXGroup'})
+                nodes.append({'element_index':rec+1,'parent_index':rec,'role':'AXStaticText','value':person})
+                nodes.append({'element_index':rec+2,'parent_index':rec,'role':'AXButton','label':'Book','actions':['AXPress']})
+                books.append('e'+str(rec+2));index+=3
+        for n in nodes:n.update(element_token='sn:'+str(n['element_index']),enabled=True)
+        self.driver.observe=lambda *a:{'snapshot_id':'sn','pid':1,'window_id':2,'window_title':'Inbox','elements':copy.deepcopy(nodes),'_image':b'p'}
+        state=self.f.state(self.f.observe(1,2)['snapshot'])
+        described=[a['description'] for a in self.f.actions(state,books,'click',None)]
+        self.assertIn('Ana',described[0]);self.assertNotIn('Ben',described[0]);self.assertNotIn('Monday',described[0])
+        self.assertIn('Di',described[3]);self.assertNotIn('Cy',described[3])
+
     # --- Fix 3: reject answer-leaking goals; flag caller preselection -------
     def test_goal_mentioning_observed_element_id_rejected(self):
         with self.assertRaises(Gap):
@@ -348,6 +373,12 @@ class CoreTests(unittest.TestCase):
         result=self.f.verify(1,2,'"Inspect first" appears in the details view for the Used product')
         self.assertEqual(result['route'],'systemone_vision')
 
+    def test_visual_verify_quoted_text_repeated_across_elements_uses_vision(self):
+        # Review P2. Tempting wrong patch: substring over the joined tree, so
+        # text present in several records ("Inspect") counts as the outcome.
+        result=self.f.verify(1,2,'The page now shows "Inspect"')
+        self.assertEqual(result['route'],'systemone_vision')
+
     def test_visual_verify_falls_back_to_vision_when_quoted_text_absent(self):
         result=self.f.verify(1,2,'Status shows "Not anywhere in the tree"')
         self.assertEqual(result['route'],'systemone_vision')
@@ -392,5 +423,13 @@ class CoreTests(unittest.TestCase):
         f.observe(1,2)
         self.assertEqual(f.driver_version,(0,29,1))
         self.assertEqual(f.close()['driver_version'],(0,29,1))
+
+    def test_unparsed_driver_version_is_distinguishable_in_trace(self):
+        # Review P4: an unparseable version passes (check_foreground still guards
+        # act), but must not look like a version that was never probed.
+        f=Facade(VersionedDriver(None),generic_factory=lambda:FakeChooser(),reader_factory=lambda:FakeReader(),visual_factory=lambda:FakeVision())
+        self.assertEqual(f.close()['driver_version_state'],'unprobed')
+        f.observe(1,2)
+        self.assertEqual(f.close()['driver_version_state'],'unparsed')
 
 if __name__=='__main__':unittest.main()

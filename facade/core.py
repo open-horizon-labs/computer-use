@@ -78,6 +78,7 @@ class Facade:
         self.session = 'cua-facade-' + uuid.uuid4().hex[:10]
         self.started = False
         self.driver_version = None
+        self.driver_version_state = 'unprobed'
         self.snapshots, self.latest, self.selections, self.readings = {}, {}, {}, {}
         self.events = []
         self.lock = threading.RLock()
@@ -101,6 +102,7 @@ class Facade:
             version_probe = getattr(self.driver, 'version', None)
             if callable(version_probe):
                 self.driver_version = version_probe()
+                self.driver_version_state = 'unparsed' if self.driver_version is None else 'probed'
                 # Unknown version (older driver with no --help version line) is not
                 # blocked; a version we CAN parse and IS too old must refuse.
                 if self.driver_version is not None and self.driver_version < MIN_DRIVER_VERSION:
@@ -459,7 +461,9 @@ class Facade:
             # reading's mapped controls), or the goal's quoted text deterministically
             # names this candidate's own record and no other's.
             picked=decision['action_id']
-            if not (bool(reading) or self.visual_corroborated(goal,picked,actions)):
+            # Quoted-text corroboration only counts across the full observed scope:
+            # against a caller-narrowed subset it just ratifies the caller's winner.
+            if not (bool(reading) or (not caller_preselected and self.visual_corroborated(goal,picked,actions))):
                 self.event('choose',snapshot=snapshot,route='visual_uncorroborated_guard',mode=mode,
                            authorized=False,reason='visual_uncorroborated',caller_preselected=caller_preselected)
                 return {'status':'defer','route':'visual_uncorroborated_guard','reason':'visual_uncorroborated',
@@ -534,8 +538,10 @@ class Facade:
             # text that merely appears somewhere in the window.
             quoted=self.quoted_tokens(postcondition)
             rest=set(re.findall(r'[a-z0-9#]+',re.sub(r'"[^"]*"',' ',postcondition or '').casefold()))-self.TEXT_ONLY_FILLER
-            haystack=' '.join(f"{n.get('label') or ''} {n.get('value') or ''}" for n in state['nodes'].values()).casefold()
-            if quoted and not rest and all(token.casefold() in haystack for token in quoted):
+            # Each quote must be observed in exactly one element: text repeated
+            # across records ("Cancelled") cannot establish which one changed.
+            texts=[f"{n.get('label') or ''} {n.get('value') or ''}".casefold() for n in state['nodes'].values()]
+            if quoted and not rest and all(sum(token.casefold() in t for t in texts)==1 for token in quoted):
                 result={'status':'satisfied','route':'exact_text_postcondition',
                         'reason':'quoted_text_observed_in_ax_tree','matched_quotes':quoted}
             else:
@@ -559,4 +565,4 @@ class Facade:
             except Exception:self.event('cleanup',status='worker_close_failed')
         self.providers.clear()
         self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear()
-        return {'status':'closed','trace':self.events,'driver_version':self.driver_version}
+        return {'status':'closed','trace':self.events,'driver_version':self.driver_version,'driver_version_state':self.driver_version_state}
