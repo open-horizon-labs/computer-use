@@ -4,6 +4,8 @@
 Helpers only, no tests. They build raw Driver-style element lists; ShapeDriver serves them through the same fakes as the live fixtures.
 No tree captured from an unrelated real site exists yet (that needs the user's consent), so these are still synthetic.
 """
+import random
+
 from core import Facade
 from test_core import FakeChooser
 from test_live_shapes import LiveDriver, LiveReader, UnknownVision
@@ -122,6 +124,72 @@ def growth(link=False):
         if link:E(els, li, 'AXLink', 'Profile')
         E(els, li, 'AXButton', 'Book')
     return after_click(add)
+
+
+# --- option B (look, then plan): a 100-row list shaped like the suite's `invoices` task and a 3-step wizard -------------------------------------
+
+_VENDORS = ['Contoso Supply', 'Fabrikam Freight', 'Tailspin Toys', 'Litware Labs', 'Adatum Corp', 'Proseware Inc', 'Wingtip Print',
+            'Lucerne Publishing', 'Margie Travel', 'Alpine Ski House', 'Coho Vineyard', 'Humongous Insurance', 'Trey Research', 'Wide World Importers']
+INVOICE_TARGET = 'inv-063'
+
+
+def invoice_rows(n=100):
+    """The same 100 deterministic rows as experiments/facade-vs-native/pages.py (eval-suite `invoices`): exactly one is (Northwind Traders, $1,240.00);
+    the rest include near-duplicates on the vendor alone, the amount alone, and a transposed amount. (Copied, not imported: that module lives on another branch.)"""
+    rng = random.Random(7)
+    rows = []
+    for k in range(1, n + 1):
+        vendor = rng.choice(_VENDORS);amount = rng.randrange(20000, 400000) / 100.0
+        if abs(amount - 1240.0) < 0.5:amount += 3.0
+        rows.append([f'inv-{k:03d}', vendor, amount, f'2026-{rng.randrange(1, 13):02d}-{rng.randrange(1, 29):02d}'])
+    fixed = {17: ('Northwind Trading', 1240.00), 29: ('Contoso Supply', 1240.00), 41: ('Northwind Traders', 1204.00), 55: ('Northwind Traders', 980.00),
+             63: ('Northwind Traders', 1240.00), 78: ('Northwind Traders', 12400.00), 90: ('Northwind Traders', 240.00)}
+    for k, (vendor, amount) in fixed.items():
+        if k <= n:rows[k - 1][1], rows[k - 1][2] = vendor, amount
+    return rows
+
+
+def invoices(n=100):
+    """A Chrome-shaped table: a header row, then per row four text cells and an Approve button cell."""
+    els, web = base();E(els, web, 'AXHeading', 'Invoices', 'Invoices');table = E(els, web, 'AXTable')
+    head = E(els, table, 'AXRow')
+    for title in ('Invoice', 'Vendor', 'Amount', 'Due', ''):
+        c = E(els, head, 'AXCell')
+        if title:E(els, c, 'AXStaticText', title, title)
+    for ident, vendor, amount, due in invoice_rows(n):
+        row = E(els, table, 'AXRow')
+        for value in (ident.upper(), vendor, '${:,.2f}'.format(amount), due):
+            c = E(els, row, 'AXCell');E(els, c, 'AXStaticText', value, value)
+        c = E(els, row, 'AXCell');E(els, c, 'AXButton', 'Approve')
+    return els
+
+
+def approved_status(driver, els):
+    """Script for invoices(): once a click was delivered, the page states which invoice was approved (from the row of the clicked button)."""
+    if not driver.executed:return None
+    index = int(driver.executed[-1]['element_token'].rsplit(':', 1)[1])
+    by = {e['element_index']: e for e in els}
+    row = by[by[index]['parent_index']]['parent_index']
+    first = next(e for e in els if e.get('parent_index') is not None and by[e['parent_index']].get('parent_index') == row and e['role'] == 'AXStaticText')
+    text = 'Approved ' + first['value'];E(els, 1, 'AXStaticText', text, text)
+
+
+def wizard_els(step):
+    """One wizard screen per step (a Back button from step 2 on); the text of each screen is ONE static text so an expect can prove it."""
+    els, web = base()
+    if step >= 4:
+        E(els, web, 'AXStaticText', 'Setup complete.', 'Setup complete.');return els
+    title = 'Step %d of 3: %s' % (step, {1: 'Plan', 2: 'Billing', 3: 'Review'}[step])
+    E(els, web, 'AXStaticText', title, title)
+    if step == 3:E(els, web, 'AXStaticText', 'Plan: pro, billing: annual', 'Plan: pro, billing: annual')
+    if step > 1:E(els, web, 'AXButton', 'Back')
+    E(els, web, 'AXButton', 'Finish' if step == 3 else 'Next');E(els, web, 'AXButton', 'Cancel')
+    return els
+
+
+def wizard_script(driver, els):
+    """Every delivered click advances the wizard one screen (the tests only click Next, Next, Finish)."""
+    return wizard_els(1 + len(driver.executed))
 
 
 def run(els, goal='Book Dr. B', script=None, reader=None, chooser=None, visual=None, records='default', **kw):
