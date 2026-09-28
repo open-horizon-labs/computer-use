@@ -242,5 +242,18 @@
    "live_task_budgets.booking.max_llm_visible_calls": 1,
    "live_task_budgets.orders.max_llm_visible_calls": 3
   }
+ },
+ {
+  "id": "CE-FACADE-004",
+  "status": "proposed",
+  "authority": "Proposed experiment; not approved for the default path. Motivated by the same 15 live runs as CE-FACADE-003 (driving-LLM turns were 87% of wall time) and by the sketch's original aim of offloading perception and choice away from the driving LLM.",
+  "classification": "experiment: server-side task agent (option D), behind CUA_TASK_EXPERIMENTAL_AGENT=1, off by default",
+  "sketch_clause": "S4.1, S4.2 sections 1-7, S4.5 (candidate limit), S4.8",
+  "input_and_actual": "cua_do removes hops for single-shot tasks but defers when discovery is ambiguous or the task needs several dependent steps; each deferral returns to the driving LLM, whose turns (about 2.9 s) dominate wall time.",
+  "corrected_behavior": "Experimental tool cua_agent(goal, title, expect, text, confirm, max_steps, budget_s): the driving LLM states the goal and the success condition once; a server-side loop (observe, deterministic expect check, actionable candidates grouped with record context, lexical prefilter to at most 18, exact-label path without a model, fast-model choice through the existing generic chooser, bound click with scope revalidation, progress check) runs up to max_steps within budget_s and returns done, or escalated with evidence and no further clicks. It escalates on abstain, low confidence, too many candidates (never truncated), no progress twice, a new dialog without the exact confirm label, a destructive-verb control the goal did not name, navigation, budgets, and policy transport failure; a click is never retried and a failure after a click may have been delivered is failed and not retryable.",
+  "tempting_wrong_repair": "Making it default or raising max_tool_count; letting the model pick beyond the offered candidates or ranking/truncating an oversized list; retrying a click; confirming a dialog because its only control looks affirmative; guessing on abstain or low confidence; counting tool time only against the budget; claiming measured accuracy from fake-policy tests.",
+  "regression": "facade/test_agent.py (booking and orders on the real sanitized Chrome AX shapes, dialog confirm and identity, destructive-verb guard, no_progress, abstain, low confidence, too many candidates, stale re-plan once, click failing after delivery, navigation, budgets, policy transport failure, tool surface only behind the flag); facade/test_budget.py and facade/call_budget.py (guard and Experimental docstring lint); facade/check_protocol.py in both modes.",
+  "invalidation": "Retire the experiment if the evaluation suite shows no advantage over cua_do plus a frontier driver on either axis it exists for: cost per success with a cheap or absent frontier driver, or lists too large for the driving LLM's context. Promotion to the default path would need its own CE and call-budget entry.",
+  "adjacent_holes": "Nothing is measured: each fast-model step through the hosted chooser costs about 1-3 s, so D may be slower than the frontier LLM on simple tasks. Real-chooser confidence is usually absent (authorization only). type_text steps and Perception regions are not exercised offline. The sketch text is unchanged; proposed wording is in the branch report."
  }
 ]
