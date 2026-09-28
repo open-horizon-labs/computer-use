@@ -25,7 +25,7 @@ Code: `facade/look.py` (structure of one observation into displayed strings, `Fa
 
 ### `look_id`: no filter without sight
 
-`look_id` is a short hash of the window title, the page's headings and the ORDERED FULL lines (untruncated, every line) of the displayed records (after `focus`, `max_records` and `max_bytes`); text hidden past the display cut therefore invalidates it, and a lone toast does not. The server remembers the issued ids of this session per (pid, window_id, hash), with the focus terms and how many records were displayed. A `where.lines` step is allowed only with an id the server issued for this window. At the step the executor recomputes the displayed record lines on the CURRENT observation with the same parameters and compares the hash: a mismatch defers `page_changed_since_look` before any click, and the response deliberately carries no fresh id (the LLM has not seen those lines). Only records the look displayed are candidates. Positive conditions are evaluated on the displayed (cut) lines, exactly what the LLM saw (a cut can only hide MORE text). Negative conditions over a record with cut or omitted lines are refused (`negative_condition_over_cut_lines`).
+`look_id` is a short hash of the window title, the page's headings, every page control's state and the ORDERED FULL lines (untruncated, every line) of the displayed records (after `focus`, `max_records` and `max_bytes`); text hidden past the display cut therefore invalidates it, and a lone toast does not. The server remembers the issued ids of this session per (pid, window_id, hash), with the focus terms and how many records were displayed. A `where.lines` step is allowed only with an id the server issued for this window. At the step the executor recomputes the displayed record lines on the CURRENT observation with the same parameters and compares the hash: a mismatch defers `page_changed_since_look` before any click, and the response deliberately carries no fresh id (the LLM has not seen those lines). Only records the look displayed are candidates. Conditions are evaluated on the displayed (cut) lines, exactly what the LLM saw, and a cut is NOT harmless: a hidden line can contradict a shown positive match. Uniqueness is decided over ALL records of the fresh observation; selecting a record with cut or omitted lines needs `accept_hidden_text`; negative conditions over such records are refused; `cua_look` takes `max_lines` and `line_chars` to show whole records.
 
 ## Guarantees
 
@@ -37,7 +37,7 @@ Preserved (each has its existing tests, plus the plan tests named in the CE):
 | a click is never retried; no selection after a delivered click | the executor never re-runs a step that delivered; `_do` unchanged; test with a failing click counts exactly one click |
 | stale recovery (S4.2 s7) | a stale refusal re-runs THAT step on a fresh observation with a NEW selection; a mid-plan page that keeps changing stops at that step (`ui_changed_repeatedly`) |
 | hard 3x budget | plan-level: no step starts after 3x `budget_s`; each step gets `min(budget_s, remaining/3)` |
-| confirm is opt-in by exact label with a complete identity match | an explicit `confirm` step only, directly after a press; exact label (never a prefix); exactly one such control inside the dialog the previous step opened; EVERY identity string a WHOLE token of that dialog's lines, and no negated identity line |
+| confirm is opt-in by exact label and a declared dialog | an explicit `confirm` step only, directly after a press; exact label; exactly one such control inside the dialog the previous step opened; the caller's `dialog_text` must equal the dialog's actual text lines as a set (POSITIVE AUTHORIZATION: no negation or verb word list decides intent), plus the identity strings as whole tokens as a sanity check |
 | incomparable -> unknown; `treat_as_match`/`accept_unknown` gates; `excluded_values` | `where.fields` runs the unchanged reader path |
 | answer-leak guard | plan goal and every step goal, before any Driver call |
 | destructive-verb guard (option D) | literal `control`/`confirm` at validation, and the RESOLVED control at execution; only the step's own `allow_destructive` (exact label) unlocks it, never goal text |
@@ -59,7 +59,8 @@ New: whole-plan validation before any Driver action; `look_id`; `page_changed_si
 2. A press step needs `where` and/or `control`: no plan step ever falls through to the chooser on "the page's controls".
 3. Several `where.lines` matches stop (`where_matches_several`) instead of asking the chooser or clicking the first.
 4. A `confirm` step must directly follow a `press`; a dialog that was already open is not confirmable by a plan.
-5. Dialog identity is matched by displayed strings (deterministic), so a differently worded dialog stops with the click before it already done; `dialog.lines` lets the LLM judge and press the dialog control deliberately.
+5. A confirm step declares the dialog's COMPLETE text (second review): the negation word list was deleted because word lists cannot be complete; the whitelist decides. Cost: press, defer with the actual lines, deliberate press (3 calls; 2 when the wording is known). The destructive-label list (widened) is a floor, not a definition.
+5a. Where.lines uniqueness covers all records; hidden-text selection needs `accept_hidden_text`; control state is in the `look_id`; toggles need a look; every response is marked untrusted.
 6. The default identity of a `where.lines` press is the values its `eq`/`contains` conditions required; if the dialog does not show all of them, the confirm step stops (measured: 3 calls instead of 2).
 7. Conditions are evaluated on the DISPLAYED (cut) lines; values are at most 60 characters.
 8. Destructive controls (delete, remove, erase, discard, reset, sign out, cancel subscription) need `allow_destructive: <exact label>` on the step itself; goal text never unlocks one (review of PR 18: "do NOT delete anything" unlocked it).
@@ -95,7 +96,7 @@ The scripted LLM's phrases come from the goal, so the budget is a LOWER BOUND on
 ```
 .venv-facade/bin/python -m unittest discover -s facade -p 'test_*.py'
 .venv-facade/bin/python scripts/check_call_budget.py
-.venv-facade/bin/python scripts/check_plan_mutations.py     # 33 wrong patches, each must fail its test BY ASSERTION
+.venv-facade/bin/python scripts/check_plan_mutations.py     # 66 wrong patches (incl. SHRINKING patches: verbs and boundary characters dropped, visible->all reverted), each must fail its test BY ASSERTION
 .venv-facade/bin/python scripts/look_compare.py             # structure and size only
 .venv-facade/bin/python facade/check_protocol.py            # default, CUA_TASK_ADVANCED=1
 ```
