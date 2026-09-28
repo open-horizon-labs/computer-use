@@ -14,13 +14,13 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-from fixtures import BOOKING_EXPECTED_ID, ORDERS_EXPECTED_ID
+from fixtures import BOOKING_EXPECTED_ID, CANVAS_EXPECTED_ID, ORDERS_EXPECTED_ID
 
 # Ceiling on LLM-visible MCP calls per task on the facade's default path (facade/CALL_BUDGET.json).
 BUDGET_PATH = Path(__file__).resolve().parents[2] / 'facade' / 'CALL_BUDGET.json'
-EXPECTED = {'booking': {BOOKING_EXPECTED_ID}, 'orders': {ORDERS_EXPECTED_ID}}
+EXPECTED = {'booking': {BOOKING_EXPECTED_ID}, 'orders': {ORDERS_EXPECTED_ID}, 'canvas': {CANVAS_EXPECTED_ID}}
 # For orders, only a cancel that reaches confirmation counts as a real attempt.
-TERMINAL_ACTION = {'booking': 'book', 'orders': 'cancel_confirm'}
+TERMINAL_ACTION = {'booking': 'book', 'orders': 'cancel_confirm', 'canvas': 'press'}
 
 
 def load_events(events_path, run_id):
@@ -76,8 +76,10 @@ def scan_transcript(transcript_path):
     caller_preselected_count = 0
     cost_usd = None
     duration_ms = None
+    usage = {}
+    model = None
     if not Path(transcript_path).is_file():
-        return {'turns': 0, 'routes': {}, 'caller_preselected_count': 0, 'cost_usd': None, 'duration_ms': None}
+        return {'turns': 0, 'routes': {}, 'caller_preselected_count': 0, 'cost_usd': None, 'duration_ms': None, 'usage': {}, 'model': None}
     with open(transcript_path) as fh:
         for line in fh:
             line = line.strip()
@@ -92,6 +94,8 @@ def scan_transcript(transcript_path):
             if event.get('type') == 'result':
                 cost_usd = event.get('total_cost_usd', cost_usd)
                 duration_ms = event.get('duration_ms', duration_ms)
+                usage = event.get('usage') or usage
+                model = next(iter(event.get('modelUsage') or {}), model)
             # Tool call arguments/results often arrive as raw JSON text inside
             # a content block; try to parse any string that looks like one.
             for node in walk(event):
@@ -112,7 +116,7 @@ def scan_transcript(transcript_path):
                         if inner.get('caller_preselected') is True:
                             caller_preselected_count += 1
     return {'turns': turns, 'routes': dict(routes), 'caller_preselected_count': caller_preselected_count,
-            'cost_usd': cost_usd, 'duration_ms': duration_ms}
+            'cost_usd': cost_usd, 'duration_ms': duration_ms, 'usage': usage, 'model': model}
 
 
 def count_llm_visible_calls(transcript_path):
@@ -183,6 +187,10 @@ def main(argv=None):
             'turns': trace['turns'], 'llm_visible_calls': calls, 'call_budget': limit,
             'over_budget': limit is not None and calls > limit, 'wall_s': run.get('wall_s'),
             'cost_usd': trace['cost_usd'], 'agent_duration_ms': trace['duration_ms'],
+            'model': trace['model'],
+            'tokens': {'input': trace['usage'].get('input_tokens'), 'output': trace['usage'].get('output_tokens'),
+                       'cache_read': trace['usage'].get('cache_read_input_tokens'),
+                       'cache_write': trace['usage'].get('cache_creation_input_tokens')},
             'routes': trace['routes'], 'caller_preselected_count': trace['caller_preselected_count'],
         }
         rows.append(row)

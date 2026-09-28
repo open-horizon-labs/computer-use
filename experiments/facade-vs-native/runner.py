@@ -17,6 +17,7 @@ the facade's own "never move the user's windows" policy (fix 7).
 import argparse
 import json
 import subprocess
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
@@ -30,20 +31,26 @@ HERE = Path(__file__).resolve().parent
 PROMPTS = {
     'booking': 'Book the earliest 30-minute appointment with Dr. Morgan Reyes that starts at or after 2:00 PM. Book exactly one appointment.',
     'orders': 'Cancel my walnut desk lamp order that has not shipped yet. Do not cancel or change any other order.',
+    'canvas': 'Press the Export button. Press only one button.',
 }
 PROMPT_FRAME = ('A Google Chrome window whose title begins with {title!r} is open on this Mac. {goal} '
                 'Use only the computer-use tools available to you. Do not open, navigate, or act on any other '
                 'window or tab. When finished, report exactly what you did and how you verified the result.')
 
-TITLES = {'booking': 'Clinic Slots {run}', 'orders': 'Orders {run}'}
+TITLES = {'booking': 'Clinic Slots {run}', 'orders': 'Orders {run}', 'canvas': 'Canvas {run}'}
 
 ALLOWED_TOOLS = {
     'facade': ['mcp__cua-task'],
     'native': ['mcp__cua-driver'],
 }
+# File and shell tools are off for both arms: an agent that can Read would load repo
+# context (the session's own memory notes read in one run) and stop being a clean
+# tool-set comparison. Native additionally has no Skill, since the installed skill
+# would reintroduce facade guidance.
+_BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'Task']
 DISALLOWED_TOOLS = {
-    'facade': ['Bash', 'Edit', 'Write', 'WebFetch', 'WebSearch', 'Agent'],
-    'native': ['Bash', 'Edit', 'Write', 'WebFetch', 'WebSearch', 'Agent', 'Skill'],
+    'facade': _BASE_DENY,
+    'native': _BASE_DENY + ['Skill'],
 }
 
 
@@ -71,21 +78,24 @@ def mcp_config(arm, out_dir):
     root = HERE.parents[1]
     servers = {'facade': {'cua-task': {'command': str(root / '.venv-facade/bin/python'), 'args': [str(root / 'facade/server.py')]}},
                'native': {'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}}
-    path = out_dir / f'mcp-config.{arm}.json'
+    path = Path(out_dir).resolve() / f'mcp-config.{arm}.json'  # absolute: the agent runs from a scratch cwd
     path.write_text(json.dumps({'mcpServers': servers[arm]}, indent=2))
     return path
 
 
-def run_agent(arm, task, title, out_path, model):
+def run_agent(arm, task, title, out_path, model, max_turns=80, timeout=600):
     prompt = PROMPT_FRAME.format(title=title, goal=PROMPTS[task])
-    cmd = ['claude', '-p', prompt, '--model', model, '--max-turns', '80',
+    cmd = ['claude', '-p', prompt, '--model', model, '--max-turns', str(max_turns),
            '--strict-mcp-config', '--mcp-config', str(mcp_config(arm, out_path.parent)),
            '--allowedTools', ','.join(ALLOWED_TOOLS[arm]),
            '--disallowedTools', ','.join(DISALLOWED_TOOLS[arm]),
            '--output-format', 'stream-json', '--verbose']
     began = time.monotonic()
     with out_path.open('w') as out:
-        result = subprocess.run(cmd, stdout=out, stderr=subprocess.STDOUT, timeout=600, cwd=str(HERE))
+        try:
+            result = subprocess.run(cmd, stdout=out, stderr=subprocess.STDOUT, timeout=timeout, cwd=tempfile.mkdtemp(prefix='cua-ab-'))  # outside the repo: no AGENTS.md/memory contamination
+        except subprocess.TimeoutExpired:
+            return {'wall_s': time.monotonic() - began, 'returncode': 'timeout'}
     return {'wall_s': time.monotonic() - began, 'returncode': result.returncode}
 
 
@@ -104,8 +114,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-url', default='http://127.0.0.1:8934')
     parser.add_argument('--arms', nargs='+', default=['facade', 'native'], choices=['facade', 'native'])
-    parser.add_argument('--tasks', nargs='+', default=['booking', 'orders'], choices=['booking', 'orders'])
+    parser.add_argument('--tasks', nargs='+', default=['booking', 'orders'], choices=['booking', 'orders', 'canvas'])
     parser.add_argument('--model', default='claude-opus-5-5')
+    parser.add_argument('--max-turns', type=int, default=80)
+    parser.add_argument('--agent-timeout', type=int, default=600, help='seconds per run')
     parser.add_argument('--runs', type=int, default=1, help='runs per (arm, task) pair')
     parser.add_argument('--out-dir', default=str(HERE / 'runs'))
     parser.add_argument('--events', default=str(HERE / 'events.jsonl'))
@@ -131,7 +143,7 @@ def main():
                 window_id = open_page(url)
                 time.sleep(1)  # let the tab actually load before the agent starts
                 try:
-                    outcome = run_agent(arm, task, title, transcript, args.model)
+                    outcome = run_agent(arm, task, title, transcript, args.model, args.max_turns, args.agent_timeout)
                 finally:
                     close_window(window_id)
                 manifest.append({'arm': arm, 'task': task, 'run_id': run_id,

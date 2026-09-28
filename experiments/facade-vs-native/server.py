@@ -12,7 +12,7 @@ import time
 import urllib.parse
 from pathlib import Path
 
-from fixtures import render_booking, render_orders
+from fixtures import render_booking, render_canvas, render_orders
 
 HERE = Path(__file__).resolve().parent
 
@@ -39,6 +39,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return self._send_html(render_booking(run))
         if parsed.path == '/orders':
             return self._send_html(render_orders(run))
+        if parsed.path == '/canvas':
+            return self._send_html(render_canvas(run))
         if parsed.path == '/log':
             event = {
                 'ts': time.time(),
