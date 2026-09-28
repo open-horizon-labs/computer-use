@@ -10,11 +10,14 @@ already produced.
 """
 import argparse
 import json
+import sys
 from collections import Counter
 from pathlib import Path
 
 from fixtures import BOOKING_EXPECTED_ID, ORDERS_EXPECTED_ID
 
+# Ceiling on LLM-visible MCP calls per task on the facade's default path (facade/CALL_BUDGET.json).
+BUDGET_PATH = Path(__file__).resolve().parents[2] / 'facade' / 'CALL_BUDGET.json'
 EXPECTED = {'booking': {BOOKING_EXPECTED_ID}, 'orders': {ORDERS_EXPECTED_ID}}
 # For orders, only a cancel that reaches confirmation counts as a real attempt.
 TERMINAL_ACTION = {'booking': 'book', 'orders': 'cancel_confirm'}
@@ -112,24 +115,85 @@ def scan_transcript(transcript_path):
             'cost_usd': cost_usd, 'duration_ms': duration_ms}
 
 
-def main():
+def count_llm_visible_calls(transcript_path):
+    """MCP tool calls the driving LLM made: tool_use blocks named mcp__* in assistant events.
+
+    Every such block is one LLM turn's hop (the 87% of wall time the facade must not multiply). Only assistant
+    events count, so a tool_result or a repeated summary event is never counted, and Bash/Read are not MCP hops.
+    """
+    if not Path(transcript_path).is_file():
+        return 0
+    count = 0
+    with open(transcript_path) as fh:
+        for line in fh:
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if event.get('type') != 'assistant':
+                continue
+            for node in walk(event.get('message', event)):
+                if node.get('type') == 'tool_use' and str(node.get('name', '')).startswith('mcp__'):
+                    count += 1
+    return count
+
+
+def budget_for(task, budget_path=BUDGET_PATH):
+    """Max LLM-visible calls allowed for a live task on the facade arm, or None when unbudgeted."""
+    tasks = json.loads(Path(budget_path).read_text()).get('live_task_budgets', {})
+    entry = tasks.get(task, {}).get('max_llm_visible_calls')
+    return entry['value'] if isinstance(entry, dict) else None
+
+
+def headline(rows):
+    """Facade-vs-native ratios of mean LLM-visible calls and turns, per task, when both arms are present."""
+    out = []
+    for task in sorted({r['task'] for r in rows}):
+        arms = {arm: [r for r in rows if r['task'] == task and r['arm'] == arm] for arm in ('facade', 'native')}
+        if not arms['facade'] or not arms['native']:
+            continue
+        mean = lambda arm, key: sum(r[key] for r in arms[arm]) / len(arms[arm])
+        entry = {'task': task}
+        for key in ('llm_visible_calls', 'turns'):
+            native = mean('native', key)
+            entry[key + '_ratio'] = round(mean('facade', key) / native, 2) if native else None
+            entry['facade_' + key], entry['native_' + key] = round(mean('facade', key), 1), round(native, 1)
+        out.append(entry)
+    return out
+
+
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', required=True)
     parser.add_argument('--events', required=True)
-    args = parser.parse_args()
+    parser.add_argument('--fail-over-budget', action='store_true',
+                        help='exit nonzero when a facade run used more LLM-visible calls than facade/CALL_BUDGET.json allows')
+    args = parser.parse_args(argv)
     manifest = json.loads(Path(args.manifest).read_text())
+    rows = []
     for run in manifest:
         events = load_events(args.events, run['run_id'])
         outcome, wrong_clicks = classify(run['task'], events)
         trace = scan_transcript(run['transcript'])
-        print(json.dumps({
+        calls = count_llm_visible_calls(run['transcript'])
+        limit = budget_for(run['task']) if run['arm'] == 'facade' else None
+        row = {
             'arm': run['arm'], 'task': run['task'], 'run_id': run['run_id'],
             'outcome': outcome, 'wrong_clicks': wrong_clicks,
-            'turns': trace['turns'], 'wall_s': run.get('wall_s'),
+            'turns': trace['turns'], 'llm_visible_calls': calls, 'call_budget': limit,
+            'over_budget': limit is not None and calls > limit, 'wall_s': run.get('wall_s'),
             'cost_usd': trace['cost_usd'], 'agent_duration_ms': trace['duration_ms'],
             'routes': trace['routes'], 'caller_preselected_count': trace['caller_preselected_count'],
-        }))
+        }
+        rows.append(row)
+        print(json.dumps(row))
+    for entry in headline(rows):
+        print(json.dumps({'headline': entry}))
+    over = [r['run_id'] for r in rows if r['over_budget']]
+    if over:
+        print('OVER BUDGET: %s' % ', '.join(over), file=sys.stderr)
+    return 1 if over and args.fail_over_budget else 0
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())
