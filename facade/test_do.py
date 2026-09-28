@@ -232,11 +232,11 @@ class BookingPath(DoBase):
 
 
 class Discovery(DoBase):
-    def test_ambiguous_discovery_defers_records_ambiguous_and_never_guesses(self):
+    def test_two_repeated_controls_defer_control_needed_and_never_guess(self):
         # Wrong patch: pick the first repeated control kind ('Book') when 'Details' repeats as well.
         self.driver.layout = {'extra_button': True}
         r = self.do(records=rec(ONE))
-        self.assertEqual((r['status'], r['reason']), ('deferred', 'records_ambiguous'))
+        self.assertEqual((r['status'], r['reason']), ('deferred', 'control_needed'))
         self.assertEqual({c['label'] for c in r['found']['repeated_controls']}, {'Book', 'Details'})
         self.assertEqual(self.reader.requests, []);self.assertEqual(self.driver.executed, [])
 
@@ -486,10 +486,10 @@ class Verification(DoBase):
         self.assertEqual((r['status'], r['verification']['status'], r['verified'], r['delivery']), ('deferred', 'unknown', False, 'delivered'))
         self.assertEqual(len(self.driver.executed), 1)
 
-    def test_no_expect_and_no_visual_provider_is_unverified_never_success(self):
-        self.factory_ok = False
+    def test_no_expect_is_delivered_unverified_never_success_even_with_a_visual_provider(self):
+        # Wrong patch: let the screenshot model or the goal stand in for expect.
         r = self.do(records=rec(ONE))
-        self.assertEqual((r['status'], r['verification']['status']), ('deferred', 'unverified'));self.assertEqual(len(self.driver.executed), 1)
+        self.assertEqual((r['status'], r['verification']['status'], r['trace_summary']['follow_up_needed']), ('delivered_unverified', 'unverified', True));self.assertEqual(len(self.driver.executed), 1)
 
     def test_expect_in_two_elements_is_unknown_not_satisfied(self):
         # Wrong patch: any hit satisfies.

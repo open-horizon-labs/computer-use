@@ -1,0 +1,1994 @@
+{
+"source": "synthetic fixture page captured from Chrome AX (web content only); tab strip and address bar are synthetic",
+"window_title": "Orders facade-orders-0-1790630079",
+"elements": [
+{
+"element_index": 0,
+"parent_index": null,
+"role": "AXWindow",
+"enabled": true
+},
+{
+"element_index": 15,
+"parent_index": 0,
+"role": "AXWebArea",
+"enabled": true,
+"label": "Orders facade-orders-0-1790630079",
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 16,
+"parent_index": 15,
+"role": "AXHeading",
+"enabled": true,
+"label": "Orders facade-orders-0-1790630079",
+"value": "1",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 17,
+"parent_index": 16,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Orders facade-orders-0-1790630079",
+"value": "Orders facade-orders-0-1790630079",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 18,
+"parent_index": 15,
+"role": "AXTable",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 19,
+"parent_index": 18,
+"role": "AXRow",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 20,
+"parent_index": 19,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 21,
+"parent_index": 20,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Order",
+"value": "Order",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 22,
+"parent_index": 19,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 23,
+"parent_index": 22,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Item",
+"value": "Item",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 24,
+"parent_index": 19,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 25,
+"parent_index": 24,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Status",
+"value": "Status",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 26,
+"parent_index": 19,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 27,
+"parent_index": 26,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Actions",
+"value": "Actions",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 28,
+"parent_index": 18,
+"role": "AXRow",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 29,
+"parent_index": 28,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 30,
+"parent_index": 29,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1041",
+"value": "#1041",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 31,
+"parent_index": 28,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 32,
+"parent_index": 31,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk lamp",
+"value": "Walnut desk lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 33,
+"parent_index": 28,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 34,
+"parent_index": 33,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Shipped",
+"value": "Shipped",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 35,
+"parent_index": 28,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 36,
+"parent_index": 35,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 37,
+"parent_index": 35,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 38,
+"parent_index": 18,
+"role": "AXRow",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 39,
+"parent_index": 38,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 40,
+"parent_index": 39,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1042",
+"value": "#1042",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 41,
+"parent_index": 38,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 42,
+"parent_index": 41,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut floor lamp",
+"value": "Walnut floor lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 43,
+"parent_index": 38,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 44,
+"parent_index": 43,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 45,
+"parent_index": 38,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 46,
+"parent_index": 45,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 47,
+"parent_index": 45,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 48,
+"parent_index": 18,
+"role": "AXRow",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 49,
+"parent_index": 48,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 50,
+"parent_index": 49,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1043",
+"value": "#1043",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 51,
+"parent_index": 48,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 52,
+"parent_index": 51,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Brass desk lamp",
+"value": "Brass desk lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 53,
+"parent_index": 48,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 54,
+"parent_index": 53,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 55,
+"parent_index": 48,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 56,
+"parent_index": 55,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 57,
+"parent_index": 55,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 58,
+"parent_index": 18,
+"role": "AXRow",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 59,
+"parent_index": 58,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 60,
+"parent_index": 59,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1044",
+"value": "#1044",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 61,
+"parent_index": 58,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 62,
+"parent_index": 61,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk lamp",
+"value": "Walnut desk lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 63,
+"parent_index": 58,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 64,
+"parent_index": 63,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 65,
+"parent_index": 58,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 66,
+"parent_index": 65,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 67,
+"parent_index": 65,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 68,
+"parent_index": 18,
+"role": "AXRow",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 69,
+"parent_index": 68,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 70,
+"parent_index": 69,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1045",
+"value": "#1045",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 71,
+"parent_index": 68,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 72,
+"parent_index": 71,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk organizer",
+"value": "Walnut desk organizer",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 73,
+"parent_index": 68,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 74,
+"parent_index": 73,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 75,
+"parent_index": 68,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 76,
+"parent_index": 75,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 77,
+"parent_index": 75,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 78,
+"parent_index": 18,
+"role": "AXRow",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 79,
+"parent_index": 78,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 80,
+"parent_index": 79,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1046",
+"value": "#1046",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 81,
+"parent_index": 78,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 82,
+"parent_index": 81,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk lamp shade (replacement)",
+"value": "Walnut desk lamp shade (replacement)",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 83,
+"parent_index": 78,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 84,
+"parent_index": 83,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 85,
+"parent_index": 78,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 86,
+"parent_index": 85,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 87,
+"parent_index": 85,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 88,
+"parent_index": 18,
+"role": "AXRow",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 89,
+"parent_index": 88,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 90,
+"parent_index": 89,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1047",
+"value": "#1047",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 91,
+"parent_index": 88,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 92,
+"parent_index": 91,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk lamp",
+"value": "Walnut desk lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 93,
+"parent_index": 88,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 94,
+"parent_index": 93,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Delivered",
+"value": "Delivered",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 95,
+"parent_index": 88,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 96,
+"parent_index": 95,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 97,
+"parent_index": 95,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 98,
+"parent_index": 18,
+"role": "AXColumn",
+"enabled": true,
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 99,
+"parent_index": 98,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 100,
+"parent_index": 99,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Order",
+"value": "Order",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 101,
+"parent_index": 98,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 102,
+"parent_index": 101,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1041",
+"value": "#1041",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 103,
+"parent_index": 98,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 104,
+"parent_index": 103,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1042",
+"value": "#1042",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 105,
+"parent_index": 98,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 106,
+"parent_index": 105,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1043",
+"value": "#1043",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 107,
+"parent_index": 98,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 108,
+"parent_index": 107,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1044",
+"value": "#1044",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 109,
+"parent_index": 98,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 110,
+"parent_index": 109,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1045",
+"value": "#1045",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 111,
+"parent_index": 98,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 112,
+"parent_index": 111,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1046",
+"value": "#1046",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 113,
+"parent_index": 98,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 114,
+"parent_index": 113,
+"role": "AXStaticText",
+"enabled": true,
+"label": "#1047",
+"value": "#1047",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 115,
+"parent_index": 18,
+"role": "AXColumn",
+"enabled": true,
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 116,
+"parent_index": 115,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 117,
+"parent_index": 116,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Item",
+"value": "Item",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 118,
+"parent_index": 115,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 119,
+"parent_index": 118,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk lamp",
+"value": "Walnut desk lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 120,
+"parent_index": 115,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 121,
+"parent_index": 120,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut floor lamp",
+"value": "Walnut floor lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 122,
+"parent_index": 115,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 123,
+"parent_index": 122,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Brass desk lamp",
+"value": "Brass desk lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 124,
+"parent_index": 115,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 125,
+"parent_index": 124,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk lamp",
+"value": "Walnut desk lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 126,
+"parent_index": 115,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 127,
+"parent_index": 126,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk organizer",
+"value": "Walnut desk organizer",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 128,
+"parent_index": 115,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 129,
+"parent_index": 128,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk lamp shade (replacement)",
+"value": "Walnut desk lamp shade (replacement)",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 130,
+"parent_index": 115,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 131,
+"parent_index": 130,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Walnut desk lamp",
+"value": "Walnut desk lamp",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 132,
+"parent_index": 18,
+"role": "AXColumn",
+"enabled": true,
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 133,
+"parent_index": 132,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 134,
+"parent_index": 133,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Status",
+"value": "Status",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 135,
+"parent_index": 132,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 136,
+"parent_index": 135,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Shipped",
+"value": "Shipped",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 137,
+"parent_index": 132,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 138,
+"parent_index": 137,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 139,
+"parent_index": 132,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 140,
+"parent_index": 139,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 141,
+"parent_index": 132,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 142,
+"parent_index": 141,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 143,
+"parent_index": 132,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 144,
+"parent_index": 143,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 145,
+"parent_index": 132,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 146,
+"parent_index": 145,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Processing",
+"value": "Processing",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 147,
+"parent_index": 132,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 148,
+"parent_index": 147,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Delivered",
+"value": "Delivered",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 149,
+"parent_index": 18,
+"role": "AXColumn",
+"enabled": true,
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 150,
+"parent_index": 149,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 151,
+"parent_index": 150,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Actions",
+"value": "Actions",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 152,
+"parent_index": 149,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 153,
+"parent_index": 152,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 154,
+"parent_index": 152,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 155,
+"parent_index": 149,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 156,
+"parent_index": 155,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 157,
+"parent_index": 155,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 158,
+"parent_index": 149,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 159,
+"parent_index": 158,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 160,
+"parent_index": 158,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 161,
+"parent_index": 149,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 162,
+"parent_index": 161,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 163,
+"parent_index": 161,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 164,
+"parent_index": 149,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 165,
+"parent_index": 164,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 166,
+"parent_index": 164,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 167,
+"parent_index": 149,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 168,
+"parent_index": 167,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 169,
+"parent_index": 167,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 170,
+"parent_index": 149,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 171,
+"parent_index": 170,
+"role": "AXButton",
+"enabled": true,
+"label": "Track",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 172,
+"parent_index": 170,
+"role": "AXButton",
+"enabled": true,
+"label": "Cancel",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 173,
+"parent_index": 18,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 174,
+"parent_index": 173,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Order",
+"value": "Order",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 175,
+"parent_index": 18,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 176,
+"parent_index": 175,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Item",
+"value": "Item",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 177,
+"parent_index": 18,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 178,
+"parent_index": 177,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Status",
+"value": "Status",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 179,
+"parent_index": 18,
+"role": "AXCell",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 180,
+"parent_index": 179,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Actions",
+"value": "Actions",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 483,
+"parent_index": 0,
+"role": "AXTabGroup",
+"enabled": true
+},
+{
+"element_index": 484,
+"parent_index": 483,
+"role": "AXRadioButton",
+"label": "Fixture page - Memory usage - 90.0 MB",
+"enabled": true
+},
+{
+"element_index": 485,
+"parent_index": 0,
+"role": "AXTextField",
+"value": "127.0.0.1:8934/orders?run=fixture",
+"enabled": true
+}
+]
+}

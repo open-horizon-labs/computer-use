@@ -1,19 +1,36 @@
-"""Offline MCP protocol smoke. Run using the interpreter with requirements.txt installed."""
+"""Offline MCP protocol smoke, both surfaces. Run using the interpreter with requirements.txt installed.
+
+Default mode: cua_do is the ONLY visible tool. CUA_TASK_ADVANCED=1 mode: the eight primitives appear too, all documented Advanced.
+"""
 import asyncio,sys,json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 from mcp import ClientSession,StdioServerParameters
 from mcp.client.stdio import stdio_client
-async def main():
- code=("import sys;sys.path.insert(0,'facade');import server;from test_core import FakeDriver,FakeReader,FakeChooser,FakeVision;"
-       "from core import Facade;d=FakeDriver();d.capture_id='cap_test';"
-       "server.facade=Facade(d,reader_factory=FakeReader,generic_factory=FakeChooser,visual_factory=FakeVision);server.mcp.run()")
- async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',code],cwd=str(ROOT))) as (r,w):
+CODE=("import sys;sys.path.insert(0,'facade');import server;from test_core import FakeDriver,FakeReader,FakeChooser,FakeVision;"
+      "from core import Facade;d=FakeDriver();d.capture_id='cap_test';"
+      "server.facade=Facade(d,reader_factory=FakeReader,generic_factory=FakeChooser,visual_factory=FakeVision);server.mcp.run()")
+SPEC={'fields':{'condition':{'description':'Condition'}},'predicates':[{'field':'condition','value':'Used'}],'record_ids':['e1','e4'],'coverage_complete':True}
+async def default_mode():
+ async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT))) as (r,w):
+  async with ClientSession(r,w) as s:
+   await s.initialize();ts=(await s.list_tools()).tools
+   assert [t.name for t in ts]==['cua_do'],[t.name for t in ts]
+   do=ts[0];assert do.description.startswith('Default path.')
+   assert {'goal','expect'}<=set(do.inputSchema['required']),do.inputSchema['required']
+   assert {'goal','expect','title','pid','window_id','records','control','operation','text','accept_unknown','budget_s','confirm'}<=set(do.inputSchema['properties'])
+   missing=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':SPEC});assert missing.isError,'expect is required in the schema'
+   first=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':SPEC,'expect':None});out=json.loads(first.content[0].text)
+   assert not first.isError and out['status']=='delivered_unverified' and out['selected']['id']=='e3' and out['trace_summary']['follow_up_needed'] is True,first.content[0].text
+   check=await s.call_tool('cua_do',{'goal':'Check the page','title':'Demo','operation':'verify','expect':'Inspect first'});assert json.loads(check.content[0].text)['status']=='done'
+   leak=await s.call_tool('cua_do',{'goal':'Inspect e3','title':'Demo','expect':None});assert json.loads(leak.content[0].text)['status']=='refused'
+   gone=await s.call_tool('cua_observe',{'pid':1,'window_id':2});assert gone.isError,'primitives must not be callable by default'
+async def advanced_mode():
+ async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT),env={'CUA_TASK_ADVANCED':'1'})) as (r,w):
   async with ClientSession(r,w) as s:
    await s.initialize();ts=(await s.list_tools()).tools
    assert ts[0].name=='cua_do' and ts[0].description.startswith('Default path.'),[t.name for t in ts]
-   assert all(t.description.startswith('Advanced') for t in ts[1:]),[t.name for t in ts if not t.description.startswith('Advanced')]
-   assert {'goal','title','pid','window_id','records','operation','text','expect','accept_unknown','budget_s'}<=set(ts[0].inputSchema['properties'])
+   assert len(ts)==9 and all(t.description.startswith('Advanced') for t in ts[1:]),[t.name for t in ts if not t.description.startswith('Advanced')]
    assert 'title' in next(t for t in ts if t.name=='cua_windows').inputSchema['properties']
    x=await s.call_tool('cua_windows',{'title':'Other'});assert '"windows": []' in x.content[0].text
    o=await s.call_tool('cua_observe',{'pid':1,'window_id':2});sid=o.structuredContent['snapshot']
@@ -32,11 +49,10 @@ async def main():
    o2=await s.call_tool('cua_observe',{'pid':1,'window_id':2});sid2=o2.structuredContent['snapshot']
    gap=await s.call_tool('cua_choose',{'snapshot':sid2,'goal':'Pick a region','mode':'regions'})
    assert gap.isError and 'perception' in gap.content[0].text
-   spec={'fields':{'condition':{'description':'Condition'}},'predicates':[{'field':'condition','value':'Used'}],'record_ids':['e1','e4'],'coverage_complete':True}
-   done=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':spec});out=json.loads(done.content[0].text)
-   assert not done.isError and out['status']=='done' and out['selected']['id']=='e3' and out['verification']['status']=='satisfied' and out['trace_summary']['follow_up_needed'] is False,done.content[0].text
-   leak=await s.call_tool('cua_do',{'goal':'Inspect e3','title':'Demo'});assert json.loads(leak.content[0].text)['status']=='refused'
+   done=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':SPEC,'expect':None});assert json.loads(done.content[0].text)['selected']['id']=='e3'
    fin=json.loads((await s.call_tool('cua_finish',{})).content[0].text)
    assert 'perception_version' in fin and 'perception_state' in fin
-   print('Protocol checks passed: cua_do first with the default-path schema and one end-to-end call, title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
+async def main():
+ await default_mode();await advanced_mode()
+ print('Protocol checks passed in both modes. Default: cua_do is the only tool, expect is required, delivered_unverified/verify/leak paths, primitives not callable. CUA_TASK_ADVANCED=1: nine tools all Advanced but cua_do, title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
 asyncio.run(main())
