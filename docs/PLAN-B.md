@@ -25,7 +25,7 @@ Code: `facade/look.py` (structure of one observation into displayed strings, `Fa
 
 ### `look_id`: no filter without sight
 
-`look_id` is a short hash of the ORDERED displayed record lines of the look (after `focus`, `max_records`, `max_bytes` and the 6x60 line cut). The server remembers the issued ids of this session with the window, the focus terms and how many records were displayed. A `where.lines` step is allowed only with an id the server issued for this window. At the step the executor recomputes the displayed record lines on the CURRENT observation with the same parameters and compares the hash: a mismatch defers `page_changed_since_look` before any click, and the response deliberately carries no fresh id (the LLM has not seen those lines). Only records the look displayed are candidates. Conditions are evaluated on the displayed (cut) lines, exactly what the LLM saw.
+`look_id` is a short hash of the window title, the page's headings and the ORDERED FULL lines (untruncated, every line) of the displayed records (after `focus`, `max_records` and `max_bytes`); text hidden past the display cut therefore invalidates it, and a lone toast does not. The server remembers the issued ids of this session per (pid, window_id, hash), with the focus terms and how many records were displayed. A `where.lines` step is allowed only with an id the server issued for this window. At the step the executor recomputes the displayed record lines on the CURRENT observation with the same parameters and compares the hash: a mismatch defers `page_changed_since_look` before any click, and the response deliberately carries no fresh id (the LLM has not seen those lines). Only records the look displayed are candidates. Positive conditions are evaluated on the displayed (cut) lines, exactly what the LLM saw (a cut can only hide MORE text). Negative conditions over a record with cut or omitted lines are refused (`negative_condition_over_cut_lines`).
 
 ## Guarantees
 
@@ -37,10 +37,10 @@ Preserved (each has its existing tests, plus the plan tests named in the CE):
 | a click is never retried; no selection after a delivered click | the executor never re-runs a step that delivered; `_do` unchanged; test with a failing click counts exactly one click |
 | stale recovery (S4.2 s7) | a stale refusal re-runs THAT step on a fresh observation with a NEW selection; a mid-plan page that keeps changing stops at that step (`ui_changed_repeatedly`) |
 | hard 3x budget | plan-level: no step starts after 3x `budget_s`; each step gets `min(budget_s, remaining/3)` |
-| confirm is opt-in by exact label with a complete identity match | an explicit `confirm` step only, directly after a press; exact label (never a prefix); exactly one such control inside the dialog the previous step opened; EVERY identity string displayed by that dialog |
+| confirm is opt-in by exact label with a complete identity match | an explicit `confirm` step only, directly after a press; exact label (never a prefix); exactly one such control inside the dialog the previous step opened; EVERY identity string a WHOLE token of that dialog's lines, and no negated identity line |
 | incomparable -> unknown; `treat_as_match`/`accept_unknown` gates; `excluded_values` | `where.fields` runs the unchanged reader path |
 | answer-leak guard | plan goal and every step goal, before any Driver call |
-| destructive-verb guard (option D) | literal `control`/`confirm` at validation, and the RESOLVED control at execution |
+| destructive-verb guard (option D) | literal `control`/`confirm` at validation, and the RESOLVED control at execution; only the step's own `allow_destructive` (exact label) unlocks it, never goal text |
 | required `expect`; text-bearing non-control nodes only | non-null on every press/type/confirm step, null only on the last step (ends `delivered_unverified`) |
 | S4.8 strings; no window moves; OCR never feeds typed values | look values are displayed strings; the look never moves or clicks; canvas texts are only listed as `control`/`near` candidates |
 | primitives hidden unless `CUA_TASK_ADVANCED=1`; D untouched | test on the live `list_tools`; no primitive is ever named in a plan hint |
@@ -62,17 +62,18 @@ New: whole-plan validation before any Driver action; `look_id`; `page_changed_si
 5. Dialog identity is matched by displayed strings (deterministic), so a differently worded dialog stops with the click before it already done; `dialog.lines` lets the LLM judge and press the dialog control deliberately.
 6. The default identity of a `where.lines` press is the values its `eq`/`contains` conditions required; if the dialog does not show all of them, the confirm step stops (measured: 3 calls instead of 2).
 7. Conditions are evaluated on the DISPLAYED (cut) lines; values are at most 60 characters.
-8. The destructive guard uses the plan's goal only (not step goals): an LLM that writes its own step goals could write the verb in.
+8. Destructive controls (delete, remove, erase, discard, reset, sign out, cancel subscription) need `allow_destructive: <exact label>` on the step itself; goal text never unlocks one (review of PR 18: "do NOT delete anything" unlocked it).
+8a. Plan steps match `control` exactly; prefix only with `control_match: "prefix"`. Negative line conditions over cut or omitted lines are refused. Identity strings are whole tokens and a negated identity line stops the confirm. `look_id` covers title, headings and full lines. Every look says its page text is untrusted data.
 9. `where.lines` after a step that changed the page stops `page_changed_since_look` (never re-anchors on a new look it has not seen).
 10. `budget_s` defaults to 20 as in the single-step form, so the plan hard cap is 60 s; a long plan needs a larger `budget_s`.
 11. `live_task_budgets.booking` rises from 1 to 2 because the default path is now look then do.
 12. Two extra plan statuses beyond done|stopped|aborted|refused|failed, reusing existing ones: `delivered_unverified` (last step without `expect`) and `observed` (a verify-only plan).
 
-## The claim to verify, and what remains
+## The question, and what remains (UNMEASURED live)
 
-"A deterministic look is good enough on a 100-row page; keep NuExtract in the default look only if it wins."
+The question: does a deterministic look suffice on a 100-row page, so that NuExtract stays out of the default look unless it wins? UNMEASURED live.
 
-`scripts/look_compare.py` builds a synthetic 100-row `invoices` page (rows with several fields and near-duplicates, shaped like the eval suite's task) and runs the deterministic look, the look with `fields`, and the plan a scripted LLM writes from each. Offline result (fake reader):
+`scripts/look_compare.py` builds a synthetic 100-row `invoices` page (rows with several fields and near-duplicates, shaped like the eval suite's task) and runs the deterministic look, the look with `fields`, and the plan a scripted LLM writes from each. Offline result (fake reader; it says only that a policy that already knows the target can act on the data):
 
 ```
 variant                           bytes     shown calls  chunks  plan target
@@ -83,18 +84,18 @@ fields, all 100 rows              19601  100/100     10      10  done, clicked I
 fields, focus=Northwind            1799    6/100      1       1  done, clicked INV-063 -> CORRECT
 ```
 
-What this shows: the deterministic look already contains every string the plan needs; on 100 rows the default caps show 40, so the LLM needs `focus` (or `max_records` and `max_bytes` raised: 11 KB) to see the target, and `fields` adds a response of 19.6 KB and 10 reader calls for values that repeat the displayed lines. **Offline numbers are structure and size only**: the fake reader is exact by construction and instant. What remains, to be measured live: (1) the wall time of `look(fields=...)` on 100 rows (10 reader calls; the extractor chunks 5 records at a time under a 20 s deadline); (2) NuExtract accuracy on those records against the displayed strings (`--reader package.module:callable` runs the same record texts through a real reader and scores them); (3) whether an LLM writes correct plans from the deterministic look alone on messy pages, and the wrong-click rate against native. Until then the claim stays unverified and NuExtract stays out of the default look.
+What this shows, and only this: a policy that already knows the target can act on the data. The deterministic look contains every string that policy needs; on 100 rows the default caps show 40, so the LLM needs `focus` (or `max_records` and `max_bytes` raised: 11 KB) to see the target, and `fields` adds a response of 19.6 KB and 10 reader calls for values that repeat the displayed lines. **Offline numbers are structure and size only**: the fake reader is exact by construction and instant. What remains, to be measured live: (1) the wall time of `look(fields=...)` on 100 rows (10 reader calls; the extractor chunks 5 records at a time under a 20 s deadline); (2) NuExtract accuracy on those records against the displayed strings (`--reader package.module:callable` runs the same record texts through a real reader and scores them); (3) whether an LLM writes correct plans from the deterministic look alone on messy pages, and the wrong-click rate against native. Until then the question stays open and NuExtract stays out of the default look.
 
 ## Not measured
 
-Live latency and cost of look-then-plan; LLM plan correctness; NuExtract accuracy and latency on 100 rows; any tree from an unrelated real site (no consent to capture one yet), so every budget is fixture-derived and the shapes beyond booking and orders are synthetic. The CE's invalidation condition: more than a third of the suite's tasks cannot be expressed as plans, or the wrong-click rate is above native.
+The scripted LLM's phrases come from the goal, so the budget is a LOWER BOUND on the calls a real LLM needs (it guards call counts, not plan correctness). Live latency and cost of look-then-plan; LLM plan correctness; NuExtract accuracy and latency on 100 rows; any tree from an unrelated real site (no consent to capture one yet), so every budget is fixture-derived and the shapes beyond booking and orders are synthetic. The CE's invalidation condition: more than a third of the suite's tasks cannot be expressed as plans, or the wrong-click rate is above native.
 
 ## Checks
 
 ```
 .venv-facade/bin/python -m unittest discover -s facade -p 'test_*.py'
 .venv-facade/bin/python scripts/check_call_budget.py
-.venv-facade/bin/python scripts/check_plan_mutations.py     # 21 wrong patches, each must fail its test BY ASSERTION
+.venv-facade/bin/python scripts/check_plan_mutations.py     # 33 wrong patches, each must fail its test BY ASSERTION
 .venv-facade/bin/python scripts/look_compare.py             # structure and size only
 .venv-facade/bin/python facade/check_protocol.py            # default, CUA_TASK_ADVANCED=1
 ```

@@ -31,10 +31,10 @@ MUTATIONS = {
     'lines_where_without_look_id': (
         'look_id optional: with none, run the filter over the current page',
         [('plan.py', "    if needs_look:\n        if look_id is None:", "    if needs_look:\n        if False:"),
-         ('plan.py', "        if look_id not in f.looks:", "        if False:"),
-         ('plan.py', "            channel['lines_where']['pid_window'] = (look['pid'], look['window_id'])", "            channel['lines_where']['pid_window'] = (look['pid'], look['window_id']) if look else (ctx['pid'], ctx['window_id'])"),
-         ('plan.py', "    look = spec['look']\n    analysis = lk.analyze(f, state)\n    rows, _, _ = lk.select(analysis, look['terms'], cap=look['n'])\n    if lk.view_id(rows) != spec['look_id']:",
-          "    look = spec['look'] or {'terms': [], 'n': 10 ** 6}\n    analysis = lk.analyze(f, state)\n    rows, _, _ = lk.select(analysis, look['terms'], cap=look['n'])\n    if spec['look'] and lk.view_id(rows) != spec['look_id']:")],
+         ('plan.py', "        if not any(key[2] == look_id for key in f.looks):", "        if False:"),
+         ('core.py', "                if lines_where['look'] is None:\n                    raise Gap(", "                if False:\n                    raise Gap("),
+         ('plan.py', "    look = spec['look']\n    analysis = lk.analyze(f, state)", "    look = spec['look'] or {'terms': [], 'n': 10 ** 6}\n    analysis = lk.analyze(f, state)"),
+         ('plan.py', "    if lk.view_id(rows, state['raw'].get('window_title'), analysis) != spec['look_id']:", "    if spec['look'] and lk.view_id(rows, state['raw'].get('window_title'), analysis) != spec['look_id']:")],
         ['test_plan.Validation.test_where_lines_without_a_look_id_is_refused_before_any_click_and_points_at_cua_look',
          'test_plan.Validation.test_an_invented_look_id_is_refused']),
     'null_expect_on_a_non_final_step': (
@@ -50,19 +50,19 @@ MUTATIONS = {
         'bind every step on the first observation and replay it',
         [('core.py', "            snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot)\n            count('observe', 'cua-driver')\n            self.reject_answer_leak(state, goal)",
           "            if plan is not None and plan.get('sticky'):\n                snapshot = plan['sticky'];self.latest[(pid_, window_)] = snapshot\n            else:snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot']\n            if plan is not None:plan.setdefault('first_snapshot', snapshot)\n            state = self.state(snapshot)\n            count('observe', 'cua-driver')\n            self.reject_answer_leak(state, goal)"),
-         ('plan.py', "        channel = {'goal': goal, 'out': {}}", "        channel = {'goal': goal, 'out': {}, 'sticky': carry.get('first')}"),
+         ('plan.py', "        channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive')}", "        channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive'), 'sticky': carry.get('first')}"),
          ('plan.py', "        carry['before'] = channel['out'].get('before')", "        carry.setdefault('first', channel.get('first_snapshot'))\n        carry['before'] = channel['out'].get('before')")],
         ['test_plan.WizardPlans.test_three_steps_run_in_one_call_each_on_a_fresh_observation_with_a_new_selection']),
     'destructive_control_not_checked_at_resolve_time': (
         'guard only the literal control label',
-        [('core.py', "                bad = planmod.destructive_verbs(action.get('name') or '', plan['goal'])", "                bad = []")],
+        [('core.py', "                bad = planmod.destructive_verbs(action.get('name') or '')", "                bad = []")],
         ['test_plan.DestructiveAtResolve.test_a_whole_word_prefix_that_resolves_to_a_destructive_control_is_never_pressed',
-         'test_plan.DestructiveAtResolve.test_a_record_whose_only_control_is_destructive_is_not_pressed_when_the_goal_never_asked']),
+         'test_plan.DestructiveAtResolve.test_a_record_whose_only_control_is_destructive_is_not_pressed_without_the_declaration']),
     'destructive_control_not_checked_at_validation': (
         'no destructive guard on the literal label',
-        [('plan.py', "            bad = destructive_verbs(label, goal) if label else []", "            bad = []")],
+        [('plan.py', "            bad = destructive_verbs(label) if label else []", "            bad = []")],
         ['test_plan.Validation.test_a_destructive_literal_control_is_refused_unless_the_plan_goal_says_so',
-         'test_plan.Validation.test_a_destructive_confirm_label_is_refused_unless_the_goal_says_so']),
+         'test_plan.Validation.test_a_destructive_confirm_label_is_refused_unless_the_step_declares_it']),
     'several_line_matches_click_the_first': (
         'break ties instead of deferring',
         [('plan.py', "    if len(matched) != 1:", "    if not matched:"),
@@ -76,7 +76,7 @@ MUTATIONS = {
          'test_plan.InvoicePlans.test_the_target_beyond_the_default_cap_is_not_selectable_without_a_focused_look']),
     'page_change_since_look_not_detected': (
         'run the filter over the current lines whatever the look said',
-        [('plan.py', "    if lk.view_id(rows) != spec['look_id']:", "    if False:")],
+        [('plan.py', "    if lk.view_id(rows, state['raw'].get('window_title'), analysis) != spec['look_id']:", "    if False:")],
         ['test_plan.BookingPlans.test_page_changed_since_look_defers_and_clicks_nothing']),
     'confirm_by_label_without_identity': (
         'press the confirm label because a dialog appeared',
@@ -98,7 +98,7 @@ MUTATIONS = {
         ['test_plan.WizardPlans.test_the_plan_wall_budget_stops_before_the_next_step_and_never_clicks_past_it']),
     'look_id_ignores_line_text': (
         'an id that does not depend on what the LLM saw',
-        [('look.py', "    return 'lk_' + hashlib.sha1(json.dumps(displayed_lines, ensure_ascii=False).encode()).hexdigest()[:10]", "    return 'lk_' + hashlib.sha1(json.dumps(len(displayed_lines)).encode()).hexdigest()[:10]")],
+        [('look.py', "json.dumps([title or '', list(headings), full_lines], ensure_ascii=False)", "json.dumps(len(full_lines))")],
         ['test_look.LookReal.test_look_id_is_stable_for_the_same_strings_and_changes_when_a_line_changes',
          'test_plan.BookingPlans.test_page_changed_since_look_defers_and_clicks_nothing']),
     'look_clicks_or_scrolls': (
@@ -117,16 +117,69 @@ MUTATIONS = {
         'drop the CUA_TASK_ADVANCED guard',
         [('server.py', "if ADVANCED:register_advanced()", "register_advanced()")],
         ['test_budget.ToolSurface.test_primitives_registered_by_default_fail', 'test_plan.ServerSurface.test_the_default_surface_is_exactly_cua_do_then_cua_look_and_the_primitives_are_absent']),
+    'hash_only_the_displayed_lines': (
+        'the look_id covers what was displayed, not the full lines (review P1-1)',
+        [('look.py', "return look_id_of([r['rec']['lines'] for r in rows], title, analysis['headings'])", "return look_id_of([r['lines'] for r in rows], title, analysis['headings'])")],
+        ['test_plan_review.HiddenText.test_a_change_hidden_past_the_cut_after_the_look_invalidates_the_look_id', 'test_plan_review.HiddenText.test_the_look_id_changes_when_hidden_text_changes']),
+    'negative_conditions_over_cut_lines_allowed': (
+        'evaluate not_contains and neq on the displayed (cut) lines (review P1-1)',
+        [('plan.py', "        if hidden:\n            return", "        if False:\n            return")],
+        ['test_plan_review.HiddenText.test_a_negative_condition_over_a_cut_line_is_refused_and_clicks_nothing', 'test_plan_review.HiddenText.test_neq_over_a_cut_line_is_refused_too',
+         'test_plan_review.HiddenText.test_lines_omitted_beyond_six_count_as_hidden_text']),
+    'identity_matched_by_substring': (
+        'the identity is present as a substring (review P1-2)',
+        [('plan.py', "    return bool(w) and re.search(r'(?<![a-z0-9#])' + re.escape(w) + r'(?![a-z0-9#])', text) is not None", "    return bool(w) and w in text")],
+        ['test_plan_review.Identity.test_an_identity_that_is_only_a_prefix_of_another_number_is_not_a_match', 'test_plan_review.Identity.test_the_identity_unit_rules']),
+    'negated_dialog_confirmed': (
+        'the identity is present, so confirm (review P1-2)',
+        [('plan.py', "        if any(token_in(low, w) for w in wanted) and NEGATION.search(low):", "        if False:")],
+        ['test_plan_review.Identity.test_a_negated_dialog_line_defers_and_shows_the_line', 'test_plan_review.Identity.test_every_negation_token_counts']),
+    'destructive_unlocked_by_goal_text': (
+        'a regex over the goal unlocks a destructive control (review P1-3)',
+        [('plan.py', "            if bad and not allowed(step.get('allow_destructive'), label):", "            if bad and not (allowed(step.get('allow_destructive'), label) or re.search(r'delet|remov|eras|discard|reset|sign out', lk.norm(goal))):"),
+         ('core.py', "                if bad and not planmod.allowed(plan.get('allow'), action.get('name') or ''):", "                if bad and not (planmod.allowed(plan.get('allow'), action.get('name') or '') or re.search(r'delet|remov|eras|discard|reset|sign out', plan['goal'].casefold())):")],
+        ['test_plan_review.Destructive.test_a_negated_goal_never_unlocks_a_destructive_control', 'test_plan_review.Destructive.test_a_goal_that_says_delete_still_needs_the_declaration']),
+    'any_declaration_unlocks': (
+        'allow_destructive of any text unlocks the control (review P1-3)',
+        [('plan.py', "    return bool(step_allow) and lk.norm(step_allow) == lk.norm(label)", "    return bool(step_allow)")],
+        ['test_plan_review.Destructive.test_a_declaration_for_another_label_does_not_allow_it']),
+    'prefix_control_in_plans': (
+        'reuse the whole-word prefix in plans: Finish presses Finish later (review P2-5)',
+        [('plan.py', "        f.prefix_control = step.get('control_match') == 'prefix'", "        f.prefix_control = True")],
+        ['test_plan_review.ExactControl.test_finish_does_not_click_finish_later']),
+    'page_identity_ignored': (
+        'a look_id over the record lines only (review P2-4)',
+        [('look.py', "json.dumps([title or '', list(headings), full_lines], ensure_ascii=False)", "json.dumps(full_lines, ensure_ascii=False)")],
+        ['test_plan_review.PageIdentity.test_a_different_heading_over_the_same_rows_is_a_different_page']),
+    'looks_keyed_by_hash_alone': (
+        'the second look of identical rows overwrites the first (review P2-4)',
+        [('look.py', "f.looks[(pid, window_id, response['look_id'])] =", "f.looks[(None, None, response['look_id'])] ="),
+         ('core.py', "                lines_where['look'] = self.looks.get((ctx['pid'], ctx['window_id'], lines_where['look_id']))", "                lines_where['look'] = self.looks.get((None, None, lines_where['look_id']))\n                if lines_where['look'] and (lines_where['look']['pid'], lines_where['look']['window_id']) != (ctx['pid'], ctx['window_id']):lines_where['look'] = None")],
+        ['test_plan_review.TwoWindows.test_identical_rows_in_two_windows_do_not_overwrite_each_others_look']),
+    'page_text_unmarked': (
+        'return page text with no untrusted marker (review P3-6)',
+        [('look.py', "'untrusted_page_text': True, 'notice': NOTICE, ", "")],
+        ['test_plan_review.UntrustedText.test_every_look_says_the_page_text_is_untrusted_data']),
+    'child_map_cached_on_the_facade': (
+        'cache the subtree child map across observations (review P3-7)',
+        [('core.py', "        kids = state.get('_kids')\n        if kids is None:", "        kids = getattr(self, '_kidcache', None)\n        if kids is None:"),
+         ('core.py', "            state['_kids'] = kids\n", "            self._kidcache = kids\n")],
+        ['test_plan_review.SubtreeCache.test_a_new_observation_never_reuses_an_old_child_map']),
+    'claim_worded_as_a_fact': (
+        'a result line saying the deterministic look is good enough (review P3-8)',
+        [('../scripts/look_compare.py', "sufficiency of the deterministic look is UNMEASURED live.", "the deterministic look is good enough on a 100-row page.")],
+        ['test_plan_review.Wording.test_no_heading_or_result_line_states_the_claim_as_a_fact']),
     'budget_look_reader': (
         'the default look reads through NuExtract (measured through the real server tools)',
-        [('look.py', "        f.looks[response['look_id']] = {", "        try:f.provider('reader').extract({'snapshot_id': state['raw']['snapshot_id'], 'task': 't', 'fields': {'x': 'x'}, 'records': [{'id': 'e1', 'text': 't'}]}, state['raw']['snapshot_id'])\n        except Exception:pass  # the fake reader counts the request before it looks for a pattern\n        f.looks[response['look_id']] = {")],
+        [('look.py', "        f.looks[(pid, window_id, response['look_id'])] = {", "        try:f.provider('reader').extract({'snapshot_id': state['raw']['snapshot_id'], 'task': 't', 'fields': {'x': 'x'}, 'records': [{'id': 'e1', 'text': 't'}]}, state['raw']['snapshot_id'])\n        except Exception:pass  # the fake reader counts the request before it looks for a pattern\n        f.looks[(pid, window_id, response['look_id'])] = {")],
         ['test_budget.DefaultPathBudget.test_look_then_plan_is_two_calls_with_no_reader_and_no_chooser_on_the_real_trees']),
 }
 
 
 def stage(tmp):
     shutil.copytree(ROOT / 'facade', tmp / 'facade', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
-    for name in ('inference', 'skills', 'docs', 'scripts'):
+    shutil.copytree(ROOT / 'scripts', tmp / 'scripts', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))  # a copy: a patch must never reach the real file through a symlink
+    for name in ('inference', 'skills', 'docs'):
         (tmp / name).symlink_to(ROOT / name)
 
 

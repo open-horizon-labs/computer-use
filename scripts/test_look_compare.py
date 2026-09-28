@@ -46,7 +46,7 @@ class LookCompare(unittest.TestCase):
     def test_the_report_says_offline_numbers_are_structure_and_size_only_and_never_claims_verification(self):
         # Wrong patch: print the fake reader's exact, instant numbers as if they were latency or accuracy, or declare the claim verified.
         code, text = run()
-        self.assertIn('STRUCTURE AND SIZE ONLY', text);self.assertIn('NOT measured', text);self.assertIn('NOT VERIFIED', text)
+        self.assertIn('STRUCTURE AND SIZE ONLY', text);self.assertIn('NOT measured', text);self.assertIn('UNMEASURED live', text)
         self.assertIn('LATENCY', text);self.assertIn('ACCURACY', text)
         self.assertNotRegex(text, r'(?i)claim is verified|confirmed|proved')
         self.assertNotIn('extract_ms=', text);self.assertNotIn('values_correct=', text)  # no latency or accuracy column with the fake reader
@@ -55,8 +55,8 @@ class LookCompare(unittest.TestCase):
         code, text = run('--reader', 'test_look_compare:make_reader')
         self.assertEqual(code, 0);self.assertIn('reader: REAL test_look_compare:make_reader', text)
         self.assertIn('extract_ms=', text);self.assertIn('values_correct=', text)
-        self.assertNotIn('STRUCTURE AND SIZE ONLY', text)  # the disclaimer is for the fake reader; the claim line still says NOT VERIFIED
-        self.assertIn('NOT VERIFIED', text)
+        self.assertNotIn('STRUCTURE AND SIZE ONLY', text)  # the disclaimer is for the fake reader; the claim line still says UNMEASURED live
+        self.assertIn('UNMEASURED live', text)
         self.assertRegex(text, r'values_correct=\d+/\d+')
 
 

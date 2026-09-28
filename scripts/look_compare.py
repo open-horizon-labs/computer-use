@@ -1,10 +1,10 @@
-"""The claim to verify (CE-FACADE-005): "a deterministic look is good enough on a 100-row page; keep NuExtract in the default look only if it wins".
+"""The question (CE-FACADE-005): does a deterministic look suffice on a 100-row page, so that NuExtract stays out of the default look unless it wins? UNMEASURED live.
 
 Runs the synthetic 100-row `invoices` page (facade/shapes.py: rows with several fields and near-duplicates, shaped like the eval suite's
 `invoices` task) through cua_look without and with `fields`, then executes the plan a scripted LLM writes from each look, and reports:
 response bytes, extraction calls and chunks, and whether the plan clicked the right row.
 
-WHAT THIS DOES NOT MEASURE, and the report says so every time: with the default fake reader the numbers are STRUCTURE AND SIZE ONLY.
+WHAT THIS DOES NOT MEASURE, and the report says so every time: the scripted policy ALREADY KNOWS the target (its phrases come from the goal), so a CORRECT row says only that a policy that already knows the target can act on the data. with the default fake reader the numbers are STRUCTURE AND SIZE ONLY.
 Extraction LATENCY and NuExtract ACCURACY cannot be measured offline (the fake reader is exact by construction and instant). Pass
 `--reader package.module:callable` (a factory returning an object with extract(request, snapshot_id) and close(), for example
 `page_candidates:NuExtractPage` with the fleet profile configured) for a LATER live run: the same record texts go to the real endpoint,
@@ -117,9 +117,10 @@ def main(argv=None):
             extra = '  extract_ms=%s values_correct=%s' % (r['extract_ms'], r['values_correct'])
         print('%-32s %6d %4d/%-4d %5d %7d  %s%s' % (r['variant'], r['bytes'], r['shown'], r['of'], r['extraction_calls'], r['extraction_chunks'], target, extra))
     print()
+    print('Every CORRECT above says only that a policy that already knows the target can act on the data; sufficiency of the deterministic look is UNMEASURED live.')
     if not real:
         print('OFFLINE NUMBERS ARE STRUCTURE AND SIZE ONLY. The fake reader is exact by construction and instant: extraction LATENCY and NuExtract ACCURACY are NOT measured here.')
-    print('THE CLAIM IS NOT VERIFIED BY THIS SCRIPT. Remaining, to be measured live: (1) wall time of look(fields=...) on 100 rows (%d reader calls of at most 10 records each; the real extractor has a 20 s whole-call deadline and chunks 5 records internally); '
+    print('THE QUESTION IS NOT ANSWERED BY THIS SCRIPT (UNMEASURED live). Remaining, to be measured live: (1) wall time of look(fields=...) on 100 rows (%d reader calls of at most 10 records each; the real extractor has a 20 s whole-call deadline and chunks 5 records internally); '
           '(2) NuExtract accuracy on those records against the displayed strings (--reader ... prints values_correct); (3) whether an LLM writes correct plans from the deterministic look alone on messy pages.' % next(r['extraction_calls'] for r in rows if r['variant'] == 'fields, all 100 rows'))
     return 0
 
