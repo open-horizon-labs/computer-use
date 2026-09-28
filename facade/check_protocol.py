@@ -33,8 +33,8 @@ async def main():
    gap=await s.call_tool('cua_choose',{'snapshot':sid2,'goal':'Pick a region','mode':'regions'})
    assert gap.isError and 'perception' in gap.content[0].text
    spec={'fields':{'condition':{'description':'Condition'}},'predicates':[{'field':'condition','value':'Used'}],'record_ids':['e1','e4'],'coverage_complete':True}
-   done=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':spec,'expect':'Inspect first'});out=json.loads(done.content[0].text)
-   assert not done.isError and out['status']=='done' and out['selected']['id']=='e3' and out['verification']['status']=='satisfied' and out['trace_summary']['llm_visible_calls']==1,done.content[0].text
+   done=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':spec});out=json.loads(done.content[0].text)
+   assert not done.isError and out['status']=='done' and out['selected']['id']=='e3' and out['verification']['status']=='satisfied' and out['trace_summary']['follow_up_needed'] is False,done.content[0].text
    leak=await s.call_tool('cua_do',{'goal':'Inspect e3','title':'Demo'});assert json.loads(leak.content[0].text)['status']=='refused'
    fin=json.loads((await s.call_tool('cua_finish',{})).content[0].text)
    assert 'perception_version' in fin and 'perception_state' in fin

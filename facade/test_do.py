@@ -27,18 +27,20 @@ def button(i):
     return 'e%d' % (5 * (i + 1))  # flat booking layout: 4 texts then the control per record
 
 
-def flat_window(sid, rows, shift=False, extra_button=False, header=None, footer=None):
+def flat_window(sid, rows, shift=False, extra_button=False, header=None, footer=None, banner=None, textfield=None):
     """Flat AX like Chrome's: each record's texts precede its identical control, no wrapper groups."""
     nodes = [{'element_index': 0, 'role': 'AXWindow', 'label': 'Clinic Slots'}]
     def add(role, **kw):
         nodes.append({'element_index': len(nodes), 'parent_index': 0, 'role': role, **kw})
     if shift:add('AXGroup')  # same content, every later index moves by one
+    if banner:add('AXStaticText', value=banner)
     if header:add('AXStaticText', value=header)
     for texts, label in rows:
         for value in texts:add('AXStaticText', value=value)
         add('AXButton', label=label, actions=['AXPress'])
         if extra_button:add('AXButton', label='Details', actions=['AXPress'])
     if footer:add('AXStaticText', value=footer)
+    if textfield is not None:add('AXTextField', label='Name', value=textfield)
     return nodes
 
 
@@ -55,16 +57,32 @@ class FlatDriver(FakeDriver):
     def __init__(self):
         super().__init__()
         self.rows = booking_rows();self.layout = {};self.rows_at = None;self.confirm_text = None;self.confirm_copies = 1
-        self.modal = None;self.shift_at = lambda v: False;self.observed = []
+        self.modal = None;self.pre_modal = None;self.shift_at = lambda v: False;self.observed = [];self.typed = '';self.field = False;self.extra_sheet = False
+        self.on_tool = None;self.observe_args = []
+    def call(self, tool, args, timeout=20):
+        if self.on_tool:self.on_tool(tool)
+        if tool == 'type_text':self.typed = args['text']
+        return super().call(tool, args, timeout)
     def observe(self, *args):
         self.version += 1
         rows = self.rows_at(self.version) if self.rows_at else self.rows
         sid = 's' + format(self.version, '08x')
-        nodes = flat_window(sid, rows, shift=self.shift_at(self.version), **self.layout)
+        self.observe_args.append(args)
+        nodes = flat_window(sid, rows, shift=self.shift_at(self.version), **({'textfield': self.typed} if self.field else {}), **self.layout)
         clicks = len(self.executed)
-        if self.modal and clicks == 1:
-            sheet = len(nodes);nodes.append({'element_index': sheet, 'parent_index': 0, 'role': 'AXSheet', 'label': 'Confirm'})
-            for role, kw in self.modal:nodes.append({'element_index': len(nodes), 'parent_index': sheet, 'role': role, **kw})
+        def sheet(spec, label='Confirm', first=False):
+            at = 1 if first else len(nodes)  # a pre-existing dialog sits before the records, like a page-level overlay
+            block = [{'element_index': 0, 'parent_index': 0, 'role': 'AXSheet', 'label': label}] + [{'element_index': 0, 'parent_index': 0, 'role': r, **kw} for r, kw in spec]
+            for k, n in enumerate(block):n['element_index'] = at + k;n['parent_index'] = 0 if k == 0 else at
+            for n in nodes:
+                if first and n['element_index'] >= at:n['element_index'] += len(block)
+                if first and n.get('parent_index', 0) >= at:n['parent_index'] += len(block)
+            nodes[at - 1 if first else len(nodes):at - 1 if first else len(nodes)] = block
+            nodes.sort(key=lambda n: n['element_index'])
+        if self.pre_modal and clicks == 0:sheet(self.pre_modal, first=True)
+        elif self.modal and clicks == 1:
+            sheet(self.modal)
+            if self.extra_sheet:sheet([('AXStaticText', {'value': 'Other'})], 'Other')
         elif self.confirm_text and clicks >= (2 if self.modal else 1):
             for _ in range(self.confirm_copies):nodes.append({'element_index': len(nodes), 'parent_index': 0, 'role': 'AXGroup', 'label': self.confirm_text})
         for n in nodes:n.update(element_token=sid + ':' + str(n['element_index']), enabled=True)
@@ -146,7 +164,7 @@ class BookingPath(DoBase):
         self.assertEqual((r['status'], r['judgment'], r['verified']), ('done', 'filter', True))
         self.assertEqual(len(self.reader.requests), 1);self.assertEqual(self.chooser.requests, []);self.assertEqual(self.starts, [])
         self.assertEqual(len(self.driver.executed), 1);self.assertEqual(self.driver.executed[0]['element_token'], 's00000002:25')
-        self.assertEqual(r['selected']['id'], button(4));self.assertEqual(r['trace_summary']['llm_visible_calls'], 1)
+        self.assertEqual(r['selected']['id'], button(4));self.assertFalse(r['trace_summary']['follow_up_needed'])
         self.assertEqual(r['verification']['status'], 'satisfied')
         self.assertEqual(r['observation']['snapshot'], self.f.latest[(1, 2)])  # the LLM can continue from this handle
         self.assertEqual(self.driver.version, 3)  # observe, act's revalidation, verification: no extra observations
@@ -330,6 +348,21 @@ class Recovery(DoBase):
         self.assertEqual((r['status'], r['reason'], r['budget_exceeded'], r['stage']), ('deferred', 'budget_exceeded', True, 'read'))
         self.assertEqual((self.driver.executed, r['trace_summary']['passes']), ([], 2))
 
+    def test_garbled_identity_blocks_stale_recovery(self):
+        # P1-3. Wrong patch: compare identities that dropped None fields ({} == {} is vacuously "the same record").
+        self.driver.rows_at = lambda v: booking_rows([(n, s, d, '1:35 PM' if (n == 'Provider A' and v >= 2) else t) for n, s, d, t in PROVIDERS])
+        self.reader.missing = lambda call, rid, field: rid == button(4) and field == 'duration'
+        r = self.do(records=rec(ONE))
+        self.assertEqual((r['status'], r['reason'], self.driver.executed, len(self.reader.requests)), ('deferred', 'record_changed_unverifiable', [], 1))
+        self.assertEqual(self.f.selections and all(s['used'] for s in self.f.selections.values()), True)
+
+    def test_two_records_with_the_same_identity_block_stale_recovery(self):
+        # P1-3. Wrong patch: recovery by identity when the identity is not position-independent.
+        twin = [(n, s, d, t) if n != 'Provider F' else ('Provider E', 'Follow-up', '30 min', '1:45 PM') for n, s, d, t in PROVIDERS]
+        self.driver.rows_at = lambda v: booking_rows([(n, s, d, '1:35 PM' if (n == 'Provider A' and v >= 2) else t) for n, s, d, t in twin])
+        r = self.do(records=rec(ONE))
+        self.assertEqual((r['status'], r['reason'], self.driver.executed), ('deferred', 'record_changed_unverifiable', []))
+
     def test_delivered_click_that_cannot_be_verified_is_deferred_and_never_reclicked(self):
         # Case A after a recovered stale pass. Wrong patch: click again because verification was unknown.
         self.driver.rows_at = lambda v: booking_rows([(n, s, d, '1:35 PM' if (n == 'Provider A' and v >= 2) else t) for n, s, d, t in PROVIDERS])
@@ -420,6 +453,26 @@ class Recovery(DoBase):
 
 
 class Verification(DoBase):
+    def test_expect_already_on_the_page_is_unproven_after_a_click_that_changed_nothing(self):
+        # P1-4. Wrong patch: presence after the click is proof even when the text was already there before it.
+        self.driver.layout = {'banner': 'Confirmation ready'};self.driver.confirm_text = None;self.visual = UnknownVision()
+        r = self.do(records=rec(ONE), expect='Confirmation ready')
+        self.assertEqual((r['status'], r['reason'], r['verification']['reason'], self.visual.calls), ('deferred', 'delivery_unverified', 'expect_present_before_action', 0))
+        self.assertEqual(len(self.driver.executed), 1)
+
+    def test_typed_text_does_not_satisfy_expect_by_itself(self):
+        # P1-4. Wrong patch: the field's own value counts as evidence that typing worked.
+        self.driver.rows = [];self.driver.field = True;self.visual = UnknownVision()
+        r = self.do('Type the name into "Name"', operation='type_text', text='hello', expect='hello')
+        self.assertEqual((r['status'], r['verification']['reason'], len(self.driver.executed)), ('deferred', 'expect_echoes_typed_text', 1))
+        self.assertEqual(self.visual.calls, 0)
+
+    def test_typing_can_still_be_verified_by_different_text(self):
+        self.driver.rows = [];self.driver.field = True;self.driver.confirm_text = 'Saved';self.visual = UnknownVision()
+        real = self.driver.observe
+        r = self.do('Type the name into "Name"', operation='type_text', text='hello', expect='Saved')
+        self.assertEqual(r['status'], 'done')
+
     def test_expect_absent_escalates_to_the_screenshot_model_which_can_satisfy(self):
         # Row 5. Wrong patch: stop at the AX check and report unknown.
         self.driver.confirm_text = None
@@ -471,42 +524,137 @@ class Verification(DoBase):
 
 
 class ConfirmDialog(DoBase):
+    CONFIRM = 'Yes, cancel order'
     MODAL = [('AXStaticText', {'value': 'Cancel order 1042 for Cedar?'}),
              ('AXButton', {'label': 'Keep order', 'actions': ['AXPress']}), ('AXButton', {'label': 'Yes, cancel order', 'actions': ['AXPress']})]
     def setUp(self):
         super().setUp()
         self.driver.rows = order_rows();self.driver.confirm_text = 'Order 1042 cancelled';self.reader.patterns = ORDER_PATTERNS
         self.chooser.prefer = 'Yes'
-    def cancel(self, **kw):
+    def cancel(self, confirm=None, **kw):
         self.driver.modal = kw.get('modal', self.MODAL)
-        return self.do('Cancel the order 1042 for customer Cedar', records=rec([{'field': 'order', 'value': '1042'}, {'field': 'customer', 'value': 'Cedar'}], fields=ORDER_FIELDS), expect='Order 1042 cancelled')
+        more = {'confirm': confirm} if confirm is not None else {}
+        return self.do('Cancel the order 1042 for customer Cedar', records=rec([{'field': 'order', 'value': '1042'}, {'field': 'customer', 'value': 'Cedar'}], fields=ORDER_FIELDS), expect='Order 1042 cancelled', **more)
+
+    # --- review of PR 15: safety fixes -------------------------------------------------------------
+    def test_confirm_prefire_failure_after_the_first_click_returns_no_selection(self):
+        # P1-1. Wrong patch: given_back = selection unused, without asking whether ANY click was already delivered.
+        real = self.driver.observe
+        self.driver.observe = lambda *a: (_ for _ in ()).throw(DriverCallFailed('driver_call_failed: get_window_state exited 1')) if (self.driver.version >= 3 and len(self.driver.executed) == 1) else real(*a)
+        r = self.cancel(confirm=self.CONFIRM)
+        self.assertEqual((r['status'], r['delivery'], r['retryable'], len(self.driver.executed)), ('failed', 'delivered', False, 1))
+        self.assertNotIn('selection', r)
+        self.driver.observe = real
+        for handle in list(self.f.selections):
+            with self.assertRaises(Gap):self.f.act(handle)  # nothing left that could click the dialog
+        self.assertEqual(len(self.driver.executed), 1)
+
+    def dialog(self, *controls, text='Cancel order 1042 for Cedar?'):
+        return [('AXStaticText', {'value': text}), *[('AXButton', {'label': c, 'actions': ['AXPress']}) for c in controls]]
+
+    def test_a_single_dialog_control_is_never_clicked_without_confirm(self):
+        # P1-2. Wrong patch: click the only control because the dialog's identity matched (the goal never authorized it).
+        r = self.cancel(modal=self.dialog('Delete'))
+        self.assertEqual((r['status'], r['reason'], len(self.driver.executed)), ('deferred', 'confirm_dialog_present', 1))
+        self.assertEqual((r['dialog']['controls'], r['dialog']['identity']), (['Delete'], 'matched'));self.assertIn('first click is done', r['hint'])
+
+    def test_confirm_must_equal_a_control_label_exactly(self):
+        # Wrong patch: substring or fuzzy label match ('Cancel order' would hit 'Yes, cancel order').
+        r = self.cancel(modal=self.dialog('Keep order', 'Yes, cancel order'), confirm='Cancel order')
+        self.assertEqual((r['reason'], len(self.driver.executed), self.chooser.requests), ('confirm_control_not_found', 1, []))
+
+    def test_confirm_clicks_the_named_control_case_and_space_insensitively_without_the_chooser(self):
+        r = self.cancel(confirm='  yes,  CANCEL order ')
+        self.assertEqual((r['status'], len(self.driver.executed), self.chooser.requests), ('done', 2, []))
+
+    def test_two_dialog_controls_with_the_confirm_label_are_ambiguous(self):
+        r = self.cancel(modal=self.dialog('Yes, cancel order', 'Yes, cancel order'), confirm='Yes, cancel order')
+        self.assertEqual((r['reason'], len(self.driver.executed)), ('confirm_dialog_ambiguous', 1))
+
+    def test_confirm_needs_a_complete_identity_match(self):
+        # Wrong patch: confirm on a dialog that displays only some of the identity.
+        r = self.cancel(modal=self.dialog('Yes, cancel order', text='Cancel order 1042?'), confirm='Yes, cancel order')
+        self.assertEqual((r['reason'], len(self.driver.executed)), ('confirm_identity_unknown', 1))
+
+    def test_a_preexisting_dialog_is_not_the_confirm_dialog(self):
+        # Wrong patch: count modals; an unchanged pre-existing one must never be mistaken for the new dialog.
+        same = self.dialog('Dismiss', text='Session expiring');self.driver.pre_modal = same;self.visual = UnknownVision()
+        r = self.cancel(confirm='Yes, cancel order', modal=same)
+        self.assertEqual((r['reason'], len(self.driver.executed)), ('delivery_unverified', 1))
+
+    def test_a_replaced_dialog_is_ambiguous_not_confirmed(self):
+        # Wrong patch: equal modal counts before and after mean "nothing new".
+        self.driver.pre_modal = self.dialog('Dismiss', text='Session expiring')
+        r = self.cancel(confirm='Yes, cancel order')
+        self.assertEqual((r['reason'], len(self.driver.executed)), ('confirm_dialog_ambiguous', 1))
+
+    def test_an_extra_dialog_beside_a_preexisting_one_is_ambiguous(self):
+        self.driver.pre_modal = self.dialog('Dismiss', text='Session expiring');self.driver.extra_sheet = True
+        r = self.cancel(confirm='Yes, cancel order')
+        self.assertEqual((r['reason'], len(self.driver.executed)), ('confirm_dialog_ambiguous', 1))
 
     def test_confirm_dialog_is_confirmed_only_after_its_displayed_identity_matches(self):
         # Row 6. Wrong patch: click the dialog's affirmative control without reading what it says.
-        r = self.cancel()
+        r = self.cancel(confirm=self.CONFIRM)
         self.assertEqual((r['status'], r['confirmation']['identity']), ('done', 'matched'))
-        self.assertEqual(len(self.driver.executed), 2);self.assertEqual(len(self.reader.requests), 2)
-        self.assertEqual(len(self.chooser.requests), 1);self.assertEqual([a['name'] for a in self.chooser.requests[0]['actions']], ['Keep order', 'Yes, cancel order'])
-        self.assertEqual(r['trace_summary']['llm_visible_calls'], 1)
+        self.assertEqual(len(self.driver.executed), 2);self.assertEqual(len(self.reader.requests), 2);self.assertEqual(self.chooser.requests, [])
+
+    def test_a_dialog_is_reported_not_pressed_when_the_goal_gave_no_confirm_label(self):
+        # Wrong patch: the identity match alone authorizes pressing the dialog's affirmative control.
+        r = self.cancel()
+        self.assertEqual((r['status'], r['reason'], len(self.driver.executed)), ('deferred', 'confirm_dialog_present', 1))
+        self.assertEqual((r['dialog']['controls'], r['dialog']['identity']), (['Keep order', 'Yes, cancel order'], 'matched'))
 
     def test_confirm_dialog_naming_another_record_defers_and_clicks_nothing_more(self):
         wrong = [('AXStaticText', {'value': 'Cancel order 1043 for Cedar?'})] + self.MODAL[1:]
-        r = self.cancel(modal=wrong)
+        r = self.cancel(confirm=self.CONFIRM, modal=wrong)
         self.assertEqual((r['status'], r['reason'], len(self.driver.executed), self.chooser.requests), ('deferred', 'confirm_identity_mismatch', 1, []))
+        self.setUp();self.reader.patterns = ORDER_PATTERNS;self.driver.rows = order_rows();self.driver.confirm_text = 'Order 1042 cancelled'
+        self.assertEqual(self.cancel(modal=wrong)['dialog']['identity'], 'mismatch')
 
     def test_confirm_dialog_that_shows_no_identity_defers(self):
         blank = [('AXStaticText', {'value': 'Are you sure?'})] + self.MODAL[1:]
-        r = self.cancel(modal=blank)
+        r = self.cancel(confirm=self.CONFIRM, modal=blank)
         self.assertEqual((r['reason'], len(self.driver.executed)), ('confirm_identity_unknown', 1))
 
     def test_dialog_without_a_record_identity_is_never_auto_confirmed(self):
         self.driver.rows = [(('Only',), 'Delete'), (('Other',), 'Delete')]
         self.driver.modal = self.MODAL
-        r = self.do('Delete "Delete"')  # not exact (repeated): chooser path, no reading to compare against
+        r = self.do('Delete "Delete"', confirm=self.CONFIRM)  # not exact (repeated): chooser path, no reading to compare against
         self.assertEqual((r['reason'], len(self.driver.executed)), ('confirm_dialog_needs_identity', 1))
+        self.setUp();self.driver.rows = [(('Only',), 'Delete'), (('Other',), 'Delete')];self.driver.modal = self.MODAL
+        self.assertEqual(self.do('Delete "Delete"')['reason'], 'confirm_dialog_present')
 
 
 class Bounds(DoBase):
+    def test_hard_cap_counts_click_time_and_stops_verification(self):
+        # P2-6. Wrong patch: exclude click time from every budget, so slow stages run on indefinitely.
+        self.driver.on_tool = lambda tool: self.clock.advance(10) if tool == 'click' else None
+        r = self.do(records=rec(ONE), expect='Booked Provider E', budget_s=2)
+        self.assertEqual((r['status'], r['reason'], r['delivery'], len(self.driver.executed), self.driver.version), ('deferred', 'budget_exceeded', 'delivered', 1, 2))
+
+    def test_hard_cap_blocks_the_second_pass(self):
+        self.driver.rows_at = lambda v: booking_rows([(n, s, d, '1:35 PM' if (n == 'Provider A' and v >= 2) else t) for n, s, d, t in PROVIDERS])
+        real = self.driver.observe
+        def slow(*a):
+            if self.driver.version == 1:self.clock.advance(10)  # act's revalidation: excluded from the soft budget
+            return real(*a)
+        self.driver.observe = slow
+        r = self.do(records=rec(ONE), budget_s=2)
+        self.assertEqual((r['reason'], self.driver.executed, len(self.reader.requests)), ('budget_exceeded', [], 1))
+
+    def test_driver_observation_timeout_is_capped_by_the_remaining_budget(self):
+        # Wrong patch: always the Driver's 20 s default.
+        self.do(records=rec(ONE), budget_s=5, expect='Booked')
+        self.assertLessEqual(self.driver.observe_args[0][3], 5)
+
+    def test_follow_up_needed_replaces_the_hardcoded_call_count(self):
+        # P2-5. Wrong patch: a tool that claims how many LLM calls were made.
+        done = self.do(records=rec(ONE), expect='Booked Provider E')
+        held = self.do(records=rec([{'field': 'provider', 'value': 'Provider Z'}]))
+        self.assertNotIn('llm_visible_calls', json.dumps(done));self.assertNotIn('llm_visible_calls', json.dumps(self.f.events))
+        self.assertEqual((done['trace_summary']['follow_up_needed'], held['trace_summary']['follow_up_needed']), (False, True))
+
     def test_reader_that_overruns_the_budget_stops_before_any_click(self):
         # Wrong patch: check the budget only at the end.
         self.reader.on_call = lambda call: self.clock.advance(25)
