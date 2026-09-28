@@ -110,14 +110,26 @@ def typed(value, spec):
     return number
 
 
+PREDICATE_OPS = ('eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'not_contains')
+
+
 def predicate(actual, rule, spec):
-    expected = typed(rule['value'], spec)
     op = rule.get('op', 'eq')
+    op = 'neq' if op == 'ne' else op  # 'ne' is a discoverable alias for 'neq'
+    if op not in PREDICATE_OPS:
+        raise Unsupported('unsupported predicate op ' + repr(rule.get('op')) + '; allowed ops: ' + ', '.join(PREDICATE_OPS))
+    if op in ('contains', 'not_contains'):
+        # Text-only: a substring match on a coerced number/money hides unit and
+        # precision errors instead of raising them. typed() already casefolds
+        # and whitespace-normalizes text for both sides.
+        if spec.get('type', 'text') != 'text':
+            raise Unsupported('contains/not_contains apply only to text fields; use eq/neq/gt/gte/lt/lte for number, money, time or duration fields')
+        expected = typed(rule['value'], spec)
+        return (expected in actual) if op == 'contains' else (expected not in actual)
+    expected = typed(rule['value'], spec)
     operations = {'eq': lambda: actual == expected, 'neq': lambda: actual != expected,
                   'gt': lambda: actual > expected, 'gte': lambda: actual >= expected,
                   'lt': lambda: actual < expected, 'lte': lambda: actual <= expected}
-    if op not in operations:
-        raise Unsupported('unsupported predicate')
     return operations[op]()
 
 

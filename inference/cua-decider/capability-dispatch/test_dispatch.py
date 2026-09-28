@@ -1,7 +1,7 @@
 import copy
 import unittest
 
-from dispatch import Engine, compile_plan, execute_bound, reduce_match, typed
+from dispatch import Engine, Unsupported, compile_plan, execute_bound, predicate, reduce_match, typed
 from providers import span_schema
 
 
@@ -192,6 +192,39 @@ class DispatchGates(unittest.TestCase):
         request = {'snapshot_id': 'now', 'kind': 'semantic', 'visual_only': True, 'operation': 'click', 'actions': []}
         result = Engine({'jev': lambda *a: self.fail('text path cannot see image')}).decide(request, 'now')
         self.assertFalse(result['action_authorized'])
+
+    def test_contains_and_not_contains_separate_substring_siblings(self):
+        spec = {'type': 'text', 'description': 'item'}
+        lamp = typed('Walnut desk lamp', spec)
+        shade = typed('Walnut desk lamp shade (replacement)', spec)
+        # Tempting wrong patch: naive equality-only predicate() would leave
+        # both records ambiguous/excluded instead of separating them.
+        self.assertTrue(predicate(lamp, {'field': 'item', 'op': 'contains', 'value': 'lamp'}, spec))
+        self.assertTrue(predicate(shade, {'field': 'item', 'op': 'contains', 'value': 'lamp'}, spec))
+        self.assertFalse(predicate(shade, {'field': 'item', 'op': 'not_contains', 'value': 'shade'}, spec))
+        self.assertTrue(predicate(lamp, {'field': 'item', 'op': 'not_contains', 'value': 'shade'}, spec))
+
+    def test_ne_is_a_discoverable_alias_for_neq(self):
+        spec = {'type': 'text', 'description': 'status'}
+        actual = typed('Processing', spec)
+        self.assertTrue(predicate(actual, {'field': 'status', 'op': 'ne', 'value': 'Shipped'}, spec))
+        self.assertFalse(predicate(actual, {'field': 'status', 'op': 'ne', 'value': 'Processing'}, spec))
+
+    def test_unsupported_op_message_lists_allowed_ops(self):
+        spec = {'type': 'text', 'description': 'status'}
+        with self.assertRaises(Unsupported) as ctx:
+            predicate(typed('x', spec), {'field': 'status', 'op': 'startswith', 'value': 'x'}, spec)
+        for op in ('eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'contains', 'not_contains'):
+            self.assertIn(op, str(ctx.exception))
+
+    def test_contains_rejected_for_money_and_number_fields(self):
+        # Tempting wrong patch: silently coercing the rule value and doing a
+        # substring match on the numeric string instead of refusing outright.
+        with self.assertRaises(Unsupported):
+            predicate(typed(80, {'type': 'number'}), {'field': 'count', 'op': 'contains', 'value': '8'}, {'type': 'number'})
+        with self.assertRaises(Unsupported):
+            predicate(typed(80, {'type': 'money', 'currency': 'USD'}),
+                      {'field': 'price', 'op': 'not_contains', 'value': '8'}, {'type': 'money', 'currency': 'USD'})
 
 
 if __name__ == '__main__':
