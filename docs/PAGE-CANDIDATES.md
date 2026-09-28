@@ -1,6 +1,6 @@
 # NuExtract before finite-choice selection
 
-**Current default:** NuExtract3 page reading/filtering → Julia-1 finite choice, with GLiNER2 spans and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically. Jev/Qwen remains an explicit alternative.
+**Current default:** NuExtract3 page reading/filtering → Jev finite choice (configured Qwen escalation), with GLiNER2 spans and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically. Julia-1 remains an explicit alternative.
 
 Use extraction to reduce a large **observed** candidate set under explicit caller predicates. Chunk the reading, not the chooser's comparison. This is the selected default; the qualified GLiNER2 route is unchanged.
 
@@ -8,7 +8,7 @@ Use extraction to reduce a large **observed** candidate set under explicit calle
 export CUA_PAGE_EXTRACTION=1
 export CUA_EXTRACT_URL='http://YOUR-SYSTEMONE-HOST:8010/v1/extract-page'
 # Selected default generic chooser.
-export CUA_GENERIC_PROVIDER=julia-1
+export CUA_GENERIC_PROVIDER=jev
 # Configure CUA_JULIA_COMMAND as documented in PROVIDERS.md.
 ```
 

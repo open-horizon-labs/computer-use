@@ -26,11 +26,17 @@ class RemoteSpans:
         command = json.loads(os.environ.get('CUA_SPAN_COMMAND', '[]'))
         if not isinstance(command, list) or not command or not all(isinstance(x, str) and x for x in command):
             raise ValueError('Set CUA_SPAN_COMMAND to a JSON argv array for workers/span_worker.py; model ID is appended')
-        self.process = subprocess.Popen(command + [model], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
-        self.lock = threading.Lock()
-        self.ready = json.loads(self.process.stdout.readline())
-        if not self.ready.get('ready') or self.ready.get('model') != model:
-            raise RuntimeError('wrong or unavailable extractor')
+        from worker_transport import JsonWorker
+        import time
+        self.worker = JsonWorker(command + [model])
+        self.process = self.worker.process
+        try:
+            self.ready = self.worker.read(time.monotonic() + 20)
+            if not self.ready.get('ready') or self.ready.get('model') != model:
+                raise RuntimeError('wrong or unavailable extractor')
+        except Exception:
+            self.close()
+            raise
 
     def __call__(self, step, request):
         if step['method'] != 'extract' or step['shape'] not in ('spans', 'long_spans'):
@@ -41,23 +47,14 @@ class RemoteSpans:
             return {'evidence': {}, 'model': self.model, 'inference_ms': 0}
         fields = {k: v.get('description') or k for k, v in step['fields'].items()}
         texts = [actions[aid]['evidence_text'] for aid in ids]
-        with self.lock:
-            self.process.stdin.write(json.dumps({'texts': texts, 'schemas': [span_schema(fields) for _ in ids]}) + '\n')
-            self.process.stdin.flush()
-            raw = json.loads(self.process.stdout.readline())
+        raw = self.worker.exchange({'texts': texts, 'schemas': [span_schema(fields) for _ in ids]}, 20)
         if raw.get('error') or len(raw.get('results', [])) != len(ids):
             raise ValueError('incomplete extraction batch')
         evidence = {aid: result.get('entities', {}) for aid, result in zip(ids, raw['results'])}
         return {'evidence': evidence, 'model': self.model, 'inference_ms': raw['inference_ms']}
 
     def close(self):
-        if self.process.poll() is None:
-            self.process.stdin.close()
-            try:
-                self.process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait()
+        self.worker.close()
 
 
 class FleetGeneric:
@@ -67,8 +64,9 @@ class FleetGeneric:
         command = json.loads(os.environ.get('CUA_SELECTOR_COMMAND', json.dumps([str(launcher), '--fast', 'jev'])))
         if not isinstance(command, list) or not command or not all(isinstance(x, str) and x for x in command):
             raise ValueError('CUA_SELECTOR_COMMAND must be a nonempty JSON argv array')
-        self.process = subprocess.Popen(command, stdin=subprocess.PIPE,
-                                        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, bufsize=1)
+        from worker_transport import JsonWorker
+        self.worker = JsonWorker(command)
+        self.process = self.worker.process
 
     def __call__(self, step, request):
         if step['method'] != 'choose':
@@ -83,19 +81,13 @@ class FleetGeneric:
                    'history': request.get('history', [])}
         if request.get('feedback'):
             payload['feedback'] = request['feedback']
-        self.process.stdin.write(json.dumps(payload)+'\n'); self.process.stdin.flush()
-        result = json.loads(self.process.stdout.readline())
+        result = self.worker.exchange(payload, 20)
         if result.get('choice') in ('reobserve', 'abstain'):
             result['action_authorized'] = False
         return result
 
     def close(self):
-        if self.process.poll() is None:
-            self.process.stdin.close()
-            try:
-                self.process.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                self.process.kill(); self.process.wait()
+        self.worker.close()
 
 
 class JuliaGeneric:
@@ -166,9 +158,9 @@ class JuliaGeneric:
 
 
 def generic_from_config():
-    """NuExtract plus Julia by default; explicit Jev preference remains available."""
+    """NuExtract plus Jev by default; explicit Julia preference remains available."""
     load_runtime_config()
-    name = os.environ.get('CUA_GENERIC_PROVIDER', 'julia-1').lower()
+    name = os.environ.get('CUA_GENERIC_PROVIDER', 'jev').lower()
     if name == 'jev':
         generic = FleetGeneric()
     elif name in ('julia', 'julia-1'):

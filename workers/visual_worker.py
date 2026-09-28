@@ -25,7 +25,9 @@ def respond(row):
             'Do not return coordinates, commands or other execution arguments.')
     else:
         raise ValueError('unsupported visual operation')
-    text = {k: v for k, v in row.items() if k != 'image'}
+    # This is screenshot perception. Duplicated full-window AX dumps can exceed
+    # the endpoint state limit and are not required to inspect the pixels.
+    text = {k: v for k, v in row.items() if k not in ('image', 'ax_text')}
     if os.environ.get('CUA_SYSTEMONE_URL'):
         candidates = row['candidates'] if method == 'choose' else {
             'ready': 'The screenshot visibly supports: ' + row['postcondition'],
@@ -38,7 +40,10 @@ def respond(row):
                           {'Content-Type': 'application/json'})
         with urlopen(request, timeout=20) as response:
             result = json.load(response)
-        selected = result['answers']['assessment']['choice']
+        assessment = result['answers']['assessment']
+        if assessment.get('vision') is not True:
+            raise ValueError('endpoint did not confirm screenshot processing')
+        selected = assessment['choice']
         if selected not in candidates:
             raise ValueError('unoffered visual assessment')
         return {'snapshot_id': row['snapshot_id'], 'model': result['model'],
@@ -61,11 +66,16 @@ def respond(row):
     return {**result, 'snapshot_id': row['snapshot_id'], 'model': payload['model']}
 
 
-for line in sys.stdin:
-    row = {}
-    try:
-        row = json.loads(line)
-        print(json.dumps(respond(row)), flush=True)
-    except Exception as error:
-        print(json.dumps({'snapshot_id': row.get('snapshot_id') if isinstance(row, dict) else None,
-                          'error': type(error).__name__}), flush=True)
+def main():
+    for line in sys.stdin:
+        row = {}
+        try:
+            row = json.loads(line)
+            print(json.dumps(respond(row)), flush=True)
+        except Exception as error:
+            print(json.dumps({'snapshot_id': row.get('snapshot_id') if isinstance(row, dict) else None,
+                              'error': type(error).__name__,
+                              'http_status': getattr(error, 'code', None)}), flush=True)
+
+if __name__ == '__main__':
+    main()

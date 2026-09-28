@@ -1,6 +1,6 @@
 # Provider configuration
 
-**Current default:** NuExtract3 page reading/filtering → Julia-1 finite choice, with GLiNER2 spans and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically. Jev/Qwen remains an explicit alternative.
+**Current default:** NuExtract3 page reading/filtering → Jev finite choice (configured Qwen escalation), with GLiNER2 spans and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically. Julia-1 remains an explicit alternative.
 
 For hosted Jev, start with the [API key, endpoint and model setup](../skills/cua-capability-dispatch/references/setup.md#jev-api-key-endpoint-and-model). It also documents the separate Qwen key and endpoint, credential precedence, and a Jev-only smoke check.
 
@@ -22,7 +22,7 @@ The live booking harness also requires the installed stock Cua Driver/jev-use ch
 
 ## Julia-1 generic chooser
 
-`CUA_GENERIC_PROVIDER` defaults to `julia-1`. Use `generic_from_config()` to load persistent operator configuration; set it to `jev` only for an explicit alternative. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
+`CUA_GENERIC_PROVIDER` defaults to `jev`. Use `generic_from_config()` to load persistent operator configuration; set it to `julia-1` for an explicit alternative. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
 
 ```sh
 export CUA_GENERIC_PROVIDER=julia-1

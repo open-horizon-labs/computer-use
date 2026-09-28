@@ -1,6 +1,6 @@
 # Setup
 
-The active default is NuExtract3 reading/filtering plus Julia-1 finite choice. The runtime loads `~/.config/computer-use/runtime.json` automatically; use `generic_from_config()` for this path. Jev/Qwen instructions below describe the available alternative. Terminal helpers use the configured screenshot-capable SystemOne endpoint.
+The active default is NuExtract3 reading/filtering plus Jev finite choice with configured Qwen escalation. The runtime loads `~/.config/computer-use/runtime.json` automatically; use `generic_from_config()` for this path. Jev/Qwen instructions below describe the active chooser. Terminal helpers use the configured screenshot-capable SystemOne endpoint.
 
 The skill installs guidance and references. Running the dispatcher also requires a checkout of the private `open-horizon-labs/computer-use` repository. It does not install models or replace stock computer-use tools.
 
@@ -106,7 +106,7 @@ Existing Fleet users can omit direct keys/files and set `TYPESAFE_CONNECT_SSH` t
 
 ## 4. Connect the stock driver
 
-Use the stock computer-use skill and driver to observe the actual desktop. Build the typed request from the fresh observation. Configure `RemoteSpans` with a cached `fastino/gliner2-base-v1` CUDA worker and `generic_from_config()` for NuExtract/Julia. Import `Strangler` from `inference/cua-decider/capability-dispatch/rollout.py` and `execute_bound` from `dispatch.py`; load `ROLLOUT.json` so only the qualified described-English-span contract uses GLiNER2, with the configured generic provider as one recovery call. See the [working recipe](../../../inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). The examples in `simulation.py` show request shapes; `run_booking.py` is a task-specific integration example, not a general API server.
+Use the stock computer-use skill and driver to observe the actual desktop. Build the typed request from the fresh observation. Configure `RemoteSpans` with a cached `fastino/gliner2-base-v1` CUDA worker and `generic_from_config()` for NuExtract/Jev by default (Julia optional). Import `Strangler` from `inference/cua-decider/capability-dispatch/rollout.py` and `execute_bound` from `dispatch.py`; load `ROLLOUT.json` so only the qualified described-English-span contract uses GLiNER2, with the configured generic provider as one recovery call. See the [working recipe](../../../inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). The examples in `simulation.py` show request shapes; `run_booking.py` is a task-specific integration example, not a general API server.
 
 Call `Strangler.from_config(providers).decide(request, current_snapshot)`. Before any action, obtain a current snapshot and pass the unchanged request and selection through `execute_bound` with a driver callback. Independently verify the result. Keep one generic selector process per task; close it after the task and do not share feedback state across independent tasks.
 
@@ -114,7 +114,7 @@ The controller must bind and verify: installing this skill alone does not cause 
 
 ## 5. Julia and terminal screenshots
 
-For the default Julia chooser, configure `CUA_GENERIC_PROVIDER=julia-1` and `CUA_JULIA_COMMAND` to a JSON argv array launching `workers/julia_worker.py` with the cached checkpoint directory. Construct the generic provider with `generic_from_config()`, and keep the same Strangler/GLiNER2 bindings. Default is NuExtract/Julia; set `CUA_GENERIC_PROVIDER=jev` to explicitly choose Jev/Qwen. Read `docs/PROVIDERS.md` in the runtime checkout for checkpoint digest, runtime dependencies, strict input limits and cleanup. This skill does not install Julia or start a worker.
+For the optional Julia chooser, configure `CUA_GENERIC_PROVIDER=julia-1` and `CUA_JULIA_COMMAND` to a JSON argv array launching `workers/julia_worker.py` with the cached checkpoint directory. Construct the generic provider with `generic_from_config()`, and keep the same Strangler/GLiNER2 bindings. Default is NuExtract/Jev; set `CUA_GENERIC_PROVIDER=julia-1` to explicitly choose Julia. Read `docs/PROVIDERS.md` in the runtime checkout for checkpoint digest, runtime dependencies, strict input limits and cleanup. This skill does not install Julia or start a worker.
 
 For terminal observations, read `docs/TERMINALS.md` in the runtime checkout and use `terminal_observation.py`. Configure `CUA_VISUAL_COMMAND` for `workers/visual_worker.py` with a screenshot-capable Qwen chat endpoint, or use the controlling LLM to inspect Driver screenshots. Julia and text-only Jev cannot supply visual evidence. Missing vision returns unknown; it must never become an app-stalled diagnosis.
 
