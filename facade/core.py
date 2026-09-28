@@ -311,13 +311,13 @@ class Facade:
         try:
             result = self.driver.call('parse_visual_regions', args)
         except DriverCallFailed as gap:
-            message = 'perception_parse_failed: %s (cached for this capture; reobserve to retry)' % gap
+            message = 'perception_parse_failed: %s (cached for this capture; reobserve to retry, and if it persists the Driver session may have been lost)' % gap
             state['regions_failure'] = (capture_id, message)
             raise Gap(message)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError, ValueError) as error:
             # A Driver/extension failure is an unavailable capability, never a
             # crash of the caller. Fixed text only: stderr can carry paths and ids.
-            message = 'perception_parse_failed: parse_visual_regions failed (%s; cached for this capture; reobserve to retry)' % type(error).__name__
+            message = 'perception_parse_failed: parse_visual_regions failed (%s; cached for this capture; reobserve to retry, and if it persists the Driver session may have been lost)' % type(error).__name__
             state['regions_failure'] = (capture_id, message)
             raise Gap(message)
         state['regions'] = result
@@ -891,6 +891,12 @@ class Facade:
                 if i not in members and n.get('role') in ('AXTextField','AXComboBox') and n.get('value')]
 
     def scope_changes(self,before,after,root):
+        # Diagnostic only, called after the selection is spent: it must never
+        # replace the refusal with its own crash on an unusual tree.
+        try:return self._scope_changes(before,after,root)
+        except Exception:return 'digest differs'
+
+    def _scope_changes(self,before,after,root):
         """Where a bound scope differs, by element id, role and changed field names
         only (never page values), so a refusal is diagnosable without leaking text."""
         if root not in after['nodes']:return 'scope root %s is gone' % ('e'+str(root))

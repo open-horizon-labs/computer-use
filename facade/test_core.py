@@ -748,4 +748,32 @@ class CoreTests(unittest.TestCase):
         text=str(caught.exception)
         self.assertRegex(text,r'e5 AXStaticText: value');self.assertNotIn('$95',text);self.assertNotIn('$80',text)
 
+
+    def snap(self,nodes,title='Demo'):
+        sid='sq%d'%len(self.f.snapshots)
+        nodes=copy.deepcopy(nodes)
+        for x in nodes:x.update(element_token=sid+':'+str(x['element_index']),enabled=True)
+        self.driver.observe=lambda *a:{'snapshot_id':sid,'pid':1,'window_id':2,'window_title':title,'elements':copy.deepcopy(nodes),'_image':b'p'}
+        return self.f.state(self.f.observe(1,2)['snapshot'])
+
+    def test_scope_changes_reports_added_removed_root_title_and_address_without_values(self):
+        base=self.browser_window()
+        before=self.snap(base)
+        extra=base+[{'element_index':10,'parent_index':3,'role':'AXStaticText','value':'NEWTEXT'}]
+        self.assertIn('e10 added',self.f.scope_changes(before,self.snap(extra),3))
+        self.assertIn('e8 removed',self.f.scope_changes(before,self.snap([n for n in base if n['element_index']!=8]),3))
+        self.assertIn('window title changed',self.f.scope_changes(before,self.snap(base,title='Other'),3))
+        after=self.snap(self.browser_window(url='127.0.0.1:8934/orders'))
+        text=self.f.scope_changes(before,after,3)
+        self.assertIn('address field changed',text);self.assertNotIn('orders',text)
+        self.assertIn('gone',self.f.scope_changes(before,self.snap([n for n in base if n['element_index']!=3]),3))
+
+    def test_scope_changes_never_prints_a_secure_fields_value_and_never_raises(self):
+        # Review: tempting wrong patch is printing changed values, or letting a malformed
+        # tree replace the refusal with a KeyError after the selection is already spent.
+        secure=lambda v:self.browser_window()+[{'element_index':10,'parent_index':3,'role':'AXSecureTextField','value':v}]
+        text=self.f.scope_changes(self.snap(secure('hunter2')),self.snap(secure('hunter3')),3)
+        self.assertIn('AXSecureTextField: value',text);self.assertNotIn('hunter',text)
+        self.assertEqual(self.f.scope_changes(self.snap(self.browser_window()),{'nodes':None},3),'digest differs')
+
 if __name__=='__main__':unittest.main()
