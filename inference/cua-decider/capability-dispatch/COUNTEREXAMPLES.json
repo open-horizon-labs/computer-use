@@ -155,14 +155,14 @@
  },
  {
   "id": "CE-FACADE-002",
-  "status": "proposed",
-  "authority": "Parent-session proposal from the same live run; awaits user approval of the S4.8 revalidation clause.",
-  "classification": "proposed sketch clarification (S4.2 section 6 revalidation scope)",
-  "sketch_clause": "S4.8 (pending)",
+  "status": "accepted",
+  "authority": "User approved the S4.8 revalidation clause on 2026-09-28, including binding the browser address field with the page.",
+  "classification": "approved sketch clarification (S4.2 section 6 revalidation scope)",
+  "sketch_clause": "S4.8",
   "input_and_actual": "The only difference between the selection's observation and the pre-act observation was Chrome's tab-strip radio button name 'Clinic Slots ... - Memory usage - 93.4 MB' -> '86.0 MB'. The whole-window fingerprint refused: 'UI changed since selection'. The same false refusal occurred in the 2026-09-28 A1 run.",
-  "corrected_behavior": "Compare the content scope holding the offered actions (the AXWebArea for a page, else the window); refuse on any change inside it; ignore changes outside it.",
-  "tempting_wrong_repair": "Regex-exclude 'Memory usage'; drop names or values from the fingerprint; retry act automatically.",
-  "regression": "facade/test_core.py: test_act_ignores_browser_chrome_change_outside_web_area, test_act_refuses_content_change_inside_web_area",
-  "adjacent_holes": "Native (non-browser) windows keep whole-window revalidation. Regions/visual selections keep whole-window and screenshot checks."
+  "corrected_behavior": "Compare the content scope holding the offered actions (the AXWebArea for a page, else the window) together with the browser address field; refuse on any change inside it or a URL change; ignore other browser chrome.",
+  "tempting_wrong_repair": "Regex-exclude Memory usage; drop names or values from the fingerprint; retry act automatically; bind the web area only so a navigation to a lookalike page passes.",
+  "regression": "facade/test_core.py: test_act_ignores_browser_chrome_change_outside_web_area, test_act_refuses_content_change_inside_web_area, test_act_refuses_navigation_even_when_page_tree_is_identical",
+  "adjacent_holes": "Native (non-browser) windows keep whole-window revalidation. Visual and regions selections keep their screenshot and capture checks. Other browser chrome (bookmarks, extensions) is not bound."
  }
 ]

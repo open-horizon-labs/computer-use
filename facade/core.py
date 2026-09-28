@@ -815,7 +815,12 @@ class Facade:
 
     def scope_digest(self,state,root):
         _,members=self.subtree(state,'e'+str(root))
-        return digest({'title':state['raw'].get('window_title'),
+        # A page scope also binds the address field (role and value only): a
+        # navigation is a different page even when its tree happens to match.
+        address=[] if state['nodes'][root].get('role')!='AXWebArea' else [
+            {'role':n.get('role'),'value':n.get('value')} for i,n in sorted(state['nodes'].items())
+            if i not in members and n.get('role') in ('AXTextField','AXComboBox') and n.get('value')]
+        return digest({'title':state['raw'].get('window_title'),'address':address,
                        'nodes':[{k:v for k,v in state['nodes'][i].items() if k!='element_token'} for i in sorted(members)]})
 
     def act(self, selection):

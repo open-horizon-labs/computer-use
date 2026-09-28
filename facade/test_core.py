@@ -253,8 +253,9 @@ class CoreTests(unittest.TestCase):
         self.assertFalse(consts&{'duration_minutes','time','money','number','USD'})
 
     # --- S4.8: revalidation scope -------------------------------------------
-    def browser_window(self,memory='93.4 MB',row_value='Used $80'):
+    def browser_window(self,memory='93.4 MB',row_value='Used $80',url='127.0.0.1:8934/booking'):
         nodes=[{'element_index':0,'role':'AXWindow','label':'demo'},
+          {'element_index':9,'parent_index':0,'role':'AXTextField','value':url},
           {'element_index':1,'parent_index':0,'role':'AXTabGroup'},
           {'element_index':2,'parent_index':1,'role':'AXRadioButton','label':'Demo - Memory usage - '+memory},
           {'element_index':3,'parent_index':0,'role':'AXWebArea'},
@@ -282,6 +283,12 @@ class CoreTests(unittest.TestCase):
         # or drop names from the fingerprint.
         self.act_after_change(memory='86.0 MB')()
         self.assertEqual(len(self.driver.executed),1)
+
+    def test_act_refuses_navigation_even_when_page_tree_is_identical(self):
+        # CE-FACADE-002 approved clause: the address field is bound with the page.
+        # Tempting wrong patch: web area only, so a navigation to a lookalike page passes.
+        with self.assertRaisesRegex(Gap,'content scope'):self.act_after_change(url='127.0.0.1:8934/orders')()
+        self.assertEqual(self.driver.executed,[])
 
     def test_act_refuses_content_change_inside_web_area(self):
         with self.assertRaisesRegex(Gap,'content scope'):self.act_after_change(row_value='Used $95')()
