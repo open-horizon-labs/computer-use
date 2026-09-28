@@ -63,6 +63,10 @@ For terminal surfaces, an unchanged AX tree or screenshot is neither evidence of
 
 The terminal observation helper uses one total deadline of at most 20 seconds across Driver calls, visual calls and polling, reserving time for final visual inspection. If capture or interpretation cannot complete, return unknown with the cause; do not label the app stalled or send an automatic interrupt. Recovery is a caller decision after reconciling state, with at most one retry. Confirm a terminal program's CLI and supply an explicit directory when its default scope differs from the shell's working directory.
 
+## S4.6 NuExtract candidate preparation
+
+Authority: user request to execute and test extractor-first filtering instead of chunking Julia choices (2026-09-27). An explicitly described `page_filter` may read fresh record-backed candidates through NuExtract3 in bounded chunks, merge all records, then apply caller predicates within each record. Preserve source quotes, IDs, original Driver arguments, unknowns and complete-scope requirements. An extracted value is source evidence, not calibrated confidence. Identity-boundary overlaps remain unknown under S4.4. Do not drop unknown competitors or choose per-chunk winners. The generic chooser receives only demonstrated eligible candidates; no match or unresolved scope defers, oversized surviving scope defers or uses an explicitly configured overflow provider with all survivors. The final selection remains bound to the original full request. Reporting can return extracted records without invoking a chooser. This opt-in preparation does not alter exact-control or qualified GLiNER2 paths.
+
 ## Explicit holes and nonclaims
 
 - Optimal checkpoint/threshold per role, calibration of classification acceptance, broad CUA coverage, and whether GLiNER beats GLiNER2 on simple labels require role-specific measurements. Defaults above are routing hypotheses.

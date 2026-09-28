@@ -166,7 +166,16 @@ def generic_from_config():
     """Default remains Jev/Qwen. Explicit Julia preference changes only chooser."""
     name = os.environ.get('CUA_GENERIC_PROVIDER', 'jev').lower()
     if name == 'jev':
-        return FleetGeneric()
-    if name in ('julia', 'julia-1'):
-        return JuliaGeneric()
-    raise ValueError('CUA_GENERIC_PROVIDER must be jev or julia-1')
+        generic = FleetGeneric()
+    elif name in ('julia', 'julia-1'):
+        generic = JuliaGeneric()
+    else:
+        raise ValueError('CUA_GENERIC_PROVIDER must be jev or julia-1')
+    if os.environ.get('CUA_PAGE_EXTRACTION', '0') == '1':
+        from page_candidates import ExtractThenChoose, NuExtractPage
+        try:
+            return ExtractThenChoose(NuExtractPage(), generic)
+        except Exception:
+            generic.close()
+            raise
+    return generic

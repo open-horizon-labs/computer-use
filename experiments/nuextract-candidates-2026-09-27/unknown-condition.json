@@ -1,0 +1,599 @@
+{
+  "test_kind": "synthetic records sent to real deployed NuExtract3; no desktop actions",
+  "request": {
+    "snapshot_id": "synthetic-endpoint-contract-27-not-a-driver-observation",
+    "task": "Read product model, type and explicit condition. Do not infer condition.",
+    "fields": {
+      "model": "The model of the product actually sold, not a compatible model mentioned for an accessory",
+      "condition": "Explicit item condition; null when not stated",
+      "kind": "Product type sold, such as power bank or case"
+    },
+    "records": [
+      {
+        "id": "0",
+        "text": "Listing 0. Case for Anker 737. Product type: case. Condition: Used."
+      },
+      {
+        "id": "1",
+        "text": "Listing 1. Product model: Anker 737. Product type: power bank."
+      },
+      {
+        "id": "2",
+        "text": "Listing 2. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "3",
+        "text": "Listing 3. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "4",
+        "text": "Listing 4. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "5",
+        "text": "Listing 5. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "6",
+        "text": "Listing 6. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "7",
+        "text": "Listing 7. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "8",
+        "text": "Listing 8. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "9",
+        "text": "Listing 9. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "10",
+        "text": "Listing 10. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "11",
+        "text": "Listing 11. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "12",
+        "text": "Listing 12. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "13",
+        "text": "Listing 13. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "14",
+        "text": "Listing 14. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "15",
+        "text": "Listing 15. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "16",
+        "text": "Listing 16. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "17",
+        "text": "Listing 17. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "18",
+        "text": "Listing 18. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "19",
+        "text": "Listing 19. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "20",
+        "text": "Listing 20. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "21",
+        "text": "Listing 21. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "22",
+        "text": "Listing 22. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "23",
+        "text": "Listing 23. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "24",
+        "text": "Listing 24. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "25",
+        "text": "Listing 25. Product model: Anker 737. Product type: power bank. Condition: New."
+      },
+      {
+        "id": "26",
+        "text": "Listing 26. Product model: Anker 737. Product type: power bank. Condition: Used."
+      }
+    ]
+  },
+  "extraction": {
+    "snapshot_id": "synthetic-endpoint-contract-27-not-a-driver-observation",
+    "model": "numind/NuExtract3",
+    "records": [
+      {
+        "record_id": "0",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "Used",
+          "kind": "case"
+        }
+      },
+      {
+        "record_id": "1",
+        "fields": {
+          "model": "Anker 737",
+          "condition": null,
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "2",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "3",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "4",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "5",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "6",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "7",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "8",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "9",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "10",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "11",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "12",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "13",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "14",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "15",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "16",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "17",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "18",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "19",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "20",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "21",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "22",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "23",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "24",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "25",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "New",
+          "kind": "power bank"
+        }
+      },
+      {
+        "record_id": "26",
+        "fields": {
+          "model": "Anker 737",
+          "condition": "Used",
+          "kind": "power bank"
+        }
+      }
+    ],
+    "chunks": [
+      {
+        "record_count": 5,
+        "endpoint_ms": 2600.564624997787
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1484.5970000023954
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1484.960083005717
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1485.7474160089623
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1487.6845420221798
+      },
+      {
+        "record_count": 2,
+        "endpoint_ms": 602.597249991959
+      }
+    ],
+    "wall_ms": 9146.195667010034,
+    "calibrated": false
+  },
+  "filter": {
+    "snapshot_id": "synthetic-endpoint-contract-27-not-a-driver-observation",
+    "eligible_ids": [
+      "26"
+    ],
+    "unknown_ids": [
+      "1"
+    ],
+    "excluded_ids": [
+      "0",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25"
+    ],
+    "checks": {
+      "0": {
+        "state": "excluded",
+        "failed": [
+          "kind"
+        ],
+        "gaps": []
+      },
+      "1": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "condition"
+        ]
+      },
+      "2": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "3": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "4": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "5": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "6": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "7": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "8": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "9": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "10": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "11": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "12": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "13": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "14": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "15": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "16": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "17": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "18": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "19": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "20": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "21": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "22": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "23": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "24": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "25": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": []
+      },
+      "26": {
+        "state": "eligible",
+        "failed": [],
+        "gaps": []
+      }
+    },
+    "coverage_complete": true,
+    "complete": false
+  }
+}

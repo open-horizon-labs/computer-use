@@ -128,5 +128,17 @@
     "regression": "simulation_gate.py proposal_checks; simulation/proposed-policy-live.json",
     "tempting_wrong_repair": "Accept substring directly or strip a fixture-specific word",
     "adjacent_holes": "Semantic model mistakes remain possible; overlap does not prove identity."
+  },
+  {
+    "id": "CE-NUEXTRACT-001",
+    "status": "accepted",
+    "authority": "User requested /execute using the nuextractor and test it after proposing extraction before Julia selection.",
+    "classification": "approved candidate preparation",
+    "sketch_clause": "S4.6",
+    "input_and_actual": "27 offered shopping options exceeded Julia capacity; raw titles included accessories and missing condition.",
+    "corrected_behavior": "Extract independent records in chunks, merge all evidence, preserve unknown competitors and apply explicit same-record predicates before finite choice.",
+    "tempting_wrong_repair": "Keep the first 18, rank chunk winners, treat missing condition as excluded, or borrow condition from another record.",
+    "regression": "test_page_candidates.py",
+    "adjacent_holes": "Broad extraction accuracy and complete marketplace coverage remain unqualified."
   }
 ]

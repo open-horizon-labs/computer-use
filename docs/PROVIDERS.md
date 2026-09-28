@@ -51,3 +51,7 @@ finally:
 `incumbent_jev` is a compatibility slot name, not proof of the actual model. Inspect `provider_outputs[].route/model` for attribution. Julia accepts at most 18 action candidates plus `reobserve` and `abstain` (20 total). It never truncates inputs: oversized/empty scopes return an explicit limit deferral without calling inference. The worker's strict tokenizer rejects option/context overflow (48-token options, 8192 total, 1024 head) rather than silently losing criteria. Re-scope from fresh evidence; do not split a global comparison into tournaments. Scores are uncalibrated, and no automatic Jev fallback is added. Keep one worker per task; 20-second transport timeouts close the worker. Remote launchers must terminate on stdin EOF/disconnect.
 
 Julia does not read screenshots or extract spans. [Terminal perception](TERMINALS.md) uses a separate vision-capable endpoint. The saved Julia experiments and one successful paired Obsidian choice do not establish broad reliability.
+
+## NuExtract candidate preparation
+
+Set `CUA_PAGE_EXTRACTION=1` and `CUA_EXTRACT_URL` to your deployed `/v1/extract-page` endpoint. `generic_from_config()` wraps the preferred generic provider; only requests with an explicit `page_filter` invoke extraction. See [request shape, bounds and verification](PAGE-CANDIDATES.md). Model deployment and credentials remain external configuration.

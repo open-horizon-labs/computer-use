@@ -1,0 +1,1308 @@
+{
+  "kind": "fresh Cua Driver native Chrome observation; live NuExtract; read-only title scope",
+  "request": {
+    "snapshot_id": "s00000081",
+    "task": "Read product fields from observed product titles only. Missing condition must be null.",
+    "fields": {
+      "model": "Explicit product model; null if no model number is stated",
+      "kind": "Type of the product actually sold, e.g. case or Power Bank",
+      "condition": "Explicit item condition, null if absent"
+    },
+    "records": [
+      {
+        "id": "s00000081:172",
+        "text": "Laptop Portable Power Bank, 20,000 mAh 3-Port USB-C 140W Digital Hybrid Charger, TFT Display, Travel Charging Station with 240W Cable for ThinkBook 14, MacBook, iPhone, Samsung Galaxy"
+      },
+      {
+        "id": "s00000081:188",
+        "text": "Sponsored Ad - Laptop Power Bank, 20,000mAh Travel Essential, 200W Fast Charging"
+      },
+      {
+        "id": "s00000081:198",
+        "text": "Power Bank, 20,000mAh Travel Essential, Built-in USB-C Cable(Black)"
+      },
+      {
+        "id": "s00000081:215",
+        "text": "Laptop Power Bank, Smallest 20000mAh 65W Fast Charging Battery Pack"
+      },
+      {
+        "id": "s00000081:235",
+        "text": "Sponsored Ad - Rapid Pro Power Bank, 4-Port with 300W Max Output, Portable Charger with 140W Built-in Cable, TSA-Approved, Smart APP, 3950x7mAh, for MacBook Pro/Air, iPhone 17/16 Series, Laptops, and More"
+      },
+      {
+        "id": "s00000081:248",
+        "text": "Sponsored Ad - Youth 140W PD 3.1 PPS GaN+ Charger,100W 3-Port Laptop Wall Charger"
+      },
+      {
+        "id": "s00000081:259",
+        "text": "Laptop Power Bank, Smallest 25000mAh 100W Fast Charging Battery Pack"
+      },
+      {
+        "id": "s00000081:273",
+        "text": "Customized Case for Anker 737 24000mAh, Flip-Top Lid, Dual Window"
+      },
+      {
+        "id": "s00000081:289",
+        "text": "Sponsored Ad - 40000mAh 140W PD3.1 Laptop Power Bank, 2-in-1 Fast Charging Station"
+      },
+      {
+        "id": "s00000081:301",
+        "text": "Sponsored Ad - 240W Laptop Power Bank 27600mAh, 140W PD 3.1 Large Portable Charger"
+      },
+      {
+        "id": "s00000081:312",
+        "text": "Nano Power Bank, 45W 10,000mAh Portable Charger, iPhone Battery Pack"
+      },
+      {
+        "id": "s00000081:328",
+        "text": "Portable Charger 25K, Power Bank with Integrated USB C Cable, 158W - Fast Charging Laptop Portable Battery Pack for MacBook Pro 14, iPhone 17 Series, iPad Pro, Galaxy S26, & More - Black"
+      },
+      {
+        "id": "s00000081:344",
+        "text": "Sponsored Ad - Rapid Pro X Power Bank, 27650mAh 4-Part with 300W Output, Portable Charger with 140W Built-in Cable, for MacBook, iPhone, Laptops, and More"
+      },
+      {
+        "id": "s00000081:355",
+        "text": "Sponsored Ad - Shargeek 300W Power Bank, 24000mAh Laptop Portable Charger with DC Port"
+      },
+      {
+        "id": "s00000081:377",
+        "text": "Laptop Power Bank, Compact 27000mAh 140W Fast Charging Battery Pack"
+      },
+      {
+        "id": "s00000081:393",
+        "text": "Power Bank,20,000mAh 45W Portable Charger,Dual Built-in USB-C Cables"
+      },
+      {
+        "id": "s00000081:408",
+        "text": "Portable Charger, Smaller 45W Fast Charging Power Bank, 20000mAh Black"
+      },
+      {
+        "id": "s00000081:426",
+        "text": "Portable Charger with Built in Cable, 100W Laptop Power Bank 20000mAh, Travel Essential Fast Charging USB C Battery Pack for MacBook, iPhone 18/17/16 Series, Samsung Galaxy S25/24, TSA-Approved"
+      },
+      {
+        "id": "s00000081:442",
+        "text": "Power Bank, 10,000mAh Portable Charger, PowerIQ USB-C Battery Pack"
+      },
+      {
+        "id": "s00000081:457",
+        "text": "20000mAh 30W USB C Power Bank, Portable Charger for iPhone & iPad"
+      },
+      {
+        "id": "s00000081:477",
+        "text": "150W Max USB C Charger Block, 4-Port Compact Foldable GaN Charger for MacBook Pro/Air, iPhone 17/16 and More Series, Dell and More"
+      },
+      {
+        "id": "s00000081:491",
+        "text": "20000mAh 15W 3 Port Power Bank, USB A to USB C Cable Included"
+      },
+      {
+        "id": "s00000081:512",
+        "text": "10000mAh 20W Slim Power Bank, Digital Display, 2 USB C Ports"
+      },
+      {
+        "id": "s00000081:528",
+        "text": "USB Charger Block, 67W GaN Wall Charger, 3-Port Compact Fast Charging"
+      },
+      {
+        "id": "s00000081:544",
+        "text": "45W Power Bank 20000mAh, Portable Travel Charger Built-in USB C Cable, Fast Charging Battery Pack for iPhone 17/16/15, iPad, Samsung Galaxy, Google Pixel, Android and More (Gray)"
+      },
+      {
+        "id": "s00000081:837",
+        "text": "Amazon Music Stream millions of songs"
+      },
+      {
+        "id": "s00000081:842",
+        "text": "Amazon Ads Reach customers wherever they spend their time"
+      },
+      {
+        "id": "s00000081:848",
+        "text": "6pm Score deals on fashion brands"
+      },
+      {
+        "id": "s00000081:853",
+        "text": "AbeBooks Books, art & collectibles"
+      },
+      {
+        "id": "s00000081:858",
+        "text": "ACX Audiobook Publishing Made Easy"
+      },
+      {
+        "id": "s00000081:863",
+        "text": "Sell on Amazon Start a Selling Account"
+      },
+      {
+        "id": "s00000081:867",
+        "text": "Veeqo Shipping Software Inventory Management"
+      },
+      {
+        "id": "s00000081:873",
+        "text": "Amazon Business Everything For Your Business"
+      },
+      {
+        "id": "s00000081:878",
+        "text": "Groceries at Amazon Groceries & More Right To Your Door"
+      },
+      {
+        "id": "s00000081:883",
+        "text": "AmazonGlobal Ship Orders Internationally"
+      },
+      {
+        "id": "s00000081:888",
+        "text": "Home Services Experienced Pros Happiness Guarantee"
+      },
+      {
+        "id": "s00000081:893",
+        "text": "Amazon Web Services Scalable Cloud Computing Services"
+      },
+      {
+        "id": "s00000081:898",
+        "text": "Audible Listen to Books & Original Audio Performances"
+      },
+      {
+        "id": "s00000081:903",
+        "text": "Box Office Mojo Find Movie Box Office Data"
+      },
+      {
+        "id": "s00000081:909",
+        "text": "Goodreads Book reviews & recommendations"
+      },
+      {
+        "id": "s00000081:914",
+        "text": "IMDb Movies, TV & Celebrities"
+      },
+      {
+        "id": "s00000081:919",
+        "text": "IMDbPro Get Info Entertainment Professionals Need"
+      },
+      {
+        "id": "s00000081:924",
+        "text": "Kindle Direct Publishing Indie Digital & Print Publishing Made Easy"
+      },
+      {
+        "id": "s00000081:929",
+        "text": "Amazon Photos Unlimited Photo Storage Free With Prime"
+      },
+      {
+        "id": "s00000081:934",
+        "text": "Prime Video Direct Video Distribution Made Easy"
+      },
+      {
+        "id": "s00000081:939",
+        "text": "Shopbop Designer Fashion Brands"
+      },
+      {
+        "id": "s00000081:945",
+        "text": "Amazon Resale Great Deals on Quality Used Products"
+      },
+      {
+        "id": "s00000081:950",
+        "text": "Whole Foods Market America\u2019s Healthiest Grocery Store"
+      },
+      {
+        "id": "s00000081:955",
+        "text": "Woot! Deals and Shenanigans"
+      },
+      {
+        "id": "s00000081:960",
+        "text": "Zappos Shoes & Clothing"
+      },
+      {
+        "id": "s00000081:965",
+        "text": "Ring Smart Home Security Systems"
+      },
+      {
+        "id": "s00000081:970",
+        "text": "eero WiFi Stream 4K Video in Every Room"
+      },
+      {
+        "id": "s00000081:975",
+        "text": "Blink Smart Security for Every Home"
+      },
+      {
+        "id": "s00000081:981",
+        "text": "Neighbors App Real-Time Crime & Safety Alerts"
+      },
+      {
+        "id": "s00000081:986",
+        "text": "PillPack Pharmacy Simplified"
+      },
+      {
+        "id": "s00000081:990",
+        "text": "Amazon Renewed Refurbished tech you can trust"
+      }
+    ]
+  },
+  "extraction": {
+    "snapshot_id": "s00000081",
+    "model": "numind/NuExtract3",
+    "records": [
+      {
+        "record_id": "s00000081:172",
+        "fields": {
+          "model": "ThinkBook 14",
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:188",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:198",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:215",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:235",
+        "fields": {
+          "model": "Rapid Pro",
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:248",
+        "fields": {
+          "model": "140W PD 3.1 PPS GaN+",
+          "kind": "Charger",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:259",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:273",
+        "fields": {
+          "model": "Anker 737",
+          "kind": "Case",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:289",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:301",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:312",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:328",
+        "fields": {
+          "model": "25K",
+          "kind": "Power Bank",
+          "condition": "Black"
+        }
+      },
+      {
+        "record_id": "s00000081:344",
+        "fields": {
+          "model": "Rapid Pro X",
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:355",
+        "fields": {
+          "model": "Shargeek 300W",
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:377",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:393",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:408",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:426",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:442",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:457",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:477",
+        "fields": {
+          "model": null,
+          "kind": "Charger Block",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:491",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:512",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:528",
+        "fields": {
+          "model": null,
+          "kind": "USB Charger Block",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:544",
+        "fields": {
+          "model": null,
+          "kind": "Power Bank",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:837",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:842",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:848",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:853",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:858",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:863",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:867",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:873",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:878",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:883",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:888",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:893",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:898",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:903",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:909",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:914",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:919",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:924",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:929",
+        "fields": {
+          "model": null,
+          "kind": "Photos",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:934",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:939",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:945",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:950",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:955",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:960",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:965",
+        "fields": {
+          "model": null,
+          "kind": "Security Systems",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:970",
+        "fields": {
+          "model": "eero WiFi Stream",
+          "kind": "Video",
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:975",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:981",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:986",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": null
+        }
+      },
+      {
+        "record_id": "s00000081:990",
+        "fields": {
+          "model": null,
+          "kind": null,
+          "condition": "Refurbished"
+        }
+      }
+    ],
+    "chunks": [
+      {
+        "record_count": 5,
+        "endpoint_ms": 1424.223209003685
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1433.1553329830058
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1354.549792013131
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1206.4310840214603
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1232.8783340053633
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1105.8272090158425
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1115.1930420019198
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1112.0995410019532
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1124.0719170018565
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1112.4825419974513
+      },
+      {
+        "record_count": 5,
+        "endpoint_ms": 1171.120416984195
+      },
+      {
+        "record_count": 1,
+        "endpoint_ms": 257.8762089833617
+      }
+    ],
+    "wall_ms": 13650.014124985319,
+    "calibrated": false
+  },
+  "filter": {
+    "snapshot_id": "s00000081",
+    "eligible_ids": [],
+    "unknown_ids": [
+      "s00000081:188",
+      "s00000081:198",
+      "s00000081:215",
+      "s00000081:259",
+      "s00000081:289",
+      "s00000081:301",
+      "s00000081:312",
+      "s00000081:377",
+      "s00000081:393",
+      "s00000081:408",
+      "s00000081:426",
+      "s00000081:442",
+      "s00000081:457",
+      "s00000081:491",
+      "s00000081:512",
+      "s00000081:544",
+      "s00000081:837",
+      "s00000081:842",
+      "s00000081:848",
+      "s00000081:853",
+      "s00000081:858",
+      "s00000081:863",
+      "s00000081:867",
+      "s00000081:873",
+      "s00000081:878",
+      "s00000081:883",
+      "s00000081:888",
+      "s00000081:893",
+      "s00000081:898",
+      "s00000081:903",
+      "s00000081:909",
+      "s00000081:914",
+      "s00000081:919",
+      "s00000081:924",
+      "s00000081:934",
+      "s00000081:939",
+      "s00000081:945",
+      "s00000081:950",
+      "s00000081:955",
+      "s00000081:960",
+      "s00000081:975",
+      "s00000081:981",
+      "s00000081:986"
+    ],
+    "excluded_ids": [
+      "s00000081:172",
+      "s00000081:235",
+      "s00000081:248",
+      "s00000081:273",
+      "s00000081:328",
+      "s00000081:344",
+      "s00000081:355",
+      "s00000081:477",
+      "s00000081:528",
+      "s00000081:929",
+      "s00000081:965",
+      "s00000081:970",
+      "s00000081:990"
+    ],
+    "checks": {
+      "s00000081:172": {
+        "state": "excluded",
+        "failed": [
+          "model"
+        ],
+        "gaps": [
+          "condition"
+        ]
+      },
+      "s00000081:188": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:198": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:215": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:235": {
+        "state": "excluded",
+        "failed": [
+          "model"
+        ],
+        "gaps": [
+          "condition"
+        ]
+      },
+      "s00000081:248": {
+        "state": "excluded",
+        "failed": [
+          "model",
+          "kind"
+        ],
+        "gaps": [
+          "condition"
+        ]
+      },
+      "s00000081:259": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:273": {
+        "state": "excluded",
+        "failed": [
+          "kind"
+        ],
+        "gaps": [
+          "condition"
+        ]
+      },
+      "s00000081:289": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:301": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:312": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:328": {
+        "state": "excluded",
+        "failed": [
+          "model",
+          "condition"
+        ],
+        "gaps": []
+      },
+      "s00000081:344": {
+        "state": "excluded",
+        "failed": [
+          "model"
+        ],
+        "gaps": [
+          "condition"
+        ]
+      },
+      "s00000081:355": {
+        "state": "excluded",
+        "failed": [
+          "model"
+        ],
+        "gaps": [
+          "condition"
+        ]
+      },
+      "s00000081:377": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:393": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:408": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:426": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:442": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:457": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:477": {
+        "state": "excluded",
+        "failed": [
+          "kind"
+        ],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:491": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:512": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:528": {
+        "state": "excluded",
+        "failed": [
+          "kind"
+        ],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:544": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:837": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:842": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:848": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:853": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:858": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:863": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:867": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:873": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:878": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:883": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:888": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:893": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:898": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:903": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:909": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:914": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:919": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:924": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:929": {
+        "state": "excluded",
+        "failed": [
+          "kind"
+        ],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:934": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:939": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:945": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:950": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:955": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:960": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:965": {
+        "state": "excluded",
+        "failed": [
+          "kind"
+        ],
+        "gaps": [
+          "model",
+          "condition"
+        ]
+      },
+      "s00000081:970": {
+        "state": "excluded",
+        "failed": [
+          "model",
+          "kind"
+        ],
+        "gaps": [
+          "condition"
+        ]
+      },
+      "s00000081:975": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:981": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:986": {
+        "state": "unknown",
+        "failed": [],
+        "gaps": [
+          "model",
+          "kind",
+          "condition"
+        ]
+      },
+      "s00000081:990": {
+        "state": "excluded",
+        "failed": [
+          "condition"
+        ],
+        "gaps": [
+          "model",
+          "kind"
+        ]
+      }
+    },
+    "coverage_complete": false,
+    "complete": false
+  },
+  "chooser_called": false,
+  "limitation": "AX heading-link grouping included footer navigation. Incomplete-scope extraction smoke only; excluded from shopping accuracy claims."
+}
