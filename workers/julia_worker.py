@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 import sys
 import time
+import argparse
 
 import torch
 from julia.inference import TransformerEngine
@@ -29,7 +30,11 @@ def sha256(path):
 
 
 def main():
-    root = Path(sys.argv[1])
+    parser = argparse.ArgumentParser()
+    parser.add_argument('checkpoint', type=Path)
+    parser.add_argument('--device', choices=('cpu', 'cuda'), default='cuda')
+    args = parser.parse_args()
+    root = args.checkpoint
     weight_path = root / 'model.safetensors'
     actual_hash = sha256(weight_path)
     if actual_hash != WEIGHTS_SHA256:
@@ -40,9 +45,10 @@ def main():
     # the published Transformers 5.0.0 runtime. Use the same weights and the
     # repository's plain TransformerEngine for this correctness-first screen.
     with contextlib.redirect_stdout(sys.stderr):
-        engine = TransformerEngine(str(root), device='cuda', max_length=MAX_LENGTH,
+        engine = TransformerEngine(str(root), device=args.device, max_length=MAX_LENGTH,
                                    head_length=HEAD_LENGTH)
-    torch.cuda.synchronize()
+    if args.device == 'cuda':
+        torch.cuda.synchronize()
     load_ms = (time.perf_counter() - began) * 1000
     ready = {
         'ready': True,
@@ -50,8 +56,8 @@ def main():
         'revision': REVISION,
         'weights_sha256': actual_hash,
         'load_ms': load_ms,
-        'device': str(engine.device),
-        'gpu': torch.cuda.get_device_name(engine.device),
+        'gpu': torch.cuda.get_device_name(engine.device) if args.device == 'cuda' else None,
+        'device': args.device,
         'torch': str(torch.__version__),
         'transformers': transformers_version,
         'max_length': MAX_LENGTH,
@@ -78,7 +84,8 @@ def main():
             # Keep the exact typed question API semantics; score rows in one
             # resident-model call and return the model's option IDs unchanged.
             scores = engine.logits([row])[0]
-            torch.cuda.synchronize()
+            if args.device == 'cuda':
+                torch.cuda.synchronize()
             inference_ms = (time.perf_counter() - began) * 1000
             maximum = max(scores)
             exp_scores = [float(torch.exp(torch.tensor(score - maximum)).item()) for score in scores]

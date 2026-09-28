@@ -21,7 +21,7 @@ Before acting, keep the user's requested steps and prerequisites in order and id
 
 ## Active stack
 
-Use **NuExtract3 for page reading/filtering → Jev for contextual finite choice (with configured Qwen escalation)**, with the qualified GLiNER2 route for described spans and screenshot-capable SystemOne/Qwen for terminal perception. This is the user's selected default after the bounded adoption comparison; Julia remains optional. Create providers through `generic_from_config()`, never hardcode `FleetGeneric()` for the normal path. The factory and observation helpers automatically read `~/.config/computer-use/runtime.json`; explicit environment settings can override it. Preserve runtime credentials outside observations and source.
+The default runtime profile is `local-mac`: Julia-1 contextual finite choice with no hosted fallback. The `fleet` profile opts into NuExtract3 page reading, Jev choice with configured Qwen escalation, GLiNER2 spans, and screenshot-capable SystemOne/Qwen. Local NuExtract3 and screenshot workers are not yet bundled; check [local Mac support](../../docs/LOCAL-MAC.md) and treat unavailable capabilities as blockers. Create providers through `generic_from_config()`, never hardcode `FleetGeneric()` for the normal path. The factory and observation helpers automatically read `~/.config/computer-use/runtime.json`; select `{"profile":"fleet"}` for the homelab setup. Preserve runtime credentials outside observations and source.
 
 For record-backed reading or choice, supply caller-described extraction fields and explicit predicates in `page_filter`, retaining unknowns and original Driver IDs. Pure reads use NuExtract directly and need no Julia choice. For terminals, use `VisualTerminal` and the bounded observation helper with the configured SystemOne screenshot endpoint. Missing visual evidence remains unknown. Keep one worker per task and close it afterward; being the default does not require leaving GPU workers resident between tasks.
 
@@ -34,7 +34,7 @@ Choose a semantic request kind from the sketch:
 - Exact unique control: `exact`; no model needed.
 - Field matching: `match`; supply field types/descriptions, candidate IDs, coverage, predicates and any explicit ordering. Simple labels route to GLiNER; described spans to GLiNER2; structured/relational/multilingual requests to qualified GLiNER2.5 adapters.
 - Described bounded categories mapped to actions: `classify`; Decide.
-- Contextual choice: `semantic` or default; Jev through the configured generic provider with Qwen escalation. Julia-1 remains an explicit alternative.
+- Contextual choice: `semantic` or default; use the configured generic provider (Julia-1 locally, Jev/Qwen in the fleet profile).
 
 These are dispatcher rules, not a learned router. Check adapter availability: several specialist roles are still provisional. An unavailable specialist may recover through Jev under the sketch; never report an uncalled specialist as measured.
 

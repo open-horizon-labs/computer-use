@@ -2,6 +2,7 @@
 from __future__ import annotations
 import contextlib
 import json
+import argparse
 import sys
 import time
 import torch
@@ -11,11 +12,16 @@ DEFAULT_MODEL = 'fastino/gliner2.5-multi-v1'
 
 
 def main():
-    model_id = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_MODEL
+    parser = argparse.ArgumentParser()
+    parser.add_argument('model', nargs='?', default=DEFAULT_MODEL)
+    parser.add_argument('--device', choices=('cpu', 'cuda'), default='cuda')
+    args = parser.parse_args()
+    model_id = args.model
     torch.set_num_threads(4)
     with contextlib.redirect_stdout(sys.stderr):
-        model = AutoExtractor.from_pretrained(model_id, local_files_only=True).to('cuda').eval()
-    print(json.dumps({'ready': True, 'model': model_id, 'role': 'generic_span_evidence'}), flush=True)
+        model = AutoExtractor.from_pretrained(model_id, local_files_only=True).to(args.device).eval()
+    print(json.dumps({'ready': True, 'model': model_id, 'device': args.device,
+                      'role': 'generic_span_evidence'}), flush=True)
     for line in sys.stdin:
         try:
             request = json.loads(line)

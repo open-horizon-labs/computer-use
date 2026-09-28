@@ -60,6 +60,9 @@ class RemoteSpans:
 class FleetGeneric:
     """One installed Jev -> Qwen selector process per simulated or real task."""
     def __init__(self):
+        load_runtime_config()
+        if os.environ.get('CUA_PROFILE') == 'local-mac':
+            raise ValueError('FleetGeneric is unavailable in the local-mac profile')
         launcher = Path.home()/'.local/share/fleet-cua-decider/select-fleet'
         command = json.loads(os.environ.get('CUA_SELECTOR_COMMAND', json.dumps([str(launcher), '--fast', 'jev'])))
         if not isinstance(command, list) or not command or not all(isinstance(x, str) and x for x in command):

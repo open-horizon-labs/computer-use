@@ -1,6 +1,6 @@
 # Terminal observation and action integration
 
-**Current default:** NuExtract3 page reading/filtering → Julia-1 finite choice, with GLiNER2 spans and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically. Jev/Qwen remains an explicit alternative.
+The `local-mac` profile defaults to Julia-1 and GLiNER2 local workers when installed. Screenshot interpretation still requires a separately configured vision worker; the local profile intentionally has no SystemOne/Qwen fallback. Choose `fleet` for the configured homelab endpoints. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
 
 The Cua Driver binary still observes and executes locally. `terminal_observation.py` is a reusable controller helper around its `get_window_state` API. It does not replace the Driver or run terminal commands behind the UI. Configure the installed Driver executable and reuse its session/window.
 

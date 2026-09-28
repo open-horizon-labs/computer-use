@@ -1,6 +1,12 @@
 # Provider configuration
 
-**Current default:** NuExtract3 page reading/filtering → Jev finite choice (configured Qwen escalation), with GLiNER2 spans and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically. Julia-1 remains an explicit alternative.
+**Current default profile:** `local-mac`, with Julia-1 as the chooser and no hosted fallback. `fleet` remains selectable for NuExtract3 page reading, Jev/Qwen choice, GLiNER2 spans, and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
+
+## Provider profiles
+
+The default is `local-mac`. Switch profiles from the repository checkout with `python3 scripts/set_profile.py local-mac` or `python3 scripts/set_profile.py fleet`. The script moves legacy flat settings under the inferred current profile and preserves them while selecting the new one. Use `CUA_PROFILE=fleet` for a one-process override. The local profile forces Julia-1 and rejects configured hosted selector, extraction, or visual endpoints rather than silently sending evidence off-device.
+
+The profile is a provider policy, not an installer. Julia-1 CPU inference and GLiNER2 CPU inference need local Python environments and cached checkpoints. The current NuExtract page adapter and screenshot provider still require a separately implemented local MLX worker; in `local-mac`, those capabilities fail closed when unavailable. Do not configure hosted URLs in a local-only deployment. See [Mac local runtime status](LOCAL-MAC.md) for the supported subset and remaining work.
 
 For hosted Jev, start with the [API key, endpoint and model setup](../skills/cua-capability-dispatch/references/setup.md#jev-api-key-endpoint-and-model). It also documents the separate Qwen key and endpoint, credential precedence, and a Jev-only smoke check.
 
@@ -22,7 +28,7 @@ The live booking harness also requires the installed stock Cua Driver/jev-use ch
 
 ## Julia-1 generic chooser
 
-`CUA_GENERIC_PROVIDER` defaults to `jev`. Use `generic_from_config()` to load persistent operator configuration; set it to `julia-1` for an explicit alternative. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
+`generic_from_config()` loads the active profile. `local-mac` selects Julia-1; `fleet` selects Jev with the configured Qwen escalation. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev, but the local profile rejects that provider. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
 
 ```sh
 export CUA_GENERIC_PROVIDER=julia-1

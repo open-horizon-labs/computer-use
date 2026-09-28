@@ -1,12 +1,12 @@
 # Setup
 
-The active default is NuExtract3 reading/filtering plus Jev finite choice with configured Qwen escalation. The runtime loads `~/.config/computer-use/runtime.json` automatically; use `generic_from_config()` for this path. Jev/Qwen instructions below describe the active chooser. Terminal helpers use the configured screenshot-capable SystemOne endpoint.
+The default profile is `local-mac`: Julia-1 finite choice without a hosted fallback. Select `fleet` in `~/.config/computer-use/runtime.json` to opt into the homelab NuExtract3/Jev/Qwen/SystemOne setup. The local profile currently supports Julia CPU and GLiNER CPU workers when installed; local NuExtract3 extraction and screenshot interpretation remain unavailable. See [profile status](../../../docs/LOCAL-MAC.md). Runtime helpers load configuration automatically; use `generic_from_config()`.
 
-The skill installs guidance and references. Running the dispatcher also requires a checkout of the private `open-horizon-labs/computer-use` repository. It does not install models or replace stock computer-use tools.
+The skill installs guidance and references. Running the dispatcher also requires a checkout of the public `open-horizon-labs/computer-use` repository. It does not install models or replace stock computer-use tools.
 
 ## 1. Install the skill
 
-Requirements: Node.js/npm and Git authentication with access to the private repository. For GitHub CLI users, authenticate with `gh auth login` if needed.
+Requirements: Node.js/npm and Git.
 
 ```sh
 npx skills add open-horizon-labs/computer-use --skill cua-capability-dispatch
@@ -18,7 +18,7 @@ For a global Codex installation:
 npx skills add open-horizon-labs/computer-use --skill cua-capability-dispatch --agent codex --global
 ```
 
-The [skills CLI](https://github.com/vercel-labs/skills#private-repositories) uses existing Git/GitHub CLI or SSH authentication. A private repository remains accessible only to authorized users. No token belongs in skill files.
+The [skills CLI](https://github.com/vercel-labs/skills) installs the public repository. No token belongs in skill files.
 
 ## 2. Get the runtime and run offline checks
 
@@ -106,7 +106,7 @@ Existing Fleet users can omit direct keys/files and set `TYPESAFE_CONNECT_SSH` t
 
 ## 4. Connect the stock driver
 
-Use the stock computer-use skill and driver to observe the actual desktop. Build the typed request from the fresh observation. Configure `RemoteSpans` with a cached `fastino/gliner2-base-v1` CUDA worker and `generic_from_config()` for NuExtract/Jev by default (Julia optional). Import `Strangler` from `inference/cua-decider/capability-dispatch/rollout.py` and `execute_bound` from `dispatch.py`; load `ROLLOUT.json` so only the qualified described-English-span contract uses GLiNER2, with the configured generic provider as one recovery call. See the [working recipe](../../../inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). The examples in `simulation.py` show request shapes; `run_booking.py` is a task-specific integration example, not a general API server.
+Use the stock computer-use skill and driver to observe the actual desktop. Build the typed request from the fresh observation. Configure `RemoteSpans` with the qualified `fastino/gliner2-base-v1` worker, on CPU for a suitable local installation or CUDA in the fleet setup, and `generic_from_config()` for the selected profile. Import `Strangler` from `inference/cua-decider/capability-dispatch/rollout.py` and `execute_bound` from `dispatch.py`; load `ROLLOUT.json` so only the qualified described-English-span contract uses GLiNER2, with the configured generic provider as one recovery call. See the [working recipe](../../../inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). The examples in `simulation.py` show request shapes; `run_booking.py` is a task-specific integration example, not a general API server.
 
 Call `Strangler.from_config(providers).decide(request, current_snapshot)`. Before any action, obtain a current snapshot and pass the unchanged request and selection through `execute_bound` with a driver callback. Independently verify the result. Keep one generic selector process per task; close it after the task and do not share feedback state across independent tasks.
 

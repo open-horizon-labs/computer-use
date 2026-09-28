@@ -2,7 +2,7 @@
 
 The facade gives an agent one coherent, evidence-first interface to desktop work. It joins fresh Cua Driver observations, page reading, action selection, execution and independent verification while keeping each boundary explicit. Agents should use these tools directly instead of writing task-specific shell wrappers around model endpoints or Driver calls.
 
-Cua Driver still observes and acts on the Mac. The facade sends bounded evidence to the configured specialist for the task: NuExtract3 reads requested fields from observed page records; Jev (with configured Qwen escalation) or Julia chooses among contextual alternatives; qualified GLiNER2 spans handle the narrow typed-field matching route; SystemOne handles visual choice or screenshot verification. Exact unique name/role selection bypasses a chooser by design. Provider routing and credentials come from external runtime configuration, so remote inference does not move desktop control off the Mac. Check `cua_trace` when you need the route and timing actually used.
+Cua Driver still observes and acts on the Mac. The default `local-mac` profile selects Julia-1 and refuses hosted chooser, extraction, or visual endpoints; `fleet` opts into the configured NuExtract3, Jev/Qwen, GLiNER2 and SystemOne services. Exact unique name/role selection bypasses a chooser by design. See [profile support](LOCAL-MAC.md) before relying on local page reading or visual interpretation, which are not yet bundled. Check `cua_trace` when you need the route and timing actually used.
 
 ## Agent workflow
 
@@ -24,13 +24,14 @@ Requires Python 3.10+, the installed and authorized Cua Driver, and providers co
 From the runtime checkout:
 
 ```sh
-python3 -m venv .venv-facade
+uv venv --python 3.12 .venv-facade
 .venv-facade/bin/pip install -r facade/requirements.txt
+python3 scripts/set_profile.py fleet
 codex mcp add cua-task -- "$PWD/.venv-facade/bin/python" "$PWD/facade/server.py"
 codex mcp get cua-task --json
 ```
 
-Start a fresh agent session to discover the tools. Skill installation alone does not register an MCP server. `CUA_DRIVER` overrides the default `~/.local/bin/cua-driver`. Runtime commands, endpoints and secrets stay outside this repository. No model starts merely to list tools.
+Run the profile switch command any time to change providers: `python3 scripts/set_profile.py local-mac` or `python3 scripts/set_profile.py fleet`. Settings are stored separately per profile and switching preserves both sets. If `cua-task` is already registered, skip the `codex mcp add` command. Start a fresh Codex session after installation or a profile change so the server reloads its runtime configuration. `CUA_DRIVER` overrides the default `~/.local/bin/cua-driver`. Runtime commands, endpoints and secrets stay outside this repository. No model starts merely to list tools.
 
 ## Tools
 
