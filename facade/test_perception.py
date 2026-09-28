@@ -205,6 +205,15 @@ class PerceptionRouteTests(unittest.TestCase):
         self.assertEqual(result['status'], 'selected')
         self.assertIn('selection', result)
 
+    def test_choose_regions_narrowed_scope_cannot_self_corroborate(self):
+        # Review P1 again, in regions mode. Tempting wrong patch: checking quote
+        # uniqueness among the caller's narrowed regions, which the caller controls.
+        self.driver.capture_id = 'cap_1'; self.driver.parse_result = BOOK_REGIONS
+        obs = self.f.observe(1, 2)['snapshot']
+        result = self.f.choose(obs, 'Pick the "Provider A" slot', mode='regions', candidate_ids=['text-1', 'text-2'])
+        self.assertEqual(result['reason'], 'visual_uncorroborated')
+        self.assertNotIn('selection', result)
+
     def test_choose_regions_requires_live_capture(self):
         self.driver.capture_id = None
         obs = self.f.observe(1, 2)['snapshot']

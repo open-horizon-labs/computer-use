@@ -586,7 +586,9 @@ class Facade:
         decision=policy.decide(request,request['snapshot_id'])
         if decision.get('action_authorized'):
             picked=decision['action_id']
-            if not self.visual_corroborated(goal,picked,actions):
+            # As in visual mode (review P1): a caller-narrowed region list cannot
+            # self-corroborate; quote uniqueness only counts across all regions.
+            if candidate_ids is not None or not self.visual_corroborated(goal,picked,actions):
                 self.event('choose',snapshot=snapshot,route='visual_uncorroborated_guard',mode='regions',
                            authorized=False,reason='visual_uncorroborated')
                 return {'status':'defer','route':'visual_uncorroborated_guard','reason':'visual_uncorroborated',
