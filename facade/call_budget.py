@@ -50,25 +50,52 @@ def budget_violations(budget=None, ces=None):
 
 
 def tool_surface(source):
-    """[(name, docstring)] of every @mcp.tool function in server.py, in registration order."""
-    tools = []
-    for node in ast.parse(source).body:
-        if isinstance(node, ast.FunctionDef) and any('tool' in ast.dump(d) for d in node.decorator_list):
-            tools.append((node.name, ast.get_docstring(node) or ''))
-    return tools
+    """[(name, docstring, nested)] of every @mcp.tool function in server.py in registration order; nested is True when it is
+    defined inside register_advanced() (registered only when CUA_TASK_ADVANCED=1)."""
+    tree = ast.parse(source)
+    nested = {n.name for fn in ast.walk(tree) if isinstance(fn, ast.FunctionDef) and fn.name == 'register_advanced' for n in ast.walk(fn) if n is not fn and isinstance(n, ast.FunctionDef)}
+    return [(n.name, ast.get_docstring(n) or '', n.name in nested) for n in ast.walk(tree)
+            if isinstance(n, ast.FunctionDef) and any('tool' in ast.dump(d) for d in n.decorator_list)]
+
+
+def guard_present(source):
+    """register_advanced() is called only under `if ADVANCED:` and ADVANCED reads CUA_TASK_ADVANCED."""
+    tree = ast.parse(source)
+    flag = any(isinstance(n, ast.Assign) and any(isinstance(t, ast.Name) and t.id == 'ADVANCED' for t in n.targets) and 'CUA_TASK_ADVANCED' in ast.dump(n) for n in tree.body)
+    calls = [n for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name) and n.func.id == 'register_advanced']
+    guarded = [n for n in tree.body if isinstance(n, ast.If) and isinstance(n.test, ast.Name) and n.test.id == 'ADVANCED'
+               and any(isinstance(x, ast.Expr) and isinstance(x.value, ast.Call) and getattr(x.value.func, 'id', '') == 'register_advanced' for x in n.body)]
+    return flag and len(calls) == 1 and len(guarded) == 1
 
 
 def surface_violations(source, budget=None):
+    """Default surface is exactly the default-path tools; every other tool lives in register_advanced (opt-in) and is documented Advanced."""
     budget = budget or load_budget()
     default = budget['default_path_tools']['value']
     tools = tool_surface(source)
     out = []
     if not tools or tools[0][0] != default[0]:out.append('%s must be registered first, got %s' % (default[0], tools[0][0] if tools else None))
     if len(tools) > budget['max_tool_count']['value']:out.append('%d tools exceed max_tool_count %d' % (len(tools), budget['max_tool_count']['value']))
-    for name, doc in tools:
+    for name, doc, nested in tools:
+        if name not in default and not nested:out.append('%s is registered by default: only %s may be visible without CUA_TASK_ADVANCED=1' % (name, default))
         if name not in default and not doc.startswith('Advanced'):out.append('%s is neither a default-path tool nor marked Advanced' % name)
-        if name in default and doc.startswith('Advanced'):out.append('%s is a default-path tool but marked Advanced' % name)
+        if name in default and (doc.startswith('Advanced') or nested):out.append('%s is a default-path tool but is marked Advanced or nested' % name)
+    if not guard_present(source):out.append('register_advanced() must be called only under `if ADVANCED:` where ADVANCED reads CUA_TASK_ADVANCED')
     return out
+
+
+def advanced_run(code):
+    """Run python code with CUA_TASK_ADVANCED=1 in a fresh interpreter from facade/ (the surface is decided at import time)."""
+    import os
+    import subprocess
+    env = {**os.environ, 'CUA_TASK_ADVANCED': '1'}
+    done = subprocess.run([sys.executable, '-c', code], cwd=str(HERE), env=env, capture_output=True, text=True, timeout=120)
+    if done.returncode:raise RuntimeError(done.stderr[-800:])
+    return json.loads(done.stdout.strip().splitlines()[-1])
+
+
+def advanced_tool_names():
+    return advanced_run("import asyncio, json, server; print(json.dumps([t.name for t in asyncio.run(server.mcp.list_tools())]))")
 
 
 def default_workflow_section(text):
@@ -103,18 +130,20 @@ def result_text(blocks):
 
 
 def measure_scenarios():
-    """Drive the real server tools through a counting wrapper under a minimal LLM policy: call cua_do; on a deferral, follow the
+    """Drive the real server tool functions through a counting wrapper under a minimal LLM policy: call cua_do; on a deferral follow the
     scenario's recovery hint once (or, when the scenario has none, naively repeat the call once); stop at done or after 4 calls.
+    Scenarios run on the REAL captured Chrome trees (facade/fixtures/live_*_ax.json) so tidy-fixture bugs cannot hide.
     Returns {name: {calls, reader, chooser, max_bytes, status, tools}} with REAL invocation counts."""
     import server
-    from core import Facade
+    from core import Facade, DriverCallFailed
     from test_core import FakeVision
     import test_do as fx
+    import test_live_shapes as lv
 
     RETRY = object()
 
-    def run(driver, args, reader=None, chooser=None, follow=RETRY):
-        reader = reader or fx.LineReader();chooser = chooser or fx.NamedChooser()
+    def run(driver, args, reader, chooser=None, follow=RETRY):
+        chooser = chooser or fx.NamedChooser()
         server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=FakeVision, sleep=lambda s: None)
         seen = {'calls': 0, 'tools': [], 'max_bytes': 0}
         def call(name, **kw):
@@ -129,22 +158,30 @@ def measure_scenarios():
             nxt = current if follow is RETRY else (follow(result, current) if follow else None)
             if nxt is None:break
             current = nxt
-            follow = RETRY if follow is RETRY else follow
         return {'calls': seen['calls'], 'tools': seen['tools'], 'max_bytes': seen['max_bytes'], 'status': result['status'],
                 'reader': len(reader.requests), 'chooser': len(chooser.requests)}
 
-    def records(pred, fields=fx.FIELDS):
-        return {'fields': fields, 'predicates': pred}
-    stale_rows = lambda v: fx.booking_rows([(n, s, d, '1:35 PM' if (n == 'Provider A' and v >= 2) else t) for n, s, d, t in fx.PROVIDERS])
-    orders = lambda: {'records': records([{'field': 'order', 'value': '1042'}, {'field': 'customer', 'value': 'Cedar'}], fx.ORDER_FIELDS),
-                      'goal': 'Cancel the order 1042 for customer Cedar', 'expect': 'Order 1042 cancelled'}
+    booking = {'goal': 'Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM', 'expect': 'Booked:',
+               'records': {'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE}}
+    orders = {'goal': 'Cancel the Walnut desk lamp order that is still Processing', 'expect': 'Order #1044 cancelled', 'control': 'Cancel',
+              'records': {'fields': lv.ORDER_FIELDS, 'predicates': lv.ORDER_ONE, 'identity': ['order']}}
+    def booking_driver(churn=False):
+        d = lv.LiveDriver('live_booking_ax.json');d.script = lv.booked()
+        if churn:
+            def script(driver, els):
+                if driver.version >= 2:
+                    for e in els:
+                        if e['element_index'] == 22:e['label'] = e['value'] = 'Starts 1:35 PM'  # an unrelated record's text changes between observe and act
+                lv.booked()(driver, els)
+            d.script = script
+        return d
     def orders_driver():
-        d = fx.FlatDriver();d.rows = fx.order_rows();d.confirm_text = 'Order 1042 cancelled';d.modal = fx.ConfirmDialog.MODAL;return d
-    booking = {'goal': 'Book the Follow-up slot that starts at 1:45 PM', 'records': records(fx.ONE), 'expect': 'Booked Provider E'}
+        d = lv.LiveDriver('live_orders_ax.json');d.script = lv.orders_flow(d);return d
     out = {}
-    d = fx.FlatDriver();d.confirm_text = 'Booked Provider E 1:45 PM'
-    out['booking_list'] = run(d, booking)
-    out['orders_confirm'] = run(orders_driver(), {**orders(), 'confirm': 'Yes, cancel order'}, reader=fx.LineReader(fx.ORDER_PATTERNS))
+    out['booking_list'] = run(booking_driver(), booking, lv.LiveReader(lv.BOOKING_PATTERNS))
+    out['orders_confirm'] = run(orders_driver(), {**orders, 'confirm': 'Yes, cancel order'}, lv.LiveReader(lv.ORDER_PATTERNS))
+    out['confirm_deferral'] = run(orders_driver(), orders, lv.LiveReader(lv.ORDER_PATTERNS),
+        follow=lambda result, cur: {'title': 'Demo', 'goal': 'Click "%s"' % result['dialog']['controls'][0], 'expect': orders['expect']} if result.get('dialog') else None)
     d = fx.FlatDriver();d.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};d.capture_id = 'cap'
     real = d.observe
     def canvas(*a):
@@ -153,33 +190,27 @@ def measure_scenarios():
     d.parse_result = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 5, 'y': 10 + 30 * i, 'width': 50, 'height': 20}} for i, t in enumerate(['Save', 'Export', 'Reset'])]}
     class Picks(fx.NamedChooser):
         def __call__(self, step, request):self.requests.append(request);return {'choice': 't1', 'route': 'julia-1', 'action_authorized': True}
-    out['canvas_regions'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported'}, chooser=Picks())
+    out['canvas_regions'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported'}, fx.LineReader(), chooser=Picks())
     many = [('Provider %03d' % i, 'Follow-up', '30 min', '1:%02d PM' % (i % 60)) for i in range(80)]
     d = fx.FlatDriver();d.rows = fx.booking_rows(many);d.confirm_text = 'Booked Provider 041 1:41 PM'
-    out['large_page_400'] = run(d, {'goal': 'Book Provider 041', 'records': records([{'field': 'provider', 'value': 'Provider 041'}]), 'expect': 'Booked Provider 041'})
-    # Recovery and deferral paths: what a clean-looking run costs when the world misbehaves.
-    d = fx.FlatDriver();d.confirm_text = 'Booked Provider E 1:45 PM';d.rows_at = stale_rows
-    out['stale_recovery'] = run(d, booking)
-    d = fx.FlatDriver();d.confirm_text = 'Booked Provider E 1:45 PM';flaky = d.observe;seen_obs = []
+    out['large_page_400'] = run(d, {'goal': 'Book Provider 041', 'expect': 'Booked Provider 041', 'records': {'fields': fx.FIELDS, 'predicates': [{'field': 'provider', 'value': 'Provider 041'}]}}, fx.LineReader())
+    # Recovery and deferral paths on the real shapes: what a clean-looking run costs when the world misbehaves.
+    out['stale_recovery'] = run(booking_driver(churn=True), booking, lv.LiveReader(lv.BOOKING_PATTERNS))
+    d = booking_driver();real_observe = d.observe;seen_obs = []
     def flaky_observe(*a):
         seen_obs.append(1)
-        if len(seen_obs) == 1:
-            from core import DriverCallFailed
-            raise DriverCallFailed('driver_call_failed: get_window_state exited 1')
-        return flaky(*a)
+        if len(seen_obs) == 1:raise DriverCallFailed('driver_call_failed: get_window_state exited 1')
+        return real_observe(*a)
     d.observe = flaky_observe
-    out['driver_failure_recovered'] = run(d, booking)
-    d = fx.FlatDriver();d.confirm_text = 'Booked Provider D';reader = fx.LineReader();reader.missing = lambda call, rid, field: rid == fx.button(11) and field == 'duration'
-    out['unknown_then_accept'] = run(d, {'goal': 'Book the 45 minute consultation', 'records': records(fx.D_ONLY), 'expect': 'Booked Provider D'}, reader=reader,
-                                     follow=lambda result, cur: {**cur, 'accept_unknown': result['unknown_ids']} if result.get('unknown_ids') else None)
-    d = orders_driver()
-    out['confirm_deferral'] = run(d, orders(), reader=fx.LineReader(fx.ORDER_PATTERNS),
-                                  follow=lambda result, cur: {'title': 'Demo', 'goal': 'Press "Yes, cancel order"', 'expect': 'Order 1042 cancelled'})
-    d = fx.FlatDriver();d.confirm_text = 'Booked Provider D'
+    out['driver_failure_recovered'] = run(d, booking, lv.LiveReader(lv.BOOKING_PATTERNS))
+    decoy = {**orders, 'records': {**orders['records'], 'predicates': [{'field': 'item', 'value': 'Walnut desk lamp'}, {'field': 'status', 'value': 'Processing'}]}, 'confirm': 'Yes, cancel order'}
+    out['unknown_then_accept'] = run(orders_driver(), decoy, lv.LiveReader(lv.ORDER_PATTERNS),
+        follow=lambda result, cur: {**cur, 'accept_unknown': result['unknown_ids']} if result.get('unknown_ids') else None)
     class Abstain(fx.NamedChooser):
         def __call__(self, step, request):self.requests.append(request);return {'choice': request['actions'][0]['id'], 'route': 'julia-1', 'action_authorized': False}
-    out['ambiguity_deferral'] = run(d, {'goal': 'Book a consultation that is not the 60 minute one', 'records': records(fx.TWO), 'expect': 'Booked Provider D'}, chooser=Abstain(),
-                                    follow=lambda result, cur: {**cur, 'records': records(fx.TWO + [{'field': 'provider', 'value': 'Provider D'}])})
+    several = {**booking, 'records': {'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE[:2]}}
+    out['ambiguity_deferral'] = run(booking_driver(), several, lv.LiveReader(lv.BOOKING_PATTERNS), chooser=Abstain(),
+        follow=lambda result, cur: {'title': 'Demo', **booking} if result.get('reason') and result['status'] == 'deferred' else None)
     return out
 
 

@@ -1,5 +1,5 @@
 {
-  "purpose": "Ceiling on REAL LLM-visible MCP tool calls, measured through the server tool functions under a minimal LLM policy (call cua_do; on a deferral follow its recovery hint once). Measured 2026-09: tools were 13% of agent wall time, the driving LLM's turns 87%; a clean booking took 9 mediated calls (native tools about 5). Any number changes only with a CE id in changed_by, and that CE's call_budget must record the same number (test_budget.py checks both; CODEOWNERS requires the policy owner's review).",
+  "purpose": "Ceiling on REAL LLM-visible MCP tool calls, measured through the server tool functions under a minimal LLM policy (call cua_do; on a deferral follow its recovery hint once) on REAL captured Chrome trees (facade/fixtures). Only cua_do is visible by default (the primitives need CUA_TASK_ADVANCED=1). Measured 2026-09: tools were 13% of agent wall time, the driving LLM's turns 87%; a clean booking took 9 mediated calls (native about 5) and the first live cua_do run took 8 because eight tools were visible. Any number changes only with a CE id in changed_by, and that CE's call_budget must record the same number (test_budget.py checks both; CODEOWNERS requires the policy owner's review).",
   "default_path_tools": {
     "value": [
       "cua_do"
@@ -16,7 +16,7 @@
   },
   "scenarios": {
     "booking_list": {
-      "description": "12 repeated Book records on a flat AX page, fields+predicates, expect text",
+      "description": "REAL captured booking page (12 identical Book buttons in a flat AXList): fields+predicates, expect",
       "max_llm_visible_calls": {
         "value": 1,
         "changed_by": "CE-FACADE-003"
@@ -32,7 +32,23 @@
       "native_reference_calls": 5
     },
     "orders_confirm": {
-      "description": "orders table, cancel row, confirm= names the dialog control; identity must match completely",
+      "description": "REAL captured orders table (Track/Cancel per row, AXColumn copies): control, records.identity, confirm label, expect",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 6
+    },
+    "confirm_deferral": {
+      "description": "REAL orders: dialog without confirm defers with the dialog labels; the follow-up is a second cua_do quoting a label, no primitives",
       "max_llm_visible_calls": {
         "value": 2,
         "changed_by": "CE-FACADE-003"
@@ -48,9 +64,9 @@
       "native_reference_calls": 6
     },
     "canvas_regions": {
-      "description": "no AX controls; Perception text regions, one chooser call, capture-bound click",
+      "description": "no AX controls; Perception text regions, one chooser call, capture-bound click (tidy synthetic)",
       "max_llm_visible_calls": {
-        "value": 2,
+        "value": 1,
         "changed_by": "CE-FACADE-003"
       },
       "max_reader_calls": {
@@ -61,10 +77,10 @@
         "value": 1,
         "changed_by": "CE-FACADE-003"
       },
-      "native_reference_calls": 4
+      "native_reference_calls": 5
     },
     "large_page_400": {
-      "description": "80 records, 400+ elements: response must stay small",
+      "description": "80 records, 400+ elements: response must stay small (tidy synthetic)",
       "max_llm_visible_calls": {
         "value": 1,
         "changed_by": "CE-FACADE-003"
@@ -80,7 +96,7 @@
       "native_reference_calls": 5
     },
     "stale_recovery": {
-      "description": "stale UI at act: reobserve, re-run the pipeline, new selection, act",
+      "description": "REAL booking: an unrelated text changes between observe and act; reobserve, re-run, new selection, act",
       "max_llm_visible_calls": {
         "value": 1,
         "changed_by": "CE-FACADE-003"
@@ -96,7 +112,7 @@
       "native_reference_calls": 5
     },
     "driver_failure_recovered": {
-      "description": "one transient Driver failure before the click, retried inside the call",
+      "description": "REAL booking: one transient Driver failure before the click, retried inside the call",
       "max_llm_visible_calls": {
         "value": 1,
         "changed_by": "CE-FACADE-003"
@@ -112,29 +128,13 @@
       "native_reference_calls": 5
     },
     "unknown_then_accept": {
-      "description": "unknown competitor defers; the policy repeats once with accept_unknown",
+      "description": "REAL orders: the decoy \"Walnut desk lamp shade (replacement)\" is unknown for item eq; repeat once with accept_unknown",
       "max_llm_visible_calls": {
         "value": 2,
         "changed_by": "CE-FACADE-003"
       },
       "max_reader_calls": {
-        "value": 3,
-        "changed_by": "CE-FACADE-003"
-      },
-      "max_chooser_calls": {
-        "value": 0,
-        "changed_by": "CE-FACADE-003"
-      },
-      "native_reference_calls": 5
-    },
-    "confirm_deferral": {
-      "description": "dialog after the click without confirm: deferral, then a fresh cua_do quoting the dialog control",
-      "max_llm_visible_calls": {
-        "value": 2,
-        "changed_by": "CE-FACADE-003"
-      },
-      "max_reader_calls": {
-        "value": 2,
+        "value": 4,
         "changed_by": "CE-FACADE-003"
       },
       "max_chooser_calls": {
@@ -144,7 +144,7 @@
       "native_reference_calls": 5
     },
     "ambiguity_deferral": {
-      "description": "chooser abstains on several eligible records; the policy narrows the predicates once",
+      "description": "REAL booking: several eligible records, chooser abstains; the policy narrows the predicates once",
       "max_llm_visible_calls": {
         "value": 2,
         "changed_by": "CE-FACADE-003"
@@ -163,13 +163,13 @@
   "live_task_budgets": {
     "booking": {
       "max_llm_visible_calls": {
-        "value": 3,
+        "value": 1,
         "changed_by": "CE-FACADE-003"
       }
     },
     "orders": {
       "max_llm_visible_calls": {
-        "value": 4,
+        "value": 2,
         "changed_by": "CE-FACADE-003"
       }
     }

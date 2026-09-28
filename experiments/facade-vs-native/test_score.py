@@ -64,7 +64,7 @@ class ScoreGuards(unittest.TestCase):
         self.assertEqual(code, 1)
 
     def test_within_budget_passes_the_flag(self):
-        manifest, events = self.manifest(facade_calls=2, native_calls=5)
+        manifest, events = self.manifest(facade_calls=1, native_calls=5)
         code, rows, _ = self.run_score(manifest, events, '--fail-over-budget')
         self.assertEqual(code, 0);self.assertFalse(rows[0]['over_budget'])
 
