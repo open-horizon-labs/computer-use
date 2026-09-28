@@ -48,7 +48,7 @@ def cua_windows(title:str|None=None) -> dict:
 
 @mcp.tool(annotations=READ)
 def cua_observe(pid:int,window_id:int) -> CallToolResult:
-    """Fresh Driver screenshot plus AX observation. Returns opaque snapshot and observed element IDs/parents. These IDs are the only inputs allowed for reading and selection. No inference; no UI action."""
+    """Fresh Driver screenshot plus AX observation. Returns opaque snapshot and observed element IDs/parents, with alias_of for equivalent complete table projections. These IDs are the only inputs allowed for reading and selection. No inference; no UI action."""
     with facade.lock:
         return with_screenshot(facade.observe(pid,window_id))
 
@@ -59,7 +59,7 @@ def cua_read(snapshot:str,task:str,fields:dict[str,ReadField],record_ids:list[st
 
 @mcp.tool(annotations=READ)
 def cua_choose(snapshot:str,goal:str,candidate_ids:list[str]|None=None,mode:Literal['exact','semantic','visual','spans']='semantic',exact_name:str|None=None,exact_role:str|None=None,operation:Literal['click','type_text']='click',text:str|None=None,reading:str|None=None,fields:dict|None=None,predicates:list[dict]|None=None,order_by:list[dict]|None=None,coverage_complete:bool=False,record_actions:dict[str,str]|None=None) -> dict:
-    """Select, don't execute. Default semantic mode invokes the configured Jev/Julia chooser on observed alternatives; a singleton requires a complete filtered reading, not a caller-preselected winner. Exact mode requires a genuinely unique observed name/role, and checks the full observed scope. Visual mode invokes SystemOne; spans invokes qualified GLiNER2. With a reading handle, additional predicates filter its cached evidence without rereading. Unknown/incomplete scopes defer. Schemas belong on cua_read; order_by belongs to spans. candidate_ids may name all eligible record roots or their mapped controls; omit it when using record_actions. If a record contains multiple controls, record_actions maps each eligible record root to its observed descendant control. Returns opaque selection handle; never accepts Driver arguments or caller-created action IDs."""
+    """Select, don't execute. Default semantic mode invokes the configured Jev/Julia chooser on observed alternatives; a singleton requires a complete filtered reading, not a caller-preselected winner. Exact mode requires a genuinely unique observed name/role, and checks the full observed scope after verified row/column table projections are represented once. Visual mode invokes SystemOne; spans invokes qualified GLiNER2. With a reading handle, additional predicates filter its cached evidence without rereading. Unknown/incomplete scopes defer. Schemas belong on cua_read; order_by belongs to spans. candidate_ids may name all eligible record roots or their mapped controls; omit it when using record_actions. If a record contains multiple controls, record_actions maps each eligible record root to its observed descendant control. Returns opaque selection handle; never accepts Driver arguments or caller-created action IDs."""
     with facade.lock:return facade.choose(snapshot,goal,candidate_ids,mode,exact_name,exact_role,operation,text,reading,fields,predicates,order_by,coverage_complete,record_actions)
 
 @mcp.tool(annotations=ACT)

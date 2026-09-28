@@ -20,6 +20,7 @@ from page_candidates import NuExtractPage, filter_records
 from providers import generic_from_config, RemoteSpans
 from rollout import Strangler
 from terminal_observation import VisualTerminal
+from ax_aliases import table_aliases
 
 
 class Gap(ValueError):
@@ -113,7 +114,7 @@ class Facade:
         image = raw.pop('_image', b'')
         state = {'raw': raw, 'nodes': nodes, 'image': image, 'fingerprint': digest(content),
                  'image_digest': hashlib.sha256(image).hexdigest() if image else None,
-                 'pid': pid, 'window_id': window_id, 'created': self.clock()}
+                 'pid': pid, 'window_id': window_id, 'created': self.clock(), 'aliases':table_aliases(nodes)}
         self.snapshots[handle] = state
         self.latest[(pid, window_id)] = handle
         # Retain bounded memory. Old handles cannot become current again.
@@ -121,12 +122,14 @@ class Facade:
             self.snapshots.pop(next(iter(self.snapshots)))
         quality = {'ax_available': bool(nodes), 'coverage': 'observed_tree_only',
                    'terminal_text_coverage': 'unknown', 'screenshot_available': bool(image),
-                   'degraded_reason': raw.get('degraded_reason'), 'progress': 'unknown'}
+                   'degraded_reason': raw.get('degraded_reason'), 'progress': 'unknown',
+                   'table_alias_count':len(state['aliases'])}
         self.event('observe', route='cua-driver', snapshot=handle, driver_ms=(self.clock()-began)*1000)
         return {'snapshot': handle, 'driver_snapshot_id': raw['snapshot_id'], 'title': raw.get('window_title'),
                 'quality': quality, 'elements': [{'id': 'e'+str(i), 'parent_id': 'e'+str(a['parent_index']) if a.get('parent_index') in nodes else None,
                     'role': a.get('role'), 'name': a.get('label', ''), 'value': a.get('value'),
-                    'enabled': a.get('enabled', True), 'actions': a.get('actions', [])} for i,a in nodes.items()]}
+                    'enabled': a.get('enabled', True), 'actions': a.get('actions', []),
+                    **({'alias_of':'e'+str(state['aliases'][i])} if i in state['aliases'] else {})} for i,a in nodes.items()]}
 
     def state(self, handle):
         state = self.snapshots.get(handle)
@@ -204,8 +207,12 @@ class Facade:
             raise Gap('Supported bound operations: click, type_text; use explicit raw fallback for others')
         if len(set(ids)) != len(ids):raise Gap('Duplicate candidates')
         result = []
+        seen = set()
         for candidate in ids:
             node = self.node(state,candidate)
+            canonical=state['aliases'].get(node['element_index'],node['element_index'])
+            if canonical in seen:continue
+            seen.add(canonical)
             if node.get('enabled') is False:continue
             if operation=='click' and 'AXPress' not in node.get('actions',[]):continue
             if operation=='type_text' and node.get('role') not in ('AXTextField','AXTextArea','AXComboBox','AXSearchField'):continue
@@ -232,7 +239,7 @@ class Facade:
         # never against a caller-supplied singleton hiding duplicate controls.
         if mode=='exact':
             if not exact_name:raise Gap('Exact mode requires an observed name, not a synthetic ID')
-            ids=['e'+str(i) for i in state['nodes']]
+            ids=['e'+str(i) for i in state['nodes'] if i not in state['aliases']]
         if (fields or predicates or order_by) and mode not in ('spans',) and not reading:
             raise Gap('Typed criteria require a reading handle or spans mode; they cannot be ignored')
         if reading:

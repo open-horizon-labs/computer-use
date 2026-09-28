@@ -23,7 +23,11 @@ class VisualWireTests(unittest.TestCase):
         self.assertEqual(captured[0]['images'],[row['image']])
         self.assertNotIn('ax_text',captured[0]['state'])
         self.assertEqual(captured[0]['state']['constraints'],row['constraints'])
-        self.assertEqual(captured[0]['state']['postcondition'],row['postcondition'])
+        self.assertEqual(captured[0]['state']['requested_outcome'],row['postcondition'])
+        question=captured[0]['questions']['assessment']
+        self.assertNotIn(row['postcondition'],question['criteria']['ready'])
+        self.assertIn('Every stated constraint',question['instructions'])
+        self.assertIn('only when explicitly requested',question['instructions'])
     def test_text_only_response_cannot_claim_visual_success(self):
         class Response:
             def __enter__(self):return self

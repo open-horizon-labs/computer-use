@@ -34,7 +34,7 @@ Start a fresh agent session to discover the tools. Skill installation alone does
 
 For record-backed actions, pass the returned `reading` to `cua_choose`. Map every eligible root to an observed descendant through `record_actions` when necessary. Additional `predicates` on the choice conjunctively filter the cached reading without another extraction. They cannot revive earlier exclusions. Candidate IDs can name all eligible record roots or their mapped controls; omit them when the mapping already describes the scope. The original complete mapping is also accepted when an additional predicate narrows it. Every provided join is checked, and an eligible record with no compatible enabled control blocks selection. Put schemas on `cua_read`; ordering remains a spans-mode feature. Criteria supplied to incompatible modes are rejected, never silently ignored. Unknown or incomplete filtered scopes defer. All eligible records must survive until selection. A semantic singleton without a complete filtered reading defers: it cannot serve as model confirmation of a caller's preselected winner.
 
-Exact mode searches the whole observed scope even if a caller supplies fewer candidates. Duplicate AX projections remain ambiguous; the facade does not merge controls by equal labels. Exact bypasses and singleton filtered choices are not chooser accuracy evidence.
+Exact mode searches the whole observed scope even if a caller supplies fewer candidates. Complete rectangular AX tables may expose matching cell subtrees through both rows and columns. The facade annotates those aliases and counts each once only when every paired cell subtree, observed attribute and positive frame agrees. It does not merge by labels or coordinates alone. Missing cells, structural/content/frame differences and genuine repeated controls remain ambiguous. Driver object identity is not exposed: this is a qualified table-projection rule, not general node equivalence. Exact bypasses and singleton filtered choices are not chooser accuracy evidence.
 
 ## Binding and limits
 
@@ -55,3 +55,5 @@ python3 -m unittest discover -s facade -p 'test_*.py'
 See [adoption evidence](FACADE-ADOPTION.md). Tool discovery and safe binding passed the local trial; model accuracy and autonomous sequencing are not established by that result.
 
 [Second fresh-agent smoke](FACADE-SMOKE-2.md) covers the record/action contract fixes and their bounded adoption follow-up.
+
+[Duplicate-control and visual-verification repair evidence](FACADE-REMAINING-FIXES.md) covers live positive/negative checks and rejected alternatives.
