@@ -1326,10 +1326,17 @@ class Facade:
                 offered = [i for i, n in state['nodes'].items() if i not in state['aliases'] and n.get('enabled') is not False and self._operation_compatible(n, operation)]
                 if len(same) == 1:mode = 'exact';choose_args.update(exact_name=tokens[0], exact_role=same[0].get('role'))
                 elif not offered and operation == 'click' and self.perception_state == 'healthy':mode = 'regions'
-            choice = guarded('choose', lambda: self.choose(snapshot, goal, mode=mode, **choose_args))
+            def choose_once():
+                made = self.choose(snapshot, goal, mode=mode, **choose_args)
+                # The dispatcher turns a chooser transport failure into a defer; that is a failed call, not a judgment.
+                if 'selection' not in made and (made.get('decision') or {}).get('reason') == 'provider_failed':raise RuntimeError('chooser provider_failed')
+                return made
+            choice = guarded('choose', choose_once)
             count('choose', 'exact_observed_control' if mode == 'exact' else (choice['route'] if isinstance(choice.get('route'), str) else 'chooser'))
             if 'selection' not in choice:return deferred({**choice, 'reason': choice.get('reason') or (choice.get('decision') or {}).get('reason')})
-            if over():return budget()
+            if over():
+                self.selections.pop(choice.get('selection'), None)  # bound but never delivered: leave no usable authority behind
+                return budget()
             selection = choice['selection'];ctx['selection'] = selection
             item = self.selections[selection]
             action = next(a for a in item['request']['actions'] if a['id'] == choice['selected_id'])
@@ -1339,6 +1346,7 @@ class Facade:
             keep['picked_identity'] = identity if reading else None
             if 'identity' in keep and {k: v.casefold() for k, v in keep['identity'].items()} != {k: v.casefold() for k, v in identity.items()}:
                 # Recovery re-ran the whole pipeline and it picked a different record: a real change (case C).
+                self.selections.pop(selection, None)
                 return finish('deferred', reason='record_changed', selected=picked, hint='After a stale-UI refusal the fresh pipeline selects a different record than before; nothing was clicked. Re-state the goal against the new content.')
             ctx['stage'] = 'act'
             try:deliver(selection)
@@ -1368,7 +1376,9 @@ class Facade:
                 else:
                     # Deterministic escalation, all server-side: AX quote, Perception exact-presence (never on digits), then the screenshot model.
                     seen = self.verify(pid_, window_, 'The window shows "%s"' % expect if expect else 'The requested outcome is now visible: ' + goal, 'visual')
-                    verification = {'status': seen['status'], 'route': seen['route'], **({'present_before': check['present_before']} if check else {})}
+                    why = seen.get('reason') or (check or {}).get('reason')
+                    verification = {'status': seen['status'], 'route': seen['route'], **({'reason': why} if why else {}),
+                                    **({'present_before': check['present_before']} if check else {})}
             except (Gap, ValueError, RuntimeError, TimeoutError, OSError) as error:
                 if ctx['stage'] == 'confirm':
                     if isinstance(error, DriverCallFailed):raise
