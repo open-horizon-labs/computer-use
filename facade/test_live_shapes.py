@@ -42,7 +42,9 @@ class LiveDriver(FakeDriver):
         els = copy.deepcopy(self.fix['elements'])
         if self.script:els = self.script(self, els) or els
         for e in els:e.update(element_token=sid + ':' + str(e['element_index']), enabled=e.get('enabled', True))
-        return {'snapshot_id': sid, 'pid': 1, 'window_id': 2, 'window_title': self.fix['window_title'], 'elements': els, '_image': b'pixels'}
+        raw = {'snapshot_id': sid, 'pid': 1, 'window_id': 2, 'window_title': self.fix['window_title'], 'elements': els, '_image': b'pixels'}
+        if self.capture_id:raw['capture_id'] = self.capture_id
+        return raw
 
 
 class LiveReader:

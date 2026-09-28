@@ -16,7 +16,7 @@ import uuid
 
 DISPATCH = Path(__file__).resolve().parents[1] / 'inference/cua-decider/capability-dispatch'
 sys.path.insert(0, str(DISPATCH))
-from dispatch import Engine, execute_bound, request_digest
+from dispatch import Engine, execute_bound, request_digest, predicate as dispatch_predicate, typed as dispatch_typed
 from page_candidates import NuExtractPage, filter_records
 from providers import generic_from_config, RemoteSpans
 from rollout import Strangler
@@ -484,7 +484,7 @@ class Facade:
 
     READ_BUDGET = 2  # readings per (snapshot, record scope); S4.2 §7 bounds steps, S4.8 forbids re-read loops
 
-    def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False, flat_by_role=False):
+    def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False, flat_by_role=False, shape_guard=False):
         state = self.state(snapshot)
         fields = copy.deepcopy(fields)
         # S4.8: readings are the displayed strings. Supplied types are ignored
@@ -524,6 +524,7 @@ class Facade:
             'task':task, 'fields':{k:v['description'] for k,v in fields.items()}, 'records':records},state['raw']['snapshot_id'])
         filtered = filter_records(extraction,fields=fields,predicates=predicates or [],
             coverage_complete=coverage_complete,current_snapshot=state['raw']['snapshot_id'])
+        if shape_guard:filtered = self._reclassify_shapes(fields, predicates or [], extraction, filtered)
         handle = 'read_' + uuid.uuid4().hex
         result = {'reading':handle, 'snapshot':snapshot, 'route':'nuextract3', 'extraction':extraction, 'filter':filtered,
                   **({'record_basis':record_basis} if record_basis else {}), **({'types_ignored':types_ignored} if types_ignored else {})}
@@ -1411,6 +1412,128 @@ class Facade:
         ambiguous = replaced or len(modals) > 1 or len(regions) > 1
         return (regions[0][0], regions[0][1], ambiguous) if regions else ([], '', ambiguous)
 
+    @staticmethod
+    def _value_shape(value):
+        """(has a digit, clock time, currency): a small deterministic shape signature of a displayed string."""
+        text = str(value)
+        return (bool(re.search(r'\d', text)), bool(re.search(r'\d{1,2}:\d{2}', text)), bool(re.search(r'[$\u20ac\u00a3]\s?\d|\d\s?[$\u20ac\u00a3]', text)))
+
+    def _incomparable(self, predicate_value, value, majority):
+        """S4.2 s4: a value that differs in SHAPE from what the predicate talks about (a digit-bearing predicate against 'half-hour', or the reverse),
+        or that is an outlier of the field's majority shape in this reading, cannot be judged: it is unknown, never excluded."""
+        a, b = self._value_shape(predicate_value), self._value_shape(value)
+        return a[0] != b[0] or (a[1] and not b[1]) or (a[2] and not b[2]) or (majority is not None and b != majority)
+
+    def _reclassify_shapes(self, fields, predicates, extraction, filtered):
+        """A record excluded ONLY by predicates that cannot be compared with its value becomes unknown. A comparable failure on any
+        field (S4.2) still excludes. Recomputes eligible/unknown/excluded and completeness."""
+        rows = {r['record_id']: r['fields'] for r in extraction['records']}
+        majority = {}
+        for name in fields:
+            counts = {}
+            for row in rows.values():
+                if row.get(name) not in (None, ''):counts[self._value_shape(row[name])] = counts.get(self._value_shape(row[name]), 0) + 1
+            top = max(counts.items(), key=lambda kv: kv[1]) if counts else None
+            majority[name] = top[0] if top and top[1] * 2 > sum(counts.values()) else None
+        checks = filtered['checks'];moved = False
+        for aid in list(filtered['excluded_ids']):
+            gaps, real = list(checks[aid]['gaps']), []
+            for name in checks[aid]['failed']:
+                value = rows[aid].get(name);rules = [r for r in predicates if r['field'] == name]
+                failing = []
+                for rule in rules:
+                    try:
+                        if not dispatch_predicate(dispatch_typed(value, fields[name]), rule, fields[name]) and not self._incomparable(rule['value'], value, majority[name]):failing.append(rule)
+                    except (ValueError, TypeError, ArithmeticError):pass
+                (real if failing else gaps).append(name)
+            if not real and set(gaps) - set(checks[aid]['gaps']):
+                checks[aid] = {'state': 'unknown', 'failed': [], 'gaps': gaps};moved = True
+        if not moved:return filtered
+        order = [r['record_id'] for r in extraction['records']]
+        states = {aid: checks[aid]['state'] for aid in order}
+        for key, state in (('eligible_ids', 'eligible'), ('unknown_ids', 'unknown'), ('excluded_ids', 'excluded')):filtered[key] = [a for a in order if states[a] == state]
+        filtered['complete'] = filtered['coverage_complete'] and not filtered['unknown_ids']
+        return filtered
+
+    def _promote_unknown(self, reading, ids):
+        """Controller verdict (treat_as_match): these UNKNOWN records satisfy the predicates. Updates the stored reading the chooser will see."""
+        for holder in (reading, self.readings.get(reading['reading'])):
+            filt = holder['filter'];order = [r['record_id'] for r in holder['extraction']['records']]
+            for aid in ids:filt['checks'][aid] = {'state': 'eligible', 'failed': [], 'gaps': [], 'controller_verdict': True}
+            filt['unknown_ids'] = [a for a in filt['unknown_ids'] if a not in ids]
+            filt['eligible_ids'] = [a for a in order if a in set(filt['eligible_ids']) | set(ids)]
+            filt['complete'] = filt['coverage_complete'] and not filt['unknown_ids']
+
+    def _excluded_values(self, reading, predicates):
+        """Audit: per predicate field, the distinct strings of the EXCLUDED records (at most 8, each cut to 40 characters)."""
+        rows = {r['record_id']: r['fields'] for r in reading['extraction']['records']}
+        out = {}
+        for name in dict.fromkeys(r['field'] for r in predicates):
+            values = list(dict.fromkeys(str(rows[a][name])[:40] for a in reading['filter']['excluded_ids'] if rows[a].get(name) not in (None, '')))
+            out[name] = values[:8]
+        return out
+
+    REGION_NEAR_PX = 300
+
+    def _text_regions(self, snapshot):
+        return [r for r in self.regions(snapshot).get('regions', []) if r.get('kind') == 'text' and (r.get('text') or '').strip() and r.get('bounds')]
+
+    def _region_texts(self, regions):
+        """Distinct on-screen texts with how often each is drawn (bounded): what a caller may pass as control."""
+        counts = {}
+        for r in regions:counts[r['text'].strip()[:40]] = counts.get(r['text'].strip()[:40], 0) + 1
+        return [{'text': t, 'count': c} for t, c in sorted(counts.items())][:self.DO_LIST_CAP]
+
+    def _region_neighbor(self, region, regions):
+        """Text of the nearest text region ABOVE or LEFT of this one within REGION_NEAR_PX; None when there is none or two tie."""
+        b, best = region['bounds'], []
+        for other in regions:
+            if other is region:continue
+            o = other['bounds'];tol = 4
+            x_overlap = o['x'] < b['x'] + b['width'] and b['x'] < o['x'] + o['width'];y_overlap = o['y'] < b['y'] + b['height'] and b['y'] < o['y'] + o['height']
+            if o['y'] + o['height'] <= b['y'] + tol and x_overlap:best.append((b['y'] - (o['y'] + o['height']), other))
+            elif o['x'] + o['width'] <= b['x'] + tol and y_overlap:best.append((b['x'] - (o['x'] + o['width']), other))
+        best = sorted([(max(0, d), o['id'], o) for d, o in best if d <= self.REGION_NEAR_PX], key=lambda t: (t[0], t[1]))
+        if not best or (len(best) > 1 and best[0][0] == best[1][0]):return None
+        return best[0][2]['text']
+
+    def region_exact(self, snapshot, label, goal, near=None):
+        """Pixel-only pages: resolve `label` against TEXT regions exactly (normalized) and UNIQUELY, with the near-edit veto of region_corroborated
+        (an OCR twin such as 'Sove' for 'Save' vetoes). Several exact matches defer unless `near` (the text of the nearest region above or left)
+        picks exactly one. Capture-bound click at the region centre, as choose_regions. Returns {'status': selected|defer|none, ...}."""
+        state = self.state(snapshot);capture_id = state['raw'].get('capture_id')
+        regions = self._text_regions(snapshot);norm = self._ocr_normalize;want = norm(label)
+        texts = self._region_texts(regions)
+        exact = [r for r in regions if norm(r['text']) == want]
+        if not exact:return {'status': 'none', 'region_texts': texts}
+        twins = [r for r in regions if norm(r['text']) != want and len(want) >= 3 and self._within_one_edit(norm(r['text']), want)]
+        if twins:
+            return {'status': 'defer', 'reason': 'region_uncorroborated', 'region_texts': texts, 'twin_count': len(twins),
+                    'hint': 'Another text on the screen reads almost the same as %r (an OCR-style twin), so the label cannot be trusted; nothing was clicked. Call cua_do again with near=<the text just above or left of the control> and the exact label, or stop and report it.' % label}
+        neighbors = {r['id']: self._region_neighbor(r, regions) for r in exact}
+        if near is not None:exact = [r for r in exact if neighbors[r['id']] is not None and norm(neighbors[r['id']]) == norm(near)]
+        if len(exact) != 1:
+            everyone = [r for r in regions if norm(r['text']) == want]
+            matches = [{'x': int(round(r['bounds']['x'] / 50.0) * 50), 'y': int(round(r['bounds']['y'] / 50.0) * 50), 'near': (neighbors[r['id']] or '')[:40]} for r in everyone][:8]
+            return {'status': 'defer', 'reason': 'region_ambiguous', 'matches': matches, 'region_texts': texts,
+                    'hint': '%d text regions read %r%s; nothing was clicked. Call cua_do again with the same control and near=<the text just above or left of the one you mean> (see matches[].near).'
+                            % (len(everyone), label, '' if near is None else ' and none is right beside %r' % near)}
+        target = exact[0];bounds = target['bounds']
+        action = {'id': target['id'], 'name': target['text'], 'role': 'perception_region:text', 'operation': 'click', 'enabled': True, 'evidence_text': target['text'],
+                  'description': target['text'], 'record_basis': 'perception_layout',
+                  'arguments': {'pid': state['pid'], 'window_id': state['window_id'], 'session': self.session, 'capture_id': capture_id, 'delivery_mode': 'background',
+                                'target': {'kind': 'window', 'pid': state['pid'], 'window_id': state['window_id']},
+                                'x': bounds.get('x', 0) + bounds.get('width', 0) / 2, 'y': bounds.get('y', 0) + bounds.get('height', 0) / 2}}
+        request = {'snapshot_id': state['raw']['snapshot_id'], 'kind': 'semantic', 'operation': 'click', 'goal': goal, 'actions': [action], 'observation': target['text']}
+        decision = {'status': 'selected', 'action_id': target['id'], 'action_authorized': True, 'reason': 'exact_region_label', 'snapshot_id': request['snapshot_id'],
+                    'binding_digest': request_digest(request), 'provider_outputs': []}
+        handle = 'sel_' + uuid.uuid4().hex
+        self.selections[handle] = {'snapshot': snapshot, 'request': copy.deepcopy(request), 'decision': copy.deepcopy(decision), 'mode': 'regions', 'operation': 'click',
+                                   'text': None, 'used': False, 'capture_id': capture_id}
+        while len(self.selections) > 32:self.selections.pop(next(iter(self.selections)))
+        self.event('choose', snapshot=snapshot, route='exact_region_label', mode='regions', authorized=True, reason='exact_region_label', near_used=near is not None)
+        return {'status': 'selected', 'route': 'exact_region_label', 'selection': handle, 'selected_id': target['id'], 'decision': decision}
+
     def _do_observation(self, pid, window_id):
         handle = self.latest.get((pid, window_id));state = self.snapshots.get(handle)
         if not state:return None
@@ -1422,13 +1545,13 @@ class Facade:
                              if i not in state['aliases'] and self._is_control(n)][:12]}
 
     def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
-           expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None):
+           expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None):
         """One call runs observe -> read -> same-record filter -> (chooser only if several) -> bind -> act -> verify,
         recovering deterministically (bounded) and deferring to the caller only where guessing would be worse.
         Composes observe/read/choose/act/verify; owns no selection policy. Never retries a click."""
-        with self.lock:return self._do(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control)
+        with self.lock:return self._do(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near)
 
-    def _do(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm=None, control=None):
+    def _do(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm=None, control=None, treat_as_match=None, near=None):
         confirm_label = confirm
         t0 = self.clock();ms, calls, attempts, tries, keep = {}, {}, [], {}, {}
         ctx = {'stage': 'goal', 'pid': pid, 'window_id': window_id, 'delivery': 'none', 'selection': None, 'pass': 0}
@@ -1439,6 +1562,7 @@ class Facade:
             if ctx['pid'] is not None:
                 observation = self._do_observation(ctx['pid'], ctx['window_id'])
                 if observation:result['observation'] = observation
+            if keep.get('audit') is not None and status != 'refused':result['evidence'] = {**result.get('evidence', {}), 'excluded_values': keep['audit']}
             self.event('do', stage=ctx['stage'], status=status, delivery=ctx['delivery'], passes=ctx['pass'],
                        attempts=len(attempts), calls_by_route=dict(calls), reason=extra.get('reason'))
             return result
@@ -1487,9 +1611,10 @@ class Facade:
             keep_keys.setdefault('reason', (payload.get('decision') or {}).get('reason') or 'no_selection')
             if payload.get('extracted'):more['evidence'] = {**more.get('evidence', {}), 'extracted': self._bounded(payload['extracted'])}
             if keep_keys['reason'] in ('unknown_competitors_unacknowledged', 'unknown_or_incomplete_scope') and payload.get('unknown_ids'):
-                more['retry_with'] = 'cua_do again with accept_unknown=[ids] naming exactly the unknown records your judgment excludes'
-                keep_keys['hint'] = ('A record could not be read completely (see evidence.extracted for the strings and unknown_ids for the ids). If the strings show it is NOT the one you want, '
-                                     'call cua_do again with the same arguments plus accept_unknown listing exactly those ids; otherwise refine the predicates. Nothing was clicked.')
+                more['retry_with'] = 'cua_do again with the same arguments plus accept_unknown=[ids] (they do NOT match) or treat_as_match=[ids] (they DO match)'
+                keep_keys['hint'] = ('Some records could not be compared with your predicates (unknown_ids; their strings are in evidence.extracted, and evidence.excluded_values shows what the predicates threw away). '
+                                     'Call cua_do again with the same arguments plus ONE of: accept_unknown=<ids> if the strings show those records do NOT match; '
+                                     'treat_as_match=<ids> if you judge they DO match (for example "half-hour" means 30 minutes). Nothing was clicked.')
             return finish('deferred', **keep_keys, **more)
         def identity_of(reading, state, roots, selected):
             """What the selected record IS: its extracted strings (records mode) or its description."""
@@ -1540,17 +1665,26 @@ class Facade:
                         return finish('deferred', reason='records_ambiguous' if why == 'no_controls' else why, found=found, hint=hints[why], **dead,
                                       **({'retry_with': 'cua_do again with control=<one of found.repeated_controls labels>'} if why == 'control_needed' else {}))
                 def read_once():
-                    try:return self.read(snapshot, goal, fields, roots, predicates, coverage, flat_by_role=True)
+                    try:return self.read(snapshot, goal, fields, roots, predicates, coverage, flat_by_role=True, shape_guard=True)
                     except Gap as gap:
                         if str(gap).startswith(('Overlapping', 'Record has no observed text')):raise self._Ambiguous(str(gap))
                         raise
                 reading = guarded('read', read_once);count('read', 'nuextract3')
-                if reading['filter']['unknown_ids'] and not accept_unknown and not over_all():
+                if reading['filter']['unknown_ids'] and not accept_unknown and not treat_as_match and not over_all():
                     # An unknown/garbled field: ONE re-read (READ_BUDGET caps it at 2), then stop and defer with the strings.
                     attempts.append({'pass': ctx['pass'], 'stage': 'read', 'kind': 'reread_unknown_field'})
                     reading = guarded('read', read_once);count('read', 'nuextract3')
                 if over_all():return budget()
                 ctx['stage'] = 'filter';filt = reading['filter']
+                if treat_as_match:
+                    stray = [r for r in treat_as_match if r not in filt['unknown_ids']]
+                    if stray:
+                        keep['audit'] = self._excluded_values(reading, predicates)
+                        return finish('refused', reason='treat_as_match_invalid', stray_ids=self._bounded(stray), unknown_ids=self._bounded(filt['unknown_ids']),
+                                      message='treat_as_match may name only records this reading left UNKNOWN (never excluded or unknown-to-this-page ids).',
+                                      hint='Call cua_do again with treat_as_match limited to unknown_ids from this response.')
+                    self._promote_unknown(reading, list(treat_as_match));keep['treated'] = list(treat_as_match)
+                keep['audit'] = self._excluded_values(reading, predicates)
                 if not filt['eligible_ids']:
                     if filt['unknown_ids']:return deferred(self.incomplete_scope_defer(filt, reading))
                     return finish('deferred', reason='no_eligible_record', excluded_count=len(filt['excluded_ids']),
@@ -1570,7 +1704,7 @@ class Facade:
                                       hint='A matching record has no control labelled %r (controls seen: %s); nothing was clicked. Call cua_do again with control set to an exact label.' % (control, ', '.join(map(repr, found['controls'])) or 'none'))
                 if targets:pick = {'record_actions': {r: targets[r] for r in filt['eligible_ids']}}
                 elif accept_unknown:pick = {'candidate_ids': list(filt['eligible_ids'])}
-            mode = 'semantic'
+            mode = 'semantic';region_choice = None
             choose_args = dict(operation=operation, text=text)
             if reading:choose_args.update(reading=reading['reading'], accept_unknown=list(accept_unknown or []) or None, **pick)
             else:
@@ -1596,25 +1730,41 @@ class Facade:
                         snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot);count('observe', 'cua-driver')
                         any_named, same = named(state);offered = [i for i in pool(state) if self._operation_compatible(state['nodes'][i], operation)]
                     listing = self._bounded(sorted({state['nodes'][i].get('label') or '' for i in offered}))
-                    if any_named and not same or (control is not None and len(same) != 1):
+                    fallback = None
+                    if not any_named and operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
+                        try:fallback = self.region_exact(snapshot, label, goal, near)
+                        except Gap:fallback = None
+                        if fallback and fallback['status'] == 'selected':region_choice = fallback;mode = 'region_exact'
+                        elif fallback and fallback['status'] == 'defer':
+                            self.event('choose', snapshot=snapshot, route='exact_region_label', mode='regions', authorized=False, reason=fallback['reason'])
+                            return finish('deferred', **{k: v for k, v in fallback.items() if k != 'status'})
+                    if mode != 'region_exact' and (any_named and not same or (control is not None and len(same) != 1)):
                         # Never claim a control is unique (or absent) when it is merely not press-capable in this snapshot.
                         why = 'control_not_found' if not any_named else ('control_not_pressable' if not same else 'control_ambiguous')
-                        return finish('deferred', reason=why, found={'controls': listing}, control_count=len(same),
-                                      **({'dead_end': True, 'report_to_user': DEAD_END} if not listing else {}),
+                        no_help = not listing and not (fallback and fallback.get('region_texts'))
+                        return finish('deferred', reason=why, found={'controls': listing, **({'region_texts': fallback['region_texts']} if fallback and fallback.get('region_texts') else {})}, control_count=len(same),
+                                      **({'dead_end': True, 'report_to_user': DEAD_END} if no_help else {}),
                                       hint='%r matched %d pressable controls (labels seen in found.controls; %d present but not press-capable); nothing was clicked. Call cua_do again with an exact control label.' % (label, len(same), len(any_named) - len(same)))
                     if len(same) == 1:
                         node = state['nodes'][same[0]];mode = 'exact';choose_args.update(exact_name=node.get('label'), exact_role=node.get('role'))
                 if mode == 'semantic':
                     if offered:choose_args.update(candidate_ids=['e'+str(i) for i in offered])
-                    elif operation == 'click' and self.perception_state == 'healthy':mode = 'regions'
-                    else:return finish('deferred', reason='no_actionable_controls', dead_end=True, report_to_user=DEAD_END,
+                    else:
+                        seen_texts = []
+                        if operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
+                            try:seen_texts = self._region_texts(self._text_regions(snapshot))
+                            except Gap:seen_texts = []
+                        if seen_texts:
+                            return finish('deferred', reason='region_label_needed', found={'region_texts': seen_texts},
+                                          hint='This page has no pressable controls, but text is drawn on it (found.region_texts). Call cua_do again with control=<the exact text of the button as drawn>; if that text appears more than once (count above 1), also pass near=<the text just above or left of the one you mean>.')
+                        return finish('deferred', reason='no_actionable_controls', dead_end=True, report_to_user=DEAD_END,
                                        hint='No enabled, press-capable control was found in the page content, so no cua_do parameter can move forward; nothing was clicked. Stop and report this to the user; do not retry.')
             def choose_once():
                 made = self.choose(snapshot, goal, mode=mode, **choose_args)
                 # The dispatcher turns a chooser transport failure into a defer; that is a failed call, not a judgment.
                 if 'selection' not in made and (made.get('decision') or {}).get('reason') == 'provider_failed':raise RuntimeError('chooser provider_failed')
                 return made
-            choice = guarded('choose', choose_once)
+            choice = region_choice or guarded('choose', choose_once)
             count('choose', 'exact_observed_control' if mode == 'exact' else (choice['route'] if isinstance(choice.get('route'), str) else 'chooser'))
             if 'selection' not in choice:return deferred({**choice, 'reason': choice.get('reason') or (choice.get('decision') or {}).get('reason')})
             if over_all():
@@ -1623,7 +1773,10 @@ class Facade:
             selection = choice['selection'];ctx['selection'] = selection
             item = self.selections[selection]
             action = next(a for a in item['request']['actions'] if a['id'] == choice['selected_id'])
-            judgment = choice.get('judgment') if choice.get('route') == 'grounded_singleton' else ('exact' if mode == 'exact' else 'chooser')
+            judgment = choice.get('judgment') if choice.get('route') == 'grounded_singleton' else ('exact' if mode in ('exact', 'region_exact') else 'chooser')
+            if keep.get('treated') and reading:
+                index = self.node(state, choice['selected_id'])['element_index']
+                if any(index in self.subtree(state, r)[1] for r in keep['treated']):judgment = 'controller'  # the controller's verdict put this record in play
             picked = {'id': choice['selected_id'], 'description': action['description'][:120]}
             identity = identity_of(reading, state, roots, choice['selected_id']) if reading else {'description': action['description']}
             keep['picked_identity'] = identity if reading else None
