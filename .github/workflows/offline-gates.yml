@@ -1,0 +1,39 @@
+name: offline-gates
+
+# Offline only: fakes and fixtures. No secrets, no models or GPUs, no desktop, no network beyond pip.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  offline-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install facade requirements
+        run: pip install -r facade/requirements.txt
+      - name: Facade unit tests
+        run: python -m unittest discover -s facade -p 'test_*.py'
+      - name: Dispatcher unit tests
+        run: cd inference/cua-decider/capability-dispatch && python -m unittest test_dispatch
+      - name: Decider unit tests
+        run: python -m unittest discover -s inference/cua-decider -p 'test_*.py'
+      - name: Script unit tests
+        run: python -m unittest discover -s scripts -p 'test_*.py'
+      - name: Experiment scorer tests
+        run: python -m unittest discover -s experiments/facade-vs-native -p 'test_*.py'
+      - name: Simulation gate
+        run: python inference/cua-decider/capability-dispatch/simulation_gate.py
+      - name: Skill sketch snapshot is current
+        run: python scripts/sync_skill_references.py --check
+      - name: MCP protocol smoke
+        run: python facade/check_protocol.py
+      - name: Call budget (default path stays one LLM-visible call)
+        run: python scripts/check_call_budget.py
