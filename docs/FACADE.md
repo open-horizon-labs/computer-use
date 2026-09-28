@@ -6,9 +6,58 @@ Cua Driver still observes and acts on the Mac. The default `local-mac` profile s
 
 **Minimum cua-driver: 0.29.1.** The server detects the installed Driver's version once (`<driver> --help`) and refuses to start tools against an older build, because older Drivers refuse `background_input` routes with `off_space_or_ax_unresolved` instead of resolving them (fixed in [trycua/cua#4068](https://github.com/trycua/cua/issues/4068)). An unparsed/unknown version string is not blocked. The detected `driver_version` is reported by `cua_trace` and `cua_finish`.
 
-## Agent workflow
+## Default path: cua_do
 
-Treat a UI task as an ordered sequence of evidence, decision, action and verification steps. Keep the user's prerequisites intact, select only the next unmet step, and verify its visible result before continuing. For each state transition:
+One call does the whole observe, read, match, choose, act, verify chain server-side. You state the intent once; the dispatcher runs the evidence chain and the specialist models do the reading, matching and choosing.
+
+```
+cua_do(goal, title | pid+window_id, records=None, operation='click', text=None,
+       expect=None, accept_unknown=None, budget_s=20)
+```
+
+- `title` is an exact window title (0 or more than 1 match refuses with no Driver action); `pid`+`window_id` address a window directly.
+- `goal` is the intent in words. Naming an element ID or writing "the correct one is ..." is refused before any Driver or model call.
+- `records` (for lists): `{fields: {name: {description}}, predicates: [{field, op, value}], record_ids?, coverage_complete?}`. Values are the displayed strings (S4.8); ops are `eq`, `neq`, `contains`, `not_contains`. Without `record_ids`, one record is discovered per control of the single repeated (role, label) kind, using its inferred record; if discovery is ambiguous the call defers with `records_ambiguous` and what it found, never a guess.
+- Without `records`, a quoted goal label that matches exactly one observed control resolves exactly (no model); otherwise the chooser picks among the offered controls; a page with no AX controls but healthy Cua Perception offers text regions (regions mode).
+- `expect` is text that must appear in exactly one element of the fresh AX tree after the click (case-insensitive exact, else contains).
+- `accept_unknown` names unknown records you judge ineligible (S4.2 section 4), used when a previous call deferred on them.
+
+What happens inside the call: one fresh observation; one NuExtract read of the discovered records (`READ_BUDGET` still applies); the same-record filter; if exactly one record is eligible it is a grounded singleton with no chooser call; if several, ONE chooser call over the eligible controls only; an unknown competitor without `accept_unknown` defers; the selection is bound and acted through the existing `act` (S4.8 scope revalidation, single-use, no window moves); then independent verification. `cua_do` composes `observe`, `read`, `choose`, `act` and `verify`; it owns no selection policy.
+
+The response is small and bounded: `status` (`done` only when verification is `satisfied`; otherwise `deferred`, `refused` or `failed`), `stage` (where it stopped), `selected` (id and short description), `judgment` (`filter`, `controller`, `chooser`, `exact`), `verification` (`status`, `route`), `evidence` (extracted strings, capped, on a deferral), `delivery` (`none`, `delivered`, `uncertain`), `observation` (the fresh snapshot handle, element count, top roles and up to 12 controls, so you can continue without another `cua_observe`), and `trace_summary` (`calls_by_route`, `ms_by_stage`, `passes`, `attempts`, `llm_visible_calls: 1`). `cua_trace` and `cua_finish` still work: every stage and a `do` summary are traced content-free.
+
+### Recovery inside the call (no LLM in the loop)
+
+The driving LLM is not in the recovery loop (S4.2 section 7). Recovery is deterministic code, bounded, inside `budget_s` (which excludes click delivery), and every attempt is listed in `trace_summary.attempts`.
+
+| # | Situation | What cua_do does | Never |
+|---|---|---|---|
+| 1 | Stale-UI refusal at act (content changed inside the bound scope; nothing clicked) | Reobserve and re-run the whole pipeline; if the same record still uniquely matches, bind a NEW selection on the fresh snapshot and act. At most 2 passes per call. | Reuse or rebind the old selection or its element tokens (S4.3). |
+| 2 | Element indices or tokens shifted, same content | Same as 1: the fresh pipeline finds the record by its fields, not by id. | Click the old id. |
+| 3 | Driver failure BEFORE the click (observe, read, choose, act's revalidation) | Retry that stage once after a 300 ms backoff. | Retry a click, or anything after a click may have been delivered. |
+| 4 | A field unknown or garbled | Re-read once (`READ_BUDGET` caps it at 2), then stop and defer with the extracted strings. | A re-read loop. |
+| 5 | Verification unknown | AX exact/contains on the fresh tree, then Perception exact presence (never satisfies on digits), then the screenshot model if configured. `unverified` only when no step applies. | Report delivery as success. |
+| 6 | A confirm dialog appears after the click (orders) | Detect the new modal, re-extract its displayed identity, compare it with the selected record through the same-record filter, confirm only on a match; a mismatch defers. | Confirm without reading it. |
+
+The LLM gets `deferred` or `failed` back only for: (A) a click that may have been delivered but could not be verified (`delivery_unverified`; never click again blindly, inspect `observation.snapshot`); (B) ambiguity (several eligible records the chooser cannot settle, an unknown competitor without `accept_unknown`, `records_ambiguous`); (C) a real content change inside the bound scope that alters which record matches (`record_changed`, `no_eligible_record`, `ui_changed_repeatedly`). Other stops are `budget_exceeded` (stage reported, nothing clicked after it), and `failed` when a bounded retry is exhausted (`stage`, `attempts`, `retryable`). `retryable: true` only ever means nothing was clicked; a failure at the click is `retryable: false` with `delivery: uncertain`.
+
+### When to drop to the primitives
+
+Only when `cua_do` defers and you need finer control, or for an operation it does not cover (keyboard shortcuts, navigation). `cua_windows`, `cua_observe`, `cua_read`, `cua_choose`, `cua_act`, `cua_verify`, `cua_trace` and `cua_finish` are Advanced and behave exactly as before; the `observation.snapshot` from a deferral is a current handle for them.
+
+### Why: 13% of the time, 87% of the turns
+
+Across 15 live runs the facade's tools were 13% of agent wall time (138 s of 1,099 s); the other 87% was the driving LLM (about 2.9 s per turn, 374 turns). With read, choose, act and verify as separate tools the LLM mediated every hop: a clean booking took 9 LLM-visible calls where native tools take about 5. The sketch's design is that the dispatcher runs the evidence chain and the LLM states intent once (S4.1-S4.2, S4.6, S4.8). A clean `cua_do` run is one LLM-visible call, with the specialists still doing the reading and choosing. The improvement is a hypothesis until the live A/B against the native arm is run; the offline tests establish call counts, not accuracy or latency.
+
+## Call budget
+
+`facade/CALL_BUDGET.json` is the machine-readable ceiling on LLM-visible calls for the default path: booking-shaped list 1, orders with a confirm step 2, canvas/regions 2; at most one reader and one chooser call per cycle (none of the chooser for a grounded singleton); the default-path tool list is `["cua_do"]`; at most 9 tools; responses under 6 KB. `python3 scripts/check_call_budget.py` (offline; needs the facade requirements) drives the real server tool functions through a counting harness on fake fixtures, checks the tool surface (`cua_do` registered first, every other tool's docstring beginning "Advanced"), lints the skill's default-workflow section, and prints a table of scenario, calls, budget and PASS/FAIL. CI runs it on every pull request. `experiments/facade-vs-native/score.py` counts `llm_visible_calls` per live run, prints `over_budget`, accepts `--fail-over-budget`, and prints the facade-versus-native ratio of calls and turns.
+
+To change a number legitimately: write or extend a CE (proposed, then approved) that records the new number in its `call_budget` under the same dotted name, then set the number and its `changed_by` in CALL_BUDGET.json in the same change; `facade/test_budget.py` fails on a number with no CE, or one that differs from its CE. Adding a tool, or a mandatory step to the default path, is such a change.
+
+## Advanced: the primitives step by step
+
+Use these only when `cua_do` defers and you need finer control. Treat a UI task as an ordered sequence of evidence, decision, action and verification steps. Keep the user's prerequisites intact, select only the next unmet step, and verify its visible result before continuing. For each state transition:
 
 1. Use `cua_windows` to find the relevant existing window, then `cua_observe` to obtain a fresh screenshot and accessibility tree. The returned snapshot and element IDs define the only evidence currently available.
 2. If the task depends on page content, call `cua_read` with the observed record roots and only the fields/predicates needed. NuExtract3 returns grounded values tied to those source records; missing or ambiguous values remain unknown. Keep records separate and avoid whole-page roots that combine several results.
