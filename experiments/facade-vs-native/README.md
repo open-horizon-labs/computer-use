@@ -95,3 +95,68 @@ for `route`/`caller_preselected`/cost/duration rather than assuming a fixed
 schema) because `claude -p`'s stream-json shape is not a versioned contract
 this repo controls. Treat scored output as a starting point for manual
 review of the transcripts, not a final number.
+
+## How to run the suite
+
+The suite (`suite.py`, `tasks.json`, `pages.py`) extends this harness to 17 tasks and
+three arms, and turns "is the stack stronger than native" into a number under the rules in
+[`PREREGISTRATION.md`](PREREGISTRATION.md). Read that file first; the decision rules are
+fixed before any result exists.
+
+- Arms: `native` (stock `cua-driver mcp`), `stack` (the facade as configured in this
+  checkout), `stack-advanced` (same with `CUA_TASK_ADVANCED=1`), optional `native-skill`.
+- Models: `haiku` (`claude-haiku-4-5-20251001`), `sonnet` (`claude-sonnet-5-5`, default),
+  `opus` (`claude-opus-5-5`), or any full model id.
+- Task sets: `--suite small` (3 tasks), `--suite core` (12, default), `--suite full` (17),
+  or `--tasks id ...`. Task ids and what they stress are in `tasks.json`.
+
+Everything below except the live `run` is offline and safe:
+
+```sh
+# Estimate time and cost (no side effects)
+python3 experiments/facade-vs-native/suite.py plan --suite small
+python3 experiments/facade-vs-native/suite.py plan --suite core --arms native stack stack-advanced --models haiku sonnet --runs 3
+
+# Test the whole pipeline with SYNTHETIC transcripts and events (no desktop, no claude, no network)
+python3 experiments/facade-vs-native/suite.py run --dry-run --suite core --arms native stack --models haiku --runs 3
+python3 experiments/facade-vs-native/suite.py report --manifest experiments/facade-vs-native/runs-dry/manifest.json \
+  --events experiments/facade-vs-native/runs-dry/events.jsonl
+
+# LIVE: operates the desktop. Requires the user's explicit consent in chat for this session.
+python3 experiments/facade-vs-native/suite.py run --i-have-consent --max-total-minutes 30 \
+  --suite small --arms native stack --models sonnet --runs 1
+
+# Score and report a live run
+python3 experiments/facade-vs-native/suite.py score  --manifest experiments/facade-vs-native/runs-suite/manifest.json --events experiments/facade-vs-native/runs-suite/events.jsonl
+python3 experiments/facade-vs-native/suite.py report --manifest experiments/facade-vs-native/runs-suite/manifest.json --events experiments/facade-vs-native/runs-suite/events.jsonl
+```
+
+Consent: a live `run` refuses to start without `--i-have-consent` and `--max-total-minutes`.
+The flag acknowledges consent already obtained from the user in chat; it is not consent. The
+suite starts its own fixture server on 127.0.0.1 only, runs one agent at a time from a scratch
+cwd with file and shell tools disallowed, opens each page in its own Chrome window (AppleScript
+`make new window`, no `activate`), and closes only the windows it created, by id, including on
+Ctrl-C (the manifest is rewritten atomically after every run and records `interrupted`).
+Per-run timeout and max turns come from `tasks.json` (override with `--agent-timeout`,
+`--max-turns`). Arms within each (task, model, rep) block are shuffled with `--seed`
+(default 20260928), recorded in the manifest.
+
+Estimated cost (from `plan`, using measured priors of 40-140 s and $0.8-1.6 per run plus 4 s of
+window overhead; the same priors are applied to every model, so Haiku is probably cheaper):
+
+| Run | Runs | Minutes lo / mid / hi | API-equivalent USD lo / mid / hi |
+|---|---|---|---|
+| small: 3 tasks x 1 run x 2 arms x 1 model | 6 | 4.4 / 9.4 / 14.4 | 4.8 / 7.2 / 9.6 |
+| full: 12 tasks x 3 runs x 3 arms x 2 models | 216 | 158 / 338 / 518 | 173 / 259 / 346 |
+
+Worst case if every run hits its timeout is 30 minutes (small) and about 18 hours (full).
+
+Honest limits: the tasks are synthetic and our own, and the stack was tuned on the first
+three; 3 runs per cell is too few for tight intervals (Wilson intervals are reported and will
+usually overlap, so most positive results are only `directional`); hosted specialist latency
+varies; cost comes from the transcript's own `total_cost_usd`; `--dry-run` numbers are fabricated
+and only test plumbing; the `native` arm has no stock skill, so the preregistered invalidation
+check is provisional until a `native-skill` arm is run. Wrong clicks are strict: any forbidden
+event, even one the agent later corrects (for example a wrong Cancel that is dismissed), makes the
+run `wrong`. The older `score.py` and `runner.py` CLI still work for the original booking/orders
+comparison but use the looser terminal-event rule.
