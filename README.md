@@ -26,7 +26,7 @@ CESS preserves the sketch, accepted counterexamples and executable regression ch
 
 ## Agent-facing task tools
 
-Register the local [CUA task MCP facade](docs/FACADE.md) to expose observation, NuExtract reading, Jev/Julia/GLiNER2 selection, bound action and verification directly to agents. See the [fresh-agent adoption evidence and limitations](docs/FACADE-ADOPTION.md).
+Register the local [CUA task MCP facade](docs/FACADE.md) to expose observation, NuExtract reading, Jev/Julia/GLiNER2 selection, bound action and verification directly to agents. `scripts/setup_facade.sh` also installs the pinned [Cua Perception](docs/FACADE.md#cua-perception-screenshot-regions) extension by default for on-device screenshot regions (`--no-perception` to skip). See the [fresh-agent adoption evidence and limitations](docs/FACADE-ADOPTION.md).
 
 ## Install the skill
 

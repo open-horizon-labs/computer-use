@@ -118,6 +118,10 @@ For the optional Julia chooser, configure `CUA_GENERIC_PROVIDER=julia-1` and `CU
 
 For terminal observations, read `docs/TERMINALS.md` in the runtime checkout and use `terminal_observation.py`. Configure `CUA_VISUAL_COMMAND` for `workers/visual_worker.py` with a screenshot-capable Qwen chat endpoint, or use the controlling LLM to inspect Driver screenshots. Julia and text-only Jev cannot supply visual evidence. Missing vision returns unknown; it must never become an app-stalled diagnosis.
 
+## Facade and Cua Perception
+
+Setting up the [local MCP facade](../../../docs/FACADE.md) via `scripts/setup_facade.sh` installs the pinned Cua Perception extension (`scripts/install_perception.py`, `cua-perception-v0.2.1`) by default; pass `--no-perception` to skip it. Perception supplies on-device OCR/icon screenshot regions for description context, record-grouping fallback and a bounded fuzzy verification check — it never supplies typed field values, which remain NuExtract3's job on the AX tree. See [docs/FACADE.md](../../../docs/FACADE.md#cua-perception-screenshot-regions) for the route and the OCR value-vs-layout rule.
+
 ## Persistent operator configuration
 
 Runtime providers and terminal helpers load `~/.config/computer-use/runtime.json` (override its path with `CUA_RUNTIME_CONFIG`). It is a JSON object of string environment settings, including `CUA_JULIA_COMMAND`, `CUA_SPAN_COMMAND`, `CUA_EXTRACT_URL`, `CUA_VISUAL_COMMAND`, and `CUA_SYSTEMONE_URL`. Command values are JSON-encoded argv arrays. Explicit environment values take precedence. Set `CUA_GENERIC_PROVIDER` to `julia-1` and `CUA_PAGE_EXTRACTION` to `1` for the selected stack. Configure `CUA_SYSTEMONE_URL` to the existing `/v1/systemone` facade for screenshot choices/terminal postcondition assessments. No shell export or profile change is needed when using the factory. The profile contains deployment addresses, not credentials.
