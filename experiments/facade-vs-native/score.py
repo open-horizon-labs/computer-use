@@ -72,6 +72,8 @@ def scan_transcript(transcript_path):
     'result' event.
     """
     turns = 0
+    seen_messages = set()
+    num_turns = None
     routes = Counter()
     caller_preselected_count = 0
     cost_usd = None
@@ -90,8 +92,14 @@ def scan_transcript(transcript_path):
             except json.JSONDecodeError:
                 continue
             if event.get('type') == 'assistant':
-                turns += 1
+                # stream-json emits one assistant event per content block; one LLM turn = one message id.
+                mid = (event.get('message') or {}).get('id')
+                if mid is None or mid not in seen_messages:
+                    turns += 1
+                    if mid is not None:
+                        seen_messages.add(mid)
             if event.get('type') == 'result':
+                num_turns = event.get('num_turns', num_turns)
                 cost_usd = event.get('total_cost_usd', cost_usd)
                 duration_ms = event.get('duration_ms', duration_ms)
                 usage = event.get('usage') or usage
@@ -115,7 +123,7 @@ def scan_transcript(transcript_path):
                                     routes[r] += 1
                         if inner.get('caller_preselected') is True:
                             caller_preselected_count += 1
-    return {'turns': turns, 'routes': dict(routes), 'caller_preselected_count': caller_preselected_count,
+    return {'turns': num_turns if num_turns is not None else turns, 'routes': dict(routes), 'caller_preselected_count': caller_preselected_count,
             'cost_usd': cost_usd, 'duration_ms': duration_ms, 'usage': usage, 'model': model}
 
 

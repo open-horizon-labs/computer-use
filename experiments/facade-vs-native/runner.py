@@ -16,42 +16,34 @@ the facade's own "never move the user's windows" policy (fix 7).
 """
 import argparse
 import json
+import os
 import subprocess
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
-from fixtures import BOOKING_EXPECTED_ID, ORDERS_EXPECTED_ID
+from tasks import load_tasks
 
 HERE = Path(__file__).resolve().parent
+TASKS = load_tasks()
 
-# Neutral user intent only: never name the answer or enumerate decoys, or the
+# Neutral user intent only (tasks.json `prompt`): never name the answer or enumerate decoys, or the
 # comparison measures prompt hints instead of the tools.
-PROMPTS = {
-    'booking': 'Book the earliest 30-minute appointment with Dr. Morgan Reyes that starts at or after 2:00 PM. Book exactly one appointment.',
-    'orders': 'Cancel my walnut desk lamp order that has not shipped yet. Do not cancel or change any other order.',
-    'canvas': 'Press the Export button. Press only one button.',
-}
 PROMPT_FRAME = ('A Google Chrome window whose title begins with {title!r} is open on this Mac. {goal} '
                 'Use only the computer-use tools available to you. Do not open, navigate, or act on any other '
                 'window or tab. When finished, report exactly what you did and how you verified the result.')
 
-TITLES = {'booking': 'Clinic Slots {run}', 'orders': 'Orders {run}', 'canvas': 'Canvas {run}'}
-
-ALLOWED_TOOLS = {
-    'facade': ['mcp__cua-task'],
-    'native': ['mcp__cua-driver'],
-}
-# File and shell tools are off for both arms: an agent that can Read would load repo
-# context (the session's own memory notes read in one run) and stop being a clean
-# tool-set comparison. Native additionally has no Skill, since the installed skill
-# would reintroduce facade guidance.
+# arm -> server family. `facade` is the legacy name for `stack`.
+ARM_SERVER = {'native': 'cua-driver', 'native-skill': 'cua-driver', 'stack': 'cua-task', 'stack-advanced': 'cua-task', 'facade': 'cua-task'}
+ARMS = list(ARM_SERVER)
+ALLOWED_TOOLS = {arm: ['mcp__' + server] + (['Skill'] if arm == 'native-skill' else []) for arm, server in ARM_SERVER.items()}
+# File and shell tools are off for every arm: an agent that can Read would load repo
+# context and stop being a clean tool-set comparison. Native additionally has no Skill (unless the
+# `native-skill` arm), since the installed skill would reintroduce facade guidance.
 _BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'Task']
-DISALLOWED_TOOLS = {
-    'facade': _BASE_DENY,
-    'native': _BASE_DENY + ['Skill'],
-}
+DISALLOWED_TOOLS = {arm: _BASE_DENY + ([] if arm in ('native-skill',) or ARM_SERVER[arm] == 'cua-task' else ['Skill'])
+                    for arm in ARM_SERVER}
 
 
 def chrome(script):
@@ -76,15 +68,19 @@ def close_window(window_id):
 
 def mcp_config(arm, out_dir):
     root = HERE.parents[1]
-    servers = {'facade': {'cua-task': {'command': str(root / '.venv-facade/bin/python'), 'args': [str(root / 'facade/server.py')]}},
-               'native': {'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}}
+    py = os.environ.get('CUA_FACADE_PYTHON') or str(root / '.venv-facade/bin/python')
+    stack = {'command': py, 'args': [str(root / 'facade/server.py')]}
+    if arm == 'stack-advanced':
+        stack['env'] = {'CUA_TASK_ADVANCED': '1'}
+    servers = {'cua-task': stack, 'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
+    server = ARM_SERVER[arm]
     path = Path(out_dir).resolve() / f'mcp-config.{arm}.json'  # absolute: the agent runs from a scratch cwd
-    path.write_text(json.dumps({'mcpServers': servers[arm]}, indent=2))
+    path.write_text(json.dumps({'mcpServers': {server: servers[server]}}, indent=2))
     return path
 
 
 def run_agent(arm, task, title, out_path, model, max_turns=80, timeout=600):
-    prompt = PROMPT_FRAME.format(title=title, goal=PROMPTS[task])
+    prompt = PROMPT_FRAME.format(title=title, goal=TASKS[task]['prompt'])
     cmd = ['claude', '-p', prompt, '--model', model, '--max-turns', str(max_turns),
            '--strict-mcp-config', '--mcp-config', str(mcp_config(arm, out_path.parent)),
            '--allowedTools', ','.join(ALLOWED_TOOLS[arm]),
@@ -113,8 +109,8 @@ def wait_for_server(base_url, timeout=10):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-url', default='http://127.0.0.1:8934')
-    parser.add_argument('--arms', nargs='+', default=['facade', 'native'], choices=['facade', 'native'])
-    parser.add_argument('--tasks', nargs='+', default=['booking', 'orders'], choices=['booking', 'orders', 'canvas'])
+    parser.add_argument('--arms', nargs='+', default=['stack', 'native'], choices=ARMS)
+    parser.add_argument('--tasks', nargs='+', default=['booking', 'orders'], choices=list(TASKS))
     parser.add_argument('--model', default='claude-opus-5-5')
     parser.add_argument('--max-turns', type=int, default=80)
     parser.add_argument('--agent-timeout', type=int, default=600, help='seconds per run')
@@ -136,8 +132,8 @@ def main():
         for task in args.tasks:
             for run_index in range(args.runs):
                 run_id = f'{arm}-{task}-{run_index}-{int(time.time())}'
-                url = f'{args.base_url}/{task}?run={run_id}'
-                title = TITLES[task].format(run=run_id)
+                url = f'{args.base_url}{TASKS[task]["route"]}?run={run_id}'
+                title = TASKS[task]['title'].format(run=run_id)
                 transcript = out_dir / f'{run_id}.jsonl'
                 print(f'== {arm}/{task} run={run_id} ==')
                 window_id = open_page(url)
