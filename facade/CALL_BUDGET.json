@@ -1,0 +1,40 @@
+{
+  "purpose": "Ceiling on LLM-visible MCP tool calls for the DEFAULT path. Measured 2026-09: tools were 13% of agent wall time, the driving LLM's turns 87%; a clean booking took 9 mediated calls (native tools about 5). Any number below changes only with a CE id in changed_by, and that CE's call_budget must record the same number (test_budget.py checks both).",
+  "default_path_tools": {"value": ["cua_do"], "changed_by": "CE-FACADE-003"},
+  "max_tool_count": {"value": 9, "changed_by": "CE-FACADE-003"},
+  "max_response_bytes": {"value": 6144, "changed_by": "CE-FACADE-003"},
+  "scenarios": {
+    "booking_list": {
+      "description": "12 repeated Book records on a flat AX page, fields+predicates, expect text",
+      "max_llm_visible_calls": {"value": 1, "changed_by": "CE-FACADE-003"},
+      "max_reader_calls": {"value": 1, "changed_by": "CE-FACADE-003"},
+      "max_chooser_calls": {"value": 0, "changed_by": "CE-FACADE-003"},
+      "native_reference_calls": 5
+    },
+    "orders_confirm": {
+      "description": "orders table, cancel row, confirm dialog whose displayed identity must match",
+      "max_llm_visible_calls": {"value": 2, "changed_by": "CE-FACADE-003"},
+      "max_reader_calls": {"value": 2, "changed_by": "CE-FACADE-003"},
+      "max_chooser_calls": {"value": 1, "changed_by": "CE-FACADE-003"},
+      "native_reference_calls": 6
+    },
+    "canvas_regions": {
+      "description": "no AX controls; Perception text regions, one chooser call, capture-bound click",
+      "max_llm_visible_calls": {"value": 2, "changed_by": "CE-FACADE-003"},
+      "max_reader_calls": {"value": 0, "changed_by": "CE-FACADE-003"},
+      "max_chooser_calls": {"value": 1, "changed_by": "CE-FACADE-003"},
+      "native_reference_calls": 4
+    },
+    "large_page_400": {
+      "description": "80 records, 400+ elements: response must stay small",
+      "max_llm_visible_calls": {"value": 1, "changed_by": "CE-FACADE-003"},
+      "max_reader_calls": {"value": 1, "changed_by": "CE-FACADE-003"},
+      "max_chooser_calls": {"value": 0, "changed_by": "CE-FACADE-003"},
+      "native_reference_calls": 5
+    }
+  },
+  "live_task_budgets": {
+    "booking": {"max_llm_visible_calls": {"value": 3, "changed_by": "CE-FACADE-003"}},
+    "orders": {"max_llm_visible_calls": {"value": 4, "changed_by": "CE-FACADE-003"}}
+  }
+}

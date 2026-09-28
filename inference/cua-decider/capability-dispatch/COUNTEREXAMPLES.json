@@ -164,5 +164,38 @@
   "tempting_wrong_repair": "Regex-exclude Memory usage; drop names or values from the fingerprint; retry act automatically; bind the web area only so a navigation to a lookalike page passes.",
   "regression": "facade/test_core.py: test_act_ignores_browser_chrome_change_outside_web_area, test_act_refuses_content_change_inside_web_area, test_act_refuses_navigation_even_when_page_tree_is_identical",
   "adjacent_holes": "Native (non-browser) windows keep whole-window revalidation. Visual and regions selections keep their screenshot and capture checks. Other browser chrome (bookmarks, extensions) is not bound."
+ },
+ {
+  "id": "CE-FACADE-003",
+  "status": "proposed",
+  "authority": "Proposed; pending user approval. Motivated by 15 live runs (2026-09) and the sketch design that the dispatcher, not the driving LLM, runs the evidence chain (S4.1-S4.2, S4.6, S4.8; S4.2 section 7 for recovery).",
+  "classification": "architecture regression: LLM-mediated hops (facade projection of S4.1-S4.2), not a policy change",
+  "sketch_clause": "S4.1, S4.2 sections 1-7, S4.6, S4.8",
+  "input_and_actual": "Across 15 live runs the facade tools were 13% of agent wall time (138 s of 1,099 s); the other 87% was the driving LLM (about 2.9 s per turn, 374 turns). The facade exposed read, choose, act, verify and finish as separate MCP tools, so the LLM mediated every hop: a clean booking took 9 LLM-visible calls where native tools take about 5. Nothing in the repo noticed the drift.",
+  "corrected_behavior": "cua_do runs the chain server-side in one call (observe, read, same-record filter, chooser only if several remain, bind, act with S4.8 revalidation, independent verify) and recovers in bounded deterministic code: stale UI or shifted indices reobserve and re-run the whole pipeline with a NEW selection (at most 2 passes, never reusing a stale selection or its tokens, a different fresh pick is a real change and defers); a pre-click Driver/provider failure is retried once after a short backoff (never a click); an unknown field is re-read once; verification escalates AX, then Perception (never satisfying on digits), then the screenshot model; a confirm dialog is confirmed only after its displayed identity matches the selected record. It returns deferred/failed to the LLM only for (A) a click that may have been delivered but could not be verified, (B) ambiguity (several eligible records, an unknown competitor without accept_unknown, records_ambiguous) and (C) a real content change inside the bound scope that alters which record matches. A clean run is 1 LLM-visible call; specialists still do all reading, matching and choosing. The primitives remain as Advanced escape hatches with unchanged behavior. CALL_BUDGET.json, scripts/check_call_budget.py, a skill lint and the live scorer keep it that way.",
+  "tempting_wrong_repair": "A lean path that drops specialist offloading (the LLM reads and picks itself); speeding up the specialists (they are 13% of the time); merging tools without a budget so the count creeps back; making cua_do call the chooser for grounded singletons or read twice; letting recovery rebind the consumed selection or loop until stable; retrying a click or anything after a click may have been delivered; treating delivery or an unknown verification as success; dumping the full observation into the response.",
+  "regression": "facade/test_do.py (booking one read/zero chooser/one click, two-eligible one chooser call, unknown competitor defers, incomplete-scope gate, discovery ambiguity, window resolution, answer-leak before any call, recovery rows 1-6 and cases A/B/C, click never retried, pass cap, budget, verification escalation, confirm dialog identity, response size, regions); facade/check_protocol.py (cua_do first, one end-to-end call); facade/test_budget.py and facade/call_budget.py (CALL_BUDGET.json provenance, real server tools through a counting harness, tool-surface and Advanced-docstring invariants, skill default-workflow lint, and mutation checks that the guards fail on the wrong patches); scripts/check_call_budget.py; experiments/facade-vs-native/test_score.py (llm_visible_calls counter and --fail-over-budget); .github/workflows/offline-gates.yml.",
+  "adjacent_holes": "Live A/B against the native arm is pending; the budgets are fake-fixture ceilings, not measured live accuracy. Regions mode inside cua_do relies on Perception being healthy and on quoted-label corroboration. A dialog after a non-record click cannot be identity-checked and defers. Post-click verification observes again (one extra Driver observation) rather than reusing the act revalidation snapshot. The sketch text is unchanged; proposed wording for S4.2 section 7 (the recovery table) is in the branch report.",
+  "call_budget": {
+   "default_path_tools": [
+    "cua_do"
+   ],
+   "max_tool_count": 9,
+   "max_response_bytes": 6144,
+   "scenarios.booking_list.max_llm_visible_calls": 1,
+   "scenarios.booking_list.max_reader_calls": 1,
+   "scenarios.booking_list.max_chooser_calls": 0,
+   "scenarios.orders_confirm.max_llm_visible_calls": 2,
+   "scenarios.orders_confirm.max_reader_calls": 2,
+   "scenarios.orders_confirm.max_chooser_calls": 1,
+   "scenarios.canvas_regions.max_llm_visible_calls": 2,
+   "scenarios.canvas_regions.max_reader_calls": 0,
+   "scenarios.canvas_regions.max_chooser_calls": 1,
+   "scenarios.large_page_400.max_llm_visible_calls": 1,
+   "scenarios.large_page_400.max_reader_calls": 1,
+   "scenarios.large_page_400.max_chooser_calls": 0,
+   "live_task_budgets.booking.max_llm_visible_calls": 3,
+   "live_task_budgets.orders.max_llm_visible_calls": 4
+  }
  }
 ]

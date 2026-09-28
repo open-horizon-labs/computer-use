@@ -9,9 +9,13 @@ Use the stock computer-use skill and driver for fresh observations and execution
 
 Read [setup](references/setup.md) first to locate or install the runtime and configure providers. Read [the bundled sketch](references/sketch.md) for request semantics and policy. These references travel with `npx skills` installs; do not assume the runtime repository is next to the installed skill. The runtime checkout’s sketch is authoritative when available.
 
-## Use the installed task tools first
+## Default workflow
 
-Prefer the registered **`cua-task` MCP tools** for supported Mac work. Start with `cua_windows(title=...)` when the window title is known, then `cua_observe`; use `cua_read` for requested fields from nonoverlapping observed record roots, `cua_choose` for contextual or genuinely exact selection, `cua_act` for its opaque selection handle, and `cua_verify` for a fresh postcondition check. End with `cua_finish` to release task workers; `cua_trace` exposes actual routes, bypass reasons, `caller_preselected` flags and the detected `driver_version`.
+Call `cua_do` once. Give the exact window title and the goal in words; for a list, add the fields and predicates you care about, and `expect` (text that should appear afterward). The dispatcher observes, reads, matches, chooses, acts, verifies and recovers server-side, with the specialist models doing the reading and choosing, and returns one result. `status: done` means verified. `deferred` means guessing would be worse (ambiguous or unknown records, a real content change, or a click that was delivered but could not be verified): read `reason` and `evidence`, then repeat with a refinement or `accept_unknown`, never a blind second click. The other `cua_*` tools below are advanced escape hatches. A clean run is one LLM-visible call; do not spend turns re-creating the chain by hand.
+
+## Advanced primitives (escape hatches)
+
+Use the registered **`cua-task` MCP primitives** only when `cua_do` defers and you need finer control, or for an operation it does not cover. Start with `cua_windows(title=...)` when the window title is known, then `cua_observe`; use `cua_read` for requested fields from nonoverlapping observed record roots, `cua_choose` for contextual or genuinely exact selection, `cua_act` for its opaque selection handle, and `cua_verify` for a fresh postcondition check. End with `cua_finish` to release task workers; `cua_trace` exposes actual routes, bypass reasons, `caller_preselected` flags and the detected `driver_version`.
 
 **Minimum cua-driver: 0.29.1.** Older builds refuse `background_input` routes with `off_space_or_ax_unresolved` on another macOS Space; the facade detects the version once and refuses to start tools below it. It never activates, raises or moves a window to work around a stale/off-Space observation — `cua_act` refuses with `needs_foreground` instead; bring the window forward yourself or upgrade.
 
