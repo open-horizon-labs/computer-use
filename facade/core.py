@@ -28,12 +28,22 @@ class Gap(ValueError):
     """An observation/authority gap; must not authorize execution."""
 
 
+class DriverCallFailed(Gap):
+    """A Cua Driver call failed at the process boundary (exit, timeout, unusable
+    output). Typed, so callers never match on message text. Carries no stderr."""
+
+
+
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
 MIN_DRIVER_VERSION = (0, 29, 1)  # off_space_or_ax_unresolved fixed upstream; trycua/cua#4068
 PERCEPTION_CAPTURE_TTL_S = 60  # cua-perception capture registry expiry (upstream perception-extension.md)
+
+
+MUTATING_TOOLS = frozenset({'click', 'double_click', 'right_click', 'type_text', 'drag', 'scroll', 'hotkey', 'press_key',
+                              'invoke_menu', 'set_window_frame'})
 
 
 class Driver:
@@ -45,7 +55,12 @@ class Driver:
     def version(self):
         # Cache: one subprocess per process lifetime, not per tool call.
         if self._version is None:
-            result = subprocess.run([self.executable, '--help'], capture_output=True, text=True, timeout=10)
+            try:
+                result = subprocess.run([self.executable, '--help'], capture_output=True, text=True, timeout=10)
+            except subprocess.TimeoutExpired:
+                raise DriverCallFailed('driver_call_failed: version probe timed out')
+            except OSError:
+                raise DriverCallFailed('driver_call_failed: cua-driver could not be started (check CUA_DRIVER)')
             match = re.search(r'cua-driver\s+(\d+)\.(\d+)\.(\d+)', result.stdout + result.stderr)
             self._version = tuple(int(part) for part in match.groups()) if match else False
         return self._version or None
@@ -63,28 +78,39 @@ class Driver:
         return self._perception
 
     def call(self, tool, args, timeout=20):
+        # After a mutating call the action may already have been delivered.
+        note = ('; the action may have been delivered, so verify before retrying' if tool in MUTATING_TOOLS else '')
         try:
             result = subprocess.run([self.executable, 'call', tool, '--json', json.dumps(args)],
                                     capture_output=True, text=True, timeout=timeout, check=True)
             value = json.loads(result.stdout)
         except subprocess.CalledProcessError as error:
-            raise Gap('driver_call_failed: %s exited %s' % (tool, error.returncode))
+            raise DriverCallFailed('driver_call_failed: %s exited %s%s' % (tool, error.returncode, note))
         except subprocess.TimeoutExpired:
-            raise Gap('driver_call_failed: %s timed out after %ss' % (tool, timeout))
+            raise DriverCallFailed('driver_call_failed: %s timed out after %ss%s' % (tool, timeout, note))
         except (OSError, ValueError):
-            raise Gap('driver_call_failed: %s returned no usable result' % tool)
+            raise DriverCallFailed('driver_call_failed: %s returned no usable result%s' % (tool, note))
+        if not isinstance(value, dict):
+            raise DriverCallFailed('driver_call_failed: %s returned a non-object result%s' % (tool, note))
         if value.get('refusal') or value.get('status') == 'refused':
             raise Gap('Driver refused: ' + str(value.get('refusal', {}).get('code', 'unknown')))
         return value
 
     def observe(self, pid, window_id, session):
         # resolve() avoids Driver rejecting /tmp's symlink as a nondirectory.
-        with tempfile.TemporaryDirectory(prefix='cua-facade-') as directory:
+        try:
+            directory_context = tempfile.TemporaryDirectory(prefix='cua-facade-')
+        except OSError:
+            raise DriverCallFailed('driver_call_failed: no temporary directory for the screenshot')
+        with directory_context as directory:
             path = Path(directory).resolve()/'window.png'
             result = self.call('get_window_state', {'pid': pid, 'window_id': window_id,
                 'session': session, 'max_elements': 15000, 'max_dimension': 1280,
                 'screenshot_out_file': str(path)})
-            result['_image'] = path.read_bytes() if path.exists() else b''
+            try:
+                result['_image'] = path.read_bytes() if path.exists() else b''
+            except OSError:
+                raise DriverCallFailed('driver_call_failed: get_window_state screenshot was unreadable')
         return result
 
 
@@ -282,15 +308,14 @@ class Facade:
         args = {'capture_id': capture_id, **({'options': options} if options else {})}
         try:
             result = self.driver.call('parse_visual_regions', args)
-        except Gap as gap:
-            if str(gap).startswith('Driver refused'):raise
-            message = 'perception_parse_failed: ' + str(gap)
+        except DriverCallFailed as gap:
+            message = 'perception_parse_failed: %s (cached for this capture; reobserve to retry)' % gap
             state['regions_failure'] = (capture_id, message)
             raise Gap(message)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError, ValueError) as error:
             # A Driver/extension failure is an unavailable capability, never a
             # crash of the caller. Fixed text only: stderr can carry paths and ids.
-            message = 'perception_parse_failed: parse_visual_regions failed (%s)' % type(error).__name__
+            message = 'perception_parse_failed: parse_visual_regions failed (%s; cached for this capture; reobserve to retry)' % type(error).__name__
             state['regions_failure'] = (capture_id, message)
             raise Gap(message)
         state['regions'] = result
@@ -878,9 +903,8 @@ class Facade:
         item['used']=True  # Never replay an uncertain side effect.
         try:
             fresh=self.observe(state['pid'],state['window_id'])
-        except Gap as gap:
-            if str(gap).startswith('driver_call_failed'):
-                item['used']=False  # nothing was clicked: transient Driver failure, not an uncertain side effect
+        except DriverCallFailed:
+            item['used']=False  # nothing was clicked: transient Driver failure, not an uncertain side effect
             raise
         current=self.state(fresh['snapshot'])
         self.check_foreground(current['raw'])
