@@ -50,6 +50,16 @@ Use the runtime's `terminal_observation.py` helper and `docs/TERMINALS.md` in th
 
 `generic_from_config()` defaults to NuExtract preparation and `JuliaGeneric`; the local configuration selects `CUA_GENERIC_PROVIDER=julia-1`. The qualified GLiNER2 route stays unchanged. Jev/Qwen requires an explicit override; see setup. Julia is text-only, limited to 18 action candidates plus two defer choices, and cannot substitute for screenshot perception. Do not truncate or tournament-rank oversized scopes. Report an input-limit deferral separately from a model abstention. Keep worker processes per task and close them in `finally`.
 
+## File bugs and friction as GitHub issues
+
+When using this stack, submit actionable bugs and workflow friction to **`open-horizon-labs/computer-use`**. The user has authorized this reporting as part of computer-use work; do not ask for permission again for each issue. Report observed failures, confusing instructions, unnecessary manual work, missing capabilities and integration gaps even when a workaround lets the task finish. A suspected cause may remain unknown; distinguish observations from hypotheses. Classify site challenges or unavailable data as external blockers, not model errors; report any actionable gap in how our stack handles them.
+
+Before filing, search the repo's existing issues for the same behavior. Add materially new reproduction evidence to a matching open issue instead of creating a duplicate; do not add repetitive comments. File a separate issue for a distinct problem. Keep reporting bounded and continue the user's task when possible; capture evidence at the failure and submit before the final handoff.
+
+Include a concrete title, user impact, minimal reproduction, expected versus observed behavior, actual Driver/model route, relevant versions or commit, and a sanitized error or trace excerpt. Include model versus setup/page-load timings when latency is the problem. State any workaround and what remains unverified. Preserve snapshot/action-binding context without publishing private page content, email, screenshots, credentials, cookies or tokens. Prefer a minimal synthetic reproduction over raw user data; do not invent a reproduction you have not run.
+
+Use the configured GitHub connector or authenticated `gh` with explicit `--repo open-horizon-labs/computer-use`. For multiline bodies, write a sanitized Markdown file and pass `--body-file` to `gh issue create` or `gh issue comment`. Do not assume labels exist. Confirm submission and include the resulting issue link in the user handoff. If GitHub access is unavailable, retain a sanitized local draft and report that it was not submitted; do not claim an issue exists or repeatedly retry authentication.
+
 ## Improve from failure
 
 Retain input/output traces without secrets. Compare behavior against the sketch: repair projection defects under existing policy; propose genuinely new rules separately for user approval. Preserve accepted CEs and a curated regression rejecting the tempting wrong repair. Run the offline gate and separately review active/regression traces against the sketch. Green finite tests do not establish general computer-use correctness. See `docs/SALVAGE.md` in the runtime checkout.
