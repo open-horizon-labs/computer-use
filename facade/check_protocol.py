@@ -11,6 +11,9 @@ async def main():
  async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',code],cwd=str(ROOT))) as (r,w):
   async with ClientSession(r,w) as s:
    await s.initialize();ts=(await s.list_tools()).tools
+   assert ts[0].name=='cua_do' and ts[0].description.startswith('Default path.'),[t.name for t in ts]
+   assert all(t.description.startswith('Advanced') for t in ts[1:]),[t.name for t in ts if not t.description.startswith('Advanced')]
+   assert {'goal','title','pid','window_id','records','operation','text','expect','accept_unknown','budget_s'}<=set(ts[0].inputSchema['properties'])
    assert 'title' in next(t for t in ts if t.name=='cua_windows').inputSchema['properties']
    x=await s.call_tool('cua_windows',{'title':'Other'});assert '"windows": []' in x.content[0].text
    o=await s.call_tool('cua_observe',{'pid':1,'window_id':2});sid=o.structuredContent['snapshot']
@@ -29,7 +32,11 @@ async def main():
    o2=await s.call_tool('cua_observe',{'pid':1,'window_id':2});sid2=o2.structuredContent['snapshot']
    gap=await s.call_tool('cua_choose',{'snapshot':sid2,'goal':'Pick a region','mode':'regions'})
    assert gap.isError and 'perception' in gap.content[0].text
+   spec={'fields':{'condition':{'description':'Condition'}},'predicates':[{'field':'condition','value':'Used'}],'record_ids':['e1','e4'],'coverage_complete':True}
+   done=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':spec,'expect':'Inspect first'});out=json.loads(done.content[0].text)
+   assert not done.isError and out['status']=='done' and out['selected']['id']=='e3' and out['verification']['status']=='satisfied' and out['trace_summary']['llm_visible_calls']==1,done.content[0].text
+   leak=await s.call_tool('cua_do',{'goal':'Inspect e3','title':'Demo'});assert json.loads(leak.content[0].text)['status']=='refused'
    fin=json.loads((await s.call_tool('cua_finish',{})).content[0].text)
    assert 'perception_version' in fin and 'perception_state' in fin
-   print('Protocol checks passed: title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
+   print('Protocol checks passed: cua_do first with the default-path schema and one end-to-end call, title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
 asyncio.run(main())
