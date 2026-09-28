@@ -33,11 +33,48 @@ def by_record(text, label=None):
     return pick
 
 
+CHROME_NAMES = {'Back', 'Reload', 'Home', 'View site information', 'Bookmark this tab', 'Extensions', 'Chrome'}
+
+
+def chrome_nodes(base):
+    """Synthetic browser chrome around the page, like the real tree: 30 menus holding 260 menu items, 11 menu bar items, 8 pop-up
+    buttons and a toolbar (all outside the web area, all press-capable and enabled)."""
+    out, i = [], base
+    # the real toolbar buttons sit at LOW indices (e1..e13), before the page; menus come after it
+    for k, name in enumerate(sorted(CHROME_NAMES) + ['View site information', 'Bookmark this tab', 'Extensions', 'Chrome'], start=1):
+        out.append({'element_index': k, 'parent_index': 0, 'role': 'AXButton', 'enabled': True, 'actions': ['AXPress'], 'label': name})
+    def add(role, parent, label=None):
+        nonlocal i
+        out.append({'element_index': i, 'parent_index': parent, 'role': role, 'enabled': True, 'actions': ['AXPress'], **({'label': label} if label else {})});i += 1;return i - 1
+    bar = add('AXMenuBar', 0)
+    for k in range(11):add('AXMenuBarItem', bar, 'Bar item %d' % k)
+    n = 0
+    for m in range(30):
+        menu = add('AXMenu', 0, 'Menu %d' % m)
+        for _ in range(9 if m < 20 else 8):add('AXMenuItem', menu, 'Menu item %d' % n);n += 1
+    for k in range(8):add('AXPopUpButton', 0, 'Popup %d' % k)
+    return out
+
+
+def dup_page():
+    """ax_dup shape: two identical Save buttons, one in a header, one inside a form group with fields (Chrome-flat, AXPress everywhere)."""
+    rows = [(0, None, 'AXWindow', None, None), (15, 0, 'AXWebArea', 'Account', None), (16, 15, 'AXGroup', None, None),
+            (17, 16, 'AXStaticText', 'Account settings', 'Account settings'), (18, 16, 'AXButton', 'Save', None),
+            (19, 15, 'AXGroup', 'Shipping address', None), (20, 19, 'AXStaticText', 'Shipping address', 'Shipping address'),
+            (21, 19, 'AXTextField', 'Street', '1 Main St'), (22, 19, 'AXTextField', 'City', 'Springfield'), (23, 19, 'AXButton', 'Save', None),
+            (24, 0, 'AXTextField', None, '127.0.0.1:8934/account?run=fixture')]
+    return [{'element_index': i, **({'parent_index': p} if p is not None else {}), 'role': r, 'enabled': True,
+             **({'label': l} if l else {}), **({'value': v} if v else {}),
+             **({'actions': ['AXPress']} if r in ('AXButton', 'AXStaticText', 'AXGroup') else {})} for i, p, r, l, v in rows]
+
+
 class FixtureDriver(FakeDriver):
     """Serves a REAL sanitized Chrome AX capture (format {elements:[{element_index,parent_index,role,...}]})."""
-    def __init__(self, name):
+    def __init__(self, name, elements=None, chrome=False, extra_web=0):
         super().__init__()
-        self.fixture = json.loads((FIX / name).read_text())
+        self.fixture = json.loads((FIX / name).read_text()) if name else {'window_title': 'Demo page', 'elements': elements}
+        if elements is not None:self.fixture['elements'] = elements
+        self.chrome, self.extra_web = chrome, extra_web
         self.on_tool = None;self.dialog = None;self.done_text = None;self.navigate = False;self.last = max(e['element_index'] for e in self.fixture['elements'])
     def call(self, tool, args, timeout=20):
         if self.on_tool:self.on_tool(tool)
@@ -49,6 +86,11 @@ class FixtureDriver(FakeDriver):
         for e in copy.deepcopy(self.fixture['elements']):
             if e.get('parent_index') is None:e.pop('parent_index', None)
             nodes.append(e)
+        if self.chrome:nodes += chrome_nodes(max(e['element_index'] for e in nodes) + 100)
+        if self.extra_web:
+            top = max(e['element_index'] for e in nodes) + 1
+            nodes.append({'element_index': top, 'parent_index': 0 if self.extra_web == 1 else next(n['element_index'] for n in nodes if n['role'] == 'AXWebArea'),
+                          'role': 'AXWebArea', 'enabled': True, 'label': 'extra'})
         clicks = len(self.executed)
         web = next(n['element_index'] for n in nodes if n['role'] == 'AXWebArea')
         nxt = [self.last + 1]
@@ -126,6 +168,96 @@ class RealShapes(Base):
         self.make(d)
         r = self.run_agent(ScriptPolicy(by_record('Starts 2:00 PM')), 'Book the slot that starts at 2:00 PM', 'Booked')
         self.assertEqual((r['status'], r['reason']), ('escalated', 'navigation'));self.assertEqual(len(d.executed), 1)
+
+
+class ChromeHeavy(Base):
+    """The real tree is ~390 nodes, mostly browser chrome. Candidates come from the page only, through the same helpers cua_do uses."""
+    def labels(self, policy):return [c['label'] for c in policy.contexts[0]['candidates']]
+
+    def test_booking_in_a_chrome_heavy_tree_offers_only_the_page_books_and_picks_one(self):
+        # Wrong patch: define candidates as every press-capable control in the window (the live 'Back'-only failure).
+        d = FixtureDriver('live_booking_ax.json', chrome=True);d.done_text = 'Booked Morgan Lee, NP';self.make(d)
+        policy = ScriptPolicy(by_record('Starts 2:00 PM'))
+        r = self.run_agent(policy, 'Book the Follow-up slot that starts at 2:00 PM', 'Booked Morgan Lee')
+        self.assertEqual(r['status'], 'done', r);self.assertEqual(self.labels(policy), ['Book'] * 12)
+        self.assertEqual(len(d.executed), 1);self.assertFalse(set(self.labels(policy)) & CHROME_NAMES)
+
+    def test_ax_dup_picks_the_forms_save_when_the_goal_says_the_shipping_form(self):
+        # Wrong patch: offer only chrome, or pick the first Save.
+        d = FixtureDriver(None, elements=dup_page(), chrome=True);d.done_text = 'Address saved';self.make(d)
+        policy = ScriptPolicy(by_record('Shipping address', 'Save'))
+        r = self.run_agent(policy, 'Save the shipping address form', 'Address saved')
+        self.assertEqual(r['status'], 'done', r);self.assertEqual(self.labels(policy), ['Save', 'Save'])
+        self.assertEqual(len(d.executed), 1);self.assertEqual(r['steps'][0]['action']['id'], 'e23')
+        offered = policy.contexts[0]['candidates'];self.assertIn('Shipping address', offered[1]['record']);self.assertNotIn('Shipping address', offered[0]['record'])
+        self.assertEqual(policy.contexts[0]['goal'], 'Save the shipping address form')
+
+    def test_orders_multistep_with_confirm_in_a_chrome_heavy_tree(self):
+        # Wrong patch: the chrome menu items or the toolbar leak into the dialog or candidate scope.
+        d = FixtureDriver('live_orders_ax.json', chrome=True);d.done_text = 'Order #1042 cancelled'
+        d.dialog = [('AXStaticText', {'value': 'Cancel order #1042?'}), ('AXButton', {'label': 'Yes, cancel it', 'actions': ['AXPress']})]
+        self.make(d)
+        policy = ScriptPolicy(by_record('#1042', 'Cancel'))
+        r = self.run_agent(policy, 'Cancel order #1042', 'cancelled', confirm='Yes, cancel it')
+        self.assertEqual(r['status'], 'done', r);self.assertEqual(len(d.executed), 2)
+        self.assertFalse(set(self.labels(policy)) & CHROME_NAMES);self.assertTrue(all(l.startswith('Menu') is False for l in self.labels(policy)))
+
+    def test_more_than_18_page_controls_escalates_with_the_page_count_not_the_window_count(self):
+        # Wrong patch: count or truncate the window's controls, or offer >18 to the model.
+        rows = [(15, 0, 'AXWebArea')] + [(16 + k, 15, 'AXButton') for k in range(20)]
+        els = [{'element_index': 0, 'role': 'AXWindow', 'enabled': True}] + [{'element_index': i, 'parent_index': p, 'role': r, 'enabled': True, 'label': 'Book' if r == 'AXButton' else 'Page', 'actions': ['AXPress']} for i, p, r in rows]
+        self.make(FixtureDriver(None, elements=els, chrome=True));policy = ScriptPolicy(lambda ctx: ctx['candidates'][0]['id'])
+        r = self.run_agent(policy, 'Book a slot', 'Booked')
+        self.assertEqual((r['status'], r['reason'], r['evidence']['candidate_count']), ('escalated', 'too_many_candidates', 20));self.assertEqual(policy.contexts, [])
+
+    def test_chrome_only_window_says_no_page_candidates_with_counts(self):
+        # Wrong patch: offer the toolbar's 'Back' to the model and report 'no safe choice among 1 candidates'.
+        els = [{'element_index': 0, 'role': 'AXWindow', 'enabled': True}, {'element_index': 15, 'parent_index': 0, 'role': 'AXWebArea', 'enabled': True, 'label': 'Empty'}]
+        d = FixtureDriver(None, elements=els, chrome=True);self.make(d);policy = ScriptPolicy(lambda ctx: self.fail('no model call without page candidates'))
+        r = self.run_agent(policy, 'Save the form', 'Saved')
+        self.assertEqual((r['status'], r['reason']), ('escalated', 'no_page_candidates'))
+        self.assertEqual((r['evidence']['page_controls'], r['evidence']['non_page_controls']), (0, r['evidence']['non_page_controls']))
+        self.assertGreater(r['evidence']['non_page_controls'], 250);self.assertEqual(d.executed, [])
+
+    def test_several_top_level_web_areas_escalate_but_an_iframe_belongs_to_its_page(self):
+        # Wrong patch: silently pick the first web area; or treat an iframe's web area as a second page.
+        d = FixtureDriver(None, elements=dup_page(), chrome=True, extra_web=1);self.make(d);policy = ScriptPolicy(by_record('Shipping', 'Save'))
+        r = self.run_agent(policy, 'Save the shipping address form', 'Address saved')
+        self.assertEqual((r['status'], r['reason']), ('escalated', 'web_area_ambiguous'));self.assertEqual((d.executed, policy.contexts), ([], []))
+        d = FixtureDriver(None, elements=dup_page(), chrome=True, extra_web=2);d.done_text = 'Address saved';self.make(d)
+        self.assertEqual(self.run_agent(ScriptPolicy(by_record('Shipping', 'Save')), 'Save the shipping address form', 'Address saved')['status'], 'done')
+
+    def test_a_singleton_needs_the_policy_unless_the_goal_quotes_its_exact_label(self):
+        # Wrong patch: treat one candidate as an abstention, or as authorized without the model.
+        els = [{'element_index': 0, 'role': 'AXWindow', 'enabled': True}, {'element_index': 15, 'parent_index': 0, 'role': 'AXWebArea', 'enabled': True},
+               {'element_index': 16, 'parent_index': 15, 'role': 'AXStaticText', 'enabled': True, 'label': 'Ship it', 'value': 'Ship it'},
+               {'element_index': 17, 'parent_index': 15, 'role': 'AXButton', 'enabled': True, 'label': 'Submit order', 'actions': ['AXPress']}]
+        d = FixtureDriver(None, elements=els, chrome=True);d.done_text = 'Order placed';self.make(d)
+        policy = ScriptPolicy(lambda ctx: ctx['candidates'][0]['id'])
+        self.assertEqual(self.run_agent(policy, 'Submit the order', 'Order placed')['status'], 'done')
+        self.assertEqual((len(policy.contexts), len(policy.contexts[0]['candidates'])), (1, 1))  # policy decided the singleton
+        d = FixtureDriver(None, elements=els, chrome=True);d.done_text = 'Order placed';self.make(d)
+        never = ScriptPolicy(lambda ctx: self.fail('exact quoted label needs no model'))
+        r = self.run_agent(never, 'Press "Submit order"', 'Order placed')
+        self.assertEqual((r['status'], r['steps'][0]['model'], r['cost']['model_calls']), ('done', 'exact', 0))
+        d = FixtureDriver(None, elements=els, chrome=True);self.make(d)
+        r = self.run_agent(ScriptPolicy(lambda ctx: 'abstain'), 'Submit the order', 'Order placed')
+        self.assertEqual((r['reason'], d.executed), ('policy_abstained', []))
+
+    def test_candidate_record_context_is_bounded(self):
+        # Wrong patch: dump a whole page section into the model's context.
+        els = dup_page();els[3]['value'] = els[3]['label'] = 'Long text ' * 100
+        self.make(FixtureDriver(None, elements=els, chrome=True));policy = ScriptPolicy(lambda ctx: 'abstain')
+        self.run_agent(policy, 'Save the account settings', 'Saved')
+        self.assertTrue(all(len(c['record']) <= 240 and len(c['description']) <= 300 for c in policy.contexts[0]['candidates']))
+
+    def test_a_dialog_static_text_with_the_confirm_label_is_not_a_control(self):
+        # Wrong patch: any press-capable node in the dialog counts as its button.
+        d = FixtureDriver('live_orders_ax.json', chrome=True);d.done_text = 'Order #1042 cancelled'
+        d.dialog = [('AXStaticText', {'value': 'Cancel order #1042?'}), ('AXStaticText', {'label': 'Yes, cancel it', 'value': 'Yes, cancel it', 'actions': ['AXPress']})]
+        self.make(d)
+        r = self.run_agent(ScriptPolicy(by_record('#1042', 'Cancel')), 'Cancel order #1042', 'cancelled', confirm='Yes, cancel it')
+        self.assertEqual((r['status'], r['reason']), ('escalated', 'confirm_control_not_found'));self.assertEqual(len(d.executed), 1)
 
 
 class Dialogs(Base):

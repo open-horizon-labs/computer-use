@@ -22,8 +22,8 @@ Each iteration, at most `max_steps` clicks and `budget_s` of non-click time (har
 
 1. Observe the window (`Facade.observe`).
 2. Check `expect` against the fresh tree. Satisfied: `done`. Present before any action: escalate (unproven).
-3. Candidates: enabled controls with AXPress in button-like roles, each with its record context (`record_context`, which falls back to `sibling_record` style grouping for flat trees). Lexical prefilter: keep controls sharing a goal word with the label or record text; if more than 18 remain, keep only the top tier by matched goal words; if still more than 18, escalate `too_many_candidates` with the count. Nothing is ever truncated.
-4. Exact path: a quoted goal label equal to exactly one candidate label resolves through `Facade.choose(mode='exact')`, no model.
+3. Candidates: scoped to the page, by the same helpers `cua_do` uses (`_content_ids`, `_column_copies`, `_is_control`, `CONTROL_ROLES`, `record_context`, and `discover_records` for records `record_context` cannot find). That means enabled press-capable button, link, menu item, radio and checkbox controls inside the single top-level web area (an iframe's web area belongs to its page); the browser menu bar, toolbar, tab strip and AXColumn copies of table cells are never candidates. Several top-level web areas escalate `web_area_ambiguous`. No page control at all escalates `no_page_candidates` with the page and non-page control counts. Lexical prefilter: keep controls sharing a goal word with the label or record text; if more than 18 remain, keep only the top tier by matched goal words; if still more than 18, escalate `too_many_candidates` with the count. Nothing is ever truncated. The model sees each candidate's record text (bounded to 240 characters) and the goal.
+4. Exact path: a quoted goal label equal to exactly one candidate label resolves through `Facade.choose(mode='exact')`, no model. A singleton candidate whose label the goal does not quote still goes to the policy and needs its authorization.
 5. Policy: `Policy.choose(ctx) -> {choice, confidence, model}` picks a candidate id, `done` or `abstain`. The real adapter (`ChooserPolicy`) calls the generic chooser through `Facade.provider('generic')`; tests use a fake. A pick outside the offered set is an escalation.
 6. Act: `Facade.agent_bind` builds a single-use selection bound to the content scope, `Facade.act` revalidates and clicks. A stale refusal re-observes and re-plans once per step with a NEW selection; a second stale escalates.
 7. Progress: the bound scope digest before and after is recorded as `scope_changed`; two consecutive unchanged steps escalate `no_progress`.
@@ -39,7 +39,9 @@ Each iteration, at most `max_steps` clicks and `budget_s` of non-click time (har
 |---|---|
 | expect_present_before_action | expect text already on the page |
 | dialog_already_open | a dialog existed before the first step |
-| no_candidate | no enabled control, or none matching goal words (try `cua_choose mode=regions`) |
+| no_page_candidates | no enabled control in the page content (counts of page and non-page controls; try `cua_choose mode=regions`) |
+| no_candidate | page controls exist but none share a word with the goal |
+| web_area_ambiguous | several top-level web areas in the window |
 | too_many_candidates | more than 18 after the prefilter; carries the count |
 | policy_abstained / low_confidence / policy_invalid_choice / done_unverified | the model abstains, confidence below 0.5, names a control not offered, or claims done without expect |
 | policy_unavailable | policy transport failed twice (one bounded retry) |

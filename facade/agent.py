@@ -11,10 +11,9 @@ import re
 from core import Gap, StaleUI, DriverCallFailed
 
 MIN_CONFIDENCE = 0.5
+RECORD_CHARS = 240
 CANDIDATE_LIMIT = 18  # the generic chooser's capacity (sketch S4.5): never truncate or rank an oversized scope
 MAX_STEPS_CAP = 12
-CONTROL_ROLES = frozenset({'AXButton', 'AXLink', 'AXMenuItem', 'AXMenuButton', 'AXPopUpButton', 'AXCheckBox',
-                           'AXRadioButton', 'AXDisclosureTriangle', 'AXTab'})
 DESTRUCTIVE = {'delete': r'\bdelet', 'remove': r'\bremov', 'erase': r'\beras', 'discard': r'\bdiscard',
                'reset': r'\breset', 'sign out': r'\bsign[\s-]*out'}
 NAVIGATION_GOAL = re.compile(r'\b(navigate|go to|open|visit|browse)\b', re.I)
@@ -215,27 +214,60 @@ def driver_failure(facade, step, ctx, finish):
                   retryable=not delivered and ctx['clicks'] == 0)
 
 
-def candidates_for(facade, state):
-    out = []
+def page_controls(facade, state):
+    """(page control indices, non-page actionable control count), by the SAME definition cua_do uses: enabled press-capable
+    CONTROL_ROLES inside the single top-level web area (else the whole tree when there is none), minus alias and AXColumn copies.
+    Browser menu bar, toolbar and tab strip are outside the web area and never candidates."""
+    content = facade._content_ids(state) - facade._column_copies(state)
+    page, other = [], 0
     for i, n in sorted(state['nodes'].items()):
-        if i in state['aliases'] or n.get('role') not in CONTROL_ROLES or 'AXPress' not in n.get('actions', []) or n.get('enabled') is False:
-            continue
-        record = facade.record_context(state, i)
-        out.append({'id': 'e'+str(i), 'label': n.get('label') or n.get('value') or n.get('role'), 'record_text': record})
-    return out
+        if i in state['aliases'] or not facade._is_control(n) or not facade._operation_compatible(n, 'click'):continue
+        if i in content:page.append(i)
+        else:other += 1
+    return page, other
+
+
+def record_text_for(facade, state, i, fallback):
+    """The control's record text: cua_do's record_context; when that finds nothing, the structural unit / single record that
+    Facade.discover_records finds for this control's label."""
+    text = facade.record_context(state, i)
+    if text:return text
+    label = state['nodes'][i].get('label')
+    if label:
+        try:roots, targets, _, why, _ = facade.discover_records(state, 'click', label)
+        except Gap:roots = None
+        for root, target in (targets or {}).items():
+            if target == 'e'+str(i):
+                own = {label, state['nodes'][i].get('value') or ''}
+                return '\n'.join(line for line in facade.subtree(state, root)[0].split('\n') if line and line not in own)
+    return ''
+
+
+def candidates_for(facade, state):
+    """([candidate], non_page_count) for the page. record_text is complete (identity matching); the model context bounds it."""
+    page, other = page_controls(facade, state)
+    out = []
+    for i in page:
+        n = state['nodes'][i]
+        out.append({'id': 'e'+str(i), 'label': n.get('label') or n.get('value') or n.get('role'), 'record_text': record_text_for(facade, state, i, '')})
+    return out, other
 
 
 def plan_step(facade, state, goal, policy, steps, cost, sleep, over, hard, min_confidence, escalate):
     """Return {'escalated': result} or a bound step {selection, action, model, confidence, ms, record, fingerprint, snapshot}."""
     clock = facade.clock
     snapshot = next(h for h, s in facade.snapshots.items() if s is state)
-    cands = candidates_for(facade, state)
+    if len(facade._top_web_areas(state)) > 1:
+        return {'escalated': escalate('web_area_ambiguous', 'The window holds several separate page areas; close the extra one or give the title of the window holding only the page.', web_areas=len(facade._top_web_areas(state)))}
+    cands, non_page = candidates_for(facade, state)
+    every = list(cands)  # identity uniqueness is judged against every page record, not the prefiltered few
     if not cands:
-        return {'escalated': escalate('no_candidate', 'No enabled actionable control was observed; try cua_choose mode=regions for pixel-only targets.')}
+        return {'escalated': escalate('no_page_candidates', 'No enabled actionable control was found in the page content (%d outside it, e.g. browser chrome, were ignored); try cua_choose mode=regions for pixel-only targets.' % non_page,
+                                      page_controls=0, non_page_controls=non_page)}
     wanted = tokens(goal)
     scored = [c for c in cands if wanted & tokens(c['label'] + ' ' + c['record_text'])]
     if not scored:
-        return {'escalated': escalate('no_candidate', 'No enabled control matches the goal words; try cua_choose mode=regions or refine the goal.', observed_controls=len(cands))}
+        return {'escalated': escalate('no_candidate', 'No enabled control matches the goal words; try cua_choose mode=regions or refine the goal.', page_controls=len(cands), non_page_controls=non_page)}
     cands, tier = scored, None
     if len(cands) > CANDIDATE_LIMIT:
         # Lexical narrowing by exact evidence only: keep the whole top tier (candidates matching the most goal words),
@@ -254,16 +286,14 @@ def plan_step(facade, state, goal, policy, steps, cost, sleep, over, hard, min_c
     if len(exact) == 1:
         try:
             choice = facade.choose(snapshot, goal, mode='exact', exact_name=exact[0]['label'], exact_role=state['nodes'][int(exact[0]['id'][1:])].get('role'))
-        except Gap as gap:
-            return {'escalated': escalate('exact_refused', str(gap)[:160])}
-        if 'selection' not in choice:
-            return {'escalated': escalate('exact_unselected', 'The quoted label is not one unique observed control.')}
-        picked, model, confidence, selection = choice['selected_id'], 'exact', 1.0, choice['selection']
-    else:
+        except Gap:
+            choice = {}
+        if 'selection' in choice:picked, model, confidence, selection = choice['selected_id'], 'exact', 1.0, choice['selection']
+    if picked is None:  # no exact path (not unique in the whole window): the policy decides, never a guess
         actions = facade.actions(state, ids, 'click', None)
         descr = {a['id']: a['description'] for a in actions}
         context = {'goal': goal, 'step': len(steps)+1, 'snapshot_id': state['raw']['snapshot_id'],
-                   'candidates': [{'id': c['id'], 'label': c['label'], 'record': c['record_text'], 'description': descr.get(c['id'], c['label'])} for c in cands],
+                   'candidates': [{'id': c['id'], 'label': c['label'], 'record': c['record_text'][:RECORD_CHARS], 'description': descr.get(c['id'], c['label'])[:300]} for c in cands],
                    'history': [{'action': s['action'], 'scope_changed': s['scope_changed']} for s in steps]}
         decision = None
         for attempt in (1, 2):
@@ -301,7 +331,7 @@ def plan_step(facade, state, goal, policy, steps, cost, sleep, over, hard, min_c
         return {'escalated': escalate('time_budget', 'The wall budget ran out before the click.')}
     return {'selection': selection, 'action': {'id': picked, 'label': cand['label'][:40]}, 'model': model, 'confidence': confidence,
             'ms': round((clock()-began)*1000), 'record': cand['record_text'], 'fingerprint': state['fingerprint'], 'snapshot': snapshot,
-            'others': [c['record_text'] for c in cands if c['id'] != picked]}
+            'others': [c['record_text'] for c in every if c['record_text'] != cand['record_text']]}
 
 
 def handle_dialog(facade, state, new, replaced, confirm, confirm_used, goal, pending, escalate):
@@ -342,7 +372,7 @@ def confirm_plan(facade, state, verdict, goal, escalate):
 
 def dialog_buttons(facade, state, modal):
     nodes = state['nodes']
-    return [i for i in sorted(facade.subtree(state, 'e'+str(modal))[1]) if i not in state['aliases'] and nodes[i].get('enabled') is not False and 'AXPress' in nodes[i].get('actions', [])]
+    return [i for i in sorted(facade.subtree(state, 'e'+str(modal))[1]) if i not in state['aliases'] and facade._is_control(nodes[i]) and 'AXPress' in nodes[i].get('actions', [])]
 
 
 def dialog_labels(facade, state, modal):
