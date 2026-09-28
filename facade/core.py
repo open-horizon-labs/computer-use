@@ -40,6 +40,7 @@ def digest(value):
 
 MIN_DRIVER_VERSION = (0, 29, 1)  # off_space_or_ax_unresolved fixed upstream; trycua/cua#4068
 PERCEPTION_CAPTURE_TTL_S = 60  # cua-perception capture registry expiry (upstream perception-extension.md)
+REGION_CANDIDATE_LIMIT = 18  # the generic chooser's capacity (sketch S4.5); never truncate
 
 
 MUTATING_TOOLS = frozenset({'click', 'double_click', 'right_click', 'type_text', 'drag', 'scroll', 'hotkey', 'press_key',
@@ -565,6 +566,35 @@ class Facade:
         return not any(aid != picked_id and any(token.casefold() in ctx for token in tokens)
                         for aid, ctx in contexts.items())
 
+    @staticmethod
+    def _within_one_edit(a, b):
+        if abs(len(a) - len(b)) > 1:return False
+        if a == b:return True
+        i = 0
+        while i < min(len(a), len(b)) and a[i] == b[i]:i += 1
+        if len(a) == len(b):return a[i+1:] == b[i+1:]
+        short, long_ = (a, b) if len(a) < len(b) else (b, a)
+        return short[i:] == long_[i+1:]
+
+    def region_corroborated(self, goal, picked_id, actions, all_texts=None):
+        """Regions are labels, so corroboration is an EXACT label match: every quoted
+        token equals the picked region's text and no other text region ANYWHERE in the
+        window is within one edit of it. Measuring only the narrowed candidates would let
+        a decoy that reads exactly the quote win when the real control's OCR is garbled
+        ("Sove"); substring uniqueness would never let "Export" beat "Export All".
+        Several quoted tokens must all equal the one picked text (fails closed).
+        """
+        tokens = [self._ocr_normalize(t) for t in self.quoted_tokens(goal)]
+        if not tokens:return False
+        texts = {a['id']: self._ocr_normalize(a.get('evidence_text') or a.get('description')) for a in actions}
+        if picked_id not in texts:return False
+        pool = list(all_texts) if all_texts is not None else list(texts.values())
+        for token in tokens:
+            if texts[picked_id] != token:return False
+            near = [t for t in pool if (self._within_one_edit(t, token) if len(token) >= 3 else t == token)]
+            if len(near) != 1:return False
+        return True
+
     def incomplete_scope_defer(self, filt, read=None):
         extracted = {r['record_id']: r['fields'] for r in (read or {}).get('extraction', {}).get('records', [])
                      if r['record_id'] in filt['unknown_ids']}
@@ -631,7 +661,23 @@ class Facade:
         parsed=self.regions(snapshot)
         regions=parsed.get('regions',[])
         if candidate_ids is not None:regions=[r for r in regions if r.get('id') in candidate_ids]
-        if not regions:raise Gap('No perception regions available in the requested scope')
+        # Candidates are text regions, narrowed by the label the caller quoted in the
+        # goal. Icons and browser chrome are never bulk-offered (live: 41 regions went
+        # to a chooser capped at 18); an oversized scope defers rather than truncating.
+        regions=[r for r in regions if r.get('kind')=='text' and (r.get('text') or '').strip()]
+        tokens=self.quoted_tokens(goal)
+        if not regions:raise Gap('No perception text regions in the requested scope')
+        all_texts=[self._ocr_normalize(r['text']) for r in regions]  # the whole window, before any narrowing
+        if tokens and len(regions)>REGION_CANDIDATE_LIMIT:
+            # Only an oversized scope is narrowed, and only by the caller's own quoted label.
+            regions=[r for r in regions if all(self._ocr_normalize(t) in self._ocr_normalize(r['text']) for t in tokens)]
+            if not regions:raise Gap('No perception text regions match the quoted label')
+        if len(regions)>REGION_CANDIDATE_LIMIT:
+            self.event('choose',snapshot=snapshot,route='scope_guard',mode='regions',authorized=False,
+                       reason='too_many_regions',region_count=len(regions))
+            return {'status':'defer','route':'scope_guard','reason':'too_many_regions','region_count':len(regions),
+                    'hint':'Quote the button label in the goal (e.g. "Export") to narrow the text regions; '
+                           'regions mode never truncates or ranks an oversized scope.'}
         actions=[]
         for r in regions:
             bounds=r.get('bounds') or {}
@@ -658,7 +704,7 @@ class Facade:
             picked=decision['action_id']
             # As in visual mode (review P1): a caller-narrowed region list cannot
             # self-corroborate; quote uniqueness only counts across all regions.
-            if candidate_ids is not None or not self.visual_corroborated(goal,picked,actions):
+            if candidate_ids is not None or not self.region_corroborated(goal,picked,actions,all_texts):
                 self.event('choose',snapshot=snapshot,route='visual_uncorroborated_guard',mode='regions',
                            authorized=False,reason='visual_uncorroborated')
                 return {'status':'defer','route':'visual_uncorroborated_guard','reason':'visual_uncorroborated',

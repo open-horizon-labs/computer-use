@@ -48,7 +48,7 @@ def flat_two_book_window(sid='sp0000001'):
 BOOK_REGIONS = {'schema': 'cua.visual_regions_v1', 'regions': [
     {'id': 'text-1', 'kind': 'text', 'text': 'Provider A', 'bounds': {'x': 220, 'y': 180, 'width': 100, 'height': 20}},
     {'id': 'text-2', 'kind': 'text', 'text': '60 min', 'bounds': {'x': 220, 'y': 185, 'width': 60, 'height': 20}},
-    {'id': 'text-3', 'kind': 'text', 'text': 'Provider B', 'bounds': {'x': 220, 'y': 380, 'width': 100, 'height': 20}},
+    {'id': 'text-3', 'kind': 'text', 'text': 'Clinician Bravo', 'bounds': {'x': 220, 'y': 380, 'width': 100, 'height': 20}},
     {'id': 'text-4', 'kind': 'text', 'text': '30 min', 'bounds': {'x': 220, 'y': 385, 'width': 60, 'height': 20}},
 ]}
 
@@ -121,9 +121,9 @@ class PerceptionRouteTests(unittest.TestCase):
         state = self.f.state(self.f.observe(1, 2)['snapshot'])
         described = {a['id']: a for a in self.f.actions(state, ['e2', 'e3'], 'click', None)}
         self.assertIn('Provider A', described['e2']['description'])
-        self.assertNotIn('Provider B', described['e2']['description'])
+        self.assertNotIn('Clinician Bravo', described['e2']['description'])
         self.assertEqual(described['e2']['record_basis'], 'perception_layout')
-        self.assertIn('Provider B', described['e3']['description'])
+        self.assertIn('Clinician Bravo', described['e3']['description'])
         self.assertNotIn('Provider A', described['e3']['description'])
 
     def test_unique_control_never_triggers_a_perception_parse(self):
@@ -285,6 +285,85 @@ class PerceptionRouteTests(unittest.TestCase):
         result = self.f.choose(obs, 'Pick the "Provider A" slot', mode='regions', candidate_ids=['text-1', 'text-2'])
         self.assertEqual(result['reason'], 'visual_uncorroborated')
         self.assertNotIn('selection', result)
+
+    def label_regions(self, labels, icons=0):
+        regions = [{'id': 'text-%d' % i, 'kind': 'text', 'text': label,
+                    'bounds': {'x': 20, 'y': 100 + 40 * i, 'width': 100, 'height': 20}} for i, label in enumerate(labels)]
+        regions += [{'id': 'icon-%d' % i, 'kind': 'icon', 'bounds': {'x': 5, 'y': 5 + 30 * i, 'width': 20, 'height': 20}} for i in range(icons)]
+        return {'schema': 'cua.visual_regions_v1', 'regions': regions}
+
+    def test_regions_offer_only_text_regions_matching_the_quoted_label(self):
+        # Live CE: 41 regions (icons, browser chrome) went to a chooser capped at 18 and
+        # deferred. Tempting wrong patch: raise the cap, or truncate to the first 18.
+        self.driver.capture_id = 'cap_1'
+        chrome = ['Chrome label %d' % i for i in range(20)]
+        self.driver.parse_result = self.label_regions(chrome + ['Save', 'Export', 'Export All', 'Reset'], icons=30)
+        obs = self.f.observe(1, 2)['snapshot']
+        self.f.choose(obs, 'Press the button labelled "Export"', mode='regions')
+        offered = [a['name'] for a in self.generic.requests[-1]['actions']]
+        self.assertEqual(offered, ['Export', 'Export All'])
+
+    def test_small_scope_is_not_narrowed_and_icons_are_never_offered(self):
+        # Narrowing applies only above the chooser's limit; under it the chooser sees the
+        # surrounding labels. Icons (no text) are never bulk-offered.
+        self.driver.capture_id = 'cap_1'
+        self.driver.parse_result = self.label_regions(['Save', 'Export', 'Export All', 'Reset'], icons=30)
+        obs = self.f.observe(1, 2)['snapshot']
+        self.f.choose(obs, 'Press the button labelled "Export"', mode='regions')
+        self.assertEqual([a['name'] for a in self.generic.requests[-1]['actions']], ['Save', 'Export', 'Export All', 'Reset'])
+
+    def test_exact_label_corroborates_even_when_it_prefixes_another_label(self):
+        # Tempting wrong patch: substring uniqueness, under which "Export" can never be
+        # corroborated against "Export All" (and the wrong pick "Export All" would pass
+        # a substring test for "Export All").
+        self.driver.capture_id = 'cap_1'
+        self.driver.parse_result = self.label_regions(['Export', 'Export All'])
+        obs = self.f.observe(1, 2)['snapshot']
+        ok = self.f.choose(obs, 'Press the button labelled "Export"', mode='regions')
+        self.assertEqual(ok['status'], 'selected'); self.assertEqual(ok['selected_id'], 'text-0')
+        self.driver.parse_result = self.label_regions(['Export All', 'Export'])  # chooser now picks the wrong one first
+        self.driver.capture_id = 'cap_2'
+        obs2 = self.f.observe(1, 2)['snapshot']
+        bad = self.f.choose(obs2, 'Press the button labelled "Export"', mode='regions')
+        self.assertEqual(bad['reason'], 'visual_uncorroborated'); self.assertNotIn('selection', bad)
+
+    def test_duplicate_exact_labels_are_not_corroborated(self):
+        self.driver.capture_id = 'cap_1'
+        self.driver.parse_result = self.label_regions(['Export', 'Export'])
+        obs = self.f.observe(1, 2)['snapshot']
+        r = self.f.choose(obs, 'Press the button labelled "Export"', mode='regions')
+        self.assertEqual(r['reason'], 'visual_uncorroborated')
+
+    def test_too_many_text_regions_defers_with_a_count_instead_of_truncating(self):
+        self.driver.capture_id = 'cap_1'
+        self.driver.parse_result = self.label_regions(['Label %d' % i for i in range(25)])
+        obs = self.f.observe(1, 2)['snapshot']
+        r = self.f.choose(obs, 'Press the right button', mode='regions')
+        self.assertEqual(r['reason'], 'too_many_regions'); self.assertEqual(r['region_count'], 25)
+        self.assertEqual(self.generic.requests, [])
+
+    def test_garbled_real_label_cannot_let_an_exact_decoy_pass(self):
+        # Review P2-1. Tempting wrong patch: uniqueness among the narrowed candidates only,
+        # so a header that reads exactly "Save" wins when the real button OCRs as "Sove".
+        self.driver.capture_id = 'cap_1'
+        self.driver.parse_result = self.label_regions(['Chrome label %d' % i for i in range(20)] + ['Save', 'Save all', 'Sove'])
+        obs = self.f.observe(1, 2)['snapshot']
+        r = self.f.choose(obs, 'Press the button labelled "Save"', mode='regions')
+        self.assertEqual(r['reason'], 'visual_uncorroborated'); self.assertNotIn('selection', r)
+
+    def test_far_labels_do_not_veto_an_exact_match(self):
+        self.driver.capture_id = 'cap_1'
+        self.driver.parse_result = self.label_regions(['Chrome label %d' % i for i in range(20)] + ['Export', 'Export All', 'Reset'])
+        obs = self.f.observe(1, 2)['snapshot']
+        r = self.f.choose(obs, 'Press the button labelled "Export"', mode='regions')
+        self.assertEqual(r['status'], 'selected'); self.assertEqual(r['selected_id'], 'text-20')
+
+    def test_multiple_quoted_tokens_fail_closed(self):
+        self.driver.capture_id = 'cap_1'
+        self.driver.parse_result = self.label_regions(['Export', 'Reset'])
+        obs = self.f.observe(1, 2)['snapshot']
+        r = self.f.choose(obs, 'Press "Export" or "Reset"', mode='regions')
+        self.assertEqual(r['reason'], 'visual_uncorroborated')
 
     def test_choose_regions_requires_live_capture(self):
         self.driver.capture_id = None
