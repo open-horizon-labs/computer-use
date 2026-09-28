@@ -563,6 +563,16 @@ class ConfirmDialog(DoBase):
         r = self.cancel(modal=self.dialog('Keep order', 'Yes, cancel order'), confirm='Cancel order')
         self.assertEqual((r['reason'], len(self.driver.executed), self.chooser.requests), ('confirm_control_not_found', 1, []))
 
+    def test_a_slow_dialog_read_cannot_be_followed_by_a_second_click(self):
+        # Review of the fixes: confirm ignored the budget, so a 100 s dialog read was followed by a click.
+        # Wrong patch: check the budget only before the first click and after the whole confirm step.
+        self.reader.on_call = lambda call: self.clock.advance(100) if call == 2 else None
+        self.driver.modal = self.MODAL
+        r = self.do('Cancel the order 1042 for customer Cedar', records=rec([{'field': 'order', 'value': '1042'}, {'field': 'customer', 'value': 'Cedar'}], fields=ORDER_FIELDS),
+                    expect='Order 1042 cancelled', confirm=self.CONFIRM, budget_s=20)
+        self.assertEqual((r['status'], r['reason'], r['delivery'], len(self.driver.executed)), ('deferred', 'budget_exceeded', 'delivered', 1))
+        self.assertNotIn('selection', r)
+
     def test_confirm_clicks_the_named_control_case_and_space_insensitively_without_the_chooser(self):
         r = self.cancel(confirm='  yes,  CANCEL order ')
         self.assertEqual((r['status'], len(self.driver.executed), self.chooser.requests), ('done', 2, []))

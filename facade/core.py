@@ -1404,8 +1404,8 @@ class Facade:
                     early, confirmation = confirm(current, new, replaced, reading, goal_fields, picked)
                     if early:return early
                     if over_all():return budget(**base)
+                    ctx['stage'] = 'verify'  # the confirm click landed: a failure from here on is a verification failure, not a dialog failure
                     current = self.state(self.observe(pid_, window_, timeout=remaining())['snapshot'])
-                    ctx['stage'] = 'verify'
                 target = self.node(before, picked['id']) if operation == 'type_text' and picked['id'] in {'e'+str(i) for i in before['nodes']} else None
                 check = self._expect_check(current, before, expect, target, text if operation == 'type_text' else None) if expect else None
                 if check and check['status'] == 'satisfied':verification = check
@@ -1456,6 +1456,8 @@ class Facade:
                 calls['nuextract3'] = calls.get('nuextract3', 0) + 1
                 filt = dialog['filter'];extracted = self._bounded({modal: dialog['extraction']['records'][0]['fields']})
                 state = 'matched' if filt['eligible_ids'] else ('unknown' if filt['unknown_ids'] else 'mismatch')
+            # The wall budget binds the confirm step too: a slow dialog read must not be followed by a second click.
+            if over_all():return budget(selected=picked, verified=False), None
             held = {'selected': picked, 'verified': False, 'dialog': {'controls': labels, 'identity': state}, **({'evidence': {'extracted': extracted}} if extracted else {})}
             if not confirm_label:
                 return finish('deferred', reason='confirm_dialog_present', **held,
@@ -1474,6 +1476,9 @@ class Facade:
             count('confirm', 'exact_observed_control')
             if 'selection' not in choice:return deferred({**choice, 'reason': choice.get('reason') or 'confirm_unselected'}, **held), None
             ctx['selection'] = choice['selection']
+            if over_all():
+                self.selections.pop(choice['selection'], None);ctx['selection'] = None
+                return budget(selected=picked, verified=False), None
             try:deliver(choice['selection'])
             except StaleUI:return finish('deferred', reason='confirm_ui_changed', **held, hint='The dialog changed before it was confirmed; the first click was delivered. Inspect observation.snapshot.'), None
             finally:count('confirm_click', 'cua-driver')
