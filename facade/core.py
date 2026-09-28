@@ -245,7 +245,39 @@ class Facade:
                     if record:return record
                     break
                 record = text
-        return ''
+        inferred = self.sibling_record(state, index)
+        return '\n'.join(inferred[0]) if inferred else ''
+
+    def sibling_record(self, state, index):
+        """Flat trees (Chrome often prunes each <li> wrapper): split the parent's
+        children at each repeat of this control. Records must consistently sit
+        on one side of their control -- text before the first repeat and none
+        after the last, or the reverse -- otherwise the grouping is ambiguous
+        and returns None rather than guessing. Returns (texts, member indices).
+        """
+        node = state['nodes'][index]
+        parent = node.get('parent_index')
+        kind = (node.get('role'), node.get('label'))
+        children = sorted(i for i,n in state['nodes'].items() if n.get('parent_index') == parent)
+        repeats = [i for i in children if (state['nodes'][i].get('role'), state['nodes'][i].get('label')) == kind]
+        if len(repeats) < 2 or index not in repeats:
+            return None
+        before = [i for i in children if i < repeats[0]]
+        after = [i for i in children if i > repeats[-1]]
+        position = repeats.index(index)
+        if before and not after:
+            low = repeats[position-1] if position else -1
+            members = [i for i in children if low < i < index]
+        elif after and not before:
+            high = repeats[position+1] if position+1 < len(repeats) else float('inf')
+            members = [i for i in children if index < i < high]
+        else:
+            return None
+        texts = []
+        for i in members:
+            text, _ = self.subtree(state, 'e'+str(i))
+            texts += [line for line in text.split('\n') if line and line not in texts]
+        return (texts, set(members) | {index}) if texts else None
 
     def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False):
         state = self.state(snapshot)
@@ -256,9 +288,17 @@ class Facade:
                 raise Gap('Money fields require explicit currency: USD; use text for unparsed price strings')
         if not record_ids or len(set(record_ids)) != len(record_ids):
             raise Gap('Supply distinct observed record roots')
-        records, memberships = [], []
+        records, memberships, record_basis = [], [], {}
         for candidate in record_ids:
             text, members = self.subtree(state,candidate)
+            root = self.node(state,candidate)['element_index']
+            if len(members) == 1:
+                # A lone control in a flat tree: use its sibling-order record,
+                # labelled so the weaker grouping stays visible downstream.
+                inferred = self.sibling_record(state, root)
+                if inferred:
+                    text, members = '\n'.join(inferred[0] + ([text] if text else [])), inferred[1]
+                    record_basis[candidate] = 'sibling_order'
             if any(members & previous for previous in memberships):
                 raise Gap('Overlapping record roots could mix fields across records')
             if not text:
@@ -271,7 +311,8 @@ class Facade:
         filtered = filter_records(extraction,fields=fields,predicates=predicates or [],
             coverage_complete=coverage_complete,current_snapshot=state['raw']['snapshot_id'])
         handle = 'read_' + uuid.uuid4().hex
-        result = {'reading':handle, 'snapshot':snapshot, 'route':'nuextract3', 'extraction':extraction, 'filter':filtered}
+        result = {'reading':handle, 'snapshot':snapshot, 'route':'nuextract3', 'extraction':extraction, 'filter':filtered,
+                  **({'record_basis':record_basis} if record_basis else {})}
         self.readings[handle] = copy.deepcopy({**result,'fields':fields,'predicates':predicates or []})
         while len(self.readings)>32:self.readings.pop(next(iter(self.readings)))
         self.event('read',route='nuextract3',snapshot=snapshot,records=len(records),endpoint_ms=(self.clock()-start)*1000)
@@ -373,6 +414,8 @@ class Facade:
         if mode=='exact':
             if not exact_name:raise Gap('Exact mode requires an observed name, not a synthetic ID')
             ids=['e'+str(i) for i in state['nodes'] if i not in state['aliases']]
+        if mode=='spans' and fields and not all(isinstance(v,dict) and v.get('description') for v in fields.values()):
+            raise Gap('spans fields map each name to {description, type}, e.g. {"provider": {"description": "clinician name", "type": "text"}}')
         if (fields or predicates or order_by) and mode not in ('spans',) and not reading:
             raise Gap('Typed criteria require a reading handle or spans mode; they cannot be ignored')
         # A caller-narrowed candidate_ids scope (no reading grounding it) means

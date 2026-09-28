@@ -287,6 +287,55 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(result['reason'],'visual_uncorroborated')
         self.assertNotIn('selection',result)
 
+    def flat_list(self,header=None,footer=None):
+        # Live Chrome shape (2026-09-28 retest): <li> wrappers pruned, so every
+        # field and Book button is a direct child of one AXList.
+        nodes=[{'element_index':0,'parent_index':None,'role':'AXWindow','label':'Clinic'},
+               {'element_index':1,'parent_index':0,'role':'AXList'}];index=2;books=[]
+        def text(value):
+            nonlocal index;nodes.append({'element_index':index,'parent_index':1,'role':'AXStaticText','value':value});index+=1
+        if header:text(header)
+        for provider,start in (('Dr. Morgan Reyes','Starts 1:30 PM'),('Morgan Lee, NP','Starts 2:00 PM'),('Dr. Kim Ortega','Starts 2:20 PM')):
+            text(provider);text(start)
+            nodes.append({'element_index':index,'parent_index':1,'role':'AXButton','label':'Book','actions':['AXPress']});books.append('e'+str(index));index+=1
+        if footer:text(footer)
+        for n in nodes:n.update(element_token='sf:'+str(n['element_index']),enabled=True)
+        self.driver.observe=lambda *a:{'snapshot_id':'sf','pid':1,'window_id':2,'window_title':'Clinic','elements':copy.deepcopy(nodes),'_image':b'p'}
+        return self.f.state(self.f.observe(1,2)['snapshot']),books
+
+    def test_record_context_flat_list_uses_sibling_order(self):
+        # Tempting wrong patch: the flat list's whole text (all providers), or
+        # the text following each button (the next record's fields).
+        state,books=self.flat_list()
+        described=[a['description'] for a in self.f.actions(state,books,'click',None)]
+        self.assertIn('Dr. Morgan Reyes',described[0]);self.assertIn('1:30',described[0]);self.assertNotIn('Morgan Lee',described[0])
+        self.assertIn('Morgan Lee',described[1]);self.assertNotIn('Dr. Morgan Reyes',described[1]);self.assertNotIn('Ortega',described[1])
+        self.assertIn('Ortega',described[2]);self.assertNotIn('Lee',described[2])
+
+    def test_record_context_flat_list_ambiguous_orientation_gives_no_context(self):
+        # Text both before the first and after the last button: which side is
+        # the record cannot be decided, so give none rather than guess.
+        state,books=self.flat_list(header='Available appointments',footer='Times are local')
+        described=[a['description'] for a in self.f.actions(state,books,'click',None)]
+        self.assertEqual(described,['Book']*3)
+
+    def test_read_flat_list_controls_use_sibling_records_without_overlap(self):
+        state,books=self.flat_list()
+        self.reader.extract=lambda req,sid:(self.reader.requests.append(req),
+            {'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'condition':'New'}} for r in req['records']]})[1]
+        snapshot=[h for h,v in self.f.snapshots.items() if v is state][0]
+        result=self.f.read(snapshot,'Read slots',{'condition':{'description':'x','type':'text'}},books,coverage_complete=True)
+        texts=[r['text'] for r in self.reader.requests[-1]['records']]
+        self.assertIn('Dr. Morgan Reyes',texts[0]);self.assertNotIn('Morgan Lee',texts[0])
+        self.assertIn('Morgan Lee',texts[1]);self.assertNotIn('Ortega',texts[1])
+        self.assertEqual(result['record_basis'],{b:'sibling_order' for b in books})
+
+    def test_spans_fields_must_be_described_objects(self):
+        # Live retest crash: string field specs reached the dispatcher and raised
+        # AttributeError; reject them with the expected shape instead.
+        with self.assertRaisesRegex(Gap,'description'):
+            self.f.choose(self.obs,'Pick',candidate_ids=['e3','e6'],mode='spans',fields={'provider':'clinician name'})
+
     def test_record_context_nested_groups_stop_at_record(self):
         # Review P3: date groups each holding several records must not make a
         # whole group (two providers) the record.
