@@ -144,6 +144,18 @@ def scripted_llm(goal_words=()):
         if reason == 'control_needed':
             label = pick([c['label'] for c in result['found']['repeated_controls']], cur['goal'])
             return {**cur, 'control': label} if label else None
+        if reason == 'region_label_needed':
+            texts = result['found']['region_texts'];labels = [t['text'] for t in texts]
+            control = pick(labels, cur['goal'])
+            if not control:return None
+            more = {'control': control}
+            if next(t['count'] for t in texts if t['text'] == control) > 1:
+                others = [l for l in labels if l != control and any(w in l.lower() for w in re.findall(r'[a-z]+', cur['goal'].lower()) if len(w) > 3)]
+                if others:more['near'] = others[0]
+            return {**cur, **more}
+        if reason == 'region_ambiguous':
+            near = [m['near'] for m in result['matches'] if m['near'] and any(w in m['near'].lower() for w in re.findall(r'[a-z]+', cur['goal'].lower()) if len(w) > 3)]
+            return {**cur, 'near': near[0]} if len(near) == 1 else None
         if reason == 'records_ambiguous':
             label = pick(result['found']['controls'], cur['goal'])
             return {**base, 'goal': 'Click "%s"' % label} if label else None
@@ -226,7 +238,12 @@ def measure_scenarios():
     d.parse_result = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 5, 'y': 10 + 30 * i, 'width': 50, 'height': 20}} for i, t in enumerate(['Save', 'Export', 'Reset'])]}
     class Picks(fx.NamedChooser):
         def __call__(self, step, request):self.requests.append(request);return {'choice': 't1', 'route': 'julia-1', 'action_authorized': True}
-    out['canvas_regions'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported'}, fx.LineReader(), chooser=Picks(), vision=FakeVision)  # a canvas has no AX text: the screenshot model is the verifier
+    out['canvas_regions_unique'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported'}, fx.LineReader(), chooser=Picks(), vision=FakeVision)  # a canvas has no AX text: the screenshot model is the verifier
+    # The live finding: two Export buttons drawn on a canvas, labelled by Toolbar and Footer texts (synthetic parse result). The LLM knows only the goal.
+    d = sh.ShapeDriver(sh.canvas());d.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};d.capture_id = 'cap'
+    d.parse_result = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 10, 'y': y, 'width': 80, 'height': 24}}
+                                  for i, (t, y) in enumerate([('Toolbar', 10), ('Export', 40), ('Footer', 500), ('Export', 530)])]}
+    out['canvas_regions'] = run(d, {'goal': 'Press the Export button in the toolbar', 'expect': 'Exported'}, lv.LiveReader({}), vision=FakeVision)
     many = [('Provider %03d' % i, 'Follow-up', '30 min', '1:%02d PM' % (i % 60)) for i in range(80)]
     d = fx.FlatDriver();d.rows = fx.booking_rows(many);d.confirm_text = 'Booked Provider 041 1:41 PM'
     out['large_page_400'] = run(d, {'goal': 'Book Provider 041', 'expect': 'Booked Provider 041', 'records': {'fields': fx.FIELDS, 'predicates': [{'field': 'provider', 'value': 'Provider 041'}]}}, fx.LineReader())
@@ -246,6 +263,17 @@ def measure_scenarios():
     several = {**booking, 'records': {'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE[:2]}}
     def narrow(result, cur):return {'title': 'Demo', **booking} if result['status'] == 'deferred' and result.get('reason') else None
     out['ambiguity_deferral'] = run(booking_driver(), several, reader_b(), chooser=Abstain(), follow=narrow)
+    # The live finding: the LLM wrote its predicates blind (duration contains "30"); the right slot reads "half-hour".
+    class ByDescription(fx.NamedChooser):
+        def __call__(self, step, request):
+            self.requests.append(request);pick = next((a for a in request['actions'] if 'Telehealth' in a['description']), request['actions'][0])
+            return {'choice': pick['id'], 'route': 'julia-1', 'action_authorized': True}
+    blind = {'goal': 'Book the Morgan Reyes half-hour slot', 'expect': 'Booked:', 'records': {'fields': lv.BOOKING_FIELDS, 'predicates': [
+        {'field': 'provider', 'op': 'contains', 'value': 'Morgan Reyes'}, {'field': 'duration', 'op': 'contains', 'value': '30'}]}}
+    def judge(result, cur):
+        # The LLM reads the deferral: "half-hour" is 30 minutes (S4.8), so those unknown records DO match.
+        return {**cur, 'treat_as_match': result['unknown_ids']} if result.get('reason') == 'unknown_competitors_unacknowledged' else None
+    out['booking_blind_predicates'] = run(booking_driver(), blind, reader_b(), chooser=ByDescription(), follow=judge)
     # The shapes a review found the two captured trees did not cover (synthetic; the LLM knows only goal, expect and the predicates).
     out['per_record_labels'] = run(shape(sh.cards(label=lambda n: 'Book Dr ' + n), sh.toast(buttons=())), shape_args(), reader_s())
     out['single_record'] = run(shape(sh.cards(names='B'), sh.toast(buttons=())), shape_args(), reader_s())

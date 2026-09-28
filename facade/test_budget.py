@@ -206,6 +206,16 @@ class DefaultPathBudget(unittest.TestCase):
         self.assertEqual(BUDGET['live_task_budgets']['orders']['max_llm_visible_calls']['value'], m['orders_cold']['calls'])
         self.assertIn('unrelated', BUDGET['purpose']);self.assertIn('fixture-derived', BUDGET['purpose'])
 
+    def test_the_two_live_findings_are_budgeted_from_goal_and_expect_alone(self):
+        # Live n=1 findings. Wrong patch: a budget that assumed the first call succeeds (blind predicates silently clicked the wrong slot in ONE call;
+        # the canvas dead-ended). The blind first call must DEFER, so the right answer costs two calls; the canvas costs two.
+        m = self.measured
+        self.assertEqual((m['booking_blind_predicates']['calls'], m['booking_blind_predicates']['chooser']), (2, 1))
+        self.assertEqual((m['canvas_regions']['calls'], m['canvas_regions']['reader'], m['canvas_regions']['chooser']), (2, 0, 0))
+        self.assertLessEqual(BUDGET['scenarios']['booking_blind_predicates']['max_llm_visible_calls']['value'], 2)
+        self.assertLessEqual(BUDGET['scenarios']['canvas_regions']['max_llm_visible_calls']['value'], 2)
+        self.assertIn('n=1', BUDGET['scenarios']['canvas_regions']['description']);self.assertIn('n=1', BUDGET['scenarios']['booking_blind_predicates']['description'])
+
     def test_no_call_count_literal_is_claimed_by_the_tool(self):
         # Wrong patch: llm_visible_calls hardcoded in the response; a tool cannot know how many calls the LLM makes.
         self.assertNotIn('llm_visible_calls', (cb.HERE / 'core.py').read_text())
