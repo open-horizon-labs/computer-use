@@ -58,7 +58,7 @@ Exact mode searches the whole observed scope even if a caller supplies fewer can
 
 ### Candidate descriptions carry record context
 
-Each offered action's `description` (what the chooser sees) is its own label/value plus ` — record: ...`, the text of the smallest ancestor subtree that contains exactly one control of that same role/label — i.e. the enclosing record, never the parent's full listing text and never a sibling record's text. Twelve identical "Book" buttons each get their own row's provider/service/time text; they never see each other's.
+Each offered action's `description` (what the chooser sees) is its own label/value plus ` — record: ...`, the text of the outermost ancestor that still contains exactly one control of that role/label (falling back to role alone for distinctly labelled controls) — i.e. the enclosing record such as a table row rather than its actions cell, never the parent's full listing text and never a sibling record's text. Twelve identical "Book" buttons each get their own row's provider/service/time text; they never see each other's.
 
 ### Goals describe criteria, never the answer
 

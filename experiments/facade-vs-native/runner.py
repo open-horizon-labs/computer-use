@@ -2,15 +2,14 @@
 required consent before running this.
 
 For each (arm, task, run_id):
-  1. Opens the fixture page in the background with `open -g -a "Google Chrome"
-     <url>` -- never without -g, never `open -n` (which would spawn a second
-     Chrome process instead of a tab in the existing one).
+  1. Creates a dedicated Chrome window via AppleScript `make new window`
+     (no `activate`), so Chrome is not brought forward and no user window
+     gains a tab. Never `open <url>` (adds a tab to the user's front window)
+     or `open -n` (spawns a second Chrome).
   2. Runs a headless `claude -p` agent restricted to exactly that arm's MCP
-     server, with --strict-mcp-config so no other server or Skill leaks in.
-  3. Closes only the window it opened, by exact title, via
-     `osascript -e 'tell application "Google Chrome" to close (every window
-     whose name is "<title>")'` -- closing by title never activates/raises
-     the app or any other window.
+     server (config generated with absolute paths), with --strict-mcp-config,
+     a neutral task prompt, and a pinned model.
+  3. Closes only that window, by the id returned in step 1.
 
 Nothing here ever activates, raises, or foregrounds a window; that mirrors
 the facade's own "never move the user's windows" policy (fix 7).
@@ -26,48 +25,61 @@ from fixtures import BOOKING_EXPECTED_ID, ORDERS_EXPECTED_ID
 
 HERE = Path(__file__).resolve().parent
 
+# Neutral user intent only: never name the answer or enumerate decoys, or the
+# comparison measures prompt hints instead of the tools.
 PROMPTS = {
-    'booking': (
-        'On the Clinic Slots page, book the appointment that is with Dr. Morgan Reyes, '
-        'is a Telehealth visit, lasts half an hour, and starts at 3:00 PM. '
-        'There is a similarly-named decoy slot at a different time and duration; '
-        'do not book that one. Click Book only once, for the one matching slot.'
-    ),
-    'orders': (
-        'On the Orders page, cancel the order that is a "Walnut desk lamp" (not a floor '
-        'lamp, not brass, not the desk organizer, not the lamp shade replacement) and is '
-        'still "Processing" (not Shipped and not Delivered). Click Cancel, then confirm '
-        'the cancellation in the dialog that appears. Do not cancel or click on any other order.'
-    ),
+    'booking': 'Book the earliest 30-minute appointment with Dr. Morgan Reyes that starts at or after 2:00 PM. Book exactly one appointment.',
+    'orders': 'Cancel my walnut desk lamp order that has not shipped yet. Do not cancel or change any other order.',
 }
+PROMPT_FRAME = ('A Google Chrome window whose title begins with {title!r} is open on this Mac. {goal} '
+                'Use only the computer-use tools available to you. Do not open, navigate, or act on any other '
+                'window or tab. When finished, report exactly what you did and how you verified the result.')
 
 TITLES = {'booking': 'Clinic Slots {run}', 'orders': 'Orders {run}'}
 
 ALLOWED_TOOLS = {
-    'facade': ['mcp__cua-task__*'],
-    'native': ['mcp__cua-driver__*'],
+    'facade': ['mcp__cua-task'],
+    'native': ['mcp__cua-driver'],
 }
 DISALLOWED_TOOLS = {
     'facade': ['Bash', 'Edit', 'Write', 'WebFetch', 'WebSearch', 'Agent'],
     'native': ['Bash', 'Edit', 'Write', 'WebFetch', 'WebSearch', 'Agent', 'Skill'],
 }
-MCP_CONFIG = {'facade': HERE / 'mcp-config.facade.json', 'native': HERE / 'mcp-config.native.json'}
+
+
+def chrome(script):
+    return subprocess.run(['osascript', '-e', f'tell application "Google Chrome" to {script}'],
+                          capture_output=True, text=True, check=True).stdout.strip()
 
 
 def open_page(url):
-    # -g: open in the background, never bring Chrome or the new tab forward.
-    # Never -n: that spawns a second Chrome process instead of a new tab.
-    subprocess.run(['open', '-g', '-a', 'Google Chrome', url], check=True)
+    # A dedicated window, created without `activate`, so Chrome is not brought
+    # forward and no existing user window gains a tab. `open -g <url>` would add
+    # a tab to the user's front window, and `open -n` spawns a second Chrome.
+    window_id = chrome('id of (make new window)')
+    chrome(f'set URL of active tab of window id {window_id} to "{url}"')
+    return window_id
 
 
-def close_window(title):
-    script = f'tell application "Google Chrome" to close (every window whose name is "{title}")'
-    subprocess.run(['osascript', '-e', script], check=False)
+def close_window(window_id):
+    # Close only the window this run created, by id; never by title, which could
+    # match a user window whose active tab happens to share it.
+    subprocess.run(['osascript', '-e', f'tell application "Google Chrome" to close window id {window_id}'], check=False)
 
 
-def run_agent(arm, task, out_path):
-    cmd = ['claude', '-p', PROMPTS[task],
-           '--strict-mcp-config', '--mcp-config', str(MCP_CONFIG[arm]),
+def mcp_config(arm, out_dir):
+    root = HERE.parents[1]
+    servers = {'facade': {'cua-task': {'command': str(root / '.venv-facade/bin/python'), 'args': [str(root / 'facade/server.py')]}},
+               'native': {'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}}
+    path = out_dir / f'mcp-config.{arm}.json'
+    path.write_text(json.dumps({'mcpServers': servers[arm]}, indent=2))
+    return path
+
+
+def run_agent(arm, task, title, out_path, model):
+    prompt = PROMPT_FRAME.format(title=title, goal=PROMPTS[task])
+    cmd = ['claude', '-p', prompt, '--model', model, '--max-turns', '80',
+           '--strict-mcp-config', '--mcp-config', str(mcp_config(arm, out_path.parent)),
            '--allowedTools', ','.join(ALLOWED_TOOLS[arm]),
            '--disallowedTools', ','.join(DISALLOWED_TOOLS[arm]),
            '--output-format', 'stream-json', '--verbose']
@@ -93,6 +105,7 @@ def main():
     parser.add_argument('--base-url', default='http://127.0.0.1:8934')
     parser.add_argument('--arms', nargs='+', default=['facade', 'native'], choices=['facade', 'native'])
     parser.add_argument('--tasks', nargs='+', default=['booking', 'orders'], choices=['booking', 'orders'])
+    parser.add_argument('--model', default='claude-opus-5-5')
     parser.add_argument('--runs', type=int, default=1, help='runs per (arm, task) pair')
     parser.add_argument('--out-dir', default=str(HERE / 'runs'))
     parser.add_argument('--events', default=str(HERE / 'events.jsonl'))
@@ -115,12 +128,12 @@ def main():
                 title = TITLES[task].format(run=run_id)
                 transcript = out_dir / f'{run_id}.jsonl'
                 print(f'== {arm}/{task} run={run_id} ==')
-                open_page(url)
+                window_id = open_page(url)
                 time.sleep(1)  # let the tab actually load before the agent starts
                 try:
-                    outcome = run_agent(arm, task, transcript)
+                    outcome = run_agent(arm, task, title, transcript, args.model)
                 finally:
-                    close_window(title)
+                    close_window(window_id)
                 manifest.append({'arm': arm, 'task': task, 'run_id': run_id,
                                   'title': title, 'transcript': str(transcript), **outcome})
     (out_dir / 'manifest.json').write_text(json.dumps(manifest, indent=2))

@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "cua-driver": {
-      "command": "~/.local/bin/cua-driver",
-      "args": ["mcp"]
-    }
-  }
-}

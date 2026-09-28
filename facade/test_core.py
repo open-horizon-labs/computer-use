@@ -246,6 +246,26 @@ class CoreTests(unittest.TestCase):
         for other in ('Provider A','Provider B','Provider K'):
             self.assertNotIn(other,described['e72'])
 
+    def test_record_context_uses_table_row_not_nearest_cell(self):
+        # Tempting wrong patch: the nearest unique ancestor, an actions cell that
+        # holds only "Track"/"Cancel", so every Cancel looks identical.
+        nodes=[{'element_index':0,'parent_index':None,'role':'AXTable','label':'Orders'}];index=1
+        for order,item,status in (('#1041','Walnut desk lamp','Shipped'),('#1044','Walnut desk lamp','Processing')):
+            row=index;nodes.append({'element_index':row,'parent_index':0,'role':'AXRow'});index+=1
+            for text in (order,item,status):
+                nodes.append({'element_index':index,'parent_index':row,'role':'AXCell'})
+                nodes.append({'element_index':index+1,'parent_index':index,'role':'AXStaticText','value':text});index+=2
+            cell=index;nodes.append({'element_index':cell,'parent_index':row,'role':'AXCell'});index+=1
+            for label in ('Track','Cancel'):
+                nodes.append({'element_index':index,'parent_index':cell,'role':'AXButton','label':label,'actions':['AXPress']});index+=1
+        for n in nodes:n.update(element_token='st:'+str(n['element_index']),enabled=True)
+        self.driver.observe=lambda *a:{'snapshot_id':'st','pid':1,'window_id':2,'window_title':'Orders','elements':copy.deepcopy(nodes),'_image':b'p'}
+        state=self.f.state(self.f.observe(1,2)['snapshot'])
+        cancels=['e'+str(n['element_index']) for n in nodes if n.get('label')=='Cancel']
+        described=[a['description'] for a in self.f.actions(state,cancels,'click',None)]
+        self.assertIn('#1041',described[0]);self.assertIn('Shipped',described[0]);self.assertNotIn('#1044',described[0])
+        self.assertIn('#1044',described[1]);self.assertIn('Processing',described[1]);self.assertNotIn('Shipped',described[1])
+
     # --- Fix 2: visual choice cannot authorize alone ------------------------
     def test_visual_pick_without_corroboration_defers_and_issues_no_handle(self):
         result=self.f.choose(self.obs,'Inspect the "Used $80" one',candidate_ids=['e6','e3'],mode='visual')
@@ -322,6 +342,12 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(result['status'],'satisfied')
         self.assertEqual(called,[])
 
+    def test_visual_verify_quoted_text_with_other_constraints_still_uses_vision(self):
+        # Tempting wrong patch: accept quoted text found anywhere and ignore the
+        # remaining constraint about which record/view shows it.
+        result=self.f.verify(1,2,'"Inspect first" appears in the details view for the Used product')
+        self.assertEqual(result['route'],'systemone_vision')
+
     def test_visual_verify_falls_back_to_vision_when_quoted_text_absent(self):
         result=self.f.verify(1,2,'Status shows "Not anywhere in the tree"')
         self.assertEqual(result['route'],'systemone_vision')
@@ -336,6 +362,22 @@ class CoreTests(unittest.TestCase):
         with self.assertRaisesRegex(Gap,'needs_foreground'):
             self.f.act(selection)
         self.assertEqual(self.driver.executed,[])
+
+    def test_act_refuses_on_driver_list_shaped_refused_routes(self):
+        # Real cua-driver shape (0.28.2 trace): routes is a list. Tempting wrong
+        # patch: only reading a keyed dict, so a refused route is ignored.
+        selection=self.exact()['selection']
+        self.driver.background_input={'exact_window':{'pid':1,'window_id':2},
+            'routes':[{'route':'accessibility','status':'refused','reason':'off_space_or_ax_unresolved'}]}
+        with self.assertRaisesRegex(Gap,'needs_foreground'):self.f.act(selection)
+        self.assertEqual(self.driver.executed,[])
+
+    def test_act_proceeds_when_driver_routes_available(self):
+        selection=self.exact()['selection']
+        self.driver.background_input={'exact_window':{'status':'matched'},
+            'routes':[{'route':'accessibility','status':'available'}]}
+        self.f.act(selection)
+        self.assertEqual(len(self.driver.executed),1)
 
     def test_old_driver_version_refused_even_though_naive_string_compare_would_pass(self):
         # '0.9.0' > '0.29.1' as strings; only a tuple/numeric compare catches this.

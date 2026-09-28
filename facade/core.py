@@ -170,8 +170,10 @@ class Facade:
         background = raw.get('background_input') or {}
         exact_window = background.get('exact_window') or {}
         status = exact_window.get('status')
-        routes = background.get('routes') if isinstance(background.get('routes'), dict) else {}
-        refused_reasons = {r.get('reason') for r in routes.values() if isinstance(r, dict) and r.get('status') == 'refused'}
+        routes = background.get('routes') or []
+        # cua-driver emits a list of {route,status,reason}; tolerate a keyed dict too.
+        routes = list(routes.values()) if isinstance(routes, dict) else routes
+        refused_reasons = {r.get('reason') for r in routes if isinstance(r, dict) and r.get('status') == 'refused'}
         if (status is not None and status != 'matched') or 'off_space_or_ax_unresolved' in refused_reasons:
             raise Gap('needs_foreground: window is on another Space or AX-unresolved (exact_window.status=%r); '
                       'the facade never moves, activates or raises windows; bring it forward yourself, or upgrade '
@@ -219,25 +221,28 @@ class Facade:
         return '\n'.join(text), descendants
 
     def record_context(self, state, index):
-        """Text of the smallest ancestor subtree that disambiguates this control
-        among repeated siblings of the same role/label (its "record").
-
-        Never the parent's full container text (spans every record) and never
-        a sibling record: each ancestor is checked, from nearest out, and we
-        stop at the first one containing exactly one control of this kind.
+        """Text of this control's record: the outermost ancestor still holding
+        exactly one control of the same role/label, i.e. the child of the first
+        ancestor that repeats it. The nearest unique ancestor can be a table cell
+        holding only sibling controls; the first repeating ancestor spans every
+        record. A control that never repeats needs no record context.
         """
         node = state['nodes'][index]
-        kind = (node.get('role'), node.get('label'))
         ancestor = node.get('parent_index')
         chain = []
         while ancestor in state['nodes'] and ancestor not in chain:
             chain.append(ancestor)
             ancestor = state['nodes'][ancestor].get('parent_index')
-        for anc in chain:
-            text, members = self.subtree(state, 'e'+str(anc))
-            same_kind = sum(1 for i in members if (state['nodes'][i].get('role'), state['nodes'][i].get('label')) == kind)
-            if same_kind == 1:
-                return text
+        # Same role+label first (repeated "Book"); then role alone, for distinctly
+        # labelled controls whose records still repeat ("Inspect first/second").
+        for kind in (lambda n: (n.get('role'), n.get('label')), lambda n: n.get('role')):
+            record = ''
+            for anc in chain:
+                text, members = self.subtree(state, 'e'+str(anc))
+                if sum(1 for i in members if kind(state['nodes'][i]) == kind(node)) > 1:
+                    if record:return record
+                    break
+                record = text
         return ''
 
     def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False):
@@ -290,6 +295,9 @@ class Facade:
         if self.LEAK_PHRASE.search(goal or ''):
             raise Gap('Goal states the answer (e.g. "the correct one is ..."); describe the '
                       'distinguishing criteria instead so the chooser evaluates evidence, not a preselected candidate.')
+
+    TEXT_ONLY_FILLER = frozenset('the a an page window screen status message banner text shows show reads read says '
+                                 'displays display contains contain is are now visible visibly appears with and'.split())
 
     @staticmethod
     def quoted_tokens(text):
@@ -521,9 +529,13 @@ class Facade:
             # A quoted postcondition string is checked deterministically against
             # the fresh AX tree first; only fall back to the vision model when
             # that text isn't observed there (e.g. it's a purely visual state).
+            # Only a purely textual postcondition short-circuits: any other
+            # constraint (which row, which view) still needs vision, never
+            # text that merely appears somewhere in the window.
             quoted=self.quoted_tokens(postcondition)
+            rest=set(re.findall(r'[a-z0-9#]+',re.sub(r'"[^"]*"',' ',postcondition or '').casefold()))-self.TEXT_ONLY_FILLER
             haystack=' '.join(f"{n.get('label') or ''} {n.get('value') or ''}" for n in state['nodes'].values()).casefold()
-            if quoted and all(token.casefold() in haystack for token in quoted):
+            if quoted and not rest and all(token.casefold() in haystack for token in quoted):
                 result={'status':'satisfied','route':'exact_text_postcondition',
                         'reason':'quoted_text_observed_in_ax_tree','matched_quotes':quoted}
             else:

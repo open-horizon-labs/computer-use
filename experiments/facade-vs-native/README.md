@@ -19,9 +19,11 @@ itself consent, it's an acknowledgment that consent was already obtained
 from the user in chat. Nothing in this repository, this README, or a
 fixture page can substitute for that consent.
 
-It also never activates, raises, or foregrounds a window (`open -g`, never
-`open -n`; window close is by exact title via `osascript`, which does not
-bring Chrome forward) and only talks to `127.0.0.1`.
+It also never activates, raises, or foregrounds a window: each run gets its
+own Chrome window from AppleScript `make new window` (no `activate`) and closes
+it by that window id, so no existing window gains a tab or is closed. It only
+talks to `127.0.0.1`. Prompts state user intent only; never add the answer or
+list the decoys, or the comparison measures prompt hints rather than tools.
 
 ## What it does
 
@@ -29,19 +31,19 @@ bring Chrome forward) and only talks to `127.0.0.1`.
    logs every click to `events.jsonl` -- the ground truth. It never runs on
    any interface other than loopback.
 2. `runner.py`, for each `(arm, task, run_id)`:
-   - opens `http://127.0.0.1:<port>/<task>?run=<run_id>` in the background
-     (`open -g -a "Google Chrome" <url>`);
+   - opens `http://127.0.0.1:<port>/<task>?run=<run_id>` in a dedicated,
+     non-activated Chrome window;
    - runs a headless `claude -p` agent with `--strict-mcp-config` and
      `--mcp-config` pointed at *only* that arm's server
-     (`mcp-config.facade.json` runs `.venv-facade/bin/python facade/server.py`;
-     `mcp-config.native.json` runs `~/.local/bin/cua-driver mcp`),
-     `--allowedTools` restricted to that server's own tools
-     (`mcp__cua-task__*` or `mcp__cua-driver__*`), and `--disallowedTools`
+     (generated per run with absolute paths: `.venv-facade/bin/python
+     facade/server.py`, or `$HOME/.local/bin/cua-driver mcp`),
+     `--allowedTools` restricted to that server (`mcp__cua-task` or
+     `mcp__cua-driver`), and `--disallowedTools`
      covering `Bash,Edit,Write,WebFetch,WebSearch,Agent` (native also adds
      `Skill`, since the installed skill would otherwise reintroduce facade
      guidance into the native arm);
    - captures the agent's `--output-format stream-json --verbose` transcript;
-   - closes only the window it opened, by exact title.
+   - closes only the window it opened, by window id.
 3. `score.py` reads `events.jsonl` plus the transcripts and prints one JSON
    line per run: `correct` / `wrong` / `no-action`, `wrong_clicks`, `turns`,
    wall time, cost, the facade routes actually used, and how many
