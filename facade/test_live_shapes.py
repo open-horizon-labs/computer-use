@@ -302,7 +302,7 @@ class Schema(unittest.TestCase):
         doc = tool.description.lower()
         self.assertIn('required', doc);self.assertIn('e.g. "booked:"', doc)
         self.assertNotRegex(doc, r'expect (?:is )?optional|may omit|can omit|skip expect|optionally pass expect')
-        self.assertEqual([t.name for t in asyncio.run(server.mcp.list_tools())], ['cua_do'])
+        self.assertEqual([t.name for t in asyncio.run(server.mcp.list_tools())], ['cua_do', 'cua_look'])  # look, then do (CE-FACADE-005)
 
 
 if __name__ == '__main__':unittest.main()
