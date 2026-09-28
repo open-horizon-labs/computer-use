@@ -245,9 +245,12 @@ class Discovery(DoBase):
         r = self.do(records=rec(ONE))
         self.assertEqual(r['reason'], 'records_ambiguous');self.assertEqual(self.driver.executed, [])
 
-    def test_no_repeated_control_cannot_form_records(self):
+    def test_a_single_record_is_the_record(self):
+        # Wrong patch: a page with one card (nothing repeats) cannot form records, a dead end for a cua_do-only caller.
         self.driver.rows = booking_rows()[:1]
-        self.assertEqual(self.do(records=rec(ONE))['reason'], 'records_ambiguous')
+        self.assertEqual(self.do(records=rec(ONE))['reason'], 'no_eligible_record')
+        r = self.do(records=rec([{'field': 'provider', 'value': 'Provider A'}]))
+        self.assertEqual(len(self.driver.executed), 1)
 
 
 class GoalAndWindow(DoBase):
@@ -584,7 +587,8 @@ class ConfirmDialog(DoBase):
     def test_confirm_needs_a_complete_identity_match(self):
         # Wrong patch: confirm on a dialog that displays only some of the identity.
         r = self.cancel(modal=self.dialog('Yes, cancel order', text='Cancel order 1042?'), confirm='Yes, cancel order')
-        self.assertEqual((r['reason'], len(self.driver.executed)), ('confirm_identity_unknown', 1))
+        self.assertEqual((r['reason'], len(self.driver.executed)), ('confirm_identity_partial', 1))
+        self.assertEqual((r['identity_shown'], r['identity_not_shown']), (['order'], ['customer']))
 
     def test_a_preexisting_dialog_is_not_the_confirm_dialog(self):
         # Wrong patch: count modals; an unchanged pre-existing one must never be mistaken for the new dialog.

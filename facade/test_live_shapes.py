@@ -184,7 +184,7 @@ class LiveExpect(LiveBase):
         clicks = len(self.driver.executed)
         yes = self.do('Check the booking', operation='verify', expect='Booked:')
         no = self.do('Check the booking', operation='verify', expect='Refund issued')
-        self.assertEqual((yes['status'], yes['verified'], no['status'], no['reason']), ('done', True, 'deferred', 'not_verified'))
+        self.assertEqual((yes['status'], yes['verified'], no['status'], no['reason']), ('observed', False, 'deferred', 'not_verified'))
         self.assertEqual(len(self.driver.executed), clicks)
         self.assertEqual(self.do('x', operation='verify', expect=None)['status'], 'refused')
         self.assertEqual(self.do('x', operation='verify', expect='y', control='Book')['status'], 'refused')

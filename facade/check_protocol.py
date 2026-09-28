@@ -22,7 +22,8 @@ async def default_mode():
    missing=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':SPEC});assert missing.isError,'expect is required in the schema'
    first=await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','records':SPEC,'expect':None});out=json.loads(first.content[0].text)
    assert not first.isError and out['status']=='delivered_unverified' and out['selected']['id']=='e3' and out['trace_summary']['follow_up_needed'] is True,first.content[0].text
-   check=await s.call_tool('cua_do',{'goal':'Check the page','title':'Demo','operation':'verify','expect':'Inspect first'});assert json.loads(check.content[0].text)['status']=='done'
+   check=await s.call_tool('cua_do',{'goal':'Check the page','title':'Demo','operation':'verify','expect':'Used $80'});assert json.loads(check.content[0].text)['status']=='observed'
+   label=await s.call_tool('cua_do',{'goal':'Check the page','title':'Demo','operation':'verify','expect':'Inspect first'});assert json.loads(label.content[0].text)['status']=='deferred','a control label never proves an expect'
    leak=await s.call_tool('cua_do',{'goal':'Inspect e3','title':'Demo','expect':None});assert json.loads(leak.content[0].text)['status']=='refused'
    gone=await s.call_tool('cua_observe',{'pid':1,'window_id':2});assert gone.isError,'primitives must not be callable by default'
 async def advanced_mode():
