@@ -6,7 +6,7 @@ import statistics
 import time
 
 from dispatch import request_digest
-from providers import FleetGeneric, RemoteSpans
+from providers import generic_from_config, RemoteSpans
 from rollout import Strangler
 
 HERE = Path(__file__).resolve().parent
@@ -22,7 +22,7 @@ def main():
     tasks = []
     try:
         for task in saved:
-            selector = FleetGeneric()
+            selector = generic_from_config()
             try:
                 policy = Strangler.from_config({'gliner2': spans, 'jev': selector}, stage='active')
                 records = []
@@ -41,7 +41,7 @@ def main():
                                     'selected_id': answer.get('action_id'),
                                     'correct': answer.get('action_id') == step['choice'],
                                     'current_request_binding_valid': binding_valid, 'reason': answer.get('reason'),
-                                    'decision_ms': elapsed})
+                                    'decision_ms': elapsed, 'provider_outputs': answer.get('provider_outputs', [])})
                 tasks.append({'task_ref': str(task['seed']), 'decisions': records,
                               'all_correct': bool(records) and all(r['correct'] for r in records)})
             finally:

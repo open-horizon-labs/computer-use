@@ -92,7 +92,7 @@ class Strangler:
         # Jev stays authoritative during shadow. The specialist sees the same
         # current candidates and criteria, but its choice cannot authorize action.
         incumbent_request = {**request, 'kind': 'semantic'}
-        incumbent_provider = self.providers.get('incumbent_jev', self.providers['jev'])
+        incumbent_provider = self.providers.get('incumbent_jev') or self.providers['jev']
         with ThreadPoolExecutor(max_workers=2) as pool:
             incumbent_future = pool.submit(Engine({'jev': incumbent_provider}).decide, incumbent_request, current_snapshot)
             specialist_future = pool.submit(Engine(specialist_providers).decide, request, current_snapshot)

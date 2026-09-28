@@ -17,3 +17,37 @@ For a remote worker, use an operator-managed launcher executable as the array's 
 The copied `inference/cua-decider/setup.sh` is the original Fleet-specific optional installer. It retains original network/credential defaults and is not run automatically. Review the accompanying README for Fleet access, feedback semantics and pinned stock Cua dependencies. Qwen configuration and credentials remain runtime concerns in `decision_providers.py`; never commit values. Homelab service deployment remains owned by homelab-infra.
 
 The live booking harness also requires the installed stock Cua Driver/jev-use checkout. It is retained for future integration validation, not exercised by the offline test command. Other benchmark references in historical documentation are provenance, not bundled executable dependencies.
+
+## Optional Julia-1 generic chooser
+
+`CUA_GENERIC_PROVIDER` defaults to `jev`. Set it to `julia-1` when constructing providers with `generic_from_config()`. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
+
+```sh
+export CUA_GENERIC_PROVIDER=julia-1
+export CUA_JULIA_COMMAND='["/absolute/path/worker-venv/bin/python", "/absolute/path/computer-use/workers/julia_worker.py", "/absolute/path/Julia-1-checkpoint"]'
+```
+
+The command is an argv array, not shell text. A remote launcher can forward JSON lines over SSH; choose `CUDA_VISIBLE_DEVICES` in that launcher. No host, GPU index, credentials, or service changes are embedded in the adapter. Keep existing Qwen workers on their assigned GPU.
+
+Provision the `julia` package exposing `julia.inference.TransformerEngine`, compatible CUDA PyTorch and Transformers separately. The existing experiment used Transformers 5.0.0 and the reference engine; this is not a portable environment installer or an optimized FastEngine implementation. The worker takes a local checkpoint directory and verifies `model.safetensors` before model loading. Model: `SupersonicLabs/Julia-1`, revision `a85b127321d580d65176c89ced8273f305745d85`, SHA-256 `df853bf7fe424420011f3d0c47a05d7341aa9eefa7fb9f203ea4aada4ad95b72`. The adapter checks readiness identity too. Model code/weights remain external under their own terms.
+
+```python
+from providers import RemoteSpans, generic_from_config
+from rollout import Strangler
+
+spans = RemoteSpans()
+try:
+    generic = generic_from_config()
+    try:
+        policy = Strangler.from_config({'gliner2': spans, 'incumbent_jev': generic})
+        selection = policy.decide(request, current_snapshot)
+        # execute_bound with stored Driver arguments; independently observe afterward.
+    finally:
+        generic.close()
+finally:
+    spans.close()
+```
+
+`incumbent_jev` is a compatibility slot name, not proof of the actual model. Inspect `provider_outputs[].route/model` for attribution. Julia accepts at most 18 action candidates plus `reobserve` and `abstain` (20 total). It never truncates inputs: oversized/empty scopes return an explicit limit deferral without calling inference. The worker's strict tokenizer rejects option/context overflow (48-token options, 8192 total, 1024 head) rather than silently losing criteria. Re-scope from fresh evidence; do not split a global comparison into tournaments. Scores are uncalibrated, and no automatic Jev fallback is added. Keep one worker per task; 20-second transport timeouts close the worker. Remote launchers must terminate on stdin EOF/disconnect.
+
+Julia does not read screenshots or extract spans. [Terminal perception](TERMINALS.md) uses a separate vision-capable endpoint. The saved Julia experiments and one successful paired Obsidian choice do not establish broad reliability.

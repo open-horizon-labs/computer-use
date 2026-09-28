@@ -109,3 +109,9 @@ Use the stock computer-use skill and driver to observe the actual desktop. Build
 Call `Strangler.from_config(providers).decide(request, current_snapshot)`. Before any action, obtain a current snapshot and pass the unchanged request and selection through `execute_bound` with a driver callback. Independently verify the result. Keep one generic selector process per task; close it after the task and do not share feedback state across independent tasks.
 
 The controller must bind and verify: installing this skill alone does not cause tool calls to use the dispatcher. A one-call hosted API is not deployed by this repository.
+
+## 5. Optional Julia and terminal screenshots
+
+For a preferred Julia chooser, set `CUA_GENERIC_PROVIDER=julia-1` and `CUA_JULIA_COMMAND` to a JSON argv array launching `workers/julia_worker.py` with the cached checkpoint directory. Construct the generic provider with `generic_from_config()`, and keep the same Strangler/GLiNER2 bindings. Default is Jev/Qwen. Read `docs/PROVIDERS.md` in the runtime checkout for checkpoint digest, runtime dependencies, strict input limits and cleanup. This skill does not install Julia or start a worker.
+
+For terminal observations, read `docs/TERMINALS.md` in the runtime checkout and use `terminal_observation.py`. Configure `CUA_VISUAL_COMMAND` for `workers/visual_worker.py` with a screenshot-capable Qwen chat endpoint, or use the controlling LLM to inspect Driver screenshots. Julia and text-only Jev cannot supply visual evidence. Missing vision returns unknown; it must never become an app-stalled diagnosis.

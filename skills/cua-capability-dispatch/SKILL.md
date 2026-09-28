@@ -32,6 +32,14 @@ Before execution, validate a fresh snapshot and the unchanged request with `exec
 
 Keep one installed selector process per ongoing task; independent tasks need independent state. Send truthful verification feedback using the selector guide at `inference/cua-decider/README.md#reusable-bounded-selector` in the runtime checkout. Credentials are runtime provider configuration, never observation data or logs.
 
+## Terminal surfaces and optional Julia
+
+Lean on the configured models for their supported roles: NuExtract for structured reading, GLiNER2 for described spans, a generic chooser for contextual actions, and a screenshot-capable model for visual terminal evidence. Do not substitute AX polling for visual interpretation. Inspect the first fresh screenshot after launching a TUI: it may already be ready. An unchanged AX tree does not establish a stall, and changed pixels do not establish progress. Keep missing observations explicit.
+
+Use the runtime's `terminal_observation.py` helper and `docs/TERMINALS.md` in the runtime checkout. It exposes observation quality, combines fresh AX and screenshot evidence, and bounds the whole wait to 20 seconds with time reserved for a final inspection. Missing visual capability or a deadline produces unknown, not an application failure. Do not send Ctrl+C solely because AX text stayed unchanged. Verify the installed CLI and explicitly scope directory tools (for example, `swamp ui .` when the requested scope is the current directory). Reconcile effects before at most one retry.
+
+Users may opt into `JuliaGeneric` through `generic_from_config()` and `CUA_GENERIC_PROVIDER=julia-1`; see setup. Default Jev/Qwen and the qualified GLiNER2 route stay unchanged. Julia is text-only, limited to 18 action candidates plus two defer choices, and cannot substitute for screenshot perception. Do not truncate or tournament-rank oversized scopes. Report an input-limit deferral separately from a model abstention. Keep worker processes per task and close them in `finally`.
+
 ## Improve from failure
 
 Retain input/output traces without secrets. Compare behavior against the sketch: repair projection defects under existing policy; propose genuinely new rules separately for user approval. Preserve accepted CEs and a curated regression rejecting the tempting wrong repair. Run the offline gate and separately review active/regression traces against the sketch. Green finite tests do not establish general computer-use correctness. See `docs/SALVAGE.md` in the runtime checkout.

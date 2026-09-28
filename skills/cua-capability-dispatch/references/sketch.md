@@ -53,6 +53,16 @@ Preserve S4.2 and inherited anchors: never recover from stale/invalid requests b
 
 Authority: user approval following the desktop-free simulation report ("y, I like that"). If an extracted text field fails exact equality but contains the requested value as a complete word or phrase, treat that field as uncertain boundary evidence. Preserve the source text and consult Jev with the original criteria. Overlap is never sufficient for acceptance; do not trim the span or equate substring matching with equality. Word-internal substrings do not qualify. Other known predicate failures remain exclusions; unavailable or unsuccessful generic resolution defers. This may bring genuinely distinct names such as Acme Pro to review, but does not automatically accept them.
 
+## S4.5 Optional chooser and terminal perception
+
+Authority: user request to commit terminal observation/deadline improvements and add Julia-1 support for users who prefer it (2026-09-27).
+
+Jev/Qwen remains the default generic chooser. Explicit configuration may substitute the pinned Julia-1 finite-choice provider in the same generic slot, including its single specialist recovery invocation. This does not change GLiNER2 qualification, typed reducers, or action authorization. Report the actual provider from its output, not the historical `jev` slot name. Julia limits must defer explicitly without truncating candidates; scores are uncalibrated. No recursive fallback or automatic Julia promotion is authorized.
+
+For terminal surfaces, an unchanged AX tree or screenshot is neither evidence of a stall nor evidence of success. Inspect a fresh screenshot immediately against the declared postcondition; expose AX availability, unknown terminal coverage, screenshot availability/change, and visual interpretation requirements separately. Use a configured screenshot-capable provider or the controlling visual LLM when text is insufficient. A vision response cannot invent executable arguments. Offered actions retain their stored Driver arguments and snapshot binding, including the screenshot in the bound request. Observe independently after execution.
+
+The terminal observation helper uses one total deadline of at most 20 seconds across Driver calls, visual calls and polling, reserving time for final visual inspection. If capture or interpretation cannot complete, return unknown with the cause; do not label the app stalled or send an automatic interrupt. Recovery is a caller decision after reconciling state, with at most one retry. Confirm a terminal program's CLI and supply an explicit directory when its default scope differs from the shell's working directory.
+
 ## Explicit holes and nonclaims
 
 - Optimal checkpoint/threshold per role, calibration of classification acceptance, broad CUA coverage, and whether GLiNER beats GLiNER2 on simple labels require role-specific measurements. Defaults above are routing hypotheses.

@@ -94,3 +94,79 @@ class FleetGeneric:
                 self.process.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 self.process.kill(); self.process.wait()
+
+
+class JuliaGeneric:
+    """Opt-in Julia-1 finite chooser; never replaces span extraction."""
+    MODEL = 'SupersonicLabs/Julia-1'
+    SHA256 = 'df853bf7fe424420011f3d0c47a05d7341aa9eefa7fb9f203ea4aada4ad95b72'
+    REVISION = 'a85b127321d580d65176c89ced8273f305745d85'
+
+    def __init__(self, command=None, timeout=20):
+        import time
+        from worker_transport import JsonWorker
+        self.timeout = timeout
+        self.worker = JsonWorker(command if command is not None else
+                                 json.loads(os.environ.get('CUA_JULIA_COMMAND', '[]')))
+        try:
+            self.ready = self.worker.read(time.monotonic() + timeout)
+            if (self.ready.get('ready') is not True or self.ready.get('model') != self.MODEL
+                    or self.ready.get('weights_sha256') != self.SHA256
+                    or self.ready.get('revision') != self.REVISION):
+                raise ValueError('Julia checkpoint identity mismatch')
+        except Exception:
+            self.close()
+            raise
+
+    def __call__(self, step, request):
+        import time
+        import uuid
+        if step['method'] != 'choose':
+            raise ValueError('Julia requires a finite choice operation')
+        actions = request['actions']
+        ids = [a['id'] for a in actions]
+        if len(set(ids)) != len(ids) or set(ids) & {'reobserve', 'abstain'}:
+            raise ValueError('duplicate or reserved action IDs')
+        base = {'route': 'julia-1', 'model': self.MODEL, 'calibrated': False,
+                'action_authorized': False, 'requires_verification': True}
+        if not actions or len(actions) > 18:
+            return {**base, 'choice': 'abstain', 'reason': 'julia_candidate_limit',
+                    'model_called': False, 'candidate_count': len(actions), 'max_candidates': 18}
+        criteria = {a['id']: a.get('description', a.get('evidence_text', a.get('name', '')))
+                    for a in actions}
+        criteria.update(reobserve='Observe again; do not act on unresolved evidence',
+                        abstain='Stop when no safe authorized choice is supported')
+        context = {k: request[k] for k in ('fields', 'predicates', 'order_by', 'candidate_ids',
+                   'coverage_complete', 'fallback_id', 'specialist_context') if k in request}
+        goal = request.get('goal', 'Choose the unique action satisfying all caller criteria; defer on ties or missing evidence.')
+        payload = {'id': str(uuid.uuid4()), 'state': {
+            'goal': goal, 'observation': request.get('observation', ''),
+            'history': request.get('history', []), 'feedback': request.get('feedback', {})},
+            'instructions': goal + '\nCaller criteria and existing evidence: ' + json.dumps(context),
+            'criteria': criteria}
+        began = time.monotonic()
+        result = self.worker.exchange(payload, self.timeout)
+        if result.get('id') != payload['id']:
+            self.close()
+            raise ValueError('Julia response ID mismatch')
+        if result.get('error'):
+            return {**base, 'choice': 'abstain', 'reason': 'julia_input_or_inference_error',
+                    'worker_error': result['error'], 'model_called': True}
+        if result.get('choice') not in criteria:
+            raise ValueError('Julia returned an unoffered choice')
+        return {**result, **base, 'choice': result['choice'], 'model_called': True,
+                'roundtrip_ms': (time.monotonic() - began) * 1000,
+                'action_authorized': result['choice'] in ids}
+
+    def close(self):
+        self.worker.close()
+
+
+def generic_from_config():
+    """Default remains Jev/Qwen. Explicit Julia preference changes only chooser."""
+    name = os.environ.get('CUA_GENERIC_PROVIDER', 'jev').lower()
+    if name == 'jev':
+        return FleetGeneric()
+    if name in ('julia', 'julia-1'):
+        return JuliaGeneric()
+    raise ValueError('CUA_GENERIC_PROVIDER must be jev or julia-1')

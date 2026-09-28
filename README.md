@@ -96,3 +96,9 @@ Providers are injected callables `(step, request) -> grounded evidence or offere
 Historical files retain their original experiment paths, local hardware descriptions, and pre-approval wording where relevant. S4.4 and the accepted archive carry current policy. The original `inference/` layout is retained so captured replays remain resolvable without the homelab repository. Only required fixture code and evidence were extracted; training datasets, deployment infrastructure and credentials stay outside this repo.
 
 This repository is private under `open-horizon-labs`. No upstream license is inferred for third-party tools or model weights; they remain external dependencies under their own terms.
+
+## Terminal observations and chooser preference
+
+[Terminal integration](docs/TERMINALS.md) combines fresh Driver screenshots and AX observations with explicit quality metadata and a bounded visual postcondition check. An unchanged AX tree is not a stall. These are integration helpers; the stock Driver binary is unchanged.
+
+[Optional Julia-1](docs/PROVIDERS.md#optional-julia-1-generic-chooser) replaces only the generic finite-choice provider when explicitly configured. Default Jev/Qwen, GLiNER2 extraction and current-snapshot action binding are preserved. Julia is not a vision model.
