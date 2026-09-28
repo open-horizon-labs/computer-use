@@ -1,6 +1,21 @@
 # Local CUA task tools
 
-The `cua-task` MCP server makes the configured models available as ordinary agent tools. Cua Driver runs on the Mac and retains observation/execution. Model inference follows external runtime configuration; remote GPU inference does not move desktop control remotely.
+The facade gives an agent one coherent, evidence-first interface to desktop work. It joins fresh Cua Driver observations, page reading, action selection, execution and independent verification while keeping each boundary explicit. Agents should use these tools directly instead of writing task-specific shell wrappers around model endpoints or Driver calls.
+
+Cua Driver still observes and acts on the Mac. The facade sends bounded evidence to the configured specialist for the task: NuExtract3 reads requested fields from observed page records; Jev (with configured Qwen escalation) or Julia chooses among contextual alternatives; qualified GLiNER2 spans handle the narrow typed-field matching route; SystemOne handles visual choice or screenshot verification. Exact unique name/role selection bypasses a chooser by design. Provider routing and credentials come from external runtime configuration, so remote inference does not move desktop control off the Mac. Check `cua_trace` when you need the route and timing actually used.
+
+## Agent workflow
+
+Treat a UI task as an ordered sequence of evidence, decision, action and verification steps. Keep the user's prerequisites intact, select only the next unmet step, and verify its visible result before continuing. For each state transition:
+
+1. Use `cua_windows` to find the relevant existing window, then `cua_observe` to obtain a fresh screenshot and accessibility tree. The returned snapshot and element IDs define the only evidence currently available.
+2. If the task depends on page content, call `cua_read` with the observed record roots and only the fields/predicates needed. NuExtract3 returns grounded values tied to those source records; missing or ambiguous values remain unknown. Keep records separate and avoid whole-page roots that combine several results.
+3. Call `cua_choose` for the next action. Use semantic mode for contextual alternatives, spans for the qualified typed-field contract, visual mode when image evidence is needed, or exact mode only for a genuinely unique observed name/role. Model scores are not calibrated confidence. A bypass, singleton, unsupported request, provider failure or incomplete evidence is not chooser success; reconcile the state or report a blocker.
+4. Execute only the opaque selection handle with `cua_act`. The facade retains the original Driver arguments and checks that the observed state is unchanged before acting. Never invent element IDs, coordinates or Driver arguments.
+5. Call `cua_verify` with a concrete visible postcondition. Treat delivery as an attempted action, not proof it worked. Use the returned fresh observation to reconcile failures and ground the next step.
+6. Keep retries bounded and close task-scoped model workers with `cua_finish` when done. This preserves Cua Driver and the user's windows.
+
+Each step must be grounded again after the UI changes. An old candidate, reading or selection does not authorize a later action. If a route cannot establish the requested evidence, stop at unknown/blocker rather than guessing. Do not use raw shell or direct Driver/model wrappers as an alternate path for ordinary UI decisions; use a documented capability gap only when the facade explicitly cannot express the operation, and preserve fresh observation, bound arguments and independent verification.
 
 ## Install
 
