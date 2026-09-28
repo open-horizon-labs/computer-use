@@ -63,9 +63,16 @@ class Driver:
         return self._perception
 
     def call(self, tool, args, timeout=20):
-        result = subprocess.run([self.executable, 'call', tool, '--json', json.dumps(args)],
-                                capture_output=True, text=True, timeout=timeout, check=True)
-        value = json.loads(result.stdout)
+        try:
+            result = subprocess.run([self.executable, 'call', tool, '--json', json.dumps(args)],
+                                    capture_output=True, text=True, timeout=timeout, check=True)
+            value = json.loads(result.stdout)
+        except subprocess.CalledProcessError as error:
+            raise Gap('driver_call_failed: %s exited %s' % (tool, error.returncode))
+        except subprocess.TimeoutExpired:
+            raise Gap('driver_call_failed: %s timed out after %ss' % (tool, timeout))
+        except (OSError, ValueError):
+            raise Gap('driver_call_failed: %s returned no usable result' % tool)
         if value.get('refusal') or value.get('status') == 'refused':
             raise Gap('Driver refused: ' + str(value.get('refusal', {}).get('code', 'unknown')))
         return value
@@ -265,6 +272,9 @@ class Facade:
                       % PERCEPTION_CAPTURE_TTL_S)
         if state.get('regions_capture_id') == capture_id and state.get('regions') is not None:
             return state['regions']
+        if state.get('regions_failure', (None, None))[0] == capture_id:
+            # A failed parse of this capture is not retried per candidate.
+            raise Gap(state['regions_failure'][1])
         options = {}
         if kinds: options['kinds'] = list(kinds)
         if min_confidence is not None: options['min_confidence'] = min_confidence
@@ -272,11 +282,17 @@ class Facade:
         args = {'capture_id': capture_id, **({'options': options} if options else {})}
         try:
             result = self.driver.call('parse_visual_regions', args)
+        except Gap as gap:
+            if str(gap).startswith('Driver refused'):raise
+            message = 'perception_parse_failed: ' + str(gap)
+            state['regions_failure'] = (capture_id, message)
+            raise Gap(message)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError, ValueError) as error:
             # A Driver/extension failure is an unavailable capability, never a
-            # crash of the caller (live CE: exit 1 killed a choose over a unique control).
-            detail = (getattr(error, 'stderr', None) or getattr(error, 'output', None) or str(error))
-            raise Gap('perception_parse_failed: ' + str(detail).strip()[:200])
+            # crash of the caller. Fixed text only: stderr can carry paths and ids.
+            message = 'perception_parse_failed: parse_visual_regions failed (%s)' % type(error).__name__
+            state['regions_failure'] = (capture_id, message)
+            raise Gap(message)
         state['regions'] = result
         state['regions_capture_id'] = capture_id
         self.event('perception_parse', route='cua-perception', snapshot=snapshot,
@@ -860,7 +876,12 @@ class Facade:
         if not item or item['used']:raise Gap('Unknown or already consumed selection')
         state=self.state(item['snapshot'])
         item['used']=True  # Never replay an uncertain side effect.
-        fresh=self.observe(state['pid'],state['window_id'])
+        try:
+            fresh=self.observe(state['pid'],state['window_id'])
+        except Gap as gap:
+            if str(gap).startswith('driver_call_failed'):
+                item['used']=False  # nothing was clicked: transient Driver failure, not an uncertain side effect
+            raise
         current=self.state(fresh['snapshot'])
         self.check_foreground(current['raw'])
         # Revalidate the content scope the selection was bound in (S4.8): any

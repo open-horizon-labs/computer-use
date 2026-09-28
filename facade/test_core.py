@@ -638,4 +638,53 @@ class CoreTests(unittest.TestCase):
         f.observe(1,2)
         self.assertEqual(f.close()['driver_version_state'],'unparsed')
 
+    # --- Driver boundary (review of PR 11) -----------------------------------
+    def test_real_driver_failures_become_typed_gaps_without_stderr(self):
+        # Tempting wrong patch: leave check=True so raw CalledProcessError/Timeout
+        # escapes a tool and leaks stderr into the agent's error text.
+        import subprocess
+        from core import Driver
+        d=Driver('/nonexistent/cua-driver')
+        with self.assertRaisesRegex(Gap,'driver_call_failed: list_windows returned no usable result'):d.call('list_windows',{})
+        real=subprocess.run
+        try:
+            def boom(*a,**k):raise subprocess.CalledProcessError(3,a[0],stderr='/Users/secret/path failed')
+            subprocess.run=boom
+            with self.assertRaises(Gap) as caught:d.call('get_window_state',{})
+            self.assertIn('exited 3',str(caught.exception));self.assertNotIn('secret',str(caught.exception))
+            def slow(*a,**k):raise subprocess.TimeoutExpired(a[0],20)
+            subprocess.run=slow
+            with self.assertRaisesRegex(Gap,'timed out'):d.call('click',{})
+        finally:subprocess.run=real
+
+    def test_driver_failure_before_the_click_returns_the_selection(self):
+        # Review P2: act() consumed the selection, then a get_window_state failure
+        # left the agent with nothing and no click. Tempting wrong patch: restore
+        # the selection on ANY failure (would replay after a real refusal or an
+        # uncertain click).
+        sel=self.exact()['selection']
+        real=self.driver.observe
+        self.driver.observe=lambda *a:(_ for _ in ()).throw(Gap('driver_call_failed: get_window_state exited 1'))
+        with self.assertRaisesRegex(Gap,'driver_call_failed'):self.f.act(sel)
+        self.assertEqual(self.driver.executed,[])
+        self.driver.observe=real  # transient failure over: the same selection is retried as-is
+        out=self.f.act(sel);self.assertTrue(out['requires_verification']);self.assertEqual(len(self.driver.executed),1)
+
+    def test_ui_changed_refusal_still_consumes_the_selection(self):
+        sel=self.exact()['selection'];self.driver.change=True
+        with self.assertRaisesRegex(Gap,'UI changed'):self.f.act(sel)
+        with self.assertRaisesRegex(Gap,'already consumed'):self.f.act(sel)
+
+    def test_click_failure_keeps_the_selection_consumed(self):
+        sel=self.exact()['selection']
+        real=self.driver.call
+        def bad(tool,args,timeout=20):
+            if tool=='click':raise Gap('driver_call_failed: click exited 1')
+            return real(tool,args,timeout)
+        self.driver.call=bad
+        with self.assertRaises(Gap):self.f.act(sel)
+        self.driver.call=real
+        with self.assertRaisesRegex(Gap,'already consumed'):self.f.act(sel)
+
+
 if __name__=='__main__':unittest.main()

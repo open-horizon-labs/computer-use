@@ -158,6 +158,22 @@ class PerceptionRouteTests(unittest.TestCase):
         self.assertNotIn('record:', described['e2']['description'])
         self.assertNotIn('record_basis', described['e2'])
 
+    def test_failed_parse_is_cached_per_capture_not_retried_per_candidate(self):
+        # Review P2: a failing parse re-ran for every repeated control (12 controls
+        # x a 20 s timeout). Tempting wrong patch: cache only successes.
+        import subprocess
+        self.driver.capture_id = 'cap_1'
+        self.driver.observe = lambda *a: flat_two_book_window()
+        real_call = self.driver.call; calls = []
+        def failing(tool, args, timeout=20):
+            if tool == 'parse_visual_regions':
+                calls.append(args); raise subprocess.CalledProcessError(1, ['cua-driver'], stderr='boom')
+            return real_call(tool, args, timeout)
+        self.driver.call = failing
+        state = self.f.state(self.f.observe(1, 2)['snapshot'])
+        self.f.actions(state, ['e2', 'e3'], 'click', None)
+        self.assertEqual(len(calls), 1)
+
     def test_explicit_regions_parse_failure_is_a_clean_gap(self):
         import subprocess
         self.driver.capture_id = 'cap_1'
@@ -168,8 +184,10 @@ class PerceptionRouteTests(unittest.TestCase):
             return real_call(tool, args, timeout)
         self.driver.call = failing
         obs = self.f.observe(1, 2)['snapshot']
-        with self.assertRaisesRegex(Gap, 'perception_parse_failed.*extension crashed'):
+        with self.assertRaisesRegex(Gap, 'perception_parse_failed') as caught:
             self.f.regions(obs)
+        # Tempting wrong patch: put stderr in the agent-visible message (paths, capture ids).
+        self.assertNotIn('extension crashed', str(caught.exception))
 
     def test_perception_fallback_never_overrides_valid_ax_grouping(self):
         # Tempting wrong patch: always consulting perception layout, which could
