@@ -40,10 +40,19 @@ class FakeDriver:
     def __init__(self):
         self.version=0;self.change=False;self.executed=[];self.duplicate=False;self.pixel_change=False
         self.no_snapshot=False;self.window_open=True;self.background_input=None;self.booking=False
+        # Perception defaults to not-installed so existing tests are unaffected.
+        self.perception_payload={'installed':False}
+        self.capture_id=None;self.window_bounds=None;self.parse_calls=[];self.parse_result={'regions':[]}
+        self.parse_refusal=None
+    def perception_status(self):return copy.deepcopy(self.perception_payload)
     def call(self,tool,args,timeout=20):
         if tool=='list_windows':
             return {'windows':[{'pid':1,'window_id':2,'title':'Demo'}] if self.window_open else []}
-        if tool=='click':self.executed.append(copy.deepcopy(args));return {'effect':'unverifiable'}
+        if tool in ('click','type_text'):self.executed.append(copy.deepcopy(args));return {'effect':'unverifiable'}
+        if tool=='parse_visual_regions':
+            self.parse_calls.append(copy.deepcopy(args))
+            if self.parse_refusal:return {'refusal':self.parse_refusal}
+            return copy.deepcopy(self.parse_result)
         return {}
     def observe(self,*args):
         self.version+=1
@@ -52,6 +61,8 @@ class FakeDriver:
         if self.duplicate:x['elements'][6]['label']='Inspect first'
         if self.pixel_change:x['_image']=b'changed'
         if self.background_input is not None:x['background_input']=self.background_input
+        if self.capture_id:x['capture_id']=self.capture_id
+        if self.window_bounds:x['window_bounds']=self.window_bounds
         if self.no_snapshot:
             x.pop('snapshot_id',None);x['refusal']={'code':'degraded'};x['degraded_reason']='window_minimized'
         return x
