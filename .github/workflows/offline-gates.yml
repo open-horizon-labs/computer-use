@@ -41,3 +41,7 @@ jobs:
         run: python facade/check_protocol.py
       - name: Call budget (default path stays within its measured LLM-visible calls)
         run: python scripts/check_call_budget.py
+      - name: Plan mutation checks (each wrong patch of look-then-plan must fail its test by assertion)
+        run: python scripts/check_plan_mutations.py
+      - name: Look comparison (structure and size only; live latency and accuracy are not measured)
+        run: python scripts/look_compare.py
