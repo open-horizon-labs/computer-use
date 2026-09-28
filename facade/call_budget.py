@@ -368,26 +368,31 @@ def measure_plan_scenarios():
             return {'choice': pick['id'], 'route': 'julia-1', 'action_authorized': True}
     out['plan_booking_blind_fields'] = run(booking_driver(), booking_blind_fields, lv.LiveReader(lv.BOOKING_PATTERNS), chooser=ByDescription())
 
-    def orders_plan(dialog_guess, identity=True):
+    def orders_plan(dialog_guess, identity=True, declared='guess'):
+        """The dialog text is usually unknown until it appears, so a confirm step must DECLARE its complete text (positive authorization). declared='guess':
+        the scripted LLM guesses a short text, the confirm defers with the ACTUAL lines, it reads them and presses the dialog control deliberately (3 calls).
+        declared='exact': it already knows the wording (best case, 2 calls)."""
         def policy(call):
             look = call('cua_look', title='Demo')
             conds, record = look_conditions(look, ['Walnut desk lamp', 'Processing'])
             control = next(c for c in record['controls'] if c.lower() in 'cancel the walnut desk lamp order')
             ident = unique_line(look, record)
+            text = ['Cancel order %s (Walnut desk lamp)?' % ident] if declared == 'exact' else ['Cancel order %s?' % ident]
             press = {'do': 'press', 'where': {'lines': conds}, 'control': control, 'expect': dialog_guess.replace('#N', ident), **({'identity': [ident]} if identity else {})}
             goal = 'Cancel the Walnut desk lamp order that is still Processing'
-            first = call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[press, {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order %s cancelled' % ident}])
-            if first['status'] == 'done' or first.get('reason') not in ('confirm_dialog_present', 'confirm_identity_partial'):return first
-            if first['reason'] == 'confirm_identity_partial':  # the hint: the click is done; read dialog.lines, and if it is the right record press the dialog's control deliberately
-                dialog = first['steps'][-1]['dialog']
-                if not any(ident in line for line in dialog['lines']):return first
+            first = call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[press, {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': text, 'expect': 'Order %s cancelled' % ident}])
+            if first['status'] == 'done' or first.get('reason') not in ('confirm_dialog_present', 'confirm_identity_partial', 'confirm_dialog_unexpected_text'):return first
+            if first['reason'] in ('confirm_identity_partial', 'confirm_dialog_unexpected_text'):  # the hint: the click is done; read dialog.lines, and if it is the right record press the dialog's control deliberately
+                lines = first['steps'][-1]['dialog']['lines']
+                if not any(ident in line for line in lines):return first
                 return call('cua_do', goal=goal, expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Yes, cancel order', 'expect': 'Order %s cancelled' % ident}])
             # the dialog was not what the guess said: the click is done, so press the dialog's own control
             label = first['steps'][0]['dialog']['controls'][0]
             return call('cua_do', goal=goal, expect=None, title='Demo', steps=[{'do': 'press', 'control': label, 'expect': 'Order %s cancelled' % ident}])
         return policy
-    out['plan_orders_look_do'] = run(orders_driver(), orders_plan('Cancel order #N'), lv.LiveReader(lv.ORDER_PATTERNS))
-    out['plan_orders_identity_default'] = run(orders_driver(), orders_plan('Cancel order #N', identity=False), lv.LiveReader(lv.ORDER_PATTERNS))
+    out['plan_orders_look_do'] = run(orders_driver(), orders_plan('Cancel order #N'), lv.LiveReader(lv.ORDER_PATTERNS))  # declares a guess: confirm defers with the actual dialog lines, then a deliberate press
+    out['plan_orders_declared_dialog'] = run(orders_driver(), orders_plan('Cancel order #N', declared='exact'), lv.LiveReader(lv.ORDER_PATTERNS))  # best case: the caller already knows the wording
+    out['plan_orders_identity_default'] = run(orders_driver(), orders_plan('Cancel order #N', identity=False, declared='exact'), lv.LiveReader(lv.ORDER_PATTERNS))
     out['plan_orders_wrong_dialog_guess'] = run(orders_driver(), orders_plan('Are you sure'), lv.LiveReader(lv.ORDER_PATTERNS))
 
     def wizard(final_label):
@@ -476,7 +481,7 @@ def measure_plan_scenarios():
         ident = unique_line(look, record)
         return call('cua_do', goal='Cancel the Walnut desk lamp order that is still Processing', expect=None, title='Demo', look_id=look['look_id'],
                     steps=[{'do': 'press', 'where': {'lines': conds}, 'control': 'Cancel', 'identity': [ident], 'expect': 'order ' + ident},
-                           {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order %s cancelled' % ident}])
+                           {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order %s (Walnut desk lamp)?' % ident], 'expect': 'Order %s cancelled' % ident}])
     d = lv.LiveDriver('live_orders_ax.json');d.script = tp.orders_dialog('Do NOT cancel order #1044 (Walnut desk lamp)')
     out['plan_negated_dialog'] = run(d, negated_dialog, lv.LiveReader(lv.ORDER_PATTERNS))
 
@@ -493,6 +498,40 @@ def measure_plan_scenarios():
         return policy
     out['plan_destructive_undeclared'] = run(delete_page(), destructive(False), lv.LiveReader({}))
     out['plan_destructive_declared_after_refusal'] = run(delete_page(), destructive(True), lv.LiveReader({}))
+
+    # Second review of PR 18.
+    import test_plan_review2 as tp2
+    def capped_uniqueness(call):
+        look = call('cua_look', title='Demo', focus='1:45')  # the LLM focuses on the slot it wants; other real records still satisfy a loose condition
+        loose = [{'line': 'eq', 'value': 'Dr. Morgan Reyes'}, {'line': 'eq', 'value': 'Follow-up'}]
+        first = call('cua_do', goal=booking_goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': loose}, 'expect': 'Booked:'}])
+        if first.get('reason') != 'where_matches_several':return first
+        return call('cua_do', goal=booking_goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': loose + [{'line': 'contains', 'value': '1:45 PM'}]}, 'expect': 'Booked:'}])
+    out['plan_uniqueness_over_all_records'] = run(booking_driver(), capped_uniqueness, lv.LiveReader(lv.BOOKING_PATTERNS))
+
+    def hidden_page():
+        d = sh.ShapeDriver(tp2.two_orders(hidden=('Status: Cancelled',)));d.script = sh.toast('Opened', buttons=());return d
+    def hidden_ack(call):
+        look = call('cua_look', title='Demo')
+        return call('cua_do', goal='Open the active order A', expect=None, title='Demo', look_id=look['look_id'],
+                    steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Order A'}, {'line': 'eq', 'value': 'Status: Active'}]}, 'expect': 'Opened'}])
+    out['plan_hidden_text_ack'] = run(hidden_page(), hidden_ack, lv.LiveReader({}))
+    def hidden_wide(call):
+        look = call('cua_look', title='Demo', max_lines=20, line_chars=200)  # the whole record is visible, so the LLM can see order A is cancelled and picks B
+        return call('cua_do', goal='Open the active order', expect=None, title='Demo', look_id=look['look_id'],
+                    steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Status: Active'}, {'line': 'not_contains', 'value': 'Cancelled'}]}, 'expect': 'Opened'}])
+    out['plan_hidden_text_wide_look'] = run(hidden_page(), hidden_wide, lv.LiveReader({}))
+
+    def checkbox_flip(call):
+        look = call('cua_look', title='Demo')
+        box['value'] = '1'  # someone else subscribed between the look and the plan
+        return call('cua_do', goal='Subscribe to the newsletter', expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'control': 'Subscribe', 'expect': 'Subscribed'}])
+    els, web = sh.base();sh.E(els, web, 'AXStaticText', 'Newsletter', 'Newsletter');idx = sh.E(els, web, 'AXCheckBox', 'Subscribe', '0');box = {'value': '0'}
+    def box_script(dr, e2):
+        by(e2, idx)['value'] = box['value']
+        if dr.executed:sh.E(e2, 1, 'AXStaticText', 'Subscribed', 'Subscribed')
+    d = sh.ShapeDriver(els);d.script = box_script
+    out['plan_checkbox_flip'] = run(d, checkbox_flip, lv.LiveReader({}))
     return out
 
 

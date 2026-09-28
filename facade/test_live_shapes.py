@@ -206,7 +206,7 @@ class LiveOrders(LiveBase):
         r = self.cancel()
         self.assertEqual((r['status'], r['reason'], self.driver.executed), ('deferred', 'control_needed', []))
         self.assertEqual({(c['label'], c['count']) for c in r['found']['repeated_controls']}, {('Track', 7), ('Cancel', 7)})
-        self.assertIn("'Cancel'", r['hint'])
+        self.assertIn('found.repeated_controls', r['hint']);self.assertNotIn('Cancel', r['hint'])  # page text lives in found, never in a hint
 
     def test_orders_control_cancel_selects_the_right_rows_cancel_and_confirms_by_label(self):
         # F2 + P1-2 on the real shape. Wrong patch: press Track (first button) or the first row's Cancel.

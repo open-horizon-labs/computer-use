@@ -239,8 +239,19 @@ class DefaultPathBudget(unittest.TestCase):
     def test_look_then_plan_is_two_calls_with_no_reader_and_no_chooser_on_the_real_trees(self):
         # Option B (CE-FACADE-005). Wrong patch: a look that runs NuExtract by default, a filter that needs the chooser, or a plan that needs a second do.
         m = self.measured
-        for name in ('plan_booking_look_do', 'plan_booking_half_hour_look_do', 'plan_orders_look_do'):
+        for name in ('plan_booking_look_do', 'plan_booking_half_hour_look_do', 'plan_orders_declared_dialog'):
             self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['reader'], m[name]['chooser'], m[name]['tools']), (2, 0, 0, ['cua_look', 'cua_do']), name)
+
+    def test_a_confirm_flow_costs_a_third_call_because_the_dialog_text_must_be_declared(self):
+        # Second review: positive authorization. Wrong patch: a confirm without a declared dialog text (2 calls, judged by a word list).
+        m = self.measured;m3 = self.scenario('plan_orders_look_do')
+        self.assertEqual((m['plan_orders_look_do']['calls'], m['plan_orders_look_do']['reader'], m['plan_orders_look_do']['chooser']), (3, 0, 0))
+        self.assertEqual(m['plan_orders_declared_dialog']['calls'], 2)
+
+    def test_second_review_scenarios_are_measured(self):
+        m = self.measured
+        for name, calls, final in (('plan_uniqueness_over_all_records', 3, 'done'), ('plan_hidden_text_ack', 2, 'stopped'), ('plan_hidden_text_wide_look', 2, 'done'), ('plan_checkbox_flip', 2, 'stopped')):
+            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['status']), (calls, final), name)
 
     def test_the_other_plan_shapes_are_two_calls_measured(self):
         m = self.measured

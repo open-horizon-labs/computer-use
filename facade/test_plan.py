@@ -125,8 +125,8 @@ class Validation(PlanBase):
 
     def test_confirm_is_only_an_explicit_step_after_a_press_with_an_exact_label(self):
         # Wrong patch: a `confirm` field on the press step that clicks whatever dialog appears (the dialog's identity is never checked).
-        r = self.refused([{'do': 'confirm', 'confirm': 'Yes', 'expect': 'x'}], 'bad_request');self.assertIn('follow a press', S(r, 'message'))
-        self.refused([{'do': 'verify', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes', 'expect': 'x'}], 'bad_request')
+        r = self.refused([{'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['x'], 'expect': 'x'}], 'bad_request');self.assertIn('follow a press', S(r, 'message'))
+        self.refused([{'do': 'verify', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['x'], 'expect': 'x'}], 'bad_request')
         self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x', 'confirm': 'Yes'}], 'bad_request')
         self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'expect': 'x'}], 'bad_request')
         self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'confirm': '  ', 'expect': 'x'}], 'bad_request')
@@ -178,7 +178,7 @@ class Validation(PlanBase):
         self.assertNotEqual(G(r, 'reason'), 'destructive_control')  # declared on the step: validation passes (the run then finds no such control)
 
     def test_a_destructive_confirm_label_is_refused_unless_the_step_declares_it(self):
-        self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes, delete everything', 'expect': 'x'}], 'destructive_control', goal='Update my profile')
+        self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes, delete everything', 'dialog_text': ['Delete everything?'], 'expect': 'x'}], 'destructive_control', goal='Update my profile')
 
     def test_a_bad_abort_if_is_refused(self):
         for abort in ('', '  ', 'x' * 201, 5):
@@ -326,9 +326,11 @@ class OrdersPlans(PlanBase):
     """The REAL captured orders table (rows with Track and Cancel; the confirm dialog is page content, no AXSheet)."""
     def setUp(self):self.orders()
 
-    def cancel(self, identity=('#1044',), confirm='Yes, cancel order', press_expect='Cancel order #1044', **kw):
+    DIALOG = ['Cancel order #1044 (Walnut desk lamp)?']  # what the captured orders flow shows; a confirm step must declare the dialog's complete text
+
+    def cancel(self, identity=('#1044',), confirm='Yes, cancel order', press_expect='Cancel order #1044', dialog=None, **kw):
         press = {'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'expect': press_expect, **({'identity': list(identity)} if identity else {})}
-        steps = [press, {'do': 'confirm', 'confirm': confirm, 'expect': 'Order #1044 cancelled'}]
+        steps = [press, {'do': 'confirm', 'confirm': confirm, 'expect': 'Order #1044 cancelled', 'dialog_text': dialog or self.DIALOG}]
         return self.plan(steps, goal=ORDERS_GOAL, look_id=self.look()['look_id'], **kw)
 
     def test_press_then_an_explicit_confirm_step_cancels_the_right_order_with_no_reader_call(self):
@@ -348,7 +350,7 @@ class OrdersPlans(PlanBase):
 
     def test_a_dialog_that_belongs_to_another_record_is_never_pressed(self):
         self.orders(script=orders_dialog('Cancel order #1041 (Walnut desk lamp)?'))
-        r = self.cancel(press_expect='Cancel order')  # the press's own expect is generic enough to accept this dialog; the identity check must not
+        r = self.cancel(press_expect='Cancel order', dialog=['Cancel order #1041 (Walnut desk lamp)?'])  # the press's own expect is generic enough to accept this dialog; the identity check must not
         self.assertEqual((G(r, 'status'), G(r, 'reason'), self.clicked(), G(r, 'steps', 1, 'dialog', 'identity')), ('stopped', 'confirm_identity_unknown', ['67'], 'unknown'))
 
     def test_the_confirm_label_is_matched_exactly_not_as_a_prefix(self):
@@ -360,11 +362,11 @@ class OrdersPlans(PlanBase):
         self.shape(sh.cards(), sh.dialog_then_toast(['Yes', 'No']))
         look = self.look()
         steps = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Dr. B'}]}, 'control': 'Book', 'expect': 'Confirm Dr. B'},
-                 {'do': 'confirm', 'confirm': 'Book', 'expect': 'Booked: Dr. B'}]
+                 {'do': 'confirm', 'confirm': 'Book', 'dialog_text': ['Confirm Dr. B'], 'expect': 'Booked: Dr. B'}]
         r = self.plan(steps, look_id=look['look_id'])
         self.assertEqual((G(r, 'status'), G(r, 'steps', 1, 'reason'), len(self.driver.executed)), ('stopped', 'confirm_control_not_found', 1))
         good = self.shape(sh.cards(), sh.dialog_then_toast(['Yes', 'No']));look = self.look()
-        steps[1] = {'do': 'confirm', 'confirm': 'Yes', 'expect': 'Booked: Dr. B'}
+        steps[1] = {'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['Confirm Dr. B'], 'expect': 'Booked: Dr. B'}
         r = self.plan(steps, look_id=look['look_id'])
         self.assertEqual((G(r, 'status'), len(self.driver.executed)), ('done', 2))
 
@@ -380,7 +382,7 @@ class OrdersPlans(PlanBase):
         fields = {'order': {'description': 'Order number'}, 'item': {'description': 'Item'}, 'status': {'description': 'Status'}}
         where = {'fields': fields, 'predicates': [{'field': 'order', 'value': '#1044'}]}
         r = self.plan([{'do': 'press', 'where': where, 'control': 'Cancel', 'identity': ['order'], 'expect': 'Cancel order #1044'},
-                       {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order #1044 cancelled'}], goal=ORDERS_GOAL)
+                       {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order #1044 (Walnut desk lamp)?'], 'expect': 'Order #1044 cancelled'}], goal=ORDERS_GOAL)
         self.assertEqual((G(r, 'status'), self.clicked()), ('done', ['67', '17']))
         self.assertEqual(len(self.reader.requests), 1)  # the press's read only; the dialog is checked by displayed strings
 

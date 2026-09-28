@@ -53,11 +53,13 @@ class HiddenText(PlanBase):
         r = self.plan([self.lines_press()], look_id=look['look_id'])
         self.assertEqual((G(r, 'status'), G(r, 'reason'), self.driver.executed), ('stopped', 'page_changed_since_look', []))
 
-    def test_a_positive_condition_still_works_on_a_record_with_a_cut_line(self):
-        # A cut can only hide MORE text; it never makes a shown positive match false.
+    def test_a_positive_match_on_a_record_with_a_cut_line_needs_the_acknowledgement(self):
+        # Second review: a shown positive match is no guarantee (a hidden line can contradict it), so selecting such a record needs accept_hidden_text.
         self.hidden(' AVAILABLE')
         look = self.look()
         r = self.plan([self.lines_press()], look_id=look['look_id'])
+        self.assertEqual((G(r, 'reason'), self.driver.executed), ('selected_record_has_hidden_text', []))
+        r = self.plan([self.lines_press(accept_hidden_text=True)], look_id=look['look_id'])
         self.assertEqual((G(r, 'status'), self.clicked()), ('done', ['44']))
 
     def test_lines_omitted_beyond_six_count_as_hidden_text(self):
@@ -69,7 +71,7 @@ class HiddenText(PlanBase):
         self.shape(els, sh.toast('Opened', buttons=()));look = self.look()
         r = self.plan([{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'line A0'}, {'line': 'not_contains', 'value': 'sold out'}]}, 'expect': 'Opened'}], look_id=look['look_id'], goal='Open A')
         self.assertEqual((G(r, 'reason'), self.driver.executed), ('negative_condition_over_cut_lines', []))
-        ok = self.plan([{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'line A0'}]}, 'expect': 'Opened'}], look_id=look['look_id'], goal='Open A')
+        ok = self.plan([{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'line A0'}]}, 'accept_hidden_text': True, 'expect': 'Opened'}], look_id=look['look_id'], goal='Open A')
         self.assertEqual((G(ok, 'status'), len(self.driver.executed)), ('done', 1))
 
     def test_a_record_that_fits_the_display_keeps_its_negative_conditions(self):
@@ -85,11 +87,12 @@ class HiddenText(PlanBase):
 class Identity(PlanBase):
     """P1-2: identity strings are whole tokens; a negated dialog line is never a match."""
     def orders_with(self, text):
+        self.text = text  # the caller declares exactly this dialog text (positive authorization); the identity check is the sanity check on top
         self.orders(script=orders_dialog(text))
 
-    def cancel(self, ident):
+    def cancel(self, ident, text=None):
         steps = [{'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'identity': ident, 'expect': 'order #1044'},
-                 {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order #1044 cancelled'}]
+                 {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order #1044 cancelled', 'dialog_text': [text or self.text]}]
         return self.plan(steps, goal=ORDERS_GOAL, look_id=self.look()['look_id'])
 
     def test_an_identity_that_is_only_a_prefix_of_another_number_is_not_a_match(self):
@@ -99,18 +102,12 @@ class Identity(PlanBase):
         self.assertEqual((G(r, 'status'), self.clicked()), ('stopped', ['67']));self.assertNotEqual(G(r, 'reason'), None)
         self.assertIn(G(r, 'reason'), ('confirm_identity_partial', 'confirm_identity_unknown'))
 
-    def test_a_negated_dialog_line_defers_and_shows_the_line(self):
-        # Wrong patch: the identity is present, so confirm ("Do NOT cancel order #1044" matched).
+    def test_a_negated_dialog_is_decided_by_the_declaration_not_by_a_word_list(self):
+        # Second review: the negation word list was replaced by a whole-dialog whitelist. A negated text the caller did NOT declare defers; declared exactly, it is theirs.
         self.orders_with('Do NOT cancel order #1044 (Walnut desk lamp)')
-        r = self.cancel(['#1044', 'Walnut desk lamp'])
-        self.assertEqual((G(r, 'status'), G(r, 'reason'), self.clicked()), ('stopped', 'confirm_dialog_negated', ['67']))
+        r = self.cancel(['#1044', 'Walnut desk lamp'], text='Cancel order #1044 (Walnut desk lamp)')
+        self.assertEqual((G(r, 'reason'), self.clicked()), ('confirm_dialog_unexpected_text', ['67']))
         self.assertIn('Do NOT cancel order #1044 (Walnut desk lamp)', G(r, 'steps', 1, 'dialog', 'lines') or [])
-
-    def test_every_negation_token_counts(self):
-        for text in ("Please don't cancel order #1044", 'You cannot cancel order #1044 (Walnut desk lamp)', "We can't cancel order #1044", 'Never cancel order #1044', 'No, keep order #1044'):
-            self.orders_with(text)
-            r = self.cancel(['#1044'])
-            self.assertEqual((G(r, 'reason'), self.clicked()), ('confirm_dialog_negated', ['67']), text)
 
     def test_a_clean_dialog_still_matches_with_punctuation_and_case(self):
         for text in ('Cancel order #1044 (Walnut desk lamp)?', 'cancel ORDER #1044: walnut DESK lamp.', 'Cancel order #1044'):
@@ -129,7 +126,7 @@ class Identity(PlanBase):
         self.assertEqual(state('Cancel order #10441', ['#1044']), 'unknown')
         self.assertEqual(state('order 1044 and #1044a', ['#1044']), 'unknown')
         self.assertEqual(state('order ##1044', ['#1044']), 'unknown')
-        self.assertEqual(state('Do not cancel order #1044', ['#1044']), 'negated')
+        self.assertEqual(state('Do not cancel order #1044', ['#1044']), 'matched')  # no negation list: the declaration decides
 
 
 class Destructive(PlanBase):
@@ -195,7 +192,7 @@ class Destructive(PlanBase):
         steps = lambda **kw: [{'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'identity': ['#1044'], 'expect': 'Cancel order'},
                               {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order #1044 cancelled', **kw}]
         # "Yes, cancel order" is not destructive by the list; a destructive confirm label is:
-        r = self.plan([steps()[0], {'do': 'confirm', 'confirm': 'Yes, delete order', 'expect': 'x'}], goal=ORDERS_GOAL, look_id=look['look_id'])
+        r = self.plan([steps()[0], {'do': 'confirm', 'confirm': 'Yes, delete order', 'dialog_text': ['Delete the order?'], 'expect': 'x'}], goal=ORDERS_GOAL, look_id=look['look_id'])
         self.assertEqual((G(r, 'reason'), self.driver.executed), ('destructive_control', []))
 
 
