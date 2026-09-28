@@ -270,7 +270,13 @@ class Facade:
         if min_confidence is not None: options['min_confidence'] = min_confidence
         if max_regions is not None: options['max_regions'] = max_regions
         args = {'capture_id': capture_id, **({'options': options} if options else {})}
-        result = self.driver.call('parse_visual_regions', args)
+        try:
+            result = self.driver.call('parse_visual_regions', args)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError, ValueError) as error:
+            # A Driver/extension failure is an unavailable capability, never a
+            # crash of the caller (live CE: exit 1 killed a choose over a unique control).
+            detail = (getattr(error, 'stderr', None) or getattr(error, 'output', None) or str(error))
+            raise Gap('perception_parse_failed: ' + str(detail).strip()[:200])
         state['regions'] = result
         state['regions_capture_id'] = capture_id
         self.event('perception_parse', route='cua-perception', snapshot=snapshot,
@@ -319,6 +325,12 @@ class Facade:
         node = state['nodes'][index]
         frame = node.get('frame')
         if not frame or self.perception_state != 'healthy':
+            return '', None
+        # Only a control that repeats has an ambiguity layout can resolve. A
+        # unique control ("Yes, cancel order") needs no record context and must
+        # never cost a live parse (about 1.5 s) or a chance to fail.
+        kind = (node.get('role'), node.get('label'))
+        if sum(1 for n in state['nodes'].values() if (n.get('role'), n.get('label')) == kind) < 2:
             return '', None
         scale = self._pixel_scale(state)
         if not scale:
