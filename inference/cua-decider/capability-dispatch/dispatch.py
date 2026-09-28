@@ -118,6 +118,10 @@ def predicate(actual, rule, spec):
     op = 'neq' if op == 'ne' else op  # 'ne' is a discoverable alias for 'neq'
     if op not in PREDICATE_OPS:
         raise Unsupported('unsupported predicate op ' + repr(rule.get('op')) + '; allowed ops: ' + ', '.join(PREDICATE_OPS))
+    if op in ('gt', 'gte', 'lt', 'lte') and spec.get('type', 'text') == 'text':
+        # Text is compared as displayed (S4.8); lexicographic ordering of strings
+        # like "9 min" vs "30 min" is a silent wrong answer, so refuse it.
+        raise Unsupported('ordering ops gt/gte/lt/lte apply only to typed number/money/time/duration fields; text fields support eq, neq, contains, not_contains')
     if op in ('contains', 'not_contains'):
         # Text-only: a substring match on a coerced number/money hides unit and
         # precision errors instead of raising them. typed() already casefolds

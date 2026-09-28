@@ -724,11 +724,11 @@ class Facade:
                       'binding_digest':request_digest(request),'provider_outputs':[]}
             self.event('choose',snapshot=snapshot,route='grounded_singleton',models=[],mode=mode,decision_ms=0,
                        provider_setup_ms=0,wall_ms=0,authorized=True,reason='grounded_singleton',judgment=judgment,
-                       unknown_competitors=len(unknown_competitors))
+                       unknown_competitors=len(unknown_competitors),caller_preselected=judgment=='controller')
             return self.issue(snapshot,request,decision,mode,operation,text,
                               {'status':'selected','route':'grounded_singleton','decision':decision,'snapshot':snapshot,
                                'offered_count':1,'judgment':judgment,'unknown_competitors':unknown_competitors,
-                               'caller_preselected':False,'candidate_scope':'observed_or_filtered_scope'})
+                               'caller_preselected':judgment=='controller','candidate_scope':'observed_or_filtered_scope'})
         if mode=='semantic' and len(actions)==1 and not reading:
             self.event('choose',snapshot=snapshot,route='scope_guard',mode=mode,
                        authorized=False,reason='singleton_requires_grounded_reading')
@@ -787,10 +787,12 @@ class Facade:
         if decision.get('action_authorized'):
             state=self.state(snapshot)
             root=self.content_root(state,[a['id'] for a in request['actions']])
+            if state['nodes'][root].get('role')=='AXWebArea' and not self.address_fields(state,self.subtree(state,'e'+str(root))[1]):
+                root=None  # navigation unobservable without an address field: keep whole-window revalidation
             handle='sel_'+uuid.uuid4().hex
             self.selections[handle]={'snapshot':snapshot,'request':copy.deepcopy(request),'decision':copy.deepcopy(decision),
                                      'mode':mode,'operation':operation,'text':text,'used':False,
-                                     'scope_root':root,'scope_digest':self.scope_digest(state,root)}
+                                     'scope_root':root,'scope_digest':None if root is None else self.scope_digest(state,root)}
             while len(self.selections)>32:self.selections.pop(next(iter(self.selections)))
             result.update(selection=handle,selected_id=decision['action_id'])
         return result
@@ -813,13 +815,16 @@ class Facade:
             if state['nodes'][i].get('role')=='AXWebArea':return i
         return chains[0][-1]
 
+    @staticmethod
+    def address_fields(state,members):
+        return [{'role':n.get('role'),'value':n.get('value')} for i,n in sorted(state['nodes'].items())
+                if i not in members and n.get('role') in ('AXTextField','AXComboBox') and n.get('value')]
+
     def scope_digest(self,state,root):
         _,members=self.subtree(state,'e'+str(root))
         # A page scope also binds the address field (role and value only): a
         # navigation is a different page even when its tree happens to match.
-        address=[] if state['nodes'][root].get('role')!='AXWebArea' else [
-            {'role':n.get('role'),'value':n.get('value')} for i,n in sorted(state['nodes'].items())
-            if i not in members and n.get('role') in ('AXTextField','AXComboBox') and n.get('value')]
+        address=[] if state['nodes'][root].get('role')!='AXWebArea' else self.address_fields(state,members)
         return digest({'title':state['raw'].get('window_title'),'address':address,
                        'nodes':[{k:v for k,v in state['nodes'][i].items() if k!='element_token'} for i in sorted(members)]})
 

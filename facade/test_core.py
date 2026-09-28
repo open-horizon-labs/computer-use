@@ -255,7 +255,7 @@ class CoreTests(unittest.TestCase):
     # --- S4.8: revalidation scope -------------------------------------------
     def browser_window(self,memory='93.4 MB',row_value='Used $80',url='127.0.0.1:8934/booking'):
         nodes=[{'element_index':0,'role':'AXWindow','label':'demo'},
-          {'element_index':9,'parent_index':0,'role':'AXTextField','value':url},
+          *([{'element_index':9,'parent_index':0,'role':'AXTextField','value':url}] if url else []),
           {'element_index':1,'parent_index':0,'role':'AXTabGroup'},
           {'element_index':2,'parent_index':1,'role':'AXRadioButton','label':'Demo - Memory usage - '+memory},
           {'element_index':3,'parent_index':0,'role':'AXWebArea'},
@@ -266,8 +266,8 @@ class CoreTests(unittest.TestCase):
           {'element_index':8,'parent_index':7,'role':'AXButton','label':'Inspect second','actions':['AXPress']}]
         return nodes
 
-    def act_after_change(self,**after):
-        seq=[self.browser_window(),self.browser_window(**after)];n=[0]
+    def act_after_change(self,before=None,**after):
+        seq=[self.browser_window(**(before or {})),self.browser_window(**after)];n=[0]
         def observe(*a):
             nodes=copy.deepcopy(seq[min(n[0],1)]);n[0]+=1;sid='sb%d'%n[0]
             for x in nodes:x.update(element_token=sid+':'+str(x['element_index']),enabled=True)
@@ -289,6 +289,28 @@ class CoreTests(unittest.TestCase):
         # Tempting wrong patch: web area only, so a navigation to a lookalike page passes.
         with self.assertRaisesRegex(Gap,'content scope'):self.act_after_change(url='127.0.0.1:8934/orders')()
         self.assertEqual(self.driver.executed,[])
+
+    def test_act_keeps_whole_window_revalidation_when_no_address_field_is_observed(self):
+        # Review P2.3. Tempting wrong patch: scoping to the web area anyway, which
+        # makes navigation unobservable and silently drops the guarantee.
+        with self.assertRaisesRegex(Gap,'UI changed'):self.act_after_change(before={'url':None},url=None,memory='86.0 MB')()
+        self.assertEqual(self.driver.executed,[])
+
+    def test_read_preserves_display_strings_of_any_shape(self):
+        # Review P3: behavioral guard for S4.8, stronger than the AST check.
+        shapes={'e1':'1 hr 30 min','e4':'$1,250.00'}
+        self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'v':shapes[r['id']]}} for r in req['records']]}
+        r=self.f.read(self.obs,'Read',{'v':{'description':'V','type':'duration_minutes'}},['e1','e4'],
+                      [{'field':'v','op':'contains','value':'1'}],coverage_complete=True)
+        self.assertEqual(r['filter']['unknown_ids'],[]);self.assertEqual(r['filter']['eligible_ids'],['e1','e4'])
+        self.assertEqual({x['record_id']:x['fields']['v'] for x in r['extraction']['records']},shapes)
+
+    def test_controller_judged_pick_is_flagged_caller_preselected(self):
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],coverage_complete=True)
+        c=self.f.choose(self.obs,'Inspect the used one',reading=r['reading'],candidate_ids=['e1'])
+        self.assertTrue(c['caller_preselected']);self.assertTrue(self.f.events[-1]['caller_preselected'])
+        c2=self.reading();c2=self.f.choose(self.obs,'Inspect eligible',reading=c2['reading'])
+        self.assertFalse(c2['caller_preselected'])
 
     def test_act_refuses_content_change_inside_web_area(self):
         with self.assertRaisesRegex(Gap,'content scope'):self.act_after_change(row_value='Used $95')()
