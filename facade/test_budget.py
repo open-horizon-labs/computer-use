@@ -265,6 +265,15 @@ class DefaultPathBudget(unittest.TestCase):
                 self.assertTrue(all(limits[k]['changed_by'] == 'CE-FACADE-005' for k in ('max_llm_visible_calls', 'max_reader_calls', 'max_chooser_calls')), name)
         self.assertIn('fixture-derived', BUDGET['purpose']);self.assertIn('none yet for plans', BUDGET['purpose'])
 
+    def test_review_scenarios_show_what_the_guards_cost_when_the_plan_is_wrong(self):
+        # Review of PR 18 (budget honesty). The scripted policy elsewhere takes its phrases from the goal (a lower bound); these write plans the guards must stop.
+        m = self.measured
+        self.assertEqual((self.scenario('plan_booking_vocab_mismatch') and m['plan_booking_vocab_mismatch']['calls']), 3)  # "30 min" vs "half-hour": refusal, back to the look, done
+        for name, calls in (('plan_hidden_text_negative', 2), ('plan_negated_dialog', 2), ('plan_destructive_undeclared', 1), ('plan_destructive_declared_after_refusal', 2)):
+            self.scenario(name);self.assertEqual(m[name]['calls'], calls, name)
+        self.assertEqual([BUDGET['scenarios'][n]['final_status'] for n in ('plan_hidden_text_negative', 'plan_negated_dialog', 'plan_destructive_undeclared')], ['stopped', 'stopped', 'refused'])
+        self.assertIn('LOWER BOUND', BUDGET['purpose']);self.assertIn('not plan correctness', BUDGET['purpose'])
+
     def test_a_default_look_that_calls_the_reader_trips_the_reader_budget(self):
         # Mutation of the real Facade: NuExtract in the default look (the wrong patch: 'extract values for the LLM's convenience').
         from unittest import mock

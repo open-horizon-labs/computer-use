@@ -439,6 +439,60 @@ def measure_plan_scenarios():
         look = call('cua_look', title='Demo')
         return call('cua_do', goal='Complete the setup wizard', expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Next', 'expect': 'Step 2 of 3'}, {'do': 'press', 'control': 'Next', 'expect': 'Step 3 of 3'}])
     out['plan_stale_mid_plan'] = run(stale_driver(), stale, lv.LiveReader({}))
+    # Review of PR 18 (budget honesty): the scripted LLM above takes its phrases from the goal, so it never writes a wrong filter and these ceilings
+    # guard CALL COUNTS, not plan correctness (a LOWER BOUND on what a real LLM needs). These scenarios make it write plans the guards must stop.
+    import test_plan as tp
+    def by(els, i):
+        return next(e for e in els if e['element_index'] == i)
+
+    def vocab_mismatch(call):
+        look = call('cua_look', title='Demo')
+        goal = 'Book the Morgan Reyes Telehealth slot that lasts 30 min'
+        conds = [{'line': 'eq', 'value': 'Dr. Morgan Reyes'}, {'line': 'eq', 'value': 'Telehealth'}, {'line': 'contains', 'value': '30 min'}]  # the LLM's own vocabulary
+        first = call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
+        if first.get('reason') != 'no_matching_record':return first
+        rec = next(r for r in look['records'] if 'Telehealth' in r['lines'] and 'Dr. Morgan Reyes' in r['lines'])  # back to the look's own strings
+        duration = next(x for x in rec['lines'] if x not in ('Dr. Morgan Reyes', 'Telehealth') and not x.startswith('Starts') and x != 'Video visit')
+        conds = [{'line': 'eq', 'value': 'Dr. Morgan Reyes'}, {'line': 'eq', 'value': 'Telehealth'}, {'line': 'eq', 'value': duration}]
+        return call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
+    out['plan_booking_vocab_mismatch'] = run(booking_driver(), vocab_mismatch, lv.LiveReader(lv.BOOKING_PATTERNS))
+
+    def hidden_driver():
+        d = lv.LiveDriver('live_booking_ax.json')
+        def script(dr, els):
+            by(els, 43)['label'] = by(els, 43)['value'] = 'Starts 1:45 PM' + ' x' * 25 + ' SOLD OUT'  # past the 60-character display cut
+            lv.booked()(dr, els)
+        d.script = script;return d
+    def hidden_negative(call):
+        look = call('cua_look', title='Demo')
+        conds, _ = look_conditions(look, ['Dr. Morgan Reyes', 'Follow-up', '1:45 PM'])
+        return call('cua_do', goal=booking_goal + ' unless it is sold out', expect=None, title='Demo', look_id=look['look_id'],
+                    steps=[{'do': 'press', 'where': {'lines': conds + [{'line': 'not_contains', 'value': 'sold out'}]}, 'expect': 'Booked:'}])
+    out['plan_hidden_text_negative'] = run(hidden_driver(), hidden_negative, lv.LiveReader(lv.BOOKING_PATTERNS))
+
+    def negated_dialog(call):
+        look = call('cua_look', title='Demo')
+        conds, record = look_conditions(look, ['Walnut desk lamp', 'Processing'])
+        ident = unique_line(look, record)
+        return call('cua_do', goal='Cancel the Walnut desk lamp order that is still Processing', expect=None, title='Demo', look_id=look['look_id'],
+                    steps=[{'do': 'press', 'where': {'lines': conds}, 'control': 'Cancel', 'identity': [ident], 'expect': 'order ' + ident},
+                           {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order %s cancelled' % ident}])
+    d = lv.LiveDriver('live_orders_ax.json');d.script = tp.orders_dialog('Do NOT cancel order #1044 (Walnut desk lamp)')
+    out['plan_negated_dialog'] = run(d, negated_dialog, lv.LiveReader(lv.ORDER_PATTERNS))
+
+    def delete_page():
+        els, web = sh.base()
+        for label in ('Delete account', 'Keep'):sh.E(els, web, 'AXButton', label)
+        d = sh.ShapeDriver(els);d.script = sh.toast('Account deleted', buttons=());return d
+    def destructive(declared_after_refusal):
+        def policy(call):
+            step = {'do': 'press', 'control': 'Delete account', 'expect': 'Account deleted'}
+            first = call('cua_do', goal='Delete my account', expect=None, title='Demo', steps=[step])
+            if first['status'] != 'refused' or not declared_after_refusal:return first
+            return call('cua_do', goal='Delete my account', expect=None, title='Demo', steps=[{**step, 'allow_destructive': 'Delete account'}])  # the refusal names the declaration
+        return policy
+    out['plan_destructive_undeclared'] = run(delete_page(), destructive(False), lv.LiveReader({}))
+    out['plan_destructive_declared_after_refusal'] = run(delete_page(), destructive(True), lv.LiveReader({}))
     return out
 
 

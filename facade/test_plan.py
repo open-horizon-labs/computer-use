@@ -168,14 +168,16 @@ class Validation(PlanBase):
         self.refused([{'do': 'verify', 'expect': 'x', 'goal': 'press e12'}], 'refused')
 
     def test_a_destructive_literal_control_is_refused_unless_the_plan_goal_says_so(self):
-        # Wrong patch: no destructive guard on plans (option D's guard, applied here). A verb only counts when the goal asked for it.
+        # Wrong patch: no destructive guard on plans (option D's guard, applied here). Goal text never unlocks it: only the step's allow_destructive does.
         for label in ('Delete account', 'Remove item', 'Erase all', 'Discard draft', 'Reset password', 'Sign out'):
-            r = self.refused([{'do': 'press', 'control': label, 'expect': 'x'}], 'destructive_control', goal='Update my profile photo');self.assertIn('goal', S(r, 'message'))
+            r = self.refused([{'do': 'press', 'control': label, 'expect': 'x'}], 'destructive_control', goal='Update my profile photo');self.assertIn('allow_destructive', S(r, 'message'))
         self.refused([{'do': 'press', 'control': 'Book'}, {'do': 'press', 'control': 'Book'}], 'expect_required')  # ordering: the missing expect is reported, not masked
         r = self.plan([{'do': 'press', 'control': 'Delete account', 'expect': 'Deleted'}], goal='Delete my account')
-        self.assertNotEqual(r.get('reason'), 'destructive_control')  # the goal asked for it: validation passes (the run then finds no such control)
+        self.assertEqual(G(r, 'reason'), 'destructive_control')  # the goal says delete: still refused
+        r = self.plan([{'do': 'press', 'control': 'Delete account', 'allow_destructive': 'Delete account', 'expect': 'Deleted'}], goal='Delete my account')
+        self.assertNotEqual(G(r, 'reason'), 'destructive_control')  # declared on the step: validation passes (the run then finds no such control)
 
-    def test_a_destructive_confirm_label_is_refused_unless_the_goal_says_so(self):
+    def test_a_destructive_confirm_label_is_refused_unless_the_step_declares_it(self):
         self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes, delete everything', 'expect': 'x'}], 'destructive_control', goal='Update my profile')
 
     def test_a_bad_abort_if_is_refused(self):
@@ -267,7 +269,7 @@ class BookingPlans(PlanBase):
 
     def test_a_look_of_another_window_does_not_authorize_a_filter_here(self):
         look = self.look()
-        self.f.looks[look['look_id']]['window_id'] = 99
+        self.f.looks[(1, 99, look['look_id'])] = self.f.looks.pop((1, 2, look['look_id']))  # as if that look had been of another window
         r = self.plan([self.lines_press()], look_id=look['look_id'])
         self.assertEqual((G(r, 'status'), G(r, 'delivery'), self.driver.executed), ('refused', 'none', []))
         self.assertEqual(G(r, 'steps', 0, 'reason'), 'look_window_mismatch')
@@ -552,17 +554,17 @@ class DestructiveAtResolve(PlanBase):
         # Wrong patch: guard only the literal `control` string ("Cancel" is harmless; the control it prefix-matches deletes the account).
         els, web = sh.base();sh.E(els, web, 'AXStaticText', 'Subscription', 'Subscription');sh.E(els, web, 'AXButton', 'Cancel and delete account');sh.E(els, web, 'AXButton', 'Keep')
         self.shape(els, sh.toast('Cancelled', buttons=()))
-        r = self.plan([{'do': 'press', 'control': 'Cancel', 'expect': 'Cancelled'}], goal='Cancel my subscription')
+        r = self.plan([{'do': 'press', 'control': 'Cancel', 'control_match': 'prefix', 'expect': 'Cancelled'}], goal='Cancel my subscription')
         self.assertEqual((G(r, 'status'), G(r, 'reason'), G(r, 'delivery'), self.driver.executed), ('stopped', 'destructive_control', 'none', []))
-        self.assertIn('destructive', S(r, 'hint'))
+        self.assertIn('allow_destructive', S(r, 'hint'))
 
     def test_the_resolved_control_is_not_pressed_and_leaves_no_selection_behind(self):
         els, web = sh.base();sh.E(els, web, 'AXButton', 'Cancel and delete account')
         self.shape(els, sh.toast('Cancelled', buttons=()))
-        self.plan([{'do': 'press', 'control': 'Cancel', 'expect': 'Cancelled'}], goal='Cancel my subscription')
+        self.plan([{'do': 'press', 'control': 'Cancel', 'control_match': 'prefix', 'expect': 'Cancelled'}], goal='Cancel my subscription')
         self.assertEqual([s for s in self.f.selections.values() if not s['used']], [])
 
-    def test_a_record_whose_only_control_is_destructive_is_not_pressed_when_the_goal_never_asked(self):
+    def test_a_record_whose_only_control_is_destructive_is_not_pressed_without_the_declaration(self):
         els, web = sh.base();ul = sh.E(els, web, 'AXList')
         for n in 'AB':
             li = sh.E(els, ul, 'AXGroup');sh.E(els, li, 'AXStaticText', 'Draft ' + n, 'Draft ' + n);sh.E(els, li, 'AXButton', 'Delete draft')
@@ -572,8 +574,10 @@ class DestructiveAtResolve(PlanBase):
         steps = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Draft B'}]}, 'expect': 'Done'}]  # no literal: only the resolved control can be checked
         r = self.plan(steps, goal='Archive draft B', look_id=look['look_id'])
         self.assertEqual((G(r, 'status'), G(r, 'reason'), G(r, 'delivery'), self.driver.executed), ('stopped', 'destructive_control', 'none', []))
-        ok = self.plan(steps, goal='Delete draft B', look_id=look['look_id'])
-        self.assertEqual((G(ok, 'status'), len(self.driver.executed)), ('done', 1))  # the goal asked for it
+        no = self.plan(steps, goal='Delete draft B', look_id=look['look_id'])
+        self.assertEqual((G(no, 'reason'), self.driver.executed), ('destructive_control', []))  # the goal saying delete is not a declaration
+        ok = self.plan([{**steps[0], 'allow_destructive': 'Delete draft'}], goal='Delete draft B', look_id=look['look_id'])
+        self.assertEqual((G(ok, 'status'), len(self.driver.executed)), ('done', 1))  # the step declared the exact label
 
 
 class InvoicePlans(PlanBase):

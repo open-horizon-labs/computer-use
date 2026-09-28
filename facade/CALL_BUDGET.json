@@ -1,5 +1,5 @@
 {
-  "purpose": "Ceiling on REAL LLM-visible MCP tool calls, measured through the server tool functions under a scripted LLM that starts knowing only the goal, expect and the fields/predicates and learns control, identity and labels from each deferral. Scenarios run on REAL captured Chrome trees, on synthetic shapes for the failures a review found, and on two live findings (n=1 each, one run per cell, so not a rate). No tree captured from an unrelated real site exists yet (capturing one needs the user's consent), so every number is fixture-derived, not a claim about typical pages. Only cua_do and cua_look are visible by default (the primitives need CUA_TASK_ADVANCED=1): option B, look then plan once (CE-FACADE-005), measured with a scripted LLM that starts knowing only the goal and expect and learns the page's strings from cua_look and the plan's deferrals. The plan_* scenarios run through the real server tools on the captured booking and orders trees and on synthetic wizard, 100-row and canvas shapes (n=1 live evidence for the blind-filter failure, none yet for plans). Measured 2026-09: tools were 13% of agent wall time, the driving LLM's turns 87%; a clean booking took 9 mediated calls (native about 5) and the first live cua_do run took 8 because eight tools were visible. Any number changes only with a CE id in changed_by, and that CE's call_budget must record the same number (test_budget.py checks both; CODEOWNERS requires the policy owner's review).",
+  "purpose": "Ceiling on REAL LLM-visible MCP tool calls, measured through the server tool functions under a scripted LLM that starts knowing only the goal, expect and the fields/predicates and learns control, identity and labels from each deferral. Scenarios run on REAL captured Chrome trees, on synthetic shapes for the failures a review found, and on two live findings (n=1 each, one run per cell, so not a rate). No tree captured from an unrelated real site exists yet (capturing one needs the user's consent), so every number is fixture-derived, not a claim about typical pages. Only cua_do and cua_look are visible by default (the primitives need CUA_TASK_ADVANCED=1): option B, look then plan once (CE-FACADE-005), measured with a scripted LLM that starts knowing only the goal and expect and learns the page's strings from cua_look and the plan's deferrals. The plan_* scenarios run through the real server tools on the captured booking and orders trees and on synthetic wizard, 100-row and canvas shapes (n=1 live evidence for the blind-filter failure, none yet for plans). Measured 2026-09: tools were 13% of agent wall time, the driving LLM's turns 87%; a clean booking took 9 mediated calls (native about 5) and the first live cua_do run took 8 because eight tools were visible. Any number changes only with a CE id in changed_by, and that CE's call_budget must record the same number (test_budget.py checks both; CODEOWNERS requires the policy owner's review). The scripted LLM takes its phrases from the goal, so it is a LOWER BOUND on the calls a real LLM needs and the plan_* ceilings guard call counts, not plan correctness; the vocabulary-mismatch, hidden-text, negated-dialog and undeclared-destructive scenarios (review of PR 18) measure what happens when the plan is wrong.",
   "default_path_tools": {
     "value": [
       "cua_do",
@@ -546,6 +546,91 @@
     "plan_stale_mid_plan": {
       "description": "synthetic wizard whose page churns after step 1: the plan stops at step 2 (ui_changed_repeatedly) with step 1 done and nothing clicked in step 2",
       "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_booking_vocab_mismatch": {
+      "description": "REAL booking, review of PR 18: the scripted LLM writes \"30 min\" (its own vocabulary) where the look shows \"half-hour\"; no_matching_record, then it goes back to the look strings and books the Telehealth slot",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_hidden_text_negative": {
+      "description": "REAL booking with SOLD OUT past the 60-character cut: a not_contains condition over the cut line must stop (negative_condition_over_cut_lines), nothing clicked",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_negated_dialog": {
+      "description": "REAL orders whose dialog reads \"Do NOT cancel order #1044\": the press lands, the confirm step must defer (confirm_dialog_negated) and press nothing further",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_destructive_undeclared": {
+      "description": "a Delete account control without allow_destructive: refused before any click, even though the goal says delete",
+      "final_status": "refused",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_destructive_declared_after_refusal": {
+      "description": "the same plan after the refusal, with allow_destructive naming the exact label: done",
+      "final_status": "done",
       "max_llm_visible_calls": {
         "value": 2,
         "changed_by": "CE-FACADE-005"
