@@ -740,4 +740,12 @@ class CoreTests(unittest.TestCase):
             self.assertNotIn('delivered',str(caught.exception))
         finally:subprocess.run=real
 
+
+    def test_scope_refusal_names_what_changed_without_values(self):
+        # Live: "UI changed within the bound content scope" gave no hint what changed.
+        # Tempting wrong patch: put the changed values in the message (page text leak).
+        with self.assertRaises(Gap) as caught:self.act_after_change(row_value='Used $95')()
+        text=str(caught.exception)
+        self.assertRegex(text,r'e5 AXStaticText: value');self.assertNotIn('$95',text);self.assertNotIn('$80',text)
+
 if __name__=='__main__':unittest.main()

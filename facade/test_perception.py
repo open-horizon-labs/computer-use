@@ -189,6 +189,15 @@ class PerceptionRouteTests(unittest.TestCase):
         # Tempting wrong patch: put stderr in the agent-visible message (paths, capture ids).
         self.assertNotIn('extension crashed', str(caught.exception))
 
+    def test_parse_carries_the_facade_session(self):
+        # Live CE 2026-09-28: parse_visual_regions answered capture_not_found for every
+        # facade capture because the call omitted `session` (captures are session-scoped).
+        # Tempting wrong patch: only bind capture_id, which passes every offline fake.
+        self.driver.capture_id = 'cap_1'; self.driver.parse_result = BOOK_REGIONS
+        obs = self.f.observe(1, 2)['snapshot']
+        self.f.regions(obs)
+        self.assertEqual(self.driver.parse_calls[0]['session'], self.f.session)
+
     def test_perception_fallback_never_overrides_valid_ax_grouping(self):
         # Tempting wrong patch: always consulting perception layout, which could
         # silently replace a correct AX-derived record with mis-OCR'd text.
