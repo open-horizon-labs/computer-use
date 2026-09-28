@@ -81,14 +81,14 @@ class Facade:
             self.event('provider_start', provider=name, setup_ms=(self.clock()-start)*1000)
         return self.providers[name]
 
-    def windows(self):
+    def windows(self, title=None):
         if not self.started:
             self.driver.call('start_session', {'session': self.session})
             self.started = True
         result = self.driver.call('list_windows', {'session': self.session})
         return {'route': 'driver_inventory', 'windows': [
             {k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w}
-            for w in result.get('windows', []) if w.get('title')]}
+            for w in result.get('windows', []) if w.get('title') and (title is None or w['title']==title)]}
 
     def observe(self, pid, window_id):
         if not self.started:
@@ -174,6 +174,8 @@ class Facade:
         fields = copy.deepcopy(fields)
         for spec in fields.values():
             if spec.get('type') == 'string': spec['type'] = 'text'
+            if spec.get('type') == 'money' and spec.get('currency') != 'USD':
+                raise Gap('Money fields require explicit currency: USD; use text for unparsed price strings')
         if not record_ids or len(set(record_ids)) != len(record_ids):
             raise Gap('Supply distinct observed record roots')
         records, memberships = [], []
@@ -192,7 +194,7 @@ class Facade:
             coverage_complete=coverage_complete,current_snapshot=state['raw']['snapshot_id'])
         handle = 'read_' + uuid.uuid4().hex
         result = {'reading':handle, 'snapshot':snapshot, 'route':'nuextract3', 'extraction':extraction, 'filter':filtered}
-        self.readings[handle] = copy.deepcopy(result)
+        self.readings[handle] = copy.deepcopy({**result,'fields':fields,'predicates':predicates or []})
         while len(self.readings)>32:self.readings.pop(next(iter(self.readings)))
         self.event('read',route='nuextract3',snapshot=snapshot,records=len(records),endpoint_ms=(self.clock()-start)*1000)
         return result
@@ -231,30 +233,54 @@ class Facade:
         if mode=='exact':
             if not exact_name:raise Gap('Exact mode requires an observed name, not a synthetic ID')
             ids=['e'+str(i) for i in state['nodes']]
+        if (fields or predicates or order_by) and mode not in ('spans',) and not reading:
+            raise Gap('Typed criteria require a reading handle or spans mode; they cannot be ignored')
         if reading:
-            read=self.readings.get(reading)
+            if mode != 'semantic':raise Gap('A reading uses semantic mode; spans/exact/visual use their own evidence')
+            read=copy.deepcopy(self.readings.get(reading))
             if not read or read['snapshot']!=snapshot:raise Gap('Reading is not bound to this observation')
+            if fields or order_by:raise Gap('Reading schemas come from cua_read; ordering is supported only in spans mode')
             if not read['filter']['complete']:return {'status':'defer','route':'nuextract3','reason':'unknown_or_incomplete_scope'}
+            base_retained=read['filter']['eligible_ids']
+            if predicates:
+                # Filter cached evidence, never repeat extraction or silently send
+                # unexecuted typed criteria only as free-text model context.
+                read['filter']=filter_records(read['extraction'],fields=read['fields'],
+                    predicates=read['predicates']+predicates,
+                    coverage_complete=read['filter']['coverage_complete'],
+                    current_snapshot=state['raw']['snapshot_id'])
+                read['predicates']+=predicates
+                self.event('filter',route='typed_same_record',snapshot=snapshot,
+                           eligible=len(read['filter']['eligible_ids']),unknown=len(read['filter']['unknown_ids']),
+                           excluded=len(read['filter']['excluded_ids']))
+                if not read['filter']['complete']:return {'status':'defer','route':'nuextract3','reason':'unknown_or_incomplete_scope'}
             retained=read['filter']['eligible_ids']
             mapped=[]
-            if record_actions is not None and set(record_actions)!=set(retained):
-                raise Gap('Map every eligible record, and no excluded record')
+            if record_actions is not None:
+                if set(record_actions) not in (set(retained),set(base_retained)):
+                    raise Gap('Map every eligible record (optionally all originally eligible records), with no unrelated records')
+                # Validate even controls removed by the additional predicate.
+                for root,target in record_actions.items():
+                    _,members=self.subtree(state,root)
+                    if self.node(state,target)['element_index'] not in members:
+                        raise Gap('Record action is outside its source record')
             for root in retained:
                 _,members=self.subtree(state,root)
                 if record_actions is not None:
                     target=record_actions[root]
-                    if self.node(state,target)['element_index'] not in members:
-                        raise Gap('Record action is outside its source record')
                 else:
                     choices=self.actions(state,['e'+str(i) for i in state['nodes'] if i in members],operation,text)
                     if len(choices)!=1:raise Gap('Record has ambiguous controls; supply record_actions')
                     target=choices[0]['id']
                 mapped.append(target)
-            if candidate_ids is not None and set(candidate_ids)!=set(mapped):
-                raise Gap('Selection must retain every eligible extracted candidate')
+            allowed_scopes=[set(retained),set(base_retained),set(mapped)]
+            if record_actions is not None:allowed_scopes.append(set(record_actions.values()))
+            if candidate_ids is not None and set(candidate_ids) not in allowed_scopes:
+                raise Gap('Use all eligible record IDs or their mapped control IDs; omit candidate_ids when using record_actions')
             ids=mapped
-            if mode=='exact':raise Gap('Extracted choice must use semantic or spans mode')
         actions=self.actions(state,ids,operation,text)
+        if reading and {a['id'] for a in actions} != set(ids):
+            raise Gap('An eligible record lacks an enabled compatible control; cannot silently exclude it')
         if mode=='semantic' and len(actions)==1 and not reading:
             self.event('choose',snapshot=snapshot,route='scope_guard',mode=mode,
                        authorized=False,reason='singleton_requires_grounded_reading')
@@ -328,6 +354,7 @@ class Facade:
     def verify(self,pid,window_id,postcondition,mode='visual',name=None,role=None,value=None):
         began=self.clock()
         fresh=self.observe(pid,window_id);state=self.state(fresh['snapshot'])
+        assessment_start=self.clock();event_start=len(self.events)
         if mode=='exact':
             if not name:raise Gap('Exact verification requires an observed label')
             matches=[n for n in state['nodes'].values() if n.get('label')==name and (role is None or n.get('role')==role)]
@@ -343,8 +370,11 @@ class Facade:
                 result={'state':'unknown','reason':'visual_provider_failure','error_type':type(error).__name__}
             result={'status':'satisfied' if result.get('state')=='ready' else 'unknown','route':'systemone_vision','assessment':result}
         else:raise Gap('Verification mode must be exact or visual')
-        self.event('verify',route=result['route'],snapshot=fresh['snapshot'],status=result['status'])
-        return {**result,'snapshot':fresh['snapshot'],'independent_observation':True}
+        setup=sum(e.get('setup_ms',0) for e in self.events[event_start:])
+        self.event('verify',route=result['route'],snapshot=fresh['snapshot'],status=result['status'],
+                   assessment_ms=max(0,(self.clock()-assessment_start)*1000-setup),
+                   provider_setup_ms=setup,wall_ms=(self.clock()-began)*1000)
+        return {**result,'snapshot':fresh['snapshot'],'independent_observation':True,'observation':fresh}
 
     def close(self):
         for provider in self.providers.values():

@@ -137,6 +137,47 @@ class CoreTests(unittest.TestCase):
         read=self.f.read(self.obs,'Read condition',{'condition':{'type':'string','description':'Explicit condition'}},
             ['e1','e4'],[{'field':'condition','value':'Used'}],True)
         self.assertEqual(read['filter']['eligible_ids'],['e1'])
+    def test_window_title_filter_omits_unrelated_windows(self):
+        self.assertEqual(self.f.windows('Other')['windows'],[])
+        self.assertEqual(len(self.f.windows('Demo')['windows']),1)
+    def test_money_currency_required_before_model_call(self):
+        with self.assertRaisesRegex(Gap,'currency'):
+            self.f.read(self.obs,'Read price',{'price':{'description':'Price','type':'money'}},['e1'])
+        self.assertEqual(self.reader.requests,[])
+    def test_read_then_choose_filters_cached_records_and_maps_root_ids(self):
+        r=self.f.read(self.obs,'Read condition',{'condition':{'type':'text','description':'Condition'}},['e1','e4'],coverage_complete=True)
+        c=self.f.choose(self.obs,'Inspect used',reading=r['reading'],candidate_ids=['e1','e4'],
+            record_actions={'e1':'e3','e4':'e6'},predicates=[{'field':'condition','value':'Used'}])
+        self.assertEqual(c['selected_id'],'e3')
+        self.assertEqual([a['id'] for a in self.generic.requests[-1]['actions']],['e3'])
+        self.assertEqual(len(self.reader.requests),1)
+    def test_additional_filter_cannot_revive_excluded_record(self):
+        r=self.reading()
+        c=self.f.choose(self.obs,'Inspect new',reading=r['reading'],predicates=[{'field':'condition','value':'New'}])
+        self.assertFalse(c.get('selection'))
+        self.assertNotIn('e6',[a['id'] for req in self.generic.requests for a in req['actions']])
+    def test_added_predicate_missing_evidence_blocks_before_chooser(self):
+        self.reader.missing=True
+        r=self.f.read(self.obs,'Read condition',{'condition':{'type':'text','description':'Condition'}},['e1','e4'],coverage_complete=True)
+        c=self.f.choose(self.obs,'Inspect',reading=r['reading'],predicates=[{'field':'condition','value':'Used'}])
+        self.assertEqual(c['status'],'defer');self.assertEqual(self.starts,[])
+    def test_semantic_criteria_without_reading_cannot_be_ignored(self):
+        with self.assertRaisesRegex(Gap,'reading'):
+            self.f.choose(self.obs,'Inspect',candidate_ids=['e3','e6'],predicates=[{'field':'condition','value':'Used'}])
+    def test_filtered_mapping_still_rejects_cross_record_target(self):
+        r=self.f.read(self.obs,'Read condition',{'condition':{'type':'text','description':'Condition'}},['e1','e4'],coverage_complete=True)
+        with self.assertRaisesRegex(Gap,'outside'):
+            self.f.choose(self.obs,'Inspect used',reading=r['reading'],record_actions={'e1':'e3','e4':'e3'},predicates=[{'field':'condition','value':'Used'}])
+    def test_filtered_disabled_control_does_not_silently_drop_record(self):
+        r=self.reading()
+        self.f.state(self.obs)['nodes'][3]['enabled']=False
+        with self.assertRaisesRegex(Gap,'eligible record'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],record_actions={'e1':'e3'})
+    def test_verify_returns_current_observation_for_next_choice(self):
+        v=self.f.verify(1,2,'Visible control',mode='exact',name='Inspect first')
+        self.assertEqual(v['snapshot'],v['observation']['snapshot'])
+        self.assertTrue(v['observation']['elements'])
+        self.assertEqual(self.f.choose(v['snapshot'],'Inspect first',mode='exact',exact_name='Inspect first')['status'],'selected')
     def test_worker_cleanup(self):
         self.reading();self.f.choose(self.obs,'Inspect',candidate_ids=['e3','e6']);self.f.close()
         self.assertTrue(self.reader.closed);self.assertTrue(self.generic.closed)

@@ -21,18 +21,18 @@ Start a fresh agent session to discover the tools. Skill installation alone does
 
 | Tool | Contract |
 |---|---|
-| `cua_windows` | Local Driver inventory; reuse the requested window |
+| `cua_windows` | Local Driver inventory; optional exact `title` filter; reuse the requested window |
 | `cua_observe` | Fresh AX elements/parent IDs, screenshot, quality, opaque snapshot |
 | `cua_read` | NuExtract fields and predicates over nonoverlapping observed record roots |
 | `cua_choose` | Configured Jev/Julia contextual alternatives, qualified GLiNER2 spans, visual choice, or unique exact name/role |
 | `cua_act` | One opaque selection; no caller-supplied Driver arguments |
-| `cua_verify` | Independent fresh exact or screenshot postcondition check |
+| `cua_verify` | Independent fresh exact or screenshot postcondition check, returning that observation and screenshot |
 | `cua_trace` | Content-free actual routes, startup/decision timing and outcomes |
 | `cua_finish` | Close task workers and invalidate handles; preserve Driver and user windows |
 
 `fields` maps field names to `{description, type}`. Use dispatcher types such as `text`, `number`, `money`; `string` aliases `text` for reads; money fields also require `currency: USD`. Predicates use `{field, op, value}`. Describe meanings without injecting expected answers. Choose a separate observed root for every logical record. Table rows preserve cell boundaries; there is no inferred header/value mapping. Coverage is the caller's assertion about the requested scope, not a claim that a site has no more results.
 
-For record-backed actions, pass the returned `reading` to `cua_choose`. Map every eligible root to an observed descendant through `record_actions` when necessary. Unknown or incomplete filtered scopes defer. All eligible records must survive until selection. A semantic singleton without a complete filtered reading defers: it cannot serve as model confirmation of a caller's preselected winner.
+For record-backed actions, pass the returned `reading` to `cua_choose`. Map every eligible root to an observed descendant through `record_actions` when necessary. Additional `predicates` on the choice conjunctively filter the cached reading without another extraction. They cannot revive earlier exclusions. Candidate IDs can name all eligible record roots or their mapped controls; omit them when the mapping already describes the scope. The original complete mapping is also accepted when an additional predicate narrows it. Every provided join is checked, and an eligible record with no compatible enabled control blocks selection. Put schemas on `cua_read`; ordering remains a spans-mode feature. Criteria supplied to incompatible modes are rejected, never silently ignored. Unknown or incomplete filtered scopes defer. All eligible records must survive until selection. A semantic singleton without a complete filtered reading defers: it cannot serve as model confirmation of a caller's preselected winner.
 
 Exact mode searches the whole observed scope even if a caller supplies fewer candidates. Duplicate AX projections remain ambiguous; the facade does not merge controls by equal labels. Exact bypasses and singleton filtered choices are not chooser accuracy evidence.
 
@@ -48,6 +48,10 @@ Provider deadlines are bounded; use at most one retry after reconciling state. O
 
 ```sh
 python3 -m unittest discover -s facade -p 'test_*.py'
+# Also check the actual MCP schema/response contract, without desktop or models:
+.venv-facade/bin/python facade/check_protocol.py
 ```
 
 See [adoption evidence](FACADE-ADOPTION.md). Tool discovery and safe binding passed the local trial; model accuracy and autonomous sequencing are not established by that result.
+
+[Second fresh-agent smoke](FACADE-SMOKE-2.md) covers the record/action contract fixes and their bounded adoption follow-up.
