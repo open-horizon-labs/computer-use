@@ -15,18 +15,56 @@ def window(sid='s00000001'):
     for n in nodes:n.update(element_token=sid+':'+str(n['element_index']),enabled=True)
     return {'snapshot_id':sid,'pid':1,'window_id':2,'window_title':'Demo','elements':nodes,'_image':b'pixels'}
 
+def booking_window(sid='s00000001'):
+    # 12 repeated <li> records, each identical apart from its own field text and
+    # an identical 'Book' button -- the live A/B failure shape from fix 1/2/3.
+    providers=[('Provider A','Consultation','60 min','1:30 PM'),('Provider B','Follow-up','30 min','2:00 PM'),
+               ('Provider C','Follow-up','30 min','2:15 PM'),('Provider D','Consultation','45 min','2:30 PM'),
+               ('Provider E','Follow-up','30 min','1:45 PM'),('Provider F','Follow-up','30 min','2:45 PM'),
+               ('Provider G','Follow-up','30 min','3:15 PM'),('Provider H','Follow-up','30 min','4:00 PM'),
+               ('Provider I','Follow-up','30 min','2:05 PM'),('Provider J','Telehealth','half-hour','3:00 PM'),
+               ('Provider K','Follow-up','30 min','11:00 AM'),('Provider L','Consultation','30 min','2:20 PM')]
+    nodes=[{'element_index':0,'role':'AXWindow','label':'Clinic Slots'}]
+    index=1
+    for name,service,duration,start in providers:
+        li=index;index+=1
+        nodes.append({'element_index':li,'parent_index':0,'role':'AXGroup','label':'Slot '+name})
+        for value in (name,service,duration,'Starts '+start):
+            nodes.append({'element_index':index,'parent_index':li,'role':'AXStaticText','value':value});index+=1
+        nodes.append({'element_index':index,'parent_index':li,'role':'AXButton','label':'Book','actions':['AXPress']});index+=1
+    for n in nodes:n.update(element_token=sid+':'+str(n['element_index']),enabled=True)
+    return {'snapshot_id':sid,'pid':1,'window_id':2,'window_title':'Clinic Slots','elements':nodes,'_image':b'pixels'}
+
+
 class FakeDriver:
-    def __init__(self):self.version=0;self.change=False;self.executed=[];self.duplicate=False;self.pixel_change=False
+    def __init__(self):
+        self.version=0;self.change=False;self.executed=[];self.duplicate=False;self.pixel_change=False
+        self.no_snapshot=False;self.window_open=True;self.background_input=None;self.booking=False
     def call(self,tool,args,timeout=20):
-        if tool=='list_windows':return {'windows':[{'pid':1,'window_id':2,'title':'Demo'}]}
+        if tool=='list_windows':
+            return {'windows':[{'pid':1,'window_id':2,'title':'Demo'}] if self.window_open else []}
         if tool=='click':self.executed.append(copy.deepcopy(args));return {'effect':'unverifiable'}
         return {}
     def observe(self,*args):
-        self.version+=1;x=window('s'+format(self.version,'08x'))
+        self.version+=1
+        x=booking_window('s'+format(self.version,'08x')) if self.booking else window('s'+format(self.version,'08x'))
         if self.change:x['elements'][3]['label']='Delete everything'
         if self.duplicate:x['elements'][6]['label']='Inspect first'
         if self.pixel_change:x['_image']=b'changed'
+        if self.background_input is not None:x['background_input']=self.background_input
+        if self.no_snapshot:
+            x.pop('snapshot_id',None);x['refusal']={'code':'degraded'};x['degraded_reason']='window_minimized'
         return x
+
+
+class VersionedDriver:
+    """Minimal driver stub; deliberately not a FakeDriver subclass so its own
+    'version' instance attribute never shadows the version() probe method."""
+    def __init__(self,version_tuple):self._version=version_tuple
+    def version(self):return self._version
+    def call(self,tool,args,timeout=20):
+        return {'windows':[{'pid':1,'window_id':2,'title':'Demo'}]} if tool=='list_windows' else {}
+    def observe(self,*args):return window('sversioned')
 
 class FakeChooser:
     def __init__(self):self.requests=[];self.closed=False
@@ -110,7 +148,9 @@ class CoreTests(unittest.TestCase):
         r=self.reading()
         with self.assertRaises(Gap):self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e3','e6'])
     def test_visual_pixels_change_rejects(self):
-        selection=self.f.choose(self.obs,'Inspect',candidate_ids=['e3','e6'],mode='visual')['selection']
+        # Goal quotes text that appears only in e3's own record ("Used $80"),
+        # corroborating the FakeVision pick (actions[0], e3) per fix 2.
+        selection=self.f.choose(self.obs,'Inspect the "Used $80" one',candidate_ids=['e3','e6'],mode='visual')['selection']
         self.driver.pixel_change=True
         with self.assertRaises(Gap):self.f.act(selection)
     def test_verify_fresh_and_absence_unknown(self):
@@ -187,5 +227,128 @@ class CoreTests(unittest.TestCase):
     def test_trace_no_page_text(self):
         self.reading();self.exact()
         self.assertNotIn('$80',str(self.f.events));self.assertNotIn('Inspect first',str(self.f.events))
+
+    # --- Fix 1: record context in candidate descriptions -------------------
+    def test_record_context_never_leaks_sibling_record(self):
+        self.driver.booking=True
+        obs=self.f.observe(1,2)['snapshot']
+        state=self.f.state(obs)
+        book_ids=['e'+str(6+6*i) for i in range(12)]
+        described={a['id']:a['description'] for a in self.f.actions(state,book_ids,'click',None)}
+        # Tempting wrong patch: using the parent list's full text (spans all 12
+        # records) or a preceding sibling's text instead of the smallest
+        # disambiguating ancestor.
+        self.assertIn('Provider A',described['e6'])
+        self.assertIn('record:',described['e6'])
+        for other in ('Provider B','Provider C','Provider L'):
+            self.assertNotIn(other,described['e6'])
+        self.assertIn('Provider L',described['e72'])
+        for other in ('Provider A','Provider B','Provider K'):
+            self.assertNotIn(other,described['e72'])
+
+    # --- Fix 2: visual choice cannot authorize alone ------------------------
+    def test_visual_pick_without_corroboration_defers_and_issues_no_handle(self):
+        result=self.f.choose(self.obs,'Inspect the "Used $80" one',candidate_ids=['e6','e3'],mode='visual')
+        self.assertEqual(result['status'],'defer')
+        self.assertEqual(result['reason'],'visual_uncorroborated')
+        self.assertNotIn('selection',result)
+        self.assertEqual(result['suggested_id'],'e6')
+
+    def test_visual_pick_corroborated_by_quoted_record_text_authorizes(self):
+        result=self.f.choose(self.obs,'Inspect the "Used $80" one',candidate_ids=['e3','e6'],mode='visual')
+        self.assertEqual(result['status'],'selected')
+        self.assertEqual(result['selected_id'],'e3')
+        self.assertIn('selection',result)
+
+    # --- Fix 3: reject answer-leaking goals; flag caller preselection -------
+    def test_goal_mentioning_observed_element_id_rejected(self):
+        with self.assertRaises(Gap):
+            self.f.choose(self.obs,'Click e3 since it matches',candidate_ids=['e3','e6'])
+
+    def test_goal_stating_the_answer_rejected(self):
+        with self.assertRaises(Gap):
+            self.f.choose(self.obs,'The correct one is the first product',candidate_ids=['e3','e6'])
+
+    def test_caller_preselected_flagged_for_strict_subset_without_reading(self):
+        self.driver.booking=True
+        obs=self.f.observe(1,2)['snapshot']
+        book_ids=['e'+str(6+6*i) for i in range(12)]
+        narrowed=self.f.choose(obs,'Choose the telehealth video visit slot',candidate_ids=book_ids[:3],mode='semantic')
+        self.assertTrue(narrowed['caller_preselected'])
+        self.assertTrue(self.f.events[-1]['caller_preselected'])
+        full=self.f.choose(obs,'Choose the telehealth video visit slot',candidate_ids=book_ids,mode='semantic')
+        self.assertFalse(full['caller_preselected'])
+
+    # --- Fix 5: actionable incomplete-scope defers --------------------------
+    def test_incomplete_scope_defer_includes_actionable_detail(self):
+        self.reader.missing=True
+        r=self.reading()
+        result=self.f.choose(self.obs,'Inspect',reading=r['reading'])
+        self.assertEqual(result['reason'],'unknown_or_incomplete_scope')
+        self.assertEqual(set(result['unknown_ids']),{'e1','e4'})
+        self.assertEqual(result['excluded_count'],0)
+        self.assertEqual(result['eligible_ids'],[])
+        self.assertEqual(result['missing_fields']['e1'],['condition'])
+        self.assertEqual(result['missing_fields']['e4'],['condition'])
+        self.assertTrue(result['hint'])
+
+    # --- Fix 6: verification -------------------------------------------------
+    def test_verify_contains_match_is_case_insensitive_substring(self):
+        result=self.f.verify(1,2,'partial label visible',mode='exact',name='inspect FIRST',match='contains')
+        self.assertEqual(result['status'],'satisfied')
+
+    def test_verify_equals_match_still_requires_full_label(self):
+        result=self.f.verify(1,2,'partial label visible',mode='exact',name='Inspect',match='equals')
+        self.assertEqual(result['status'],'unknown')
+
+    def test_observe_reports_window_closed_when_window_gone(self):
+        self.driver.no_snapshot=True;self.driver.window_open=False
+        with self.assertRaisesRegex(Gap,'window_closed'):self.f.observe(1,2)
+
+    def test_observe_reports_driver_snapshot_unavailable_with_detail_when_window_still_listed(self):
+        self.driver.no_snapshot=True
+        # Tempting wrong patch: keeping the old generic 'Driver did not return a
+        # bound snapshot' message here loses the still-open/degraded distinction.
+        with self.assertRaisesRegex(Gap,'driver_snapshot_unavailable'):
+            try:self.f.observe(1,2)
+            except Gap as gap:
+                self.assertIn('window_minimized',str(gap));raise
+
+    def test_visual_verify_quoted_text_matches_ax_tree_without_calling_vision_model(self):
+        called=[]
+        self.visual.inspect=lambda *a,**k:(called.append(1),{'state':'ready','evidence':'x'})[1]
+        result=self.f.verify(1,2,'Status shows "Inspect first"')
+        self.assertEqual(result['route'],'exact_text_postcondition')
+        self.assertEqual(result['status'],'satisfied')
+        self.assertEqual(called,[])
+
+    def test_visual_verify_falls_back_to_vision_when_quoted_text_absent(self):
+        result=self.f.verify(1,2,'Status shows "Not anywhere in the tree"')
+        self.assertEqual(result['route'],'systemone_vision')
+
+    # --- Fix 7: Spaces/foreground refusal and minimum driver version -------
+    def test_act_refuses_when_window_off_space_or_ax_unresolved(self):
+        selection=self.exact()['selection']
+        self.driver.background_input={'exact_window':{'status':'ax_unresolved'},
+                                       'routes':{'click':{'status':'refused','reason':'off_space_or_ax_unresolved'}}}
+        # Tempting wrong patch: raising/activating the window to work around
+        # this instead of refusing. No click and no raw driver call may occur.
+        with self.assertRaisesRegex(Gap,'needs_foreground'):
+            self.f.act(selection)
+        self.assertEqual(self.driver.executed,[])
+
+    def test_old_driver_version_refused_even_though_naive_string_compare_would_pass(self):
+        # '0.9.0' > '0.29.1' as strings; only a tuple/numeric compare catches this.
+        driver=VersionedDriver((0,9,0))
+        f=Facade(driver,generic_factory=lambda:FakeChooser(),reader_factory=lambda:FakeReader(),visual_factory=lambda:FakeVision())
+        with self.assertRaisesRegex(Gap,'0.29.1'):
+            f.observe(1,2)
+
+    def test_supported_driver_version_allowed_and_recorded_in_trace(self):
+        driver=VersionedDriver((0,29,1))
+        f=Facade(driver,generic_factory=lambda:FakeChooser(),reader_factory=lambda:FakeReader(),visual_factory=lambda:FakeVision())
+        f.observe(1,2)
+        self.assertEqual(f.driver_version,(0,29,1))
+        self.assertEqual(f.close()['driver_version'],(0,29,1))
 
 if __name__=='__main__':unittest.main()

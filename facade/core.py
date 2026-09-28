@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -31,9 +32,21 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
+MIN_DRIVER_VERSION = (0, 29, 1)  # off_space_or_ax_unresolved fixed upstream; trycua/cua#4068
+
+
 class Driver:
     def __init__(self, executable=None):
         self.executable = executable or os.environ.get('CUA_DRIVER', str(Path.home()/'.local/bin/cua-driver'))
+        self._version = None
+
+    def version(self):
+        # Cache: one subprocess per process lifetime, not per tool call.
+        if self._version is None:
+            result = subprocess.run([self.executable, '--help'], capture_output=True, text=True, timeout=10)
+            match = re.search(r'cua-driver\s+(\d+)\.(\d+)\.(\d+)', result.stdout + result.stderr)
+            self._version = tuple(int(part) for part in match.groups()) if match else False
+        return self._version or None
 
     def call(self, tool, args, timeout=20):
         result = subprocess.run([self.executable, 'call', tool, '--json', json.dumps(args)],
@@ -64,6 +77,7 @@ class Facade:
         self.clock = clock
         self.session = 'cua-facade-' + uuid.uuid4().hex[:10]
         self.started = False
+        self.driver_version = None
         self.snapshots, self.latest, self.selections, self.readings = {}, {}, {}, {}
         self.events = []
         self.lock = threading.RLock()
@@ -84,6 +98,14 @@ class Facade:
 
     def windows(self, title=None):
         if not self.started:
+            version_probe = getattr(self.driver, 'version', None)
+            if callable(version_probe):
+                self.driver_version = version_probe()
+                # Unknown version (older driver with no --help version line) is not
+                # blocked; a version we CAN parse and IS too old must refuse.
+                if self.driver_version is not None and self.driver_version < MIN_DRIVER_VERSION:
+                    raise Gap('cua-driver %s is unsupported (needs >= %s): off_space_or_ax_unresolved routes are refused on older builds; upgrade cua-driver (trycua/cua#4068)'
+                              % ('.'.join(map(str, self.driver_version)), '.'.join(map(str, MIN_DRIVER_VERSION))))
             self.driver.call('start_session', {'session': self.session})
             self.started = True
         result = self.driver.call('list_windows', {'session': self.session})
@@ -97,7 +119,13 @@ class Facade:
         began = self.clock()
         raw = self.driver.observe(pid, window_id, self.session)
         if not raw.get('snapshot_id') or raw.get('pid', pid) != pid or raw.get('window_id', window_id) != window_id:
-            raise Gap('Driver did not return a bound snapshot')
+            # A vague message here just makes the agent guess three times. Say
+            # whether the window is gone or the Driver degraded/refused instead.
+            windows = self.driver.call('list_windows', {'session': self.session}).get('windows', [])
+            if not any(w.get('pid') == pid and w.get('window_id') == window_id for w in windows):
+                raise Gap('window_closed: the target window is no longer in the Driver window list; call cua_windows again')
+            raise Gap('driver_snapshot_unavailable: ' + json.dumps(
+                {'refusal': raw.get('refusal'), 'degraded_reason': raw.get('degraded_reason')}, sort_keys=True))
         nodes = {}
         for item in raw.get('elements', []):
             index = item.get('element_index')
@@ -130,6 +158,24 @@ class Facade:
                     'role': a.get('role'), 'name': a.get('label', ''), 'value': a.get('value'),
                     'enabled': a.get('enabled', True), 'actions': a.get('actions', []),
                     **({'alias_of':'e'+str(state['aliases'][i])} if i in state['aliases'] else {})} for i,a in nodes.items()]}
+
+    @staticmethod
+    def check_foreground(raw):
+        """Refuse before delivery when the window is off-Space/AX-unresolved.
+
+        The facade never activates, raises or moves windows to work around
+        this; it only refuses so the caller (or the user) brings it forward,
+        or upgrades cua-driver.
+        """
+        background = raw.get('background_input') or {}
+        exact_window = background.get('exact_window') or {}
+        status = exact_window.get('status')
+        routes = background.get('routes') if isinstance(background.get('routes'), dict) else {}
+        refused_reasons = {r.get('reason') for r in routes.values() if isinstance(r, dict) and r.get('status') == 'refused'}
+        if (status is not None and status != 'matched') or 'off_space_or_ax_unresolved' in refused_reasons:
+            raise Gap('needs_foreground: window is on another Space or AX-unresolved (exact_window.status=%r); '
+                      'the facade never moves, activates or raises windows; bring it forward yourself, or upgrade '
+                      'cua-driver to >= %s' % (status, '.'.join(map(str, MIN_DRIVER_VERSION))))
 
     def state(self, handle):
         state = self.snapshots.get(handle)
@@ -172,6 +218,28 @@ class Facade:
                                         for i in cells]}, ensure_ascii=False)]
         return '\n'.join(text), descendants
 
+    def record_context(self, state, index):
+        """Text of the smallest ancestor subtree that disambiguates this control
+        among repeated siblings of the same role/label (its "record").
+
+        Never the parent's full container text (spans every record) and never
+        a sibling record: each ancestor is checked, from nearest out, and we
+        stop at the first one containing exactly one control of this kind.
+        """
+        node = state['nodes'][index]
+        kind = (node.get('role'), node.get('label'))
+        ancestor = node.get('parent_index')
+        chain = []
+        while ancestor in state['nodes'] and ancestor not in chain:
+            chain.append(ancestor)
+            ancestor = state['nodes'][ancestor].get('parent_index')
+        for anc in chain:
+            text, members = self.subtree(state, 'e'+str(anc))
+            same_kind = sum(1 for i in members if (state['nodes'][i].get('role'), state['nodes'][i].get('label')) == kind)
+            if same_kind == 1:
+                return text
+        return ''
+
     def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False):
         state = self.state(snapshot)
         fields = copy.deepcopy(fields)
@@ -202,6 +270,54 @@ class Facade:
         self.event('read',route='nuextract3',snapshot=snapshot,records=len(records),endpoint_ms=(self.clock()-start)*1000)
         return result
 
+    @staticmethod
+    def _operation_compatible(node, operation):
+        if operation == 'click':
+            return 'AXPress' in node.get('actions', [])
+        if operation == 'type_text':
+            return node.get('role') in ('AXTextField', 'AXTextArea', 'AXComboBox', 'AXSearchField')
+        return False
+
+    OBSERVED_ID = re.compile(r'\be(\d+)\b')
+    LEAK_PHRASE = re.compile(r'\bthe correct (?:one|answer) is\b|\bcorrect answer\s*[:=]|\bthe answer is\b', re.I)
+
+    def reject_answer_leak(self, state, goal):
+        """Refuse a goal that hands the chooser the answer instead of criteria."""
+        mentioned = {int(m) for m in self.OBSERVED_ID.findall(goal or '')}
+        if mentioned & set(state['nodes']):
+            raise Gap('Goal names an observed element ID; describe distinguishing criteria instead, '
+                      'not the answer — the chooser evaluates evidence, not a preselected candidate.')
+        if self.LEAK_PHRASE.search(goal or ''):
+            raise Gap('Goal states the answer (e.g. "the correct one is ..."); describe the '
+                      'distinguishing criteria instead so the chooser evaluates evidence, not a preselected candidate.')
+
+    @staticmethod
+    def quoted_tokens(text):
+        return [re.sub(r'\s+', ' ', token).strip() for token in re.findall(r'"([^"]+)"', text or '')]
+
+    def visual_corroborated(self, goal, picked_id, actions):
+        """Deterministic check: goal's quoted tokens appear only in the pick's
+        own record context (see record_context/actions), never another
+        candidate's. Model score/evidence text alone never authorizes a click.
+        """
+        tokens = self.quoted_tokens(goal)
+        if not tokens:
+            return False
+        contexts = {a['id']: a.get('description', '').casefold() for a in actions}
+        picked = contexts.get(picked_id, '')
+        if not all(token.casefold() in picked for token in tokens):
+            return False
+        return not any(aid != picked_id and any(token.casefold() in ctx for token in tokens)
+                        for aid, ctx in contexts.items())
+
+    def incomplete_scope_defer(self, filt):
+        return {'status': 'defer', 'route': 'nuextract3', 'reason': 'unknown_or_incomplete_scope',
+                'unknown_ids': filt['unknown_ids'], 'excluded_count': len(filt['excluded_ids']),
+                'eligible_ids': filt['eligible_ids'],
+                'missing_fields': {aid: filt['checks'][aid]['gaps'] for aid in filt['unknown_ids']},
+                'hint': 'Unknown records are missing or unparsed for the listed fields; re-read them with a '
+                        'clearer field description, or narrow record_ids/predicates to records that are already resolved.'}
+
     def actions(self, state, ids, operation, text):
         if operation not in ('click','type_text'):
             raise Gap('Supported bound operations: click, type_text; use explicit raw fallback for others')
@@ -222,9 +338,15 @@ class Facade:
             if operation=='type_text':
                 if text is None:raise Gap('type_text requires caller text')
                 args['text']=text
+            base_description=node.get('label') or node.get('value') or node.get('role','')
+            own={node.get('label') or '',node.get('value') or ''}
+            context=self.record_context(state,node['element_index'])
+            context_lines=[line for line in context.split('\n') if line and line not in own]
+            record_text=' · '.join(context_lines)[:240]
+            description=base_description+' — record: '+record_text if record_text else base_description
             result.append({'id':candidate,'name':node.get('label',''),'role':node.get('role'),
                            'operation':operation,'enabled':True,'evidence_text':evidence,
-                           'description':node.get('label') or node.get('value') or node.get('role',''),
+                           'description':description,
                            'arguments':args})
         return result
 
@@ -234,6 +356,7 @@ class Facade:
         state=self.state(snapshot)
         modes={'exact','semantic','visual','spans'}
         if mode not in modes:raise Gap('Unsupported selection mode')
+        if mode in ('semantic','visual'):self.reject_answer_leak(state,goal)
         ids=candidate_ids if candidate_ids is not None else ['e'+str(i) for i in state['nodes']]
         # Exact uniqueness must be checked against the entire observed scope,
         # never against a caller-supplied singleton hiding duplicate controls.
@@ -242,12 +365,19 @@ class Facade:
             ids=['e'+str(i) for i in state['nodes'] if i not in state['aliases']]
         if (fields or predicates or order_by) and mode not in ('spans',) and not reading:
             raise Gap('Typed criteria require a reading handle or spans mode; they cannot be ignored')
+        # A caller-narrowed candidate_ids scope (no reading grounding it) means
+        # the caller preselected a winner; the chooser mustn't be counted as
+        # having found it independently. Not chooser-accuracy evidence.
+        full_ids={'e'+str(i) for i,n in state['nodes'].items()
+                  if i not in state['aliases'] and self._operation_compatible(n,operation)}
+        caller_preselected=(candidate_ids is not None and not reading and mode not in ('exact','spans')
+                             and set(candidate_ids)<full_ids)
         if reading:
-            if mode != 'semantic':raise Gap('A reading uses semantic mode; spans/exact/visual use their own evidence')
+            if mode not in ('semantic','visual'):raise Gap('A reading uses semantic or visual mode; spans/exact use their own evidence')
             read=copy.deepcopy(self.readings.get(reading))
             if not read or read['snapshot']!=snapshot:raise Gap('Reading is not bound to this observation')
             if fields or order_by:raise Gap('Reading schemas come from cua_read; ordering is supported only in spans mode')
-            if not read['filter']['complete']:return {'status':'defer','route':'nuextract3','reason':'unknown_or_incomplete_scope'}
+            if not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'])
             base_retained=read['filter']['eligible_ids']
             if predicates:
                 # Filter cached evidence, never repeat extraction or silently send
@@ -260,7 +390,7 @@ class Facade:
                 self.event('filter',route='typed_same_record',snapshot=snapshot,
                            eligible=len(read['filter']['eligible_ids']),unknown=len(read['filter']['unknown_ids']),
                            excluded=len(read['filter']['excluded_ids']))
-                if not read['filter']['complete']:return {'status':'defer','route':'nuextract3','reason':'unknown_or_incomplete_scope'}
+                if not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'])
             retained=read['filter']['eligible_ids']
             mapped=[]
             if record_actions is not None:
@@ -315,15 +445,27 @@ class Facade:
             policy=Strangler.from_config({'incumbent_jev':lambda step,req:self.provider('generic')(step,req)})
         start=self.clock(); event_start=len(self.events)
         decision=policy.decide(request,request['snapshot_id'])
+        if mode=='visual' and decision.get('action_authorized'):
+            # A model pick (even scored) never authorizes alone: either a complete
+            # filtered reading grounds it (the offered actions are already the
+            # reading's mapped controls), or the goal's quoted text deterministically
+            # names this candidate's own record and no other's.
+            picked=decision['action_id']
+            if not (bool(reading) or self.visual_corroborated(goal,picked,actions)):
+                self.event('choose',snapshot=snapshot,route='visual_uncorroborated_guard',mode=mode,
+                           authorized=False,reason='visual_uncorroborated',caller_preselected=caller_preselected)
+                return {'status':'defer','route':'visual_uncorroborated_guard','reason':'visual_uncorroborated',
+                        'suggested_id':picked,'snapshot':snapshot}
         elapsed=(self.clock()-start)*1000
         setup=sum(e.get('setup_ms',0) for e in self.events[event_start:])
         output=decision.get('provider_outputs',[])
         route='exact_observed_control' if mode=='exact' else [r.get('route',r.get('model','unknown')) for r in output]
         provider_models=[entry.get('model') for out in output for entry in out.get('trace',[out]) if entry.get('model')]
         self.event('choose',snapshot=snapshot,route=route,models=provider_models,mode=mode,decision_ms=max(0,elapsed-setup),provider_setup_ms=setup,wall_ms=elapsed,
-                   authorized=decision.get('action_authorized',False),reason=decision.get('reason'))
+                   authorized=decision.get('action_authorized',False),reason=decision.get('reason'),caller_preselected=caller_preselected)
         result={'status':decision['status'],'route':route,'decision':decision,'snapshot':snapshot,
-                'offered_count':len(actions),'candidate_scope':'caller_subset' if candidate_ids is not None and not reading and mode!='exact' else 'observed_or_filtered_scope'}
+                'offered_count':len(actions),'caller_preselected':caller_preselected,
+                'candidate_scope':'caller_subset' if candidate_ids is not None and not reading and mode!='exact' else 'observed_or_filtered_scope'}
         if decision.get('action_authorized'):
             handle='sel_'+uuid.uuid4().hex
             self.selections[handle]={'snapshot':snapshot,'request':copy.deepcopy(request),'decision':copy.deepcopy(decision),
@@ -339,6 +481,7 @@ class Facade:
         item['used']=True  # Never replay an uncertain side effect.
         fresh=self.observe(state['pid'],state['window_id'])
         current=self.state(fresh['snapshot'])
+        self.check_foreground(current['raw'])
         if state['fingerprint']!=current['fingerprint']:
             raise Gap('UI changed since selection; reobserve and choose again')
         if item['mode']=='visual' and state['image_digest']!=current['image_digest']:
@@ -358,24 +501,39 @@ class Facade:
         return {'status':'delivered','driver_result':result,'requires_verification':True,
                 'pid':state['pid'],'window_id':state['window_id']}
 
-    def verify(self,pid,window_id,postcondition,mode='visual',name=None,role=None,value=None):
+    def verify(self,pid,window_id,postcondition,mode='visual',name=None,role=None,value=None,match='equals'):
         began=self.clock()
         fresh=self.observe(pid,window_id);state=self.state(fresh['snapshot'])
         assessment_start=self.clock();event_start=len(self.events)
+        if match not in ('equals','contains'):raise Gap('match must be equals or contains')
+        def text_match(actual,needle):
+            if needle is None:return True
+            if actual is None:return False
+            if match=='equals':return actual==needle
+            return needle.casefold() in str(actual).casefold()
         if mode=='exact':
             if not name:raise Gap('Exact verification requires an observed label')
-            matches=[n for n in state['nodes'].values() if n.get('label')==name and (role is None or n.get('role')==role)]
-            ok=any(value is None or n.get('value')==value for n in matches)
+            matches=[n for n in state['nodes'].values() if text_match(n.get('label'),name) and (role is None or n.get('role')==role)]
+            ok=any(text_match(n.get('value'),value) for n in matches)
             result={'status':'satisfied' if ok else 'unknown','route':'exact_postcondition',
                     'reason':'observed_matching_element' if ok else 'absence_not_proven'}
         elif mode=='visual':
-            import base64
-            try:
-                result=self.provider('visual').inspect({**state['raw'],
-                'screenshot_data_url':'data:image/png;base64,'+base64.b64encode(state['image']).decode() if state['image'] else None},postcondition,max(0.01,20-(self.clock()-began)))
-            except (ValueError, RuntimeError, TimeoutError, OSError) as error:
-                result={'state':'unknown','reason':'visual_provider_failure','error_type':type(error).__name__}
-            result={'status':'satisfied' if result.get('state')=='ready' else 'unknown','route':'systemone_vision','assessment':result}
+            # A quoted postcondition string is checked deterministically against
+            # the fresh AX tree first; only fall back to the vision model when
+            # that text isn't observed there (e.g. it's a purely visual state).
+            quoted=self.quoted_tokens(postcondition)
+            haystack=' '.join(f"{n.get('label') or ''} {n.get('value') or ''}" for n in state['nodes'].values()).casefold()
+            if quoted and all(token.casefold() in haystack for token in quoted):
+                result={'status':'satisfied','route':'exact_text_postcondition',
+                        'reason':'quoted_text_observed_in_ax_tree','matched_quotes':quoted}
+            else:
+                import base64
+                try:
+                    result=self.provider('visual').inspect({**state['raw'],
+                    'screenshot_data_url':'data:image/png;base64,'+base64.b64encode(state['image']).decode() if state['image'] else None},postcondition,max(0.01,20-(self.clock()-began)))
+                except (ValueError, RuntimeError, TimeoutError, OSError) as error:
+                    result={'state':'unknown','reason':'visual_provider_failure','error_type':type(error).__name__}
+                result={'status':'satisfied' if result.get('state')=='ready' else 'unknown','route':'systemone_vision','assessment':result}
         else:raise Gap('Verification mode must be exact or visual')
         setup=sum(e.get('setup_ms',0) for e in self.events[event_start:])
         self.event('verify',route=result['route'],snapshot=fresh['snapshot'],status=result['status'],
@@ -389,4 +547,4 @@ class Facade:
             except Exception:self.event('cleanup',status='worker_close_failed')
         self.providers.clear()
         self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear()
-        return {'status':'closed','trace':self.events}
+        return {'status':'closed','trace':self.events,'driver_version':self.driver_version}
