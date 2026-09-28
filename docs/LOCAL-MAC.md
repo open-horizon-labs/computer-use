@@ -7,6 +7,7 @@ The `local-mac` profile is the default provider policy. It selects Julia-1 for f
 - Julia-1 is a local finite-choice model. Its reference Python runtime supports CPU inference; it does not require CUDA. This repo's worker accepts `--device cpu`, checks the pinned checkpoint SHA-256 and revision, and retains the existing 18-action plus two defer limit.
 - The GLiNER worker accepts CPU execution with `--device cpu`; the existing described-span contract and same-record reducer do not change. CPU dependencies and checkpoint must be installed locally.
 - NuExtract3 page extraction and screenshot interpretation are not yet available through a bundled MLX worker. The profile rejects the existing hosted endpoints and therefore reports those calls as unavailable instead of transmitting page or screenshot evidence remotely.
+- Cua Perception (`scripts/install_perception.py`, on by default via `scripts/setup_facade.sh`) now provides on-device screenshot regions (OCR text + icon boxes) fully locally, independent of this profile choice — it runs through cua-driver's own signed extension, not a chooser/extraction/visual endpoint this profile gates. It only ever supplies description/corroboration context and a bounded fuzzy verification check (see [docs/FACADE.md](FACADE.md#cua-perception-screenshot-regions)); it does not replace the still-missing local NuExtract3 page reader, which remains the only typed-value source and is still unavailable locally.
 
 ## Configure local model workers
 

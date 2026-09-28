@@ -33,12 +33,14 @@ def digest(value):
 
 
 MIN_DRIVER_VERSION = (0, 29, 1)  # off_space_or_ax_unresolved fixed upstream; trycua/cua#4068
+PERCEPTION_CAPTURE_TTL_S = 60  # cua-perception capture registry expiry (upstream perception-extension.md)
 
 
 class Driver:
     def __init__(self, executable=None):
         self.executable = executable or os.environ.get('CUA_DRIVER', str(Path.home()/'.local/bin/cua-driver'))
         self._version = None
+        self._perception = None
 
     def version(self):
         # Cache: one subprocess per process lifetime, not per tool call.
@@ -47,6 +49,18 @@ class Driver:
             match = re.search(r'cua-driver\s+(\d+)\.(\d+)\.(\d+)', result.stdout + result.stderr)
             self._version = tuple(int(part) for part in match.groups()) if match else False
         return self._version or None
+
+    def perception_status(self):
+        # Cache like version(): one probe per process lifetime. The facade
+        # never installs/updates the extension itself; it only reads status.
+        if self._perception is None:
+            try:
+                result = subprocess.run([self.executable, 'extension', 'status', 'cua-perception', '--self-test', '--json'],
+                                         capture_output=True, text=True, timeout=15)
+                self._perception = json.loads(result.stdout) if result.stdout.strip() else {}
+            except (subprocess.TimeoutExpired, ValueError, OSError):
+                self._perception = {}
+        return self._perception
 
     def call(self, tool, args, timeout=20):
         result = subprocess.run([self.executable, 'call', tool, '--json', json.dumps(args)],
@@ -79,6 +93,8 @@ class Facade:
         self.started = False
         self.driver_version = None
         self.driver_version_state = 'unprobed'
+        self.perception_version = None
+        self.perception_state = 'unprobed'  # healthy | not_installed | unhealthy | unprobed
         self.snapshots, self.latest, self.selections, self.readings = {}, {}, {}, {}
         self.events = []
         self.lock = threading.RLock()
@@ -108,6 +124,14 @@ class Facade:
                 if self.driver_version is not None and self.driver_version < MIN_DRIVER_VERSION:
                     raise Gap('cua-driver %s is unsupported (needs >= %s): off_space_or_ax_unresolved routes are refused on older builds; upgrade cua-driver (trycua/cua#4068)'
                               % ('.'.join(map(str, self.driver_version)), '.'.join(map(str, MIN_DRIVER_VERSION))))
+            perception_probe = getattr(self.driver, 'perception_status', None)
+            if callable(perception_probe):
+                payload = perception_probe() or {}
+                self.perception_version = payload.get('active_version')
+                self.perception_state = 'healthy' if payload.get('installed') and payload.get('healthy') \
+                    else ('not_installed' if not payload.get('installed') else 'unhealthy')
+            else:
+                self.perception_state = 'not_installed'
             self.driver.call('start_session', {'session': self.session})
             self.started = True
         result = self.driver.call('list_windows', {'session': self.session})
@@ -222,6 +246,120 @@ class Facade:
                                         for i in cells]}, ensure_ascii=False)]
         return '\n'.join(text), descendants
 
+    def regions(self, snapshot, kinds=None, min_confidence=None, max_regions=None):
+        """Parse this SAME capture's perception regions via the Driver's
+        capture-bound contract (perception-extension.md 'Capture-bound parse
+        and action'): pass the exact capture_id get_window_state returned for
+        this observation. Never re-parses a different/expired capture for an
+        old selection -- callers must reobserve instead.
+        """
+        state = self.state(snapshot)
+        if self.perception_state != 'healthy':
+            raise Gap('perception_not_available: cua-perception is %s; install it with '
+                      '`python3 scripts/install_perception.py` (never auto-installed by the facade)' % self.perception_state)
+        capture_id = state['raw'].get('capture_id')
+        if not capture_id:
+            raise Gap('capture_unavailable: this observation carries no Driver capture_id to parse')
+        if self.clock() - state['created'] > PERCEPTION_CAPTURE_TTL_S:
+            raise Gap('capture_expired: perception captures expire after %ds upstream; reobserve for a fresh capture'
+                      % PERCEPTION_CAPTURE_TTL_S)
+        if state.get('regions_capture_id') == capture_id and state.get('regions') is not None:
+            return state['regions']
+        options = {}
+        if kinds: options['kinds'] = list(kinds)
+        if min_confidence is not None: options['min_confidence'] = min_confidence
+        if max_regions is not None: options['max_regions'] = max_regions
+        args = {'capture_id': capture_id, **({'options': options} if options else {})}
+        result = self.driver.call('parse_visual_regions', args)
+        state['regions'] = result
+        state['regions_capture_id'] = capture_id
+        self.event('perception_parse', route='cua-perception', snapshot=snapshot,
+                   region_count=len(result.get('regions', [])))
+        return result
+
+    @staticmethod
+    def _png_size(data):
+        if not data or len(data) < 24 or data[:8] != b'\x89PNG\r\n\x1a\n':
+            return None
+        width = int.from_bytes(data[16:20], 'big')
+        height = int.from_bytes(data[20:24], 'big')
+        return (width, height) if width and height else None
+
+    def _pixel_scale(self, state):
+        """(sx, sy) mapping AX frame points onto perception's screenshot-pixel
+        space, or None when that is not provably a uniform ratio. AX frames are
+        the Driver's window-local points; parsed regions are in screenshot
+        pixels (cua.visual_regions_v1 action_coordinate_space.kind ==
+        'screenshot_pixels'). A Retina/downscale factor can make these
+        numerically different -- only compute the ratio from the ACTUAL
+        screenshot's pixel size against the Driver's reported window bounds;
+        never assume 1:1. Mismatched/missing data means DON'T mix: return None.
+        """
+        bounds = state['raw'].get('window_bounds') or {}
+        width, height = bounds.get('w') or bounds.get('width'), bounds.get('h') or bounds.get('height')
+        size = self._png_size(state['image'])
+        if not width or not height or not size:
+            return None
+        sx, sy = size[0]/width, size[1]/height
+        if sx <= 0 or sy <= 0 or abs(sx-sy) > 0.02*max(sx, sy):
+            return None
+        return (sx, sy)
+
+    def record_context_perception(self, state, index):
+        """Fallback record grouping from perception layout, used only when
+        AX record_context/sibling_record found nothing (flat/ambiguous AX).
+        Maps this control's AX frame into perception's pixel space (refusing if
+        the coordinate spaces aren't provably comparable), then bands text
+        regions vertically between this control and its nearest same-role/label
+        neighbours. Description/corroboration context ONLY: OCR values must
+        never feed cua_read/NuExtract (see docs/FACADE.md OCR evidence table --
+        "60 min"->"600 min" etc.). Returns (text, 'perception_layout') or
+        ('', None) when unavailable.
+        """
+        node = state['nodes'][index]
+        frame = node.get('frame')
+        if not frame or self.perception_state != 'healthy':
+            return '', None
+        scale = self._pixel_scale(state)
+        if not scale:
+            return '', None
+        snapshot = next((h for h, s in self.snapshots.items() if s is state), None)
+        try:
+            parsed = self.regions(snapshot) if snapshot else None
+        except Gap:
+            return '', None
+        if not parsed:
+            return '', None
+        sx, sy = scale
+        kind = (node.get('role'), node.get('label'))
+        siblings = sorted((n for n in state['nodes'].values()
+                            if (n.get('role'), n.get('label')) == kind and n.get('frame')),
+                          key=lambda n: n['frame'].get('y', 0))
+        if len(siblings) < 2:
+            return '', None
+        ys = [s['frame'].get('y', 0)*sy for s in siblings]
+        my_y = frame.get('y', 0)*sy
+        try:
+            position = ys.index(my_y)
+        except ValueError:
+            return '', None
+        # Assumes the common card layout observed in the booking evidence
+        # (provider/duration/start text ABOVE its own "Book" button): band each
+        # control's record from the end of the PREVIOUS same-kind control down
+        # to this control's own top edge, never past it into the next record.
+        band_top = ys[position-1] + siblings[position-1]['frame'].get('h', 0)*sy if position else 0
+        band_bottom = my_y
+        texts = []
+        for region in parsed.get('regions', []):
+            if region.get('kind') != 'text':
+                continue
+            by = region.get('bounds', {}).get('y', 0)
+            if band_top <= by < band_bottom:
+                text = region.get('text')
+                if text and text not in texts:
+                    texts.append(text)
+        return ('\n'.join(texts), 'perception_layout') if texts else ('', None)
+
     def record_context(self, state, index):
         """Text of this control's record: the outermost ancestor still holding
         exactly one control of the same role/label, i.e. the child of the first
@@ -279,15 +417,26 @@ class Facade:
             texts += [line for line in text.split('\n') if line and line not in texts]
         return (texts, set(members) | {index}) if texts else None
 
+    READ_BUDGET = 2  # readings per (snapshot, record scope); S4.2 §7 bounds steps, S4.8 forbids re-read loops
+
     def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False):
         state = self.state(snapshot)
         fields = copy.deepcopy(fields)
+        # S4.8: readings are the displayed strings. Supplied types are ignored
+        # (recorded, never applied): the controlling LLM interprets "half-hour".
+        types_ignored = {name: spec['type'] for name, spec in fields.items() if spec.get('type', 'text') not in ('text', 'string')}
         for spec in fields.values():
-            if spec.get('type') == 'string': spec['type'] = 'text'
-            if spec.get('type') == 'money' and spec.get('currency') != 'USD':
-                raise Gap('Money fields require explicit currency: USD; use text for unparsed price strings')
+            spec['type'] = 'text'; spec.pop('currency', None)
         if not record_ids or len(set(record_ids)) != len(record_ids):
             raise Gap('Supply distinct observed record roots')
+        scope = (snapshot, frozenset(record_ids))
+        prior = [h for h, r in self.readings.items() if (r['snapshot'], frozenset(r['record_ids'])) == scope]
+        if len(prior) >= self.READ_BUDGET:
+            last = self.readings[prior[-1]]
+            raise Gap('read_budget: these records were already read %d times for this observation; re-reading is a '
+                      'defect, not recovery. Judge the extracted strings yourself and pass the eligible records as '
+                      'candidate_ids/record_actions with reading %s: %s' % (len(prior), prior[-1],
+                      json.dumps({r['record_id']: r['fields'] for r in last['extraction']['records']}, ensure_ascii=False)))
         records, memberships, record_basis = [], [], {}
         for candidate in record_ids:
             text, members = self.subtree(state,candidate)
@@ -312,8 +461,8 @@ class Facade:
             coverage_complete=coverage_complete,current_snapshot=state['raw']['snapshot_id'])
         handle = 'read_' + uuid.uuid4().hex
         result = {'reading':handle, 'snapshot':snapshot, 'route':'nuextract3', 'extraction':extraction, 'filter':filtered,
-                  **({'record_basis':record_basis} if record_basis else {})}
-        self.readings[handle] = copy.deepcopy({**result,'fields':fields,'predicates':predicates or []})
+                  **({'record_basis':record_basis} if record_basis else {}), **({'types_ignored':types_ignored} if types_ignored else {})}
+        self.readings[handle] = copy.deepcopy({**result,'fields':fields,'predicates':predicates or [],'record_ids':list(record_ids)})
         while len(self.readings)>32:self.readings.pop(next(iter(self.readings)))
         self.event('read',route='nuextract3',snapshot=snapshot,records=len(records),endpoint_ms=(self.clock()-start)*1000)
         return result
@@ -361,13 +510,17 @@ class Facade:
         return not any(aid != picked_id and any(token.casefold() in ctx for token in tokens)
                         for aid, ctx in contexts.items())
 
-    def incomplete_scope_defer(self, filt):
+    def incomplete_scope_defer(self, filt, read=None):
+        extracted = {r['record_id']: r['fields'] for r in (read or {}).get('extraction', {}).get('records', [])
+                     if r['record_id'] in filt['unknown_ids']}
         return {'status': 'defer', 'route': 'nuextract3', 'reason': 'unknown_or_incomplete_scope',
                 'unknown_ids': filt['unknown_ids'], 'excluded_count': len(filt['excluded_ids']),
                 'eligible_ids': filt['eligible_ids'],
                 'missing_fields': {aid: filt['checks'][aid]['gaps'] for aid in filt['unknown_ids']},
-                'hint': 'Unknown records are missing or unparsed for the listed fields; re-read them with a '
-                        'clearer field description, or narrow record_ids/predicates to records that are already resolved.'}
+                'extracted': extracted,
+                'hint': 'Do not re-read. A record whose strings are shown above is yours to judge: pass the records '
+                        'you find eligible as candidate_ids or record_actions with this reading. Only a record with '
+                        'no extracted value for a listed field justifies one re-read; otherwise the scope stays incomplete.'}
 
     def actions(self, state, ids, operation, text):
         if operation not in ('click','type_text'):
@@ -392,18 +545,92 @@ class Facade:
             base_description=node.get('label') or node.get('value') or node.get('role','')
             own={node.get('label') or '',node.get('value') or ''}
             context=self.record_context(state,node['element_index'])
+            record_basis=None
+            if not context:
+                # AX-only grouping found nothing (flat/ambiguous tree); fall
+                # back to perception layout for description/corroboration only.
+                context,record_basis=self.record_context_perception(state,node['element_index'])
             context_lines=[line for line in context.split('\n') if line and line not in own]
             record_text=' · '.join(context_lines)[:240]
             description=base_description+' — record: '+record_text if record_text else base_description
             result.append({'id':candidate,'name':node.get('label',''),'role':node.get('role'),
                            'operation':operation,'enabled':True,'evidence_text':evidence,
                            'description':description,
+                           **({'record_basis':record_basis} if record_basis else {}),
                            'arguments':args})
+        return result
+
+    def choose_regions(self, snapshot, goal, candidate_ids=None, operation='click'):
+        """Offer perception regions (from THIS snapshot's capture) as candidates
+        for a canvas/pixel-only pick, per the Driver's documented capture-bound
+        contract (perception-extension.md 'Capture-bound parse and action';
+        click's capture_id+x,y admits and consumes that exact capture). Requires
+        the same answer-leak rejection and quoted-text corroboration as visual
+        mode -- OCR text never authorizes alone; it only corroborates.
+        """
+        state=self.state(snapshot)
+        if operation!='click':raise Gap('regions mode supports click only (capture-bound pixel dispatch)')
+        self.reject_answer_leak(state,goal)
+        capture_id=state['raw'].get('capture_id')
+        if not capture_id:raise Gap('capture_unavailable: no live Driver capture_id on this observation; reobserve to get one')
+        parsed=self.regions(snapshot)
+        regions=parsed.get('regions',[])
+        if candidate_ids is not None:regions=[r for r in regions if r.get('id') in candidate_ids]
+        if not regions:raise Gap('No perception regions available in the requested scope')
+        actions=[]
+        for r in regions:
+            bounds=r.get('bounds') or {}
+            description=r.get('text') or r.get('label') or r.get('kind','region')
+            actions.append({'id':r['id'],'name':description,'role':'perception_region:'+r.get('kind',''),
+                            'operation':operation,'enabled':True,'evidence_text':r.get('text') or '',
+                            'description':description,'record_basis':'perception_layout',
+                            'arguments':{'pid':state['pid'],'window_id':state['window_id'],'session':self.session,
+                                        'capture_id':capture_id,'delivery_mode':'background',
+                                        'target':{'kind':'window','pid':state['pid'],'window_id':state['window_id']},
+                                        'x':bounds.get('x',0)+bounds.get('width',0)/2,
+                                        'y':bounds.get('y',0)+bounds.get('height',0)/2}})
+        if len(actions)==1:
+            self.event('choose',snapshot=snapshot,route='scope_guard',mode='regions',authorized=False,
+                       reason='singleton_requires_grounded_reading')
+            return {'status':'defer','route':'scope_guard','reason':'singleton_requires_grounded_reading',
+                    'hint':'Offer multiple region alternatives, or use AX exact/spans mode for a genuinely unique control.'}
+        request={'snapshot_id':state['raw']['snapshot_id'],'kind':'semantic','operation':operation,
+                 'goal':goal,'actions':actions,'observation':'\n'.join(a['description'] for a in actions)}
+        policy=Strangler.from_config({'incumbent_jev':lambda step,req:self.provider('generic')(step,req)})
+        start=self.clock();event_start=len(self.events)
+        decision=policy.decide(request,request['snapshot_id'])
+        if decision.get('action_authorized'):
+            picked=decision['action_id']
+            # As in visual mode (review P1): a caller-narrowed region list cannot
+            # self-corroborate; quote uniqueness only counts across all regions.
+            if candidate_ids is not None or not self.visual_corroborated(goal,picked,actions):
+                self.event('choose',snapshot=snapshot,route='visual_uncorroborated_guard',mode='regions',
+                           authorized=False,reason='visual_uncorroborated')
+                return {'status':'defer','route':'visual_uncorroborated_guard','reason':'visual_uncorroborated',
+                        'suggested_id':picked,'snapshot':snapshot}
+        elapsed=(self.clock()-start)*1000
+        setup=sum(e.get('setup_ms',0) for e in self.events[event_start:])
+        output=decision.get('provider_outputs',[])
+        route=[r.get('route',r.get('model','unknown')) for r in output]
+        self.event('choose',snapshot=snapshot,route=route,mode='regions',decision_ms=max(0,elapsed-setup),
+                   provider_setup_ms=setup,wall_ms=elapsed,authorized=decision.get('action_authorized',False),
+                   reason=decision.get('reason'),caller_preselected=candidate_ids is not None)
+        result={'status':decision['status'],'route':route,'decision':decision,'snapshot':snapshot,
+                'offered_count':len(actions),'caller_preselected':candidate_ids is not None,
+                'candidate_scope':'caller_subset' if candidate_ids is not None else 'observed_or_filtered_scope'}
+        if decision.get('action_authorized'):
+            handle='sel_'+uuid.uuid4().hex
+            self.selections[handle]={'snapshot':snapshot,'request':copy.deepcopy(request),'decision':copy.deepcopy(decision),
+                                     'mode':'regions','operation':operation,'text':None,'used':False,'capture_id':capture_id}
+            while len(self.selections)>32:self.selections.pop(next(iter(self.selections)))
+            result.update(selection=handle,selected_id=decision['action_id'])
         return result
 
     def choose(self, snapshot, goal, candidate_ids=None, mode='semantic', exact_name=None, exact_role=None,
                operation='click', text=None, reading=None, fields=None, predicates=None, order_by=None,
-               coverage_complete=False,record_actions=None):
+               coverage_complete=False,record_actions=None,accept_unknown=None):
+        if mode=='regions':
+            return self.choose_regions(snapshot,goal,candidate_ids,operation)
         state=self.state(snapshot)
         modes={'exact','semantic','visual','spans'}
         if mode not in modes:raise Gap('Unsupported selection mode')
@@ -430,7 +657,14 @@ class Facade:
             read=copy.deepcopy(self.readings.get(reading))
             if not read or read['snapshot']!=snapshot:raise Gap('Reading is not bound to this observation')
             if fields or order_by:raise Gap('Reading schemas come from cua_read; ordering is supported only in spans mode')
-            if not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'])
+            grounded=[r['record_id'] for r in read['extraction']['records']]
+            # S4.8: the controller may judge the strings itself. Record IDs in
+            # candidate_ids/record_actions are its verdict on eligibility; they
+            # must be this reading's records and not excluded by stated text
+            # predicates. Without a verdict the filter decides and unknowns defer.
+            judged=list(record_actions) if record_actions is not None else (
+                list(candidate_ids) if candidate_ids is not None and set(candidate_ids)<=set(grounded) else None)
+            if judged is None and not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'],read)
             base_retained=read['filter']['eligible_ids']
             if predicates:
                 # Filter cached evidence, never repeat extraction or silently send
@@ -443,17 +677,40 @@ class Facade:
                 self.event('filter',route='typed_same_record',snapshot=snapshot,
                            eligible=len(read['filter']['eligible_ids']),unknown=len(read['filter']['unknown_ids']),
                            excluded=len(read['filter']['excluded_ids']))
-                if not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'])
-            retained=read['filter']['eligible_ids']
-            mapped=[]
+                if judged is None and not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'],read)
+            filt=read['filter']
             if record_actions is not None:
-                if set(record_actions) not in (set(retained),set(base_retained)):
-                    raise Gap('Map every eligible record (optionally all originally eligible records), with no unrelated records')
-                # Validate even controls removed by the additional predicate.
+                # A cross-record target is a defect regardless of eligibility.
                 for root,target in record_actions.items():
                     _,members=self.subtree(state,root)
                     if self.node(state,target)['element_index'] not in members:
                         raise Gap('Record action is outside its source record')
+            if judged is not None:
+                stray=[r for r in judged if r not in grounded]
+                if stray:raise Gap('Judged records must be records of this reading: %s' % stray)
+                # Stated text predicates can only narrow a verdict, never be overridden by it.
+                retained=[r for r in judged if r not in filt['excluded_ids']]
+                if not retained:raise Gap('Every judged record %s was excluded by the stated predicates' % judged)
+                judgment='controller' if set(retained)!=set(filt['eligible_ids']) else 'filter'
+            else:
+                retained=filt['eligible_ids'];judgment='filter'
+            unknown_competitors=[r for r in filt['unknown_ids'] if r not in retained]
+            acknowledged=list(accept_unknown or [])
+            stray=[r for r in acknowledged if r not in filt['unknown_ids']]
+            if stray:raise Gap('accept_unknown names records that are not unknown in this reading: %s' % stray)
+            unacknowledged=[r for r in unknown_competitors if r not in acknowledged]
+            if unacknowledged:
+                # S4.2 section 4: an unknown possible competitor prevents automatic
+                # selection. The controller may release it, but only by naming it.
+                extracted={r['record_id']:r['fields'] for r in read['extraction']['records'] if r['record_id'] in unacknowledged}
+                self.event('choose',snapshot=snapshot,route='scope_guard',mode=mode,authorized=False,
+                           reason='unknown_competitors_unacknowledged',unknown_competitors=len(unacknowledged))
+                return {'status':'defer','route':'scope_guard','reason':'unknown_competitors_unacknowledged',
+                        'unknown_ids':unacknowledged,'extracted':extracted,'judged_ids':retained,
+                        'hint':'Your verdict skips records the reading left unknown. If their strings above show they are '
+                               'ineligible, repeat this call with accept_unknown listing exactly those IDs; otherwise include '
+                               'them in your verdict or narrow the scope. Do not re-read just to fill a format.'}
+            mapped=[]
             for root in retained:
                 _,members=self.subtree(state,root)
                 if record_actions is not None:
@@ -466,11 +723,27 @@ class Facade:
             allowed_scopes=[set(retained),set(base_retained),set(mapped)]
             if record_actions is not None:allowed_scopes.append(set(record_actions.values()))
             if candidate_ids is not None and set(candidate_ids) not in allowed_scopes:
-                raise Gap('Use all eligible record IDs or their mapped control IDs; omit candidate_ids when using record_actions')
+                raise Gap('candidate_ids must be this reading\'s judged/eligible record IDs or their mapped control IDs')
             ids=mapped
         actions=self.actions(state,ids,operation,text)
         if reading and {a['id'] for a in actions} != set(ids):
             raise Gap('An eligible record lacks an enabled compatible control; cannot silently exclude it')
+        if reading and len(actions)==1:
+            # S4.2 §5: a unique best yields the bound action. A reading-grounded
+            # singleton (filter-unique or controller-judged) binds without any
+            # chooser round trip; the trace names whose judgment it was.
+            request={'snapshot_id':state['raw']['snapshot_id'],'kind':'semantic','operation':operation,
+                     'goal':goal,'actions':actions,'observation':actions[0]['description'],'specialist_context':read}
+            decision={'status':'selected','action_id':actions[0]['id'],'action_authorized':True,
+                      'reason':'grounded_singleton','judgment':judgment,'snapshot_id':request['snapshot_id'],
+                      'binding_digest':request_digest(request),'provider_outputs':[]}
+            self.event('choose',snapshot=snapshot,route='grounded_singleton',models=[],mode=mode,decision_ms=0,
+                       provider_setup_ms=0,wall_ms=0,authorized=True,reason='grounded_singleton',judgment=judgment,
+                       unknown_competitors=len(unknown_competitors),accepted_unknown=len(acknowledged),caller_preselected=judgment=='controller')
+            return self.issue(snapshot,request,decision,mode,operation,text,
+                              {'status':'selected','route':'grounded_singleton','decision':decision,'snapshot':snapshot,
+                               'offered_count':1,'judgment':judgment,'unknown_competitors':unknown_competitors,'accepted_unknown':acknowledged,
+                               'caller_preselected':judgment=='controller','candidate_scope':'observed_or_filtered_scope'})
         if mode=='semantic' and len(actions)==1 and not reading:
             self.event('choose',snapshot=snapshot,route='scope_guard',mode=mode,
                        authorized=False,reason='singleton_requires_grounded_reading')
@@ -520,14 +793,55 @@ class Facade:
                    authorized=decision.get('action_authorized',False),reason=decision.get('reason'),caller_preselected=caller_preselected)
         result={'status':decision['status'],'route':route,'decision':decision,'snapshot':snapshot,
                 'offered_count':len(actions),'caller_preselected':caller_preselected,
-                'candidate_scope':'caller_subset' if candidate_ids is not None and not reading and mode!='exact' else 'observed_or_filtered_scope'}
+                'candidate_scope':'caller_subset' if candidate_ids is not None and not reading and mode!='exact' else 'observed_or_filtered_scope',
+                **({'judgment':judgment,'unknown_competitors':unknown_competitors,'accepted_unknown':acknowledged} if reading else {})}
+        return self.issue(snapshot,request,decision,mode,operation,text,result)
+
+    def issue(self,snapshot,request,decision,mode,operation,text,result):
+        """Store an authorized selection with the content scope it was bound in."""
         if decision.get('action_authorized'):
+            state=self.state(snapshot)
+            root=self.content_root(state,[a['id'] for a in request['actions']])
+            if state['nodes'][root].get('role')=='AXWebArea' and not self.address_fields(state,self.subtree(state,'e'+str(root))[1]):
+                root=None  # navigation unobservable without an address field: keep whole-window revalidation
             handle='sel_'+uuid.uuid4().hex
             self.selections[handle]={'snapshot':snapshot,'request':copy.deepcopy(request),'decision':copy.deepcopy(decision),
-                                     'mode':mode,'operation':operation,'text':text,'used':False}
+                                     'mode':mode,'operation':operation,'text':text,'used':False,
+                                     'scope_root':root,'scope_digest':None if root is None else self.scope_digest(state,root)}
             while len(self.selections)>32:self.selections.pop(next(iter(self.selections)))
             result.update(selection=handle,selected_id=decision['action_id'])
         return result
+
+    def content_root(self,state,ids):
+        """The observed content scope a selection binds to: the offered actions'
+        common ancestor, widened to the enclosing AXWebArea when there is one
+        (a browser's page), else the window root. Browser chrome such as a tab
+        strip's live memory readout is outside a page action's scope.
+        """
+        chains=[]
+        for cid in ids:
+            index=self.node(state,cid)['element_index'];chain=[]
+            while index in state['nodes'] and index not in chain:
+                chain.append(index);index=state['nodes'][index].get('parent_index')
+            chains.append(chain)
+        common=[i for i in chains[0] if all(i in c for c in chains[1:])]
+        lca=common[0] if common else chains[0][-1]
+        for i in chains[0][chains[0].index(lca):]:
+            if state['nodes'][i].get('role')=='AXWebArea':return i
+        return chains[0][-1]
+
+    @staticmethod
+    def address_fields(state,members):
+        return [{'role':n.get('role'),'value':n.get('value')} for i,n in sorted(state['nodes'].items())
+                if i not in members and n.get('role') in ('AXTextField','AXComboBox') and n.get('value')]
+
+    def scope_digest(self,state,root):
+        _,members=self.subtree(state,'e'+str(root))
+        # A page scope also binds the address field (role and value only): a
+        # navigation is a different page even when its tree happens to match.
+        address=[] if state['nodes'][root].get('role')!='AXWebArea' else self.address_fields(state,members)
+        return digest({'title':state['raw'].get('window_title'),'address':address,
+                       'nodes':[{k:v for k,v in state['nodes'][i].items() if k!='element_token'} for i in sorted(members)]})
 
     def act(self, selection):
         item=self.selections.get(selection)
@@ -537,17 +851,35 @@ class Facade:
         fresh=self.observe(state['pid'],state['window_id'])
         current=self.state(fresh['snapshot'])
         self.check_foreground(current['raw'])
-        if state['fingerprint']!=current['fingerprint']:
-            raise Gap('UI changed since selection; reobserve and choose again')
+        # Revalidate the content scope the selection was bound in (S4.8): any
+        # change inside it refuses; a change outside it (browser chrome) does not.
+        root=item.get('scope_root')
+        if root is None:
+            if state['fingerprint']!=current['fingerprint']:
+                raise Gap('UI changed since selection; reobserve and choose again')
+        elif root not in current['nodes'] or self.scope_digest(current,root)!=item['scope_digest']:
+            raise Gap('UI changed within the bound content scope since selection; reobserve and choose again')
         if item['mode']=='visual' and state['image_digest']!=current['image_digest']:
             raise Gap('Visual evidence changed; choose again from current screenshot')
-        # Rebind only after proving the entire observed AX content/frames unchanged.
-        # IDs are server-owned element indices; only Driver-issued tokens change.
         request=copy.deepcopy(item['request'])
-        request['snapshot_id']=current['raw']['snapshot_id']
-        for action in request['actions']:
-            action['arguments']['element_token']=self.node(current,action['id'])['element_token']
-        decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
+        if item['mode']=='regions':
+            # A capture-bound pixel click is admitted/consumed against its
+            # ORIGINAL capture_id, never rebound to a fresh one (the Driver's
+            # capture registry -- not this facade -- is the source of truth for
+            # capture_not_found/capture_expired). We only add the AX-unchanged
+            # safety check above; the capture identity itself must not move.
+            if self.clock()-state['created']>PERCEPTION_CAPTURE_TTL_S:
+                raise Gap('capture_expired: perception captures expire after %ds upstream; reobserve and choose again'
+                          % PERCEPTION_CAPTURE_TTL_S)
+            request['snapshot_id']=current['raw']['snapshot_id']
+            decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
+        else:
+            # Rebind only after proving the entire observed AX content/frames unchanged.
+            # IDs are server-owned element indices; only Driver-issued tokens change.
+            request['snapshot_id']=current['raw']['snapshot_id']
+            for action in request['actions']:
+                action['arguments']['element_token']=self.node(current,action['id'])['element_token']
+            decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
         result=execute_bound(request,decision,request['snapshot_id'],lambda tool,args:self.driver.call(tool,args))
         self.latest.pop((state['pid'],state['window_id']),None)
         self.event('act',route='cua-driver',selection=selection,revalidation='unchanged_observation',
@@ -555,6 +887,43 @@ class Facade:
                    verification='pending')
         return {'status':'delivered','driver_result':result,'requires_verification':True,
                 'pid':state['pid'],'window_id':state['window_id']}
+
+    @staticmethod
+    def _ocr_normalize(text):
+        return re.sub(r'\s+', ' ', (text or '').strip()).casefold()
+
+    def _perception_fuzzy_check(self, quoted, parsed):
+        """Fuzzy OCR presence check used only after the AX quoted-text check
+        fails and before calling the hosted vision model (facade/core.py
+        Facade.verify). Perception's own OCR corrupts values with digits
+        ("60 min"->"600 min", "1:30 PM"->"130 PM"; docs/FACADE.md evidence
+        table), so this NEVER returns satisfied for a quote containing a digit,
+        and NEVER on a merely fuzzy/partial match -- those return unknown with
+        evidence: ocr_candidate so the caller still corroborates independently.
+        Only a short, digit-free quote that matches exactly-once after
+        normalization may return satisfied.
+        """
+        texts = [r.get('text') or '' for r in parsed.get('regions', []) if r.get('kind') == 'text']
+        normalized = [self._ocr_normalize(t) for t in texts]
+        for token in quoted:
+            needle = self._ocr_normalize(token)
+            if not needle:
+                continue
+            hits = [i for i, t in enumerate(normalized) if t == needle]
+            if hits:
+                if any(ch.isdigit() for ch in needle) or len(hits) != 1:
+                    return {'status': 'unknown', 'route': 'perception_ocr_fuzzy', 'evidence': 'ocr_candidate',
+                            'matched_region': texts[hits[0]] if len(hits) == 1 else None}
+                return {'status': 'satisfied', 'route': 'perception_ocr_fuzzy',
+                        'reason': 'quoted_text_observed_in_ocr_region_exact_single_match',
+                        'matched_region': texts[hits[0]]}
+        for token in quoted:
+            needle = self._ocr_normalize(token)
+            candidate = next((t for t in texts if needle and (needle in self._ocr_normalize(t) or self._ocr_normalize(t) in needle)), None)
+            if candidate:
+                return {'status': 'unknown', 'route': 'perception_ocr_fuzzy', 'evidence': 'ocr_candidate',
+                        'matched_region': candidate}
+        return None
 
     def verify(self,pid,window_id,postcondition,mode='visual',name=None,role=None,value=None,match='equals'):
         began=self.clock()
@@ -588,13 +957,21 @@ class Facade:
                 result={'status':'satisfied','route':'exact_text_postcondition',
                         'reason':'quoted_text_observed_in_ax_tree','matched_quotes':quoted}
             else:
-                import base64
-                try:
-                    result=self.provider('visual').inspect({**state['raw'],
-                    'screenshot_data_url':'data:image/png;base64,'+base64.b64encode(state['image']).decode() if state['image'] else None},postcondition,max(0.01,20-(self.clock()-began)))
-                except (ValueError, RuntimeError, TimeoutError, OSError) as error:
-                    result={'state':'unknown','reason':'visual_provider_failure','error_type':type(error).__name__}
-                result={'status':'satisfied' if result.get('state')=='ready' else 'unknown','route':'systemone_vision','assessment':result}
+                perception_hint=None
+                if quoted and self.perception_state=='healthy':
+                    try:perception_hint=self._perception_fuzzy_check(quoted,self.regions(fresh['snapshot']))
+                    except Gap:perception_hint=None
+                if perception_hint and perception_hint['status']=='satisfied':
+                    result=perception_hint
+                else:
+                    import base64
+                    try:
+                        result=self.provider('visual').inspect({**state['raw'],
+                        'screenshot_data_url':'data:image/png;base64,'+base64.b64encode(state['image']).decode() if state['image'] else None},postcondition,max(0.01,20-(self.clock()-began)))
+                    except (ValueError, RuntimeError, TimeoutError, OSError) as error:
+                        result={'state':'unknown','reason':'visual_provider_failure','error_type':type(error).__name__}
+                    result={'status':'satisfied' if result.get('state')=='ready' else 'unknown','route':'systemone_vision','assessment':result}
+                    if perception_hint:result['perception_hint']=perception_hint
         else:raise Gap('Verification mode must be exact or visual')
         setup=sum(e.get('setup_ms',0) for e in self.events[event_start:])
         self.event('verify',route=result['route'],snapshot=fresh['snapshot'],status=result['status'],
@@ -608,4 +985,5 @@ class Facade:
             except Exception:self.event('cleanup',status='worker_close_failed')
         self.providers.clear()
         self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear()
-        return {'status':'closed','trace':self.events,'driver_version':self.driver_version,'driver_version_state':self.driver_version_state}
+        return {'status':'closed','trace':self.events,'driver_version':self.driver_version,'driver_version_state':self.driver_version_state,
+                'perception_version':self.perception_version,'perception_state':self.perception_state}

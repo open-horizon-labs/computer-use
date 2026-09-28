@@ -5,6 +5,6 @@ __pycache__/
 *.pem
 .DS_Store
 .venv-facade/
-experiments/facade-vs-native/runs/
+experiments/facade-vs-native/runs*/
 experiments/facade-vs-native/events.jsonl
 experiments/facade-vs-native/server.log

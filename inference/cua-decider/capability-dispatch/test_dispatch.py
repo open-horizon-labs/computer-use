@@ -204,6 +204,12 @@ class DispatchGates(unittest.TestCase):
         self.assertFalse(predicate(shade, {'field': 'item', 'op': 'not_contains', 'value': 'shade'}, spec))
         self.assertTrue(predicate(lamp, {'field': 'item', 'op': 'not_contains', 'value': 'shade'}, spec))
 
+    def test_ordering_ops_refused_on_text_fields(self):
+        # Tempting wrong patch: let '9 min' < '30 min' compare as strings.
+        with self.assertRaises(Unsupported):
+            predicate('9 min',{'op':'lt','value':'30 min'},{'type':'text'})
+        self.assertTrue(predicate(9,{'op':'lt','value':30},{'type':'number'}))
+
     def test_ne_is_a_discoverable_alias_for_neq(self):
         spec = {'type': 'text', 'description': 'status'}
         actual = typed('Processing', spec)

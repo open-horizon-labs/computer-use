@@ -1,0 +1,683 @@
+{
+  "capture": {
+    "action_coordinate_space": {
+      "kind": "screenshot_pixels"
+    },
+    "capture_id": "local_png_413837bb9df2132e26a993de",
+    "screenshot": {
+      "height": 1280,
+      "mime_type": "image/png",
+      "reference": "local-png-sha256:413837bb9df2132e26a993de36d9ac7439819a1d2dcea8c1be2e88c7a839bd29",
+      "sha256": "413837bb9df2132e26a993de36d9ac7439819a1d2dcea8c1be2e88c7a839bd29",
+      "width": 1021
+    },
+    "source": {
+      "kind": "window",
+      "pid": 20519,
+      "window_id": 18076
+    }
+  },
+  "local_input": {
+    "action_authority": "none",
+    "action_eligible": false,
+    "kind": "local_file",
+    "reason": "Local image input is not a Driver-owned capture and cannot authorize input.",
+    "sha256": "413837bb9df2132e26a993de36d9ac7439819a1d2dcea8c1be2e88c7a839bd29",
+    "snapshot_id": null
+  },
+  "parser": {
+    "backend": "onnx_runtime_cpu",
+    "extension_id": "cua-perception",
+    "extension_version": "0.2.1",
+    "model_id": "omniparser-v2-ppocrv5-en",
+    "model_manifest_sha256": "6e1026f7c2aa9f59a5e9126fe33fec396dc829dbd0a5d85d595dad36e9d78a2d",
+    "model_source_revision": "6600256cb0f1b07651e3bc86166196307bad7e2d",
+    "model_version": "2026-09-17",
+    "onnx_runtime_library_sha256": "cb0462c3fd35ad722e8772313030a33c182f3d4c6b33f4e5e1fcb2ce3199b86c",
+    "onnx_runtime_version": "1.26.0",
+    "runtime": "onnx_runtime_cpu"
+  },
+  "regions": [
+    {
+      "bounds": {
+        "height": 127,
+        "width": 603,
+        "x": 229,
+        "y": 176
+      },
+      "confidence": 0.946227490901947,
+      "id": "icon-38",
+      "interactive": false,
+      "kind": "icon",
+      "label": "icon-class-0"
+    },
+    {
+      "bounds": {
+        "height": 34,
+        "width": 148,
+        "x": 235,
+        "y": 181
+      },
+      "confidence": 0.806936502456665,
+      "id": "text-39",
+      "interactive": false,
+      "kind": "text",
+      "text": "Dr. Morgan Reyes"
+    },
+    {
+      "bounds": {
+        "height": 34,
+        "width": 112,
+        "x": 235,
+        "y": 200
+      },
+      "confidence": 0.6229367256164551,
+      "id": "text-40",
+      "interactive": false,
+      "kind": "text",
+      "text": "Conultation"
+    },
+    {
+      "bounds": {
+        "height": 32,
+        "width": 69,
+        "x": 236,
+        "y": 218
+      },
+      "confidence": 0.6091119050979614,
+      "id": "text-41",
+      "interactive": false,
+      "kind": "text",
+      "text": "600 min"
+    },
+    {
+      "bounds": {
+        "height": 35,
+        "width": 127,
+        "x": 235,
+        "y": 235
+      },
+      "confidence": 0.7829216718673706,
+      "id": "text-42",
+      "interactive": false,
+      "kind": "text",
+      "text": "Starts 130 PM"
+    },
+    {
+      "bounds": {
+        "height": 38,
+        "width": 68,
+        "x": 241,
+        "y": 255
+      },
+      "confidence": 0.6899374723434448,
+      "id": "text-43",
+      "interactive": false,
+      "kind": "text",
+      "text": "Book"
+    },
+    {
+      "bounds": {
+        "height": 128,
+        "width": 600,
+        "x": 232,
+        "y": 304
+      },
+      "confidence": 0.9155694842338562,
+      "id": "icon-44",
+      "interactive": false,
+      "kind": "icon",
+      "label": "icon-class-0"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 136,
+        "x": 235,
+        "y": 308
+      },
+      "confidence": 0.8134361505508423,
+      "id": "text-45",
+      "interactive": false,
+      "kind": "text",
+      "text": "Morgan Lee, NP"
+    },
+    {
+      "bounds": {
+        "height": 42,
+        "width": 98,
+        "x": 232,
+        "y": 326
+      },
+      "confidence": 0.3531297743320465,
+      "id": "text-46",
+      "interactive": false,
+      "kind": "text",
+      "text": "Follwupe"
+    },
+    {
+      "bounds": {
+        "height": 37,
+        "width": 81,
+        "x": 233,
+        "y": 345
+      },
+      "confidence": 0.601440966129303,
+      "id": "text-47",
+      "interactive": false,
+      "kind": "text",
+      "text": "30min"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 127,
+        "x": 235,
+        "y": 362
+      },
+      "confidence": 0.6341073513031006,
+      "id": "text-48",
+      "interactive": false,
+      "kind": "text",
+      "text": "Start :00 PM"
+    },
+    {
+      "bounds": {
+        "height": 34,
+        "width": 64,
+        "x": 244,
+        "y": 385
+      },
+      "confidence": 0.8430476784706116,
+      "id": "text-49",
+      "interactive": false,
+      "kind": "text",
+      "text": "Book"
+    },
+    {
+      "bounds": {
+        "height": 145,
+        "width": 599,
+        "x": 230,
+        "y": 434
+      },
+      "confidence": 0.8731147646903992,
+      "id": "icon-50",
+      "interactive": false,
+      "kind": "icon",
+      "label": "icon-class-0"
+    },
+    {
+      "bounds": {
+        "height": 35,
+        "width": 123,
+        "x": 235,
+        "y": 437
+      },
+      "confidence": 0.8959391713142395,
+      "id": "text-51",
+      "interactive": false,
+      "kind": "text",
+      "text": "Dr. Priya Shah"
+    },
+    {
+      "bounds": {
+        "height": 41,
+        "width": 96,
+        "x": 233,
+        "y": 453
+      },
+      "confidence": 0.4161095917224884,
+      "id": "text-52",
+      "interactive": false,
+      "kind": "text",
+      "text": "Fo o lw-ph"
+    },
+    {
+      "bounds": {
+        "height": 32,
+        "width": 71,
+        "x": 235,
+        "y": 476
+      },
+      "confidence": 0.7415418028831482,
+      "id": "text-53",
+      "interactive": false,
+      "kind": "text",
+      "text": "30 min"
+    },
+    {
+      "bounds": {
+        "height": 35,
+        "width": 127,
+        "x": 235,
+        "y": 492
+      },
+      "confidence": 0.7840683460235596,
+      "id": "text-54",
+      "interactive": false,
+      "kind": "text",
+      "text": "Starts 2:15 PM"
+    },
+    {
+      "bounds": {
+        "height": 34,
+        "width": 239,
+        "x": 235,
+        "y": 511
+      },
+      "confidence": 0.5890236496925354,
+      "id": "text-55",
+      "interactive": false,
+      "kind": "text",
+      "text": "Covering r Dr. Morgan Reyes"
+    },
+    {
+      "bounds": {
+        "height": 33,
+        "width": 65,
+        "x": 243,
+        "y": 532
+      },
+      "confidence": 0.7221198081970215,
+      "id": "text-56",
+      "interactive": false,
+      "kind": "text",
+      "text": "Book"
+    },
+    {
+      "bounds": {
+        "height": 129,
+        "width": 599,
+        "x": 234,
+        "y": 579
+      },
+      "confidence": 0.9436535835266112,
+      "id": "icon-57",
+      "interactive": false,
+      "kind": "icon",
+      "label": "icon-class-0"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 150,
+        "x": 235,
+        "y": 583
+      },
+      "confidence": 0.7481991648674011,
+      "id": "text-58",
+      "interactive": false,
+      "kind": "text",
+      "text": "Dr. Morgan Reyes"
+    },
+    {
+      "bounds": {
+        "height": 35,
+        "width": 112,
+        "x": 235,
+        "y": 603
+      },
+      "confidence": 0.6410514116287231,
+      "id": "text-59",
+      "interactive": false,
+      "kind": "text",
+      "text": "Consltation"
+    },
+    {
+      "bounds": {
+        "height": 33,
+        "width": 71,
+        "x": 235,
+        "y": 622
+      },
+      "confidence": 0.6539590358734131,
+      "id": "text-60",
+      "interactive": false,
+      "kind": "text",
+      "text": "4min"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 127,
+        "x": 235,
+        "y": 638
+      },
+      "confidence": 0.7000791430473328,
+      "id": "text-61",
+      "interactive": false,
+      "kind": "text",
+      "text": "Starts 2:30 PM"
+    },
+    {
+      "bounds": {
+        "height": 39,
+        "width": 66,
+        "x": 243,
+        "y": 658
+      },
+      "confidence": 0.5940515995025635,
+      "id": "text-62",
+      "interactive": false,
+      "kind": "text",
+      "text": "S Book"
+    },
+    {
+      "bounds": {
+        "height": 129,
+        "width": 599,
+        "x": 234,
+        "y": 707
+      },
+      "confidence": 0.9473929405212402,
+      "id": "icon-63",
+      "interactive": false,
+      "kind": "icon",
+      "label": "icon-class-0"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 150,
+        "x": 235,
+        "y": 712
+      },
+      "confidence": 0.7713459134101868,
+      "id": "text-64",
+      "interactive": false,
+      "kind": "text",
+      "text": "Dr. Morgan Reyes"
+    },
+    {
+      "bounds": {
+        "height": 42,
+        "width": 95,
+        "x": 233,
+        "y": 728
+      },
+      "confidence": 0.3433193564414978,
+      "id": "text-65",
+      "interactive": false,
+      "kind": "text",
+      "text": "Fo  ol w-upn"
+    },
+    {
+      "bounds": {
+        "height": 38,
+        "width": 66,
+        "x": 243,
+        "y": 787
+      },
+      "confidence": 0.5834237933158875,
+      "id": "text-66",
+      "interactive": false,
+      "kind": "text",
+      "text": "Book"
+    },
+    {
+      "bounds": {
+        "height": 129,
+        "width": 599,
+        "x": 234,
+        "y": 836
+      },
+      "confidence": 0.9504265785217284,
+      "id": "icon-67",
+      "interactive": false,
+      "kind": "icon",
+      "label": "icon-class-0"
+    },
+    {
+      "bounds": {
+        "height": 34,
+        "width": 176,
+        "x": 235,
+        "y": 841
+      },
+      "confidence": 0.7984493970870972,
+      "id": "text-68",
+      "interactive": false,
+      "kind": "text",
+      "text": "Dr. Morgan Reyesford"
+    },
+    {
+      "bounds": {
+        "height": 37,
+        "width": 91,
+        "x": 235,
+        "y": 860
+      },
+      "confidence": 0.5661685466766357,
+      "id": "text-69",
+      "interactive": false,
+      "kind": "text",
+      "text": "Folow-up"
+    },
+    {
+      "bounds": {
+        "height": 32,
+        "width": 73,
+        "x": 236,
+        "y": 880
+      },
+      "confidence": 0.7490271925926208,
+      "id": "text-70",
+      "interactive": false,
+      "kind": "text",
+      "text": "30 min"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 127,
+        "x": 235,
+        "y": 896
+      },
+      "confidence": 0.7444331049919128,
+      "id": "text-71",
+      "interactive": false,
+      "kind": "text",
+      "text": "Starts 2:45 PM"
+    },
+    {
+      "bounds": {
+        "height": 38,
+        "width": 68,
+        "x": 241,
+        "y": 916
+      },
+      "confidence": 0.5906568169593811,
+      "id": "text-72",
+      "interactive": false,
+      "kind": "text",
+      "text": "Book"
+    },
+    {
+      "bounds": {
+        "height": 128,
+        "width": 600,
+        "x": 233,
+        "y": 965
+      },
+      "confidence": 0.946292281150818,
+      "id": "icon-73",
+      "interactive": false,
+      "kind": "icon",
+      "label": "icon-class-0"
+    },
+    {
+      "bounds": {
+        "height": 35,
+        "width": 150,
+        "x": 235,
+        "y": 970
+      },
+      "confidence": 0.7716535925865173,
+      "id": "text-74",
+      "interactive": false,
+      "kind": "text",
+      "text": "Dr. Morgan Reyes"
+    },
+    {
+      "bounds": {
+        "height": 41,
+        "width": 95,
+        "x": 233,
+        "y": 987
+      },
+      "confidence": 0.42767608165740967,
+      "id": "text-75",
+      "interactive": false,
+      "kind": "text",
+      "text": "Fo Fol lw-up"
+    },
+    {
+      "bounds": {
+        "height": 32,
+        "width": 71,
+        "x": 235,
+        "y": 1008
+      },
+      "confidence": 0.7494115829467773,
+      "id": "text-76",
+      "interactive": false,
+      "kind": "text",
+      "text": "30 min"
+    },
+    {
+      "bounds": {
+        "height": 35,
+        "width": 127,
+        "x": 235,
+        "y": 1025
+      },
+      "confidence": 0.6980322003364563,
+      "id": "text-77",
+      "interactive": false,
+      "kind": "text",
+      "text": "Starts 33:15 PM"
+    },
+    {
+      "bounds": {
+        "height": 38,
+        "width": 64,
+        "x": 245,
+        "y": 1045
+      },
+      "confidence": 0.6818718910217285,
+      "id": "text-78",
+      "interactive": false,
+      "kind": "text",
+      "text": "Book"
+    },
+    {
+      "bounds": {
+        "height": 130,
+        "width": 598,
+        "x": 234,
+        "y": 1093
+      },
+      "confidence": 0.9176256656646729,
+      "id": "icon-79",
+      "interactive": false,
+      "kind": "icon",
+      "label": "icon-class-0"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 150,
+        "x": 235,
+        "y": 1098
+      },
+      "confidence": 0.7809284329414368,
+      "id": "text-80",
+      "interactive": false,
+      "kind": "text",
+      "text": "Dr. Morgan Reyes"
+    },
+    {
+      "bounds": {
+        "height": 41,
+        "width": 96,
+        "x": 232,
+        "y": 1116
+      },
+      "confidence": 0.534356951713562,
+      "id": "text-81",
+      "interactive": false,
+      "kind": "text",
+      "text": "Follow-up"
+    },
+    {
+      "bounds": {
+        "height": 37,
+        "width": 75,
+        "x": 233,
+        "y": 1135
+      },
+      "confidence": 0.5616096258163452,
+      "id": "text-82",
+      "interactive": false,
+      "kind": "text",
+      "text": "3 min"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 127,
+        "x": 235,
+        "y": 1152
+      },
+      "confidence": 0.6349759101867676,
+      "id": "text-83",
+      "interactive": false,
+      "kind": "text",
+      "text": "Starts 4:00 PM"
+    },
+    {
+      "bounds": {
+        "height": 40,
+        "width": 66,
+        "x": 243,
+        "y": 1172
+      },
+      "confidence": 0.5492581725120544,
+      "id": "text-84",
+      "interactive": false,
+      "kind": "text",
+      "text": "S ook"
+    },
+    {
+      "bounds": {
+        "height": 36,
+        "width": 135,
+        "x": 235,
+        "y": 1227
+      },
+      "confidence": 0.7807052135467529,
+      "id": "text-85",
+      "interactive": false,
+      "kind": "text",
+      "text": "Dr. Alan Morgan"
+    },
+    {
+      "bounds": {
+        "height": 33,
+        "width": 90,
+        "x": 235,
+        "y": 1247
+      },
+      "confidence": 0.6925476789474487,
+      "id": "text-86",
+      "interactive": false,
+      "kind": "text",
+      "text": "Follow-up"
+    }
+  ],
+  "schema": "cua.visual_regions_v1",
+  "timing": {
+    "duration_ms": 1244
+  }
+}

@@ -40,10 +40,19 @@ class FakeDriver:
     def __init__(self):
         self.version=0;self.change=False;self.executed=[];self.duplicate=False;self.pixel_change=False
         self.no_snapshot=False;self.window_open=True;self.background_input=None;self.booking=False
+        # Perception defaults to not-installed so existing tests are unaffected.
+        self.perception_payload={'installed':False}
+        self.capture_id=None;self.window_bounds=None;self.parse_calls=[];self.parse_result={'regions':[]}
+        self.parse_refusal=None
+    def perception_status(self):return copy.deepcopy(self.perception_payload)
     def call(self,tool,args,timeout=20):
         if tool=='list_windows':
             return {'windows':[{'pid':1,'window_id':2,'title':'Demo'}] if self.window_open else []}
-        if tool=='click':self.executed.append(copy.deepcopy(args));return {'effect':'unverifiable'}
+        if tool in ('click','type_text'):self.executed.append(copy.deepcopy(args));return {'effect':'unverifiable'}
+        if tool=='parse_visual_regions':
+            self.parse_calls.append(copy.deepcopy(args))
+            if self.parse_refusal:return {'refusal':self.parse_refusal}
+            return copy.deepcopy(self.parse_result)
         return {}
     def observe(self,*args):
         self.version+=1
@@ -52,6 +61,8 @@ class FakeDriver:
         if self.duplicate:x['elements'][6]['label']='Inspect first'
         if self.pixel_change:x['_image']=b'changed'
         if self.background_input is not None:x['background_input']=self.background_input
+        if self.capture_id:x['capture_id']=self.capture_id
+        if self.window_bounds:x['window_bounds']=self.window_bounds
         if self.no_snapshot:
             x.pop('snapshot_id',None);x['refusal']={'code':'degraded'};x['degraded_reason']='window_minimized'
         return x
@@ -133,7 +144,9 @@ class CoreTests(unittest.TestCase):
         self.assertIn('$80',rows[0]['text']);self.assertNotIn('$90',rows[0]['text'])
     def test_reading_joins_only_eligible_descendant_control(self):
         read=self.reading();result=self.f.choose(self.obs,'Inspect eligible product',reading=read['reading'])
-        self.assertEqual(result['selected_id'],'e3');self.assertEqual(len(self.generic.requests[0]['actions']),1)
+        # S4.2 §5: a unique best binds; no chooser round trip for a grounded singleton.
+        self.assertEqual(result['selected_id'],'e3');self.assertEqual(self.generic.requests,[])
+        self.assertEqual(result['route'],'grounded_singleton');self.assertEqual(result['judgment'],'filter')
     def test_missing_condition_blocks_choice(self):
         self.reader.missing=True;r=self.reading()
         result=self.f.choose(self.obs,'Inspect',reading=r['reading'])
@@ -180,16 +193,160 @@ class CoreTests(unittest.TestCase):
     def test_window_title_filter_omits_unrelated_windows(self):
         self.assertEqual(self.f.windows('Other')['windows'],[])
         self.assertEqual(len(self.f.windows('Demo')['windows']),1)
-    def test_money_currency_required_before_model_call(self):
-        with self.assertRaisesRegex(Gap,'currency'):
-            self.f.read(self.obs,'Read price',{'price':{'description':'Price','type':'money'}},['e1'])
-        self.assertEqual(self.reader.requests,[])
+    # --- S4.8: readings are strings; the controller interprets ---------------
+    def test_read_ignores_typed_schema_and_keeps_strings(self):
+        # Live CE: 'half-hour' extracted correctly five times, made unknown by a
+        # duration_minutes normalizer. Tempting wrong patch: teach the normalizer
+        # 'half-hour'. Types are ignored instead; the string stays known.
+        self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'duration':'half-hour'}} for r in req['records']]}
+        r=self.f.read(self.obs,'Read slots',{'duration':{'description':'Length','type':'duration_minutes'}},['e1','e4'],
+                      [{'field':'duration','op':'contains','value':'hour'}],coverage_complete=True)
+        self.assertEqual(r['types_ignored'],{'duration':'duration_minutes'})
+        self.assertEqual(r['filter']['unknown_ids'],[]);self.assertEqual(r['filter']['eligible_ids'],['e1','e4'])
+
+    def test_read_budget_refuses_third_read_with_the_strings(self):
+        # Live CE: five reads of the same 12 records. Tempting wrong patch: no bound.
+        self.reading();self.reading()
+        with self.assertRaisesRegex(Gap,'read_budget.*Used'):self.reading()
+        self.assertEqual(len(self.reader.requests),2)
+
+    def test_controller_judged_subset_binds_singleton_without_chooser(self):
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],coverage_complete=True)
+        c=self.f.choose(self.obs,'Inspect the used one',reading=r['reading'],candidate_ids=['e1'])
+        self.assertEqual(c['selected_id'],'e3');self.assertEqual(c['judgment'],'controller')
+        self.assertEqual(self.generic.requests,[]);self.assertEqual(self.starts,[])
+        self.f.act(c['selection']);self.assertEqual(self.driver.executed[0]['element_token'],'s00000002:3')
+
+    def test_controller_judgment_cannot_name_records_outside_the_reading(self):
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1'],coverage_complete=True)
+        with self.assertRaisesRegex(Gap,'records of this reading'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],record_actions={'e1':'e3','e4':'e6'})
+
+    def test_controller_judgment_cannot_revive_a_record_its_predicates_excluded(self):
+        r=self.reading()
+        with self.assertRaisesRegex(Gap,'excluded'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e4'])
+
+    def unknown_reading(self):
+        self.reader.missing=True
+        return self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],
+                           [{'field':'condition','value':'Used'}],coverage_complete=True)
+
+    def test_verdict_skipping_an_unknown_record_defers_until_acknowledged(self):
+        # S4.2 section 4 preserved. Tempting wrong patch: trace unknown competitors
+        # but authorize anyway, so a wrong slot can bind while a better one was never read.
+        r=self.unknown_reading()
+        c=self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'])
+        self.assertEqual(c['status'],'defer');self.assertEqual(c['reason'],'unknown_competitors_unacknowledged')
+        self.assertEqual(set(c['unknown_ids']),{'e4'});self.assertIn('e4',c['extracted']);self.assertNotIn('selection',c)
+        self.assertEqual(self.f.events[-1]['reason'],'unknown_competitors_unacknowledged')
+
+    def test_naming_exactly_the_skipped_unknowns_releases_the_verdict(self):
+        r=self.unknown_reading()
+        c=self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'],accept_unknown=['e4'])
+        self.assertEqual(c['selected_id'],'e3');self.assertEqual(c['unknown_competitors'],['e4'])
+        self.assertEqual(c['accepted_unknown'],['e4']);self.assertEqual(self.f.events[-1]['accepted_unknown'],1)
+
+    def test_acknowledgement_must_name_every_skipped_unknown(self):
+        # Tempting wrong patch: any non-empty accept_unknown (or a wildcard) waives the gate.
+        self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'condition':None if r['id']!='e1' else 'Used'}} for r in req['records']]}
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],[{'field':'condition','value':'Used'}],coverage_complete=True)
+        with self.assertRaisesRegex(Gap,'not unknown'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'],accept_unknown=['e1'])
+        with self.assertRaisesRegex(Gap,'not unknown'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'],accept_unknown=['*'])
+        c=self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'],accept_unknown=[])
+        self.assertEqual(c['reason'],'unknown_competitors_unacknowledged')
+
+    def test_no_unknowns_needs_no_acknowledgement(self):
+        r=self.reading()
+        self.assertEqual(self.f.choose(self.obs,'Inspect',reading=r['reading'])['selected_id'],'e3')
+
+    def test_incomplete_scope_defer_shows_extracted_strings_and_forbids_reread(self):
+        self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'n':'7'}} for r in req['records']]}
+        r=self.f.read(self.obs,'Read',{'n':{'description':'N','type':'number'}},['e1','e4'],[{'field':'n','op':'contains','value':'x'}],coverage_complete=False)
+        d=self.f.choose(self.obs,'Inspect',reading=r['reading'])
+        self.assertEqual(d['status'],'defer');self.assertIn('Do not re-read',d['hint'])
+
+    def test_read_path_has_no_typed_normalization(self):
+        # Static guardrail (S4.8): the reading path must not call typed() or
+        # mention typed kinds; an LLM cannot reintroduce normalization there.
+        import ast,inspect
+        tree=ast.parse(inspect.getsource(Facade))
+        fn=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='read')
+        calls={c.func.id for c in ast.walk(fn) if isinstance(c,ast.Call) and isinstance(c.func,ast.Name)}
+        self.assertNotIn('typed',calls)
+        consts={c.value for c in ast.walk(fn) if isinstance(c,ast.Constant) and isinstance(c.value,str)}
+        self.assertFalse(consts&{'duration_minutes','time','money','number','USD'})
+
+    # --- S4.8: revalidation scope -------------------------------------------
+    def browser_window(self,memory='93.4 MB',row_value='Used $80',url='127.0.0.1:8934/booking'):
+        nodes=[{'element_index':0,'role':'AXWindow','label':'demo'},
+          *([{'element_index':9,'parent_index':0,'role':'AXTextField','value':url}] if url else []),
+          {'element_index':1,'parent_index':0,'role':'AXTabGroup'},
+          {'element_index':2,'parent_index':1,'role':'AXRadioButton','label':'Demo - Memory usage - '+memory},
+          {'element_index':3,'parent_index':0,'role':'AXWebArea'},
+          {'element_index':4,'parent_index':3,'role':'AXRow','label':'First product'},
+          {'element_index':5,'parent_index':4,'role':'AXStaticText','value':row_value},
+          {'element_index':6,'parent_index':4,'role':'AXButton','label':'Inspect first','actions':['AXPress']},
+          {'element_index':7,'parent_index':3,'role':'AXRow','label':'Second product'},
+          {'element_index':8,'parent_index':7,'role':'AXButton','label':'Inspect second','actions':['AXPress']}]
+        return nodes
+
+    def act_after_change(self,before=None,**after):
+        seq=[self.browser_window(**(before or {})),self.browser_window(**after)];n=[0]
+        def observe(*a):
+            nodes=copy.deepcopy(seq[min(n[0],1)]);n[0]+=1;sid='sb%d'%n[0]
+            for x in nodes:x.update(element_token=sid+':'+str(x['element_index']),enabled=True)
+            return {'snapshot_id':sid,'pid':1,'window_id':2,'window_title':'Demo','elements':nodes,'_image':b'p'}
+        self.driver.observe=observe
+        obs=self.f.observe(1,2)['snapshot']
+        sel=self.f.choose(obs,'Inspect first',mode='exact',exact_name='Inspect first',exact_role='AXButton')['selection']
+        return lambda:self.f.act(sel)
+
+    def test_act_ignores_browser_chrome_change_outside_web_area(self):
+        # Live CE: Chrome's tab strip memory readout changed 93.4 MB -> 86.0 MB and
+        # the click was refused. Tempting wrong patch: regex-ignore 'Memory usage'
+        # or drop names from the fingerprint.
+        self.act_after_change(memory='86.0 MB')()
+        self.assertEqual(len(self.driver.executed),1)
+
+    def test_act_refuses_navigation_even_when_page_tree_is_identical(self):
+        # CE-FACADE-002 approved clause: the address field is bound with the page.
+        # Tempting wrong patch: web area only, so a navigation to a lookalike page passes.
+        with self.assertRaisesRegex(Gap,'content scope'):self.act_after_change(url='127.0.0.1:8934/orders')()
+        self.assertEqual(self.driver.executed,[])
+
+    def test_act_keeps_whole_window_revalidation_when_no_address_field_is_observed(self):
+        # Review P2.3. Tempting wrong patch: scoping to the web area anyway, which
+        # makes navigation unobservable and silently drops the guarantee.
+        with self.assertRaisesRegex(Gap,'UI changed'):self.act_after_change(before={'url':None},url=None,memory='86.0 MB')()
+        self.assertEqual(self.driver.executed,[])
+
+    def test_read_preserves_display_strings_of_any_shape(self):
+        # Review P3: behavioral guard for S4.8, stronger than the AST check.
+        shapes={'e1':'1 hr 30 min','e4':'$1,250.00'}
+        self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'v':shapes[r['id']]}} for r in req['records']]}
+        r=self.f.read(self.obs,'Read',{'v':{'description':'V','type':'duration_minutes'}},['e1','e4'],
+                      [{'field':'v','op':'contains','value':'1'}],coverage_complete=True)
+        self.assertEqual(r['filter']['unknown_ids'],[]);self.assertEqual(r['filter']['eligible_ids'],['e1','e4'])
+        self.assertEqual({x['record_id']:x['fields']['v'] for x in r['extraction']['records']},shapes)
+
+    def test_controller_judged_pick_is_flagged_caller_preselected(self):
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],coverage_complete=True)
+        c=self.f.choose(self.obs,'Inspect the used one',reading=r['reading'],candidate_ids=['e1'])
+        self.assertTrue(c['caller_preselected']);self.assertTrue(self.f.events[-1]['caller_preselected'])
+        c2=self.reading();c2=self.f.choose(self.obs,'Inspect eligible',reading=c2['reading'])
+        self.assertFalse(c2['caller_preselected'])
+
+    def test_act_refuses_content_change_inside_web_area(self):
+        with self.assertRaisesRegex(Gap,'content scope'):self.act_after_change(row_value='Used $95')()
+        self.assertEqual(self.driver.executed,[])
     def test_read_then_choose_filters_cached_records_and_maps_root_ids(self):
         r=self.f.read(self.obs,'Read condition',{'condition':{'type':'text','description':'Condition'}},['e1','e4'],coverage_complete=True)
         c=self.f.choose(self.obs,'Inspect used',reading=r['reading'],candidate_ids=['e1','e4'],
             record_actions={'e1':'e3','e4':'e6'},predicates=[{'field':'condition','value':'Used'}])
-        self.assertEqual(c['selected_id'],'e3')
-        self.assertEqual([a['id'] for a in self.generic.requests[-1]['actions']],['e3'])
+        self.assertEqual(c['selected_id'],'e3');self.assertEqual(self.generic.requests,[])
         self.assertEqual(len(self.reader.requests),1)
     def test_additional_filter_cannot_revive_excluded_record(self):
         r=self.reading()
