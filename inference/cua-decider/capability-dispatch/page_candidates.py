@@ -13,10 +13,12 @@ from decimal import InvalidOperation
 
 from dispatch import predicate, typed
 from worker_transport import JsonWorker
+from runtime_config import load_runtime_config
 
 
 class NuExtractPage:
     def __init__(self, command=None, chunk_size=5, timeout=20):
+        load_runtime_config()
         if not isinstance(chunk_size, int) or not 1 <= chunk_size <= 30:
             raise ValueError('chunk_size must be 1..30')
         if not 0 < timeout <= 20:
@@ -127,7 +129,7 @@ def filter_records(extracted, *, fields, predicates, coverage_complete, current_
 
 
 class ExtractThenChoose:
-    """Opt-in generic wrapper. Qualified GLiNER2 and exact paths stay upstream.
+    """Default generic wrapper. Qualified GLiNER2 and exact paths stay upstream.
 
     request.page_filter declares extraction fields, predicates, task, candidate
     IDs and coverage. No filter means the existing generic provider is used.

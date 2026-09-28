@@ -13,6 +13,7 @@ import tempfile
 import time
 
 from worker_transport import JsonWorker
+from runtime_config import load_runtime_config
 
 
 def observe_terminal(pid, window_id, *, session, timeout=5, previous=None,
@@ -51,6 +52,7 @@ def observe_terminal(pid, window_id, *, session, timeout=5, previous=None,
 class VisualTerminal:
     """Screenshot-capable worker; must not be backed by text-only Julia/Jev."""
     def __init__(self, command=None):
+        load_runtime_config()
         self.worker = JsonWorker(command if command is not None else
                                  json.loads(os.environ.get('CUA_VISUAL_COMMAND', '[]')))
 

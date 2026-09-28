@@ -1,5 +1,7 @@
 # Computer-use capability dispatch
 
+**Current default:** NuExtract3 page reading/filtering → Julia-1 finite choice, with GLiNER2 spans and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically. Jev/Qwen remains an explicit alternative.
+
 A companion to stock computer-use tools and skills. The stock driver observes and executes; this repository supplies typed request guidance, capability routing, evidence matching, bounded semantic recovery, and a CESS simulation loop.
 
 The driving LLM describes intent and evidence requirements. Dispatcher code follows the sketch to choose providers. Models return evidence or an offered ID; the controller retains executable arguments, validates the current binding, and independently verifies progress.
@@ -15,10 +17,10 @@ The stock driver supplies current controls. The driving LLM describes the reques
 | Described fields / GLiNER2 | Per-record text, field descriptions and types | Normalize, compare within the same record, apply caller ordering | Live span adapter and measured examples |
 | Structured, relational or multilingual extraction / GLiNER2.5 | Scoped text and requested schema | Preserve grouping/relations before matching | Provisional routes; structured adapters need qualification |
 | Bounded classification / Decide | Evidence and described categories | Map accepted class to a caller-authorized action | Contract tested; live adapter needs qualification |
-| Semantic choice or recovery / Jev | Goal, current candidate descriptions, constraints and available evidence | Select an offered ID or defer | Live adapter |
+| Semantic choice or recovery / Julia-1 | Goal, current candidate descriptions, constraints and available evidence | Select an offered ID or defer | Live adapter |
 | Escalation / Qwen | Goal and offered candidates via the bounded selector | Handle weak/failed Jev choices; verify after action | Existing selector integration |
 
-For example: the LLM requests provider name, appointment duration and start time, with explicit predicates and ordering. GLiNER2 extracts those fields; code selects the matching record. If an extracted name has an uncertain boundary, Jev can recheck it. A selected ID never supplies arbitrary executable arguments. The driver executes the stored current binding and observes the result independently.
+For example: the LLM requests provider name, appointment duration and start time, with explicit predicates and ordering. GLiNER2 extracts those fields; code selects the matching record. If an extracted name has an uncertain boundary, the configured generic chooser can recheck it. A selected ID never supplies arbitrary executable arguments. The driver executes the stored current binding and observes the result independently.
 
 CESS preserves the sketch, accepted counterexamples and executable regression checks. A failure either calls for repairing code to existing policy or proposing a policy change. Tests alone do not authorize a new rule.
 
@@ -41,9 +43,9 @@ export CUA_CAPABILITY_ROOT="$PWD"
 python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 ```
 
-The offline check needs only Python 3.10+. For real inference, follow the [setup reference](skills/cua-capability-dispatch/references/setup.md): provision a cached GLiNER2 CUDA worker, configure `CUA_SPAN_COMMAND`, configure the Jev/Qwen selector with `CUA_SELECTOR_COMMAND` and runtime credential access, then connect the dispatcher to the stock driver. The active `described-span-match/en` route and measured inference recipe are documented in [WORKING-RECIPE.md](inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). Installing the skill does not deploy services or modify the standalone Fleet selector.
+The offline check needs only Python 3.10+. For real inference, follow the [setup reference](skills/cua-capability-dispatch/references/setup.md): provision a cached GLiNER2 CUDA worker, configure `CUA_SPAN_COMMAND`, configure NuExtract with `CUA_EXTRACT_URL` and Julia with `CUA_JULIA_COMMAND` through the persistent runtime configuration, then connect the dispatcher to the stock driver. The active `described-span-match/en` route and measured inference recipe are documented in [WORKING-RECIPE.md](inference/cua-decider/capability-dispatch/WORKING-RECIPE.md). Installing the skill does not deploy services or modify the standalone Fleet selector.
 
-## Jev API and endpoint setup
+## Alternative Jev API and endpoint setup
 
 Get a TypeSafe API key through your [TypeSafe account](https://console.typesafe.ai) or administrator. Configure it separately from the Qwen fallback:
 
@@ -85,9 +87,9 @@ The installed skill is self-contained guidance; keep a separate runtime checkout
 
 The Python interface is `Engine(providers).decide(request, current_snapshot)`, followed by `execute_bound(request, selection, fresh_snapshot, execute_callback)` only when authorized. `execute_callback` is the stock driver's operation adapter. Observe again to verify the intended postcondition. See the [request example](inference/cua-decider/capability-dispatch/booking-request.json) and [controlled caller examples](inference/cua-decider/capability-dispatch/simulation.py). This is currently a Python component, not a deployed HTTP API.
 
-The CESS strangler wrapper is `Strangler.from_config(providers)`. Its tracked [rollout record](inference/cua-decider/capability-dispatch/ROLLOUT.json) defaults to `shadow`: it runs Jev and GLiNER2 in parallel for the described English span-matching contract, returns Jev, and emits sanitized disagreement evidence for independent outcome checking and CESS review. The explicit `stage='active'` override returns the specialist decision only when the record names an accepted CESS CE, an existing qualification report, a full checkpoint digest, and the authorizing user. GLiNER2 defers and Jev handles one recovery call under S4.3. `Strangler` never executes; continue to use the current `execute_bound` and stock Driver verification path.
+The CESS strangler wrapper is `Strangler.from_config(providers)`. It retains the qualified GLiNER2 rollout in [ROLLOUT.json](inference/cua-decider/capability-dispatch/ROLLOUT.json). Supply `generic_from_config()` in the compatibility slot `incumbent_jev`; the selected generic implementation is now NuExtract/Julia. The slot name does not establish model attribution. `Strangler` never executes; continue to bind current Driver arguments with `execute_bound` and independently verify effects.
 
-Providers are injected callables `(step, request) -> grounded evidence or offered choice`. The included live adapters cover GLiNER2 spans and the installed Jev→Qwen selector. Original GLiNER, structured GLiNER2.5 and Decide routes have controlled contract coverage but require qualified live adapters for their respective roles. The span adapter's GLiNER2.5 option is not a structured-record/relationship adapter.
+Providers are injected callables `(step, request) -> grounded evidence or offered choice`. The included live adapters cover NuExtract page records, Julia finite choice, GLiNER2 spans, SystemOne screenshots, and the alternative Jev→Qwen selector. Original GLiNER, structured GLiNER2.5 and Decide routes have controlled contract coverage but require qualified live adapters for their respective roles. The span adapter's GLiNER2.5 option is not a structured-record/relationship adapter.
 
 ## Live inference configuration
 
@@ -101,4 +103,4 @@ This repository is private under `open-horizon-labs`. No upstream license is inf
 
 [Terminal integration](docs/TERMINALS.md) combines fresh Driver screenshots and AX observations with explicit quality metadata and a bounded visual postcondition check. An unchanged AX tree is not a stall. These are integration helpers; the stock Driver binary is unchanged.
 
-[Optional Julia-1](docs/PROVIDERS.md#optional-julia-1-generic-chooser) replaces only the generic finite-choice provider when explicitly configured. Default Jev/Qwen, GLiNER2 extraction and current-snapshot action binding are preserved. Julia is not a vision model.
+[Julia-1](docs/PROVIDERS.md#julia-1-generic-chooser) is the default generic chooser after NuExtract candidate preparation. GLiNER2 extraction and current-snapshot binding are preserved. Julia is not a vision model.

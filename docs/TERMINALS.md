@@ -1,5 +1,7 @@
 # Terminal observation and action integration
 
+**Current default:** NuExtract3 page reading/filtering → Julia-1 finite choice, with GLiNER2 spans and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically. Jev/Qwen remains an explicit alternative.
+
 The Cua Driver binary still observes and executes locally. `terminal_observation.py` is a reusable controller helper around its `get_window_state` API. It does not replace the Driver or run terminal commands behind the UI. Configure the installed Driver executable and reuse its session/window.
 
 ## Why AX-only polling failed
@@ -10,7 +12,7 @@ Also confirm the actual command's scope. For the installed swamp CLI, `swamp` de
 
 ## Configure visual interpretation
 
-Use a deployed **screenshot-capable** chat-completion endpoint. The adapter does not enable vision on a text-only model. Configure `QWEN_BASE_URL` (including `/v1`), `QWEN_MODEL`, and runtime `QWEN_API_KEY`/`QWEN_API_KEY_FILE` or documented Fleet secret retrieval. No keys belong in screenshots, traces, or configuration committed to Git.
+The selected local profile uses `CUA_SYSTEMONE_URL` with the existing screenshot-capable `/v1/systemone` facade. It returns finite visual postcondition assessments; these are not transcriptions, and `visible_controls` remains empty until grounded by the controller. For other installations without that setting, use a deployed **screenshot-capable** chat-completion endpoint. The adapter does not enable vision on a text-only model. Configure `QWEN_BASE_URL` (including `/v1`), `QWEN_MODEL`, and runtime `QWEN_API_KEY`/`QWEN_API_KEY_FILE` or documented Fleet secret retrieval. No keys belong in screenshots, traces, or configuration committed to Git.
 
 ```sh
 export PYTHONPATH=/absolute/path/computer-use/inference/cua-decider/capability-dispatch

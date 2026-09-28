@@ -4,6 +4,7 @@ import os
 import subprocess
 import threading
 from pathlib import Path
+from runtime_config import load_runtime_config
 
 
 def span_schema(descriptions):
@@ -18,6 +19,7 @@ def span_schema(descriptions):
 
 class RemoteSpans:
     def __init__(self, model='fastino/gliner2-base-v1'):
+        load_runtime_config()
         if model not in ('fastino/gliner2-base-v1', 'fastino/gliner2.5-multi-v1'):
             raise ValueError('unregistered checkpoint')
         self.model = model
@@ -103,6 +105,7 @@ class JuliaGeneric:
     REVISION = 'a85b127321d580d65176c89ced8273f305745d85'
 
     def __init__(self, command=None, timeout=20):
+        load_runtime_config()
         import time
         from worker_transport import JsonWorker
         self.timeout = timeout
@@ -163,15 +166,16 @@ class JuliaGeneric:
 
 
 def generic_from_config():
-    """Default remains Jev/Qwen. Explicit Julia preference changes only chooser."""
-    name = os.environ.get('CUA_GENERIC_PROVIDER', 'jev').lower()
+    """NuExtract plus Julia by default; explicit Jev preference remains available."""
+    load_runtime_config()
+    name = os.environ.get('CUA_GENERIC_PROVIDER', 'julia-1').lower()
     if name == 'jev':
         generic = FleetGeneric()
     elif name in ('julia', 'julia-1'):
         generic = JuliaGeneric()
     else:
         raise ValueError('CUA_GENERIC_PROVIDER must be jev or julia-1')
-    if os.environ.get('CUA_PAGE_EXTRACTION', '0') == '1':
+    if os.environ.get('CUA_PAGE_EXTRACTION', '1') == '1':
         from page_candidates import ExtractThenChoose, NuExtractPage
         try:
             return ExtractThenChoose(NuExtractPage(), generic)
