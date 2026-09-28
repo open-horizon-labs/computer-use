@@ -1419,10 +1419,10 @@ class Facade:
         return (bool(re.search(r'\d', text)), bool(re.search(r'\d{1,2}:\d{2}', text)), bool(re.search(r'[$\u20ac\u00a3]\s?\d|\d\s?[$\u20ac\u00a3]', text)))
 
     def _incomparable(self, predicate_value, value, majority):
-        """S4.2 s4: a value that differs in SHAPE from what the predicate talks about (a digit-bearing predicate against 'half-hour', or the reverse),
+        """S4.2 s4: a value that differs in SHAPE from what the predicate talks about (a digit-bearing predicate against 'half-hour'; NOT the reverse: a text predicate such as 'Walnut' or 'PM' against a string with incidental digits is ordinary),
         or that is an outlier of the field's majority shape in this reading, cannot be judged: it is unknown, never excluded."""
         a, b = self._value_shape(predicate_value), self._value_shape(value)
-        return a[0] != b[0] or (a[1] and not b[1]) or (a[2] and not b[2]) or (majority is not None and b != majority)
+        return (a[0] and not b[0]) or (a[1] and not b[1]) or (a[2] and not b[2]) or (majority is not None and b != majority)
 
     def _reclassify_shapes(self, fields, predicates, extraction, filtered):
         """A record excluded ONLY by predicates that cannot be compared with its value becomes unknown. A comparable failure on any

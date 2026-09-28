@@ -130,6 +130,24 @@ def regions(*items):
     return {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': x, 'y': y, 'width': 80, 'height': 24}} for i, (t, x, y) in enumerate(items)]}
 
 
+class ShapeDirection(unittest.TestCase):
+    """Review of the shape rule (my own brief said 'or the reverse', which was too broad). Only a digit-bearing predicate against a
+    digit-free string is incomparable ('30' vs 'half-hour'). Wrong patch: treat ANY digit mismatch as incomparable, which defers ordinary
+    text predicates on strings with incidental digits ('Walnut' vs 'Walnut desk lamp 2', 'PM' vs '3:00 PM')."""
+    f = Facade.__new__(Facade)
+
+    def test_a_text_predicate_against_a_string_with_incidental_digits_is_comparable(self):
+        for predicate, value in (('Walnut', 'Walnut desk lamp 2'), ('PM', '3:00 PM'), ('Reyes', 'Dr. Reyes 3rd floor')):
+            self.assertFalse(self.f._incomparable(predicate, value, None), (predicate, value))
+
+    def test_a_digit_bearing_predicate_against_a_word_is_incomparable(self):
+        for predicate, value in (('30', 'half-hour'), ('30 min', 'half-hour'), ('3:00 PM', 'noon'), ('$50', 'free')):
+            self.assertTrue(self.f._incomparable(predicate, value, None), (predicate, value))
+
+    def test_a_matching_majority_shape_keeps_a_clock_predicate_comparable(self):
+        self.assertFalse(self.f._incomparable('AM', '9:00 AM', (True, True, False)))
+
+
 class CanvasRegions(unittest.TestCase):
     """Pixel-only page: two 'Export' buttons drawn on a canvas, labelled by nearby 'Toolbar' and 'Footer' texts (synthetic parse results)."""
     PAGE = [('Toolbar', 10, 10), ('Export', 10, 40), ('Footer', 10, 500), ('Export', 10, 530)]
