@@ -24,6 +24,8 @@ These are dispatcher rules, not a learned router. Check adapter availability: se
 
 For extraction, describe each field's meaning. Keep desired values in caller predicates and ordering. Do not ask NER to rank entire actions against a goal. The matcher applies constraints to one record at a time. The LLM owns intent interpretation; the code must not contain task-specific answers.
 
+For structured fields read from live page records, prefer the task-shaped SystemOne `/v1/extract-page` route backed by NuExtract3 when configured. Supply only records and IDs from a fresh Cua Driver snapshot, plus caller-requested fields and task. The endpoint sends page text and the field template to the extractor, then joins values to its retained record IDs and snapshot ID. The model must never choose or invent Cua click IDs, coordinates, or Driver arguments. Use GLiNER2 for described span matching, Jev/Qwen for contextual action choices, and no model for exact unique controls. Missing, conflicting, unavailable, or ungrounded page data is a blocker/defer; model scores are not calibrated confidence.
+
 ## Select, bind, verify
 
 Call `Strangler.from_config` with the configured providers, then `decide` with the typed request and current snapshot. The active config sends only `described-span-match/en` to the qualified GLiNER2 extractor and typed matcher. Exact-control and successful specialist paths need no generic call. Missing evidence or approved boundary uncertainty can invoke Jev once while preserving known exclusions. Overlapping text does not itself establish equality. Ties or missing scope do not grant new permission.
