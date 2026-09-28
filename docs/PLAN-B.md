@@ -1,0 +1,100 @@
+# Option B: look, then plan once (CE-FACADE-005, proposed)
+
+Status: implemented on branch `plan-b`, offline only. Proposed CE, pending user approval. **Nothing here has run against a live desktop and the central claim (below) is not verified.**
+
+## The decision
+
+The user approved this shape from the solution-space review: the LLM SEES the page's strings once (`cua_look`: deterministic, no model by default), then sends ONE small plan (`cua_do` with `steps`), and the server executes it deterministically with per-step rebinding and recovery. NuExtract3 is the only model on the common path, and only where a plan says so (`where.fields`) or a look asks for it (`fields`): it is an opt-in field extractor for big or messy pages, never the default look. No Qwen or fast-model loop chooses steps.
+
+## Why (the evidence, n=1 per cell)
+
+Measured live (Sonnet 5.5, real Chrome): the single-tool `cua_do` cut turns from 6-7 to 3-5 and cost 4-6x, but the LLM wrote its filter BLIND (`duration contains "30"`), the correct slot's duration was displayed as "half-hour", and `cua_do` booked a decoy and reported done. Option D (a fast model choosing every step) failed for a different reason and costs 1 to 3 s per step. Blind filters are the failure class: the fix is sight, then a plan, not a smarter chooser.
+
+## Design
+
+```
+cua_look(title, focus?, max_records?, max_bytes?, fields?)      read-only, no model by default
+   -> records (displayed lines), page text, controls, dialogs, canvas texts, counts, truncated, look_id
+cua_do(goal, expect=null, title, look_id?, steps=[...], abort_if?)
+   validate the WHOLE plan (no Driver action yet)
+   for each step: fresh observation -> discovery -> where -> bind -> act (scope revalidation) -> verify(expect)
+   stop at the first step that is not done
+```
+
+Code: `facade/look.py` (structure of one observation into displayed strings, `Facade.look`), `facade/plan.py` (validation, the lines-where stage, the executor, hints), and small hooks in `Facade._do` (`plan=` channel: lines-where, explicit confirm step, destructive check on the resolved control, per-step window pinning). The single-step form does not go through the plan executor and is byte-for-byte the previous behavior; `Facade.subtree` gained a per-observation child map (same closure, no longer quadratic: a 100-row page took 0.9 s per look before).
+
+### `look_id`: no filter without sight
+
+`look_id` is a short hash of the ORDERED displayed record lines of the look (after `focus`, `max_records`, `max_bytes` and the 6x60 line cut). The server remembers the issued ids of this session with the window, the focus terms and how many records were displayed. A `where.lines` step is allowed only with an id the server issued for this window. At the step the executor recomputes the displayed record lines on the CURRENT observation with the same parameters and compares the hash: a mismatch defers `page_changed_since_look` before any click, and the response deliberately carries no fresh id (the LLM has not seen those lines). Only records the look displayed are candidates. Conditions are evaluated on the displayed (cut) lines, exactly what the LLM saw.
+
+## Guarantees
+
+Preserved (each has its existing tests, plus the plan tests named in the CE):
+
+| guarantee | how plans keep it |
+|---|---|
+| bound, single-use selections; scope revalidation at act | every step calls the same `choose`/`issue`/`act`; nothing is shared between steps |
+| a click is never retried; no selection after a delivered click | the executor never re-runs a step that delivered; `_do` unchanged; test with a failing click counts exactly one click |
+| stale recovery (S4.2 s7) | a stale refusal re-runs THAT step on a fresh observation with a NEW selection; a mid-plan page that keeps changing stops at that step (`ui_changed_repeatedly`) |
+| hard 3x budget | plan-level: no step starts after 3x `budget_s`; each step gets `min(budget_s, remaining/3)` |
+| confirm is opt-in by exact label with a complete identity match | an explicit `confirm` step only, directly after a press; exact label (never a prefix); exactly one such control inside the dialog the previous step opened; EVERY identity string displayed by that dialog |
+| incomparable -> unknown; `treat_as_match`/`accept_unknown` gates; `excluded_values` | `where.fields` runs the unchanged reader path |
+| answer-leak guard | plan goal and every step goal, before any Driver call |
+| destructive-verb guard (option D) | literal `control`/`confirm` at validation, and the RESOLVED control at execution |
+| required `expect`; text-bearing non-control nodes only | non-null on every press/type/confirm step, null only on the last step (ends `delivered_unverified`) |
+| S4.8 strings; no window moves; OCR never feeds typed values | look values are displayed strings; the look never moves or clicks; canvas texts are only listed as `control`/`near` candidates |
+| primitives hidden unless `CUA_TASK_ADVANCED=1`; D untouched | test on the live `list_tools`; no primitive is ever named in a plan hint |
+
+New: whole-plan validation before any Driver action; `look_id`; `page_changed_since_look`; a look that never truncates silently; one match or a stop (the chooser is never asked to break a `where.lines` tie).
+
+## What NuExtract is for
+
+- `cua_look(fields=...)`: values per displayed record, in chunks of 10 records per reader call (the extractor has a 20 s whole-call deadline, so 100 rows are never one call). Opt-in.
+- `where.fields` (+ `predicates`): exactly the previous `cua_do records` path (one read of the discovered records, the shape guard, unknown handling).
+- Nothing else. The default look and `where.lines` never start the reader (tests fail the build if they do).
+
+## Conservative choices (each is policy the user may want to decide)
+
+1. `expect` at the top level of a plan must be null (each step has its own); a non-null one is refused rather than guessed as the last step's.
+2. A press step needs `where` and/or `control`: no plan step ever falls through to the chooser on "the page's controls".
+3. Several `where.lines` matches stop (`where_matches_several`) instead of asking the chooser or clicking the first.
+4. A `confirm` step must directly follow a `press`; a dialog that was already open is not confirmable by a plan.
+5. Dialog identity is matched by displayed strings (deterministic), so a differently worded dialog stops with the click before it already done; `dialog.lines` lets the LLM judge and press the dialog control deliberately.
+6. The default identity of a `where.lines` press is the values its `eq`/`contains` conditions required; if the dialog does not show all of them, the confirm step stops (measured: 3 calls instead of 2).
+7. Conditions are evaluated on the DISPLAYED (cut) lines; values are at most 60 characters.
+8. The destructive guard uses the plan's goal only (not step goals): an LLM that writes its own step goals could write the verb in.
+9. `where.lines` after a step that changed the page stops `page_changed_since_look` (never re-anchors on a new look it has not seen).
+10. `budget_s` defaults to 20 as in the single-step form, so the plan hard cap is 60 s; a long plan needs a larger `budget_s`.
+11. `live_task_budgets.booking` rises from 1 to 2 because the default path is now look then do.
+12. Two extra plan statuses beyond done|stopped|aborted|refused|failed, reusing existing ones: `delivered_unverified` (last step without `expect`) and `observed` (a verify-only plan).
+
+## The claim to verify, and what remains
+
+"A deterministic look is good enough on a 100-row page; keep NuExtract in the default look only if it wins."
+
+`scripts/look_compare.py` builds a synthetic 100-row `invoices` page (rows with several fields and near-duplicates, shaped like the eval suite's task) and runs the deterministic look, the look with `fields`, and the plan a scripted LLM writes from each. Offline result (fake reader):
+
+```
+variant                           bytes     shown calls  chunks  plan target
+deterministic, default caps        4810   40/100      0       0  none (the target record is not among the 40 shown)
+deterministic, all 100 rows       11065  100/100      0       0  done, clicked INV-063 -> CORRECT
+deterministic, focus=Northwind     1171    6/100      0       0  done, clicked INV-063 -> CORRECT
+fields, all 100 rows              19601  100/100     10      10  done, clicked INV-063 -> CORRECT
+fields, focus=Northwind            1799    6/100      1       1  done, clicked INV-063 -> CORRECT
+```
+
+What this shows: the deterministic look already contains every string the plan needs; on 100 rows the default caps show 40, so the LLM needs `focus` (or `max_records` and `max_bytes` raised: 11 KB) to see the target, and `fields` adds a response of 19.6 KB and 10 reader calls for values that repeat the displayed lines. **Offline numbers are structure and size only**: the fake reader is exact by construction and instant. What remains, to be measured live: (1) the wall time of `look(fields=...)` on 100 rows (10 reader calls; the extractor chunks 5 records at a time under a 20 s deadline); (2) NuExtract accuracy on those records against the displayed strings (`--reader package.module:callable` runs the same record texts through a real reader and scores them); (3) whether an LLM writes correct plans from the deterministic look alone on messy pages, and the wrong-click rate against native. Until then the claim stays unverified and NuExtract stays out of the default look.
+
+## Not measured
+
+Live latency and cost of look-then-plan; LLM plan correctness; NuExtract accuracy and latency on 100 rows; any tree from an unrelated real site (no consent to capture one yet), so every budget is fixture-derived and the shapes beyond booking and orders are synthetic. The CE's invalidation condition: more than a third of the suite's tasks cannot be expressed as plans, or the wrong-click rate is above native.
+
+## Checks
+
+```
+.venv-facade/bin/python -m unittest discover -s facade -p 'test_*.py'
+.venv-facade/bin/python scripts/check_call_budget.py
+.venv-facade/bin/python scripts/check_plan_mutations.py     # 21 wrong patches, each must fail its test BY ASSERTION
+.venv-facade/bin/python scripts/look_compare.py             # structure and size only
+.venv-facade/bin/python facade/check_protocol.py            # default, CUA_TASK_ADVANCED=1
+```
