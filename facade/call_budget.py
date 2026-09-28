@@ -103,36 +103,48 @@ def result_text(blocks):
 
 
 def measure_scenarios():
-    """Drive the real server tools on the canonical fixtures. Returns {name: {calls, reader, chooser, max_bytes, status, tools}}."""
+    """Drive the real server tools through a counting wrapper under a minimal LLM policy: call cua_do; on a deferral, follow the
+    scenario's recovery hint once (or, when the scenario has none, naively repeat the call once); stop at done or after 4 calls.
+    Returns {name: {calls, reader, chooser, max_bytes, status, tools}} with REAL invocation counts."""
     import server
     from core import Facade
     from test_core import FakeVision
     import test_do as fx
 
-    def run(driver, goal, args, reader=None, chooser=None, plan=None):
+    RETRY = object()
+
+    def run(driver, args, reader=None, chooser=None, follow=RETRY):
         reader = reader or fx.LineReader();chooser = chooser or fx.NamedChooser()
         server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=FakeVision, sleep=lambda s: None)
         seen = {'calls': 0, 'tools': [], 'max_bytes': 0}
         def call(name, **kw):
             seen['calls'] += 1;seen['tools'].append(name)
-            blocks = asyncio.run(server.mcp.call_tool(name, kw))
-            text = result_text(blocks)
+            text = result_text(asyncio.run(server.mcp.call_tool(name, kw)))
             seen['max_bytes'] = max(seen['max_bytes'], len(text))
             return json.loads(text)
-        result = call('cua_do', goal=goal, title='Demo', **args)  # the whole default-path plan: state the intent once
+        current = {'title': 'Demo', **args}
+        while True:
+            result = call('cua_do', **current)
+            if result['status'] == 'done' or seen['calls'] >= 4:break
+            nxt = current if follow is RETRY else (follow(result, current) if follow else None)
+            if nxt is None:break
+            current = nxt
+            follow = RETRY if follow is RETRY else follow
         return {'calls': seen['calls'], 'tools': seen['tools'], 'max_bytes': seen['max_bytes'], 'status': result['status'],
                 'reader': len(reader.requests), 'chooser': len(chooser.requests)}
 
     def records(pred, fields=fx.FIELDS):
         return {'fields': fields, 'predicates': pred}
+    stale_rows = lambda v: fx.booking_rows([(n, s, d, '1:35 PM' if (n == 'Provider A' and v >= 2) else t) for n, s, d, t in fx.PROVIDERS])
+    orders = lambda: {'records': records([{'field': 'order', 'value': '1042'}, {'field': 'customer', 'value': 'Cedar'}], fx.ORDER_FIELDS),
+                      'goal': 'Cancel the order 1042 for customer Cedar', 'expect': 'Order 1042 cancelled'}
+    def orders_driver():
+        d = fx.FlatDriver();d.rows = fx.order_rows();d.confirm_text = 'Order 1042 cancelled';d.modal = fx.ConfirmDialog.MODAL;return d
+    booking = {'goal': 'Book the Follow-up slot that starts at 1:45 PM', 'records': records(fx.ONE), 'expect': 'Booked Provider E'}
     out = {}
     d = fx.FlatDriver();d.confirm_text = 'Booked Provider E 1:45 PM'
-    out['booking_list'] = run(d, 'Book the Follow-up slot that starts at 1:45 PM', {'records': records(fx.ONE), 'expect': 'Booked Provider E'})
-    d = fx.FlatDriver();d.rows = fx.order_rows();d.confirm_text = 'Order 1042 cancelled';d.modal = fx.ConfirmDialog.MODAL
-    reader = fx.LineReader(fx.ORDER_PATTERNS)
-    out['orders_confirm'] = run(d, 'Cancel the order 1042 for customer Cedar',
-        {'records': records([{'field': 'order', 'value': '1042'}, {'field': 'customer', 'value': 'Cedar'}], fx.ORDER_FIELDS), 'expect': 'Order 1042 cancelled'},
-        reader=reader, chooser=fx.NamedChooser('Yes'))
+    out['booking_list'] = run(d, booking)
+    out['orders_confirm'] = run(orders_driver(), {**orders(), 'confirm': 'Yes, cancel order'}, reader=fx.LineReader(fx.ORDER_PATTERNS))
     d = fx.FlatDriver();d.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};d.capture_id = 'cap'
     real = d.observe
     def canvas(*a):
@@ -141,10 +153,33 @@ def measure_scenarios():
     d.parse_result = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 5, 'y': 10 + 30 * i, 'width': 50, 'height': 20}} for i, t in enumerate(['Save', 'Export', 'Reset'])]}
     class Picks(fx.NamedChooser):
         def __call__(self, step, request):self.requests.append(request);return {'choice': 't1', 'route': 'julia-1', 'action_authorized': True}
-    out['canvas_regions'] = run(d, 'Press "Export"', {'expect': 'Exported'}, chooser=Picks())
+    out['canvas_regions'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported'}, chooser=Picks())
     many = [('Provider %03d' % i, 'Follow-up', '30 min', '1:%02d PM' % (i % 60)) for i in range(80)]
     d = fx.FlatDriver();d.rows = fx.booking_rows(many);d.confirm_text = 'Booked Provider 041 1:41 PM'
-    out['large_page_400'] = run(d, 'Book Provider 041', {'records': records([{'field': 'provider', 'value': 'Provider 041'}]), 'expect': 'Booked Provider 041'})
+    out['large_page_400'] = run(d, {'goal': 'Book Provider 041', 'records': records([{'field': 'provider', 'value': 'Provider 041'}]), 'expect': 'Booked Provider 041'})
+    # Recovery and deferral paths: what a clean-looking run costs when the world misbehaves.
+    d = fx.FlatDriver();d.confirm_text = 'Booked Provider E 1:45 PM';d.rows_at = stale_rows
+    out['stale_recovery'] = run(d, booking)
+    d = fx.FlatDriver();d.confirm_text = 'Booked Provider E 1:45 PM';flaky = d.observe;seen_obs = []
+    def flaky_observe(*a):
+        seen_obs.append(1)
+        if len(seen_obs) == 1:
+            from core import DriverCallFailed
+            raise DriverCallFailed('driver_call_failed: get_window_state exited 1')
+        return flaky(*a)
+    d.observe = flaky_observe
+    out['driver_failure_recovered'] = run(d, booking)
+    d = fx.FlatDriver();d.confirm_text = 'Booked Provider D';reader = fx.LineReader();reader.missing = lambda call, rid, field: rid == fx.button(11) and field == 'duration'
+    out['unknown_then_accept'] = run(d, {'goal': 'Book the 45 minute consultation', 'records': records(fx.D_ONLY), 'expect': 'Booked Provider D'}, reader=reader,
+                                     follow=lambda result, cur: {**cur, 'accept_unknown': result['unknown_ids']} if result.get('unknown_ids') else None)
+    d = orders_driver()
+    out['confirm_deferral'] = run(d, orders(), reader=fx.LineReader(fx.ORDER_PATTERNS),
+                                  follow=lambda result, cur: {'title': 'Demo', 'goal': 'Press "Yes, cancel order"', 'expect': 'Order 1042 cancelled'})
+    d = fx.FlatDriver();d.confirm_text = 'Booked Provider D'
+    class Abstain(fx.NamedChooser):
+        def __call__(self, step, request):self.requests.append(request);return {'choice': request['actions'][0]['id'], 'route': 'julia-1', 'action_authorized': False}
+    out['ambiguity_deferral'] = run(d, {'goal': 'Book a consultation that is not the 60 minute one', 'records': records(fx.TWO), 'expect': 'Booked Provider D'}, chooser=Abstain(),
+                                    follow=lambda result, cur: {**cur, 'records': records(fx.TWO + [{'field': 'provider', 'value': 'Provider D'}])})
     return out
 
 

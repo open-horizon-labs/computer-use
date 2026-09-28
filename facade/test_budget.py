@@ -129,13 +129,36 @@ class DefaultPathBudget(unittest.TestCase):
         m = self.scenario('booking_list');self.assertEqual((m['calls'], m['reader'], m['chooser']), (1, 1, 0))
 
     def test_orders_confirm_stays_within_two_calls(self):
-        m = self.scenario('orders_confirm');self.assertLessEqual(m['reader'], 2);self.assertLessEqual(m['chooser'], 1)
+        m = self.scenario('orders_confirm');self.assertLessEqual(m['reader'], 2);self.assertEqual(m['chooser'], 0)  # confirm is by exact label, never the chooser
 
     def test_canvas_regions_stays_within_two_calls(self):
         m = self.scenario('canvas_regions');self.assertEqual(m['reader'], 0)
 
     def test_large_page_response_is_bounded(self):
         m = self.scenario('large_page_400');self.assertLess(m['max_bytes'], BUDGET['max_response_bytes']['value'])
+
+    def test_recovery_and_deferral_paths_are_measured_not_assumed(self):
+        # Wrong patch: a harness that makes one call per scenario by construction. These paths must be measured through real invocations.
+        for name, calls in (('stale_recovery', 1), ('driver_failure_recovered', 1), ('unknown_then_accept', 2), ('confirm_deferral', 2), ('ambiguity_deferral', 2)):
+            self.scenario(name);self.assertEqual(self.measured[name]['calls'], calls, name)
+        self.assertEqual(self.measured['stale_recovery']['reader'], 2)  # one read per pass, not a hidden re-read loop
+
+    def test_a_cua_do_that_secretly_needs_a_second_call_fails_the_stale_recovery_budget(self):
+        # P2-5 mutation: a recovery that hands the work back to the LLM on a stale pass must blow the 1-call budget.
+        from unittest import mock
+        from core import Facade
+        real = Facade.do
+        def needs_second(self, *a, **k):
+            r = real(self, *a, **k)
+            return {**r, 'status': 'deferred', 'reason': 'retry'} if r['status'] == 'done' and r['trace_summary']['passes'] > 1 else r
+        with mock.patch.object(Facade, 'do', needs_second):
+            m = cb.measure_scenarios()['stale_recovery']
+        self.assertGreaterEqual(m['calls'], 2)
+        self.assertTrue(any('calls %d' % m['calls'] in v for v in cb.over_budget(m, BUDGET['scenarios']['stale_recovery'])), m)
+
+    def test_no_call_count_literal_is_claimed_by_the_tool(self):
+        # Wrong patch: llm_visible_calls hardcoded in the response; a tool cannot know how many calls the LLM makes.
+        self.assertNotIn('llm_visible_calls', (cb.HERE / 'core.py').read_text())
 
     def test_all_scenarios_pass_the_table(self):
         rows, problems = cb.table(BUDGET, self.measured)
