@@ -92,6 +92,10 @@ is at least 0.10 the other way. Otherwise the metric is a tie.
    - Anything else: mixed result. Report per-category deltas and decide on the
      evidence, but do not describe it as a win.
 
+## Exploratory arm (not part of any decision rule)
+
+`stack-agent` runs the experimental server-side agent (option D, `cua_agent`; only that tool is allowed, so the driving LLM cannot fall back to `cua_do`). It is reported descriptively next to the other arms, added after the rules above were written, and **it never decides the preregistered claim, the invalidation condition or the stop/pivot triggers** (`metrics.verdict` excludes it by default). Whether D deserves its own preregistered question depends on what this first look shows and is a separate decision.
+
 ## Caveats (always reported with any number)
 
 - The tasks are synthetic and the fixtures are our own; the stack was tuned against

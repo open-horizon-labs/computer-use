@@ -350,6 +350,24 @@ class Safety(unittest.TestCase):
         self.assertIn('127.0.0.1', strings)
         self.assertNotIn('0.0.0.0', strings)
 
+    def test_stack_agent_is_the_d_tool_only_and_never_decides_the_verdict(self):
+        # Exploratory arm (option D). Wrong patches: leave cua_do reachable (the LLM falls back to it and the arm
+        # measures cua_do), forget the experimental flag (the tool is absent), let it decide the preregistered claim.
+        with tempfile.TemporaryDirectory() as d:
+            agent = json.loads(runner.mcp_config('stack-agent', d).read_text())['mcpServers']['cua-task']
+        self.assertEqual(agent['env'], {'CUA_TASK_EXPERIMENTAL_AGENT': '1'})
+        self.assertEqual(runner.ALLOWED_TOOLS['stack-agent'], ['mcp__cua-task__cua_agent'])
+        self.assertIn('cua_agent', runner.ARM_HINT['stack-agent'])
+        self.assertNotIn('stack-agent', metrics.verdict.__defaults__[0])
+        self.assertIn('stack-agent', runner.ARMS)
+
+    def test_arm_hints_name_the_toolset_never_an_answer(self):
+        # Wrong patch: smuggle task facts into the per-arm hint. It is task-independent by construction.
+        for arm, hint in runner.ARM_HINT.items():
+            for task in runner.TASKS.values():
+                for word in list(task['expected']) + list(task.get('forbidden', [])):
+                    self.assertNotIn(str(word).casefold(), hint.casefold())
+
     def test_stack_advanced_sets_env_and_arms_differ(self):
         with tempfile.TemporaryDirectory() as d:
             adv = json.loads(runner.mcp_config('stack-advanced', d).read_text())['mcpServers']['cua-task']

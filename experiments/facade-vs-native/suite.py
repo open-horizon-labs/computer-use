@@ -112,7 +112,7 @@ def synthetic_run(spec, task, out_dir, events_path):
     else:
         kind, events = 'none', []
     timed_out = kind == 'none' and rng.random() < .4
-    base = {'native': 5, 'native-skill': 5, 'stack': 7, 'stack-advanced': 8, 'facade': 7}[spec['arm']]
+    base = {'native': 5, 'native-skill': 5, 'stack': 7, 'stack-advanced': 8, 'stack-agent': 4, 'facade': 7}[spec['arm']]
     turns = max(2, base + len(task['expected']) + rng.randint(-1, 2))
     server = runner.ARM_SERVER[spec['arm']]
     lines = []

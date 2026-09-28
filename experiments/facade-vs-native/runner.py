@@ -35,9 +35,13 @@ PROMPT_FRAME = ('A Google Chrome window whose title begins with {title!r} is ope
                 'window or tab. When finished, report exactly what you did and how you verified the result.')
 
 # arm -> server family. `facade` is the legacy name for `stack`.
-ARM_SERVER = {'native': 'cua-driver', 'native-skill': 'cua-driver', 'stack': 'cua-task', 'stack-advanced': 'cua-task', 'facade': 'cua-task'}
+ARM_SERVER = {'native': 'cua-driver', 'native-skill': 'cua-driver', 'stack': 'cua-task', 'stack-advanced': 'cua-task', 'stack-agent': 'cua-task', 'facade': 'cua-task'}
 ARMS = list(ARM_SERVER)
 ALLOWED_TOOLS = {arm: ['mcp__' + server] + (['Skill'] if arm == 'native-skill' else []) for arm, server in ARM_SERVER.items()}
+# Exploratory arm (option D, PR 17): ONLY the experimental server-side agent tool is allowed, so the driving LLM cannot fall back to cua_do.
+ALLOWED_TOOLS['stack-agent'] = ['mcp__cua-task__cua_agent']
+# Tool-choice hint per arm: it names the toolset the arm is defined by, never the answer or a decoy (the prompt lint checks this).
+ARM_HINT = {'stack-agent': ' Use the cua_agent tool: state the goal, and in `expect` the text that will appear on the page when it has succeeded.'}
 # File and shell tools are off for every arm: an agent that can Read would load repo
 # context and stop being a clean tool-set comparison. Native additionally has no Skill (unless the
 # `native-skill` arm), since the installed skill would reintroduce facade guidance.
@@ -72,6 +76,8 @@ def mcp_config(arm, out_dir):
     stack = {'command': py, 'args': [str(root / 'facade/server.py')]}
     if arm == 'stack-advanced':
         stack['env'] = {'CUA_TASK_ADVANCED': '1'}
+    if arm == 'stack-agent':
+        stack['env'] = {'CUA_TASK_EXPERIMENTAL_AGENT': '1'}
     servers = {'cua-task': stack, 'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
     server = ARM_SERVER[arm]
     path = Path(out_dir).resolve() / f'mcp-config.{arm}.json'  # absolute: the agent runs from a scratch cwd
@@ -80,7 +86,7 @@ def mcp_config(arm, out_dir):
 
 
 def run_agent(arm, task, title, out_path, model, max_turns=80, timeout=600):
-    prompt = PROMPT_FRAME.format(title=title, goal=TASKS[task]['prompt'])
+    prompt = PROMPT_FRAME.format(title=title, goal=TASKS[task]['prompt']) + ARM_HINT.get(arm, '')
     cmd = ['claude', '-p', prompt, '--model', model, '--max-turns', str(max_turns),
            '--strict-mcp-config', '--mcp-config', str(mcp_config(arm, out_path.parent)),
            '--allowedTools', ','.join(ALLOWED_TOOLS[arm]),
