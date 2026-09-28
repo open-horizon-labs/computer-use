@@ -1,7 +1,7 @@
 import copy
 import sys
 import unittest
-from core import Facade,Gap
+from core import Facade,Gap,DriverCallFailed
 
 
 def window(sid='s00000001'):
@@ -637,5 +637,107 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(f.close()['driver_version_state'],'unprobed')
         f.observe(1,2)
         self.assertEqual(f.close()['driver_version_state'],'unparsed')
+
+    # --- Driver boundary (review of PR 11) -----------------------------------
+    def test_real_driver_failures_become_typed_gaps_without_stderr(self):
+        # Tempting wrong patch: leave check=True so raw CalledProcessError/Timeout
+        # escapes a tool and leaks stderr into the agent's error text.
+        import subprocess
+        from core import Driver
+        d=Driver('/nonexistent/cua-driver')
+        with self.assertRaisesRegex(Gap,'driver_call_failed: list_windows returned no usable result'):d.call('list_windows',{})
+        real=subprocess.run
+        try:
+            def boom(*a,**k):raise subprocess.CalledProcessError(3,a[0],stderr='/Users/secret/path failed')
+            subprocess.run=boom
+            with self.assertRaises(Gap) as caught:d.call('get_window_state',{})
+            self.assertIn('exited 3',str(caught.exception));self.assertNotIn('secret',str(caught.exception))
+            def slow(*a,**k):raise subprocess.TimeoutExpired(a[0],20)
+            subprocess.run=slow
+            with self.assertRaisesRegex(Gap,'timed out'):d.call('click',{})
+        finally:subprocess.run=real
+
+    def test_driver_failure_before_the_click_returns_the_selection(self):
+        # Review P2: act() consumed the selection, then a get_window_state failure
+        # left the agent with nothing and no click. Tempting wrong patch: restore
+        # the selection on ANY failure (would replay after a real refusal or an
+        # uncertain click).
+        sel=self.exact()['selection']
+        real=self.driver.observe
+        self.driver.observe=lambda *a:(_ for _ in ()).throw(DriverCallFailed('driver_call_failed: get_window_state exited 1'))
+        with self.assertRaisesRegex(Gap,'driver_call_failed'):self.f.act(sel)
+        self.assertEqual(self.driver.executed,[])
+        self.driver.observe=real  # transient failure over: the same selection is retried as-is
+        out=self.f.act(sel);self.assertTrue(out['requires_verification']);self.assertEqual(len(self.driver.executed),1)
+
+    def test_ui_changed_refusal_still_consumes_the_selection(self):
+        sel=self.exact()['selection'];self.driver.change=True
+        with self.assertRaisesRegex(Gap,'UI changed'):self.f.act(sel)
+        with self.assertRaisesRegex(Gap,'already consumed'):self.f.act(sel)
+
+    def test_click_failure_keeps_the_selection_consumed(self):
+        sel=self.exact()['selection']
+        real=self.driver.call
+        def bad(tool,args,timeout=20):
+            if tool=='click':raise DriverCallFailed('driver_call_failed: click exited 1')
+            return real(tool,args,timeout)
+        self.driver.call=bad
+        with self.assertRaises(Gap):self.f.act(sel)
+        self.driver.call=real
+        with self.assertRaisesRegex(Gap,'already consumed'):self.f.act(sel)
+
+
+    def test_plain_gap_with_the_same_text_does_not_return_the_selection(self):
+        # Review P4. Tempting wrong patch: match on the message text, so any Gap
+        # (or Driver-echoed text) beginning driver_call_failed re-arms a spent selection.
+        sel=self.exact()['selection']
+        self.driver.observe=lambda *a:(_ for _ in ()).throw(Gap('driver_call_failed: spoofed by a plain Gap'))
+        with self.assertRaises(Gap):self.f.act(sel)
+        with self.assertRaisesRegex(Gap,'already consumed'):self.f.act(sel)
+
+    def test_version_probe_failures_are_typed_and_carry_no_path(self):
+        # Review P1: bare FileNotFoundError carried the absolute executable path.
+        from core import Driver
+        d=Driver('/Users/secret/nonexistent/cua-driver')
+        with self.assertRaises(DriverCallFailed) as caught:d.version()
+        self.assertNotIn('secret',str(caught.exception))
+
+    def test_non_object_driver_json_is_a_typed_failure(self):
+        # Review P2: json 'null' or '[]' made value.get() raise AttributeError.
+        import subprocess,types
+        from core import Driver
+        d=Driver('cua-driver');real=subprocess.run
+        try:
+            for payload in ('null','[]','3'):
+                subprocess.run=lambda *a,payload=payload,**k:types.SimpleNamespace(stdout=payload,stderr='',returncode=0)
+                with self.assertRaisesRegex(DriverCallFailed,'non-object'):d.call('list_windows',{})
+        finally:subprocess.run=real
+
+    def test_unreadable_screenshot_file_is_typed_and_pathless(self):
+        # Review P3: the OSError text carried the temp-dir path.
+        from core import Driver
+        from pathlib import Path
+        d=Driver('cua-driver');d.call=lambda *a,**k:{'snapshot_id':'x'}
+        real=Path.read_bytes;real_exists=Path.exists
+        try:
+            Path.exists=lambda self:True
+            def bad(self):raise PermissionError('/private/var/secret/window.png')
+            Path.read_bytes=bad
+            with self.assertRaises(DriverCallFailed) as caught:d.observe(1,2,'s')
+            self.assertNotIn('secret',str(caught.exception))
+        finally:Path.read_bytes=real;Path.exists=real_exists
+
+    def test_mutating_call_failure_says_the_action_may_have_been_delivered(self):
+        # Review P5: a click that fails after sending must not read as a retryable transport error.
+        import subprocess
+        from core import Driver
+        d=Driver('cua-driver');real=subprocess.run
+        try:
+            def boom(*a,**k):raise subprocess.CalledProcessError(1,a[0])
+            subprocess.run=boom
+            with self.assertRaisesRegex(DriverCallFailed,'may have been delivered'):d.call('click',{})
+            with self.assertRaises(DriverCallFailed) as caught:d.call('list_windows',{})
+            self.assertNotIn('delivered',str(caught.exception))
+        finally:subprocess.run=real
 
 if __name__=='__main__':unittest.main()
