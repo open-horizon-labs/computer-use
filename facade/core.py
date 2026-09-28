@@ -417,15 +417,26 @@ class Facade:
             texts += [line for line in text.split('\n') if line and line not in texts]
         return (texts, set(members) | {index}) if texts else None
 
+    READ_BUDGET = 2  # readings per (snapshot, record scope); S4.2 §7 bounds steps, S4.8 forbids re-read loops
+
     def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False):
         state = self.state(snapshot)
         fields = copy.deepcopy(fields)
+        # S4.8: readings are the displayed strings. Supplied types are ignored
+        # (recorded, never applied): the controlling LLM interprets "half-hour".
+        types_ignored = {name: spec['type'] for name, spec in fields.items() if spec.get('type', 'text') not in ('text', 'string')}
         for spec in fields.values():
-            if spec.get('type') == 'string': spec['type'] = 'text'
-            if spec.get('type') == 'money' and spec.get('currency') != 'USD':
-                raise Gap('Money fields require explicit currency: USD; use text for unparsed price strings')
+            spec['type'] = 'text'; spec.pop('currency', None)
         if not record_ids or len(set(record_ids)) != len(record_ids):
             raise Gap('Supply distinct observed record roots')
+        scope = (snapshot, frozenset(record_ids))
+        prior = [h for h, r in self.readings.items() if (r['snapshot'], frozenset(r['record_ids'])) == scope]
+        if len(prior) >= self.READ_BUDGET:
+            last = self.readings[prior[-1]]
+            raise Gap('read_budget: these records were already read %d times for this observation; re-reading is a '
+                      'defect, not recovery. Judge the extracted strings yourself and pass the eligible records as '
+                      'candidate_ids/record_actions with reading %s: %s' % (len(prior), prior[-1],
+                      json.dumps({r['record_id']: r['fields'] for r in last['extraction']['records']}, ensure_ascii=False)))
         records, memberships, record_basis = [], [], {}
         for candidate in record_ids:
             text, members = self.subtree(state,candidate)
@@ -450,8 +461,8 @@ class Facade:
             coverage_complete=coverage_complete,current_snapshot=state['raw']['snapshot_id'])
         handle = 'read_' + uuid.uuid4().hex
         result = {'reading':handle, 'snapshot':snapshot, 'route':'nuextract3', 'extraction':extraction, 'filter':filtered,
-                  **({'record_basis':record_basis} if record_basis else {})}
-        self.readings[handle] = copy.deepcopy({**result,'fields':fields,'predicates':predicates or []})
+                  **({'record_basis':record_basis} if record_basis else {}), **({'types_ignored':types_ignored} if types_ignored else {})}
+        self.readings[handle] = copy.deepcopy({**result,'fields':fields,'predicates':predicates or [],'record_ids':list(record_ids)})
         while len(self.readings)>32:self.readings.pop(next(iter(self.readings)))
         self.event('read',route='nuextract3',snapshot=snapshot,records=len(records),endpoint_ms=(self.clock()-start)*1000)
         return result
@@ -499,13 +510,17 @@ class Facade:
         return not any(aid != picked_id and any(token.casefold() in ctx for token in tokens)
                         for aid, ctx in contexts.items())
 
-    def incomplete_scope_defer(self, filt):
+    def incomplete_scope_defer(self, filt, read=None):
+        extracted = {r['record_id']: r['fields'] for r in (read or {}).get('extraction', {}).get('records', [])
+                     if r['record_id'] in filt['unknown_ids']}
         return {'status': 'defer', 'route': 'nuextract3', 'reason': 'unknown_or_incomplete_scope',
                 'unknown_ids': filt['unknown_ids'], 'excluded_count': len(filt['excluded_ids']),
                 'eligible_ids': filt['eligible_ids'],
                 'missing_fields': {aid: filt['checks'][aid]['gaps'] for aid in filt['unknown_ids']},
-                'hint': 'Unknown records are missing or unparsed for the listed fields; re-read them with a '
-                        'clearer field description, or narrow record_ids/predicates to records that are already resolved.'}
+                'extracted': extracted,
+                'hint': 'Do not re-read. A record whose strings are shown above is yours to judge: pass the records '
+                        'you find eligible as candidate_ids or record_actions with this reading. Only a record with '
+                        'no extracted value for a listed field justifies one re-read; otherwise the scope stays incomplete.'}
 
     def actions(self, state, ids, operation, text):
         if operation not in ('click','type_text'):
@@ -642,7 +657,14 @@ class Facade:
             read=copy.deepcopy(self.readings.get(reading))
             if not read or read['snapshot']!=snapshot:raise Gap('Reading is not bound to this observation')
             if fields or order_by:raise Gap('Reading schemas come from cua_read; ordering is supported only in spans mode')
-            if not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'])
+            grounded=[r['record_id'] for r in read['extraction']['records']]
+            # S4.8: the controller may judge the strings itself. Record IDs in
+            # candidate_ids/record_actions are its verdict on eligibility; they
+            # must be this reading's records and not excluded by stated text
+            # predicates. Without a verdict the filter decides and unknowns defer.
+            judged=list(record_actions) if record_actions is not None else (
+                list(candidate_ids) if candidate_ids is not None and set(candidate_ids)<=set(grounded) else None)
+            if judged is None and not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'],read)
             base_retained=read['filter']['eligible_ids']
             if predicates:
                 # Filter cached evidence, never repeat extraction or silently send
@@ -655,17 +677,25 @@ class Facade:
                 self.event('filter',route='typed_same_record',snapshot=snapshot,
                            eligible=len(read['filter']['eligible_ids']),unknown=len(read['filter']['unknown_ids']),
                            excluded=len(read['filter']['excluded_ids']))
-                if not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'])
-            retained=read['filter']['eligible_ids']
-            mapped=[]
+                if judged is None and not read['filter']['complete']:return self.incomplete_scope_defer(read['filter'],read)
+            filt=read['filter']
             if record_actions is not None:
-                if set(record_actions) not in (set(retained),set(base_retained)):
-                    raise Gap('Map every eligible record (optionally all originally eligible records), with no unrelated records')
-                # Validate even controls removed by the additional predicate.
+                # A cross-record target is a defect regardless of eligibility.
                 for root,target in record_actions.items():
                     _,members=self.subtree(state,root)
                     if self.node(state,target)['element_index'] not in members:
                         raise Gap('Record action is outside its source record')
+            if judged is not None:
+                stray=[r for r in judged if r not in grounded]
+                if stray:raise Gap('Judged records must be records of this reading: %s' % stray)
+                # Stated text predicates can only narrow a verdict, never be overridden by it.
+                retained=[r for r in judged if r not in filt['excluded_ids']]
+                if not retained:raise Gap('Every judged record %s was excluded by the stated predicates' % judged)
+                judgment='controller' if set(retained)!=set(filt['eligible_ids']) else 'filter'
+            else:
+                retained=filt['eligible_ids'];judgment='filter'
+            unknown_competitors=[r for r in filt['unknown_ids'] if r not in retained]
+            mapped=[]
             for root in retained:
                 _,members=self.subtree(state,root)
                 if record_actions is not None:
@@ -678,11 +708,27 @@ class Facade:
             allowed_scopes=[set(retained),set(base_retained),set(mapped)]
             if record_actions is not None:allowed_scopes.append(set(record_actions.values()))
             if candidate_ids is not None and set(candidate_ids) not in allowed_scopes:
-                raise Gap('Use all eligible record IDs or their mapped control IDs; omit candidate_ids when using record_actions')
+                raise Gap('candidate_ids must be this reading\'s judged/eligible record IDs or their mapped control IDs')
             ids=mapped
         actions=self.actions(state,ids,operation,text)
         if reading and {a['id'] for a in actions} != set(ids):
             raise Gap('An eligible record lacks an enabled compatible control; cannot silently exclude it')
+        if reading and len(actions)==1:
+            # S4.2 §5: a unique best yields the bound action. A reading-grounded
+            # singleton (filter-unique or controller-judged) binds without any
+            # chooser round trip; the trace names whose judgment it was.
+            request={'snapshot_id':state['raw']['snapshot_id'],'kind':'semantic','operation':operation,
+                     'goal':goal,'actions':actions,'observation':actions[0]['description'],'specialist_context':read}
+            decision={'status':'selected','action_id':actions[0]['id'],'action_authorized':True,
+                      'reason':'grounded_singleton','judgment':judgment,'snapshot_id':request['snapshot_id'],
+                      'binding_digest':request_digest(request),'provider_outputs':[]}
+            self.event('choose',snapshot=snapshot,route='grounded_singleton',models=[],mode=mode,decision_ms=0,
+                       provider_setup_ms=0,wall_ms=0,authorized=True,reason='grounded_singleton',judgment=judgment,
+                       unknown_competitors=len(unknown_competitors))
+            return self.issue(snapshot,request,decision,mode,operation,text,
+                              {'status':'selected','route':'grounded_singleton','decision':decision,'snapshot':snapshot,
+                               'offered_count':1,'judgment':judgment,'unknown_competitors':unknown_competitors,
+                               'caller_preselected':False,'candidate_scope':'observed_or_filtered_scope'})
         if mode=='semantic' and len(actions)==1 and not reading:
             self.event('choose',snapshot=snapshot,route='scope_guard',mode=mode,
                        authorized=False,reason='singleton_requires_grounded_reading')
@@ -732,14 +778,45 @@ class Facade:
                    authorized=decision.get('action_authorized',False),reason=decision.get('reason'),caller_preselected=caller_preselected)
         result={'status':decision['status'],'route':route,'decision':decision,'snapshot':snapshot,
                 'offered_count':len(actions),'caller_preselected':caller_preselected,
-                'candidate_scope':'caller_subset' if candidate_ids is not None and not reading and mode!='exact' else 'observed_or_filtered_scope'}
+                'candidate_scope':'caller_subset' if candidate_ids is not None and not reading and mode!='exact' else 'observed_or_filtered_scope',
+                **({'judgment':judgment,'unknown_competitors':unknown_competitors} if reading else {})}
+        return self.issue(snapshot,request,decision,mode,operation,text,result)
+
+    def issue(self,snapshot,request,decision,mode,operation,text,result):
+        """Store an authorized selection with the content scope it was bound in."""
         if decision.get('action_authorized'):
+            state=self.state(snapshot)
+            root=self.content_root(state,[a['id'] for a in request['actions']])
             handle='sel_'+uuid.uuid4().hex
             self.selections[handle]={'snapshot':snapshot,'request':copy.deepcopy(request),'decision':copy.deepcopy(decision),
-                                     'mode':mode,'operation':operation,'text':text,'used':False}
+                                     'mode':mode,'operation':operation,'text':text,'used':False,
+                                     'scope_root':root,'scope_digest':self.scope_digest(state,root)}
             while len(self.selections)>32:self.selections.pop(next(iter(self.selections)))
             result.update(selection=handle,selected_id=decision['action_id'])
         return result
+
+    def content_root(self,state,ids):
+        """The observed content scope a selection binds to: the offered actions'
+        common ancestor, widened to the enclosing AXWebArea when there is one
+        (a browser's page), else the window root. Browser chrome such as a tab
+        strip's live memory readout is outside a page action's scope.
+        """
+        chains=[]
+        for cid in ids:
+            index=self.node(state,cid)['element_index'];chain=[]
+            while index in state['nodes'] and index not in chain:
+                chain.append(index);index=state['nodes'][index].get('parent_index')
+            chains.append(chain)
+        common=[i for i in chains[0] if all(i in c for c in chains[1:])]
+        lca=common[0] if common else chains[0][-1]
+        for i in chains[0][chains[0].index(lca):]:
+            if state['nodes'][i].get('role')=='AXWebArea':return i
+        return chains[0][-1]
+
+    def scope_digest(self,state,root):
+        _,members=self.subtree(state,'e'+str(root))
+        return digest({'title':state['raw'].get('window_title'),
+                       'nodes':[{k:v for k,v in state['nodes'][i].items() if k!='element_token'} for i in sorted(members)]})
 
     def act(self, selection):
         item=self.selections.get(selection)
@@ -749,8 +826,14 @@ class Facade:
         fresh=self.observe(state['pid'],state['window_id'])
         current=self.state(fresh['snapshot'])
         self.check_foreground(current['raw'])
-        if state['fingerprint']!=current['fingerprint']:
-            raise Gap('UI changed since selection; reobserve and choose again')
+        # Revalidate the content scope the selection was bound in (S4.8): any
+        # change inside it refuses; a change outside it (browser chrome) does not.
+        root=item.get('scope_root')
+        if root is None:
+            if state['fingerprint']!=current['fingerprint']:
+                raise Gap('UI changed since selection; reobserve and choose again')
+        elif root not in current['nodes'] or self.scope_digest(current,root)!=item['scope_digest']:
+            raise Gap('UI changed within the bound content scope since selection; reobserve and choose again')
         if item['mode']=='visual' and state['image_digest']!=current['image_digest']:
             raise Gap('Visual evidence changed; choose again from current screenshot')
         request=copy.deepcopy(item['request'])

@@ -14,7 +14,7 @@ async def main():
    assert 'title' in next(t for t in ts if t.name=='cua_windows').inputSchema['properties']
    x=await s.call_tool('cua_windows',{'title':'Other'});assert '"windows": []' in x.content[0].text
    o=await s.call_tool('cua_observe',{'pid':1,'window_id':2});sid=o.structuredContent['snapshot']
-   bad=await s.call_tool('cua_read',{'snapshot':sid,'task':'Read price','fields':{'price':{'description':'Price','type':'money'}},'record_ids':['e1']});assert bad.isError and 'currency' in bad.content[0].text
+   typed=await s.call_tool('cua_read',{'snapshot':sid,'task':'Read price','fields':{'price':{'description':'Price','type':'money'}},'record_ids':['e1']});assert not typed.isError and json.loads(typed.content[0].text)['types_ignored']=={'price':'money'}
    read=await s.call_tool('cua_read',{'snapshot':sid,'task':'Read condition','fields':{'condition':{'description':'Condition','type':'text'}},'record_ids':['e1','e4'],'coverage_complete':True})
    reading=json.loads(read.content[0].text)['reading']
    choice=await s.call_tool('cua_choose',{'snapshot':sid,'goal':'Inspect used','reading':reading,'candidate_ids':['e1','e4'],'record_actions':{'e1':'e3','e4':'e6'},'predicates':[{'field':'condition','value':'Used'}]})
@@ -31,5 +31,5 @@ async def main():
    assert gap.isError and 'perception' in gap.content[0].text
    fin=json.loads((await s.call_tool('cua_finish',{})).content[0].text)
    assert 'perception_version' in fin and 'perception_state' in fin
-   print('Protocol checks passed: title filter, money schema, cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
+   print('Protocol checks passed: title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
 asyncio.run(main())

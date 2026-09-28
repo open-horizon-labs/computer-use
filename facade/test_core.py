@@ -144,7 +144,9 @@ class CoreTests(unittest.TestCase):
         self.assertIn('$80',rows[0]['text']);self.assertNotIn('$90',rows[0]['text'])
     def test_reading_joins_only_eligible_descendant_control(self):
         read=self.reading();result=self.f.choose(self.obs,'Inspect eligible product',reading=read['reading'])
-        self.assertEqual(result['selected_id'],'e3');self.assertEqual(len(self.generic.requests[0]['actions']),1)
+        # S4.2 §5: a unique best binds; no chooser round trip for a grounded singleton.
+        self.assertEqual(result['selected_id'],'e3');self.assertEqual(self.generic.requests,[])
+        self.assertEqual(result['route'],'grounded_singleton');self.assertEqual(result['judgment'],'filter')
     def test_missing_condition_blocks_choice(self):
         self.reader.missing=True;r=self.reading()
         result=self.f.choose(self.obs,'Inspect',reading=r['reading'])
@@ -191,16 +193,104 @@ class CoreTests(unittest.TestCase):
     def test_window_title_filter_omits_unrelated_windows(self):
         self.assertEqual(self.f.windows('Other')['windows'],[])
         self.assertEqual(len(self.f.windows('Demo')['windows']),1)
-    def test_money_currency_required_before_model_call(self):
-        with self.assertRaisesRegex(Gap,'currency'):
-            self.f.read(self.obs,'Read price',{'price':{'description':'Price','type':'money'}},['e1'])
-        self.assertEqual(self.reader.requests,[])
+    # --- S4.8: readings are strings; the controller interprets ---------------
+    def test_read_ignores_typed_schema_and_keeps_strings(self):
+        # Live CE: 'half-hour' extracted correctly five times, made unknown by a
+        # duration_minutes normalizer. Tempting wrong patch: teach the normalizer
+        # 'half-hour'. Types are ignored instead; the string stays known.
+        self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'duration':'half-hour'}} for r in req['records']]}
+        r=self.f.read(self.obs,'Read slots',{'duration':{'description':'Length','type':'duration_minutes'}},['e1','e4'],
+                      [{'field':'duration','op':'contains','value':'hour'}],coverage_complete=True)
+        self.assertEqual(r['types_ignored'],{'duration':'duration_minutes'})
+        self.assertEqual(r['filter']['unknown_ids'],[]);self.assertEqual(r['filter']['eligible_ids'],['e1','e4'])
+
+    def test_read_budget_refuses_third_read_with_the_strings(self):
+        # Live CE: five reads of the same 12 records. Tempting wrong patch: no bound.
+        self.reading();self.reading()
+        with self.assertRaisesRegex(Gap,'read_budget.*Used'):self.reading()
+        self.assertEqual(len(self.reader.requests),2)
+
+    def test_controller_judged_subset_binds_singleton_without_chooser(self):
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],coverage_complete=True)
+        c=self.f.choose(self.obs,'Inspect the used one',reading=r['reading'],candidate_ids=['e1'])
+        self.assertEqual(c['selected_id'],'e3');self.assertEqual(c['judgment'],'controller')
+        self.assertEqual(self.generic.requests,[]);self.assertEqual(self.starts,[])
+        self.f.act(c['selection']);self.assertEqual(self.driver.executed[0]['element_token'],'s00000002:3')
+
+    def test_controller_judgment_cannot_name_records_outside_the_reading(self):
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1'],coverage_complete=True)
+        with self.assertRaisesRegex(Gap,'records of this reading'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],record_actions={'e1':'e3','e4':'e6'})
+
+    def test_controller_judgment_cannot_revive_a_record_its_predicates_excluded(self):
+        r=self.reading()
+        with self.assertRaisesRegex(Gap,'excluded'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e4'])
+
+    def test_controller_judgment_over_unknowns_is_traced(self):
+        self.reader.missing=True
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],
+                      [{'field':'condition','value':'Used'}],coverage_complete=True)
+        c=self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'])
+        self.assertEqual(c['selected_id'],'e3');self.assertEqual(c['unknown_competitors'],['e4'])
+        self.assertEqual(self.f.events[-1]['unknown_competitors'],1)
+
+    def test_incomplete_scope_defer_shows_extracted_strings_and_forbids_reread(self):
+        self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'n':'7'}} for r in req['records']]}
+        r=self.f.read(self.obs,'Read',{'n':{'description':'N','type':'number'}},['e1','e4'],[{'field':'n','op':'contains','value':'x'}],coverage_complete=False)
+        d=self.f.choose(self.obs,'Inspect',reading=r['reading'])
+        self.assertEqual(d['status'],'defer');self.assertIn('Do not re-read',d['hint'])
+
+    def test_read_path_has_no_typed_normalization(self):
+        # Static guardrail (S4.8): the reading path must not call typed() or
+        # mention typed kinds; an LLM cannot reintroduce normalization there.
+        import ast,inspect
+        tree=ast.parse(inspect.getsource(Facade))
+        fn=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='read')
+        calls={c.func.id for c in ast.walk(fn) if isinstance(c,ast.Call) and isinstance(c.func,ast.Name)}
+        self.assertNotIn('typed',calls)
+        consts={c.value for c in ast.walk(fn) if isinstance(c,ast.Constant) and isinstance(c.value,str)}
+        self.assertFalse(consts&{'duration_minutes','time','money','number','USD'})
+
+    # --- S4.8: revalidation scope -------------------------------------------
+    def browser_window(self,memory='93.4 MB',row_value='Used $80'):
+        nodes=[{'element_index':0,'role':'AXWindow','label':'demo'},
+          {'element_index':1,'parent_index':0,'role':'AXTabGroup'},
+          {'element_index':2,'parent_index':1,'role':'AXRadioButton','label':'Demo - Memory usage - '+memory},
+          {'element_index':3,'parent_index':0,'role':'AXWebArea'},
+          {'element_index':4,'parent_index':3,'role':'AXRow','label':'First product'},
+          {'element_index':5,'parent_index':4,'role':'AXStaticText','value':row_value},
+          {'element_index':6,'parent_index':4,'role':'AXButton','label':'Inspect first','actions':['AXPress']},
+          {'element_index':7,'parent_index':3,'role':'AXRow','label':'Second product'},
+          {'element_index':8,'parent_index':7,'role':'AXButton','label':'Inspect second','actions':['AXPress']}]
+        return nodes
+
+    def act_after_change(self,**after):
+        seq=[self.browser_window(),self.browser_window(**after)];n=[0]
+        def observe(*a):
+            nodes=copy.deepcopy(seq[min(n[0],1)]);n[0]+=1;sid='sb%d'%n[0]
+            for x in nodes:x.update(element_token=sid+':'+str(x['element_index']),enabled=True)
+            return {'snapshot_id':sid,'pid':1,'window_id':2,'window_title':'Demo','elements':nodes,'_image':b'p'}
+        self.driver.observe=observe
+        obs=self.f.observe(1,2)['snapshot']
+        sel=self.f.choose(obs,'Inspect first',mode='exact',exact_name='Inspect first',exact_role='AXButton')['selection']
+        return lambda:self.f.act(sel)
+
+    def test_act_ignores_browser_chrome_change_outside_web_area(self):
+        # Live CE: Chrome's tab strip memory readout changed 93.4 MB -> 86.0 MB and
+        # the click was refused. Tempting wrong patch: regex-ignore 'Memory usage'
+        # or drop names from the fingerprint.
+        self.act_after_change(memory='86.0 MB')()
+        self.assertEqual(len(self.driver.executed),1)
+
+    def test_act_refuses_content_change_inside_web_area(self):
+        with self.assertRaisesRegex(Gap,'content scope'):self.act_after_change(row_value='Used $95')()
+        self.assertEqual(self.driver.executed,[])
     def test_read_then_choose_filters_cached_records_and_maps_root_ids(self):
         r=self.f.read(self.obs,'Read condition',{'condition':{'type':'text','description':'Condition'}},['e1','e4'],coverage_complete=True)
         c=self.f.choose(self.obs,'Inspect used',reading=r['reading'],candidate_ids=['e1','e4'],
             record_actions={'e1':'e3','e4':'e6'},predicates=[{'field':'condition','value':'Used'}])
-        self.assertEqual(c['selected_id'],'e3')
-        self.assertEqual([a['id'] for a in self.generic.requests[-1]['actions']],['e3'])
+        self.assertEqual(c['selected_id'],'e3');self.assertEqual(self.generic.requests,[])
         self.assertEqual(len(self.reader.requests),1)
     def test_additional_filter_cannot_revive_excluded_record(self):
         r=self.reading()
