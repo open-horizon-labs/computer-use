@@ -19,7 +19,7 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
 DO_KINDS = ('press', 'type', 'confirm', 'verify')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
@@ -27,12 +27,18 @@ MAX_CONDITIONS = 6
 MAX_VALUE_CHARS = 60
 RESPONSE_BYTES = 5800
 # The destructive-verb guard of option D, applied to plans: a control whose label carries one of these needs the plan's own goal to say so.
-DESTRUCTIVE = {'delete': r'\bdelet', 'remove': r'\bremov', 'erase': r'\beras', 'discard': r'\bdiscard', 'reset': r'\breset', 'sign out': r'\bsign(?:ing|ed)?[ -]?out\b'}
+DESTRUCTIVE = {'delete': r'\bdelet', 'remove': r'\bremov', 'erase': r'\beras', 'discard': r'\bdiscard', 'reset': r'\breset', 'sign out': r'\bsign(?:ing|ed)?[ -]?out\b',
+               'cancel subscription': r'\bcancel\w*\s+(?:(?:my|the|your|this)\s+)?subscription'}
 
 
-def destructive_verbs(label, goal):
-    """Destructive verbs in a control label that the goal never asked for."""
-    return [v for v, rx in DESTRUCTIVE.items() if re.search(rx, lk.norm(label)) and not re.search(rx, lk.norm(goal))]
+def destructive_verbs(label):
+    """Destructive verbs in a control label. Goal text NEVER unlocks one (a goal is a regex target for a negation or an injected sentence):
+    only the step's own allow_destructive naming the exact label does."""
+    return [v for v, rx in DESTRUCTIVE.items() if re.search(rx, lk.norm(label))]
+
+
+def allowed(step_allow, label):
+    return bool(step_allow) and lk.norm(step_allow) == lk.norm(label)
 
 
 def _gap(message):
@@ -43,7 +49,7 @@ def _gap(message):
 # --- validation: everything that can be decided without the Driver, before any Driver action -------------------------------------
 
 def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect, single):
-    """Return (normalized steps, plan facts) or raise Gap('<reason>: ...'). No Driver call, no model, no clock."""
+    """Return the normalized steps or raise Gap('<reason>: ...'). No Driver call, no model, no clock."""
     if not isinstance(goal, str) or not goal.strip():
         raise _gap('bad_request: goal is required (the plan\'s goal, in words)')
     f.reject_answer_leak({'nodes': {int(m): 0 for m in f.OBSERVED_ID.findall(goal)}}, goal)
@@ -79,19 +85,21 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         if kind not in DO_KINDS:
             raise _gap('bad_request: %s do=%r is not one of %s' % (at, kind, ', '.join(DO_KINDS)))
         final = n == len(steps)
-        for key in ('goal', 'control', 'near', 'text', 'confirm', 'expect'):
+        for key in ('goal', 'control', 'near', 'text', 'confirm', 'expect', 'allow_destructive'):
             if key in step and (not isinstance(step[key], str) or (key != 'text' and not step[key].strip())):
                 raise _gap('bad_request: %s %s must be nonempty text' % (at, key))
+        if step.get('control_match', 'exact') not in ('exact', 'prefix'):
+            raise _gap('bad_request: %s control_match is exact (the default) or prefix' % at)
         if 'goal' in step:
             f.reject_answer_leak({'nodes': {int(m): 0 for m in f.OBSERVED_ID.findall(step['goal'])}}, step['goal'])
         for key in ('treat_as_match', 'accept_unknown'):
             if key in step and (not isinstance(step[key], list) or not step[key] or not all(isinstance(x, str) and x for x in step[key])):
                 raise _gap('bad_request: %s %s must be a list of record ids' % (at, key))
-        allowed = {'press': {'do', 'goal', 'where', 'control', 'near', 'identity', 'expect', 'treat_as_match', 'accept_unknown'},
-                   'type': {'do', 'goal', 'control', 'text', 'expect'},
-                   'confirm': {'do', 'goal', 'confirm', 'identity', 'expect'},
-                   'verify': {'do', 'goal', 'expect'}}[kind]
-        extra = sorted(set(step) - allowed)
+        takes = {'press': {'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'expect', 'treat_as_match', 'accept_unknown', 'allow_destructive'},
+                 'type': {'do', 'goal', 'control', 'control_match', 'text', 'expect', 'allow_destructive'},
+                 'confirm': {'do', 'goal', 'confirm', 'identity', 'expect', 'allow_destructive'},
+                 'verify': {'do', 'goal', 'expect'}}[kind]
+        extra = sorted(set(step) - takes)
         if extra:
             raise _gap('bad_request: %s (%s) does not take %s' % (at, kind, ', '.join(extra)))
         if kind == 'verify' and 'expect' not in step:
@@ -148,14 +156,14 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 raise _gap('bad_request: %s identity needs a where (which record it identifies)' % at)
         # The destructive guard, on the LITERAL label here and again on the RESOLVED control at execution.
         for label in (step.get('control') if kind in ('press', 'type') else None, step.get('confirm')):
-            bad = destructive_verbs(label, goal) if label else []
-            if bad:
-                raise _gap('destructive_control: %s control %r is destructive (%s) and the plan\'s goal does not ask for it; say so in the goal or choose another control' % (at, label[:40], ', '.join(bad)))
+            bad = destructive_verbs(label) if label else []
+            if bad and not allowed(step.get('allow_destructive'), label):
+                raise _gap('destructive_control: %s control %r is destructive (%s); goal text never authorizes it. Only the step itself can: add allow_destructive=%r (the exact label) to that step if it is what the user asked for' % (at, label[:40], ', '.join(bad), label[:40]))
         out.append(step)
     if needs_look:
         if look_id is None:
             raise _gap('look_required: where.lines filters over displayed lines, and a filter written without seeing the page is how the wrong record gets clicked; call cua_look first and pass its look_id')
-        if look_id not in f.looks:
+        if not any(key[2] == look_id for key in f.looks):
             raise _gap('unknown_look_id: no cua_look returned %r in this session (or it is too old); call cua_look first and pass the look_id it returns' % look_id[:24])
     return out
 
@@ -182,19 +190,30 @@ def default_identity(conds):
 def lines_stage(f, state, snapshot, spec, roots, targets, disabled_roots):
     """Resolve `where.lines` for one step on the CURRENT observation. Returns {'defer': {...}} or {'reading': ..., 'pick': ...}.
 
-    1. The page must still read the way the look showed it: the displayed record lines are recomputed and hashed (look_id). A
-       mismatch defers page_changed_since_look before anything is clicked.
+    1. The page must still read the way the look showed it: the window title, the headings and the FULL lines (every line, untruncated) of the
+       displayed records are recomputed and hashed (look_id). A mismatch, including text hidden past the display cut, defers
+       page_changed_since_look before anything is clicked.
     2. Only records that look displayed can match (a record the caller never saw is not a candidate).
-    3. Conditions are conjunctive over the displayed lines. One match binds; none or several defer with the lines (never the chooser)."""
+    3. Positive conditions (eq, contains) run on the displayed lines: a cut can only hide MORE text, never make a shown match false. Negative
+       conditions (not_contains, neq) are refused for a record whose lines were cut or omitted: absence cannot be shown over text nobody saw.
+    4. One match binds; none or several defer with the lines (never the chooser)."""
     look = spec['look']
     analysis = lk.analyze(f, state)
     rows, _, _ = lk.select(analysis, look['terms'], cap=look['n'])
-    if lk.view_id(rows) != spec['look_id']:
+    if lk.view_id(rows, state['raw'].get('window_title'), analysis) != spec['look_id']:
         return {'defer': {'reason': 'page_changed_since_look', 'found': {'records': len(analysis['records']), 'record_kind': analysis['kind']}}}
     visible = {r['rec']['root']: r for r in rows}
     candidates = [r for r in roots if int(r[1:]) in visible]
     outside = len(roots) - len(candidates)
-    matched = [r for r in candidates if all(cond_ok([lk.norm(x) for x in visible[int(r[1:])]['lines']], c) for c in spec['conditions'])]
+    lines_of = lambda r: [lk.norm(x) for x in visible[int(r[1:])]['lines']]
+    positive = [c for c in spec['conditions'] if c['line'] in ('eq', 'contains')]
+    negative = [c for c in spec['conditions'] if c['line'] not in ('eq', 'contains')]
+    candidates_pos = [r for r in candidates if all(cond_ok(lines_of(r), c) for c in positive)]
+    if negative:
+        hidden = [visible[int(r[1:])]['r'] for r in candidates_pos if visible[int(r[1:])]['lost']]
+        if hidden:
+            return {'defer': {'reason': 'negative_condition_over_cut_lines', 'evidence': {'records_with_cut_or_omitted_lines': hidden[:8], 'count': len(hidden)}}}
+    matched = [r for r in candidates_pos if all(cond_ok(lines_of(r), c) for c in negative)]
     if len(matched) != 1:
         shown = [{'lines': visible[int(r[1:])]['lines']} for r in matched[:5]]
         return {'defer': {'reason': 'no_matching_record' if not matched else 'where_matches_several', 'excluded_count': len(candidates) - len(matched),
@@ -220,12 +239,26 @@ def lines_stage(f, state, snapshot, spec, roots, targets, disabled_roots):
     return {'reading': reading, 'pick': {'record_actions': {only: targets[only]}}}
 
 
+NEGATION = re.compile(r"(?<![a-z0-9])(?:not|never|no|dont|cannot|cant|don't|can't|do not|does not|will not|won't)(?![a-z0-9])")
+
+
+def token_in(text, wanted):
+    """`wanted` as a WHOLE token: not adjacent to an alphanumeric character or '#' (so #1044 is neither #10441 nor ##1044)."""
+    w = lk.norm(wanted)
+    return bool(w) and re.search(r'(?<![a-z0-9#])' + re.escape(w) + r'(?![a-z0-9#])', text) is not None
+
+
 def identity_state(dialog_text, wanted):
-    """('matched'|'partial'|'unknown', shown, not_shown): every wanted string must be displayed by the dialog. Deterministic, no reader."""
-    body = lk.norm(dialog_text)
-    shown = [w for w in wanted if lk.norm(w) in body]
+    """('matched'|'partial'|'unknown'|'negated', shown, not_shown, negated_line). Every wanted string must be a whole token of the dialog's lines;
+    a line that carries an identity together with a negation (not, never, no, don't, cannot ...) is 'negated' and never a match. Deterministic, no reader."""
+    lines = [l.strip() for l in (dialog_text or '').split('\n') if l.strip()]
+    shown = [w for w in wanted if any(token_in(lk.norm(l), w) for l in lines)]
     missing = [w for w in wanted if w not in shown]
-    return ('matched' if wanted and not missing else ('partial' if shown else 'unknown')), shown, missing
+    for line in lines:
+        low = lk.norm(line).replace('\u2019', "'")
+        if any(token_in(low, w) for w in wanted) and NEGATION.search(low):
+            return 'negated', shown, missing, line
+    return ('matched' if wanted and not missing else ('partial' if shown else 'unknown')), shown, missing, None
 
 
 # --- hints: only cua_look / cua_do parameters, never a primitive ----------------------------------------------------------------
@@ -247,7 +280,9 @@ HINTS = {
     'confirm_identity_partial': 'The dialog shows only part of the record identity (identity_shown and identity_not_shown count the strings), and the previous step\'s click is already done, so nothing further was pressed by step %(n)d. Read dialog.lines: if it is the right record\'s dialog, call cua_do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it. Next time give the press step identity=[<texts the dialog displays, e.g. the order number>].',
     'confirm_identity_unknown': 'The dialog does not display the identity of the selected record, and the previous step\'s click is already done, so nothing further was pressed by step %(n)d. Read dialog.lines: if it is the right record\'s dialog, call cua_do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it. Next time give the press step identity=[<texts the dialog displays>].',
     'confirm_control_not_found': 'The dialog has no control labelled exactly as step %(n)d confirm (dialog.controls lists them); nothing was clicked by this step. Call cua_do with the exact label.',
-    'destructive_control': 'The control step %(n)d resolved to is destructive and the plan\'s goal does not ask for it; nothing was clicked by this step. If it is what you want, say so in the goal and call cua_do again.',
+    'destructive_control': 'The control step %(n)d names or resolved to is destructive; goal text never authorizes it and nothing was clicked by this step. If the user asked for it, call cua_do again with allow_destructive=<the exact control label> on that step.',
+    'negative_condition_over_cut_lines': 'Step %(n)d uses not_contains or neq over records whose lines were cut or omitted in the look (steps[].evidence.records_with_cut_or_omitted_lines): absence cannot be shown over text nobody saw. Nothing was clicked by this step. Use positive conditions (eq, contains) that single the record out, or call cua_look with focus so the record fits, then call cua_do with the steps from step %(n)d on.',
+    'confirm_dialog_negated': 'A line of the dialog carries the record identity together with a negation (dialog.lines shows it), and the previous step\'s click is already done, so nothing further was pressed by step %(n)d. Do not confirm. If you judge the dialog is the right one, call cua_do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it.',
     'delivery_unverified': 'Step %(n)d\'s click was delivered but its expect was not seen. Do not click again. Call cua_do with steps=[{do:"verify", expect:<page text that should be visible now>}] to check, or report the state.',
     'not_verified': 'The expect of the verify step was not established (control labels never count). Nothing was clicked. Call cua_do with a different expect, or report what cua_look shows.',
     'unknown_competitors_unacknowledged': 'Some records could not be compared with the predicates (step %(n)d unknown_ids and evidence.extracted show their strings). Call cua_do with the same steps and treat_as_match=<ids> on that step if you judge they DO match, or accept_unknown=<ids> if they do NOT. Nothing was clicked by this step.',
@@ -348,7 +383,6 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
     entries, delivery, failed, final = [], 'none', None, None
     ctx = {'pid': pid, 'window_id': window_id}
     carry = {'before': None, 'identity': None}
-    look = f.looks.get(look_id) if look_id else None
     for n, step in enumerate(plan_steps, 1):
         elapsed = f.clock() - t0
         remaining = 3 * budget_s - elapsed
@@ -361,23 +395,25 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify'}[kind],
                 'control': step.get('control'), 'text': step.get('text'), 'near': step.get('near'), 'expect': step.get('expect'),
                 'accept_unknown': step.get('accept_unknown'), 'treat_as_match': step.get('treat_as_match'), 'records': None}
-        channel = {'goal': goal, 'out': {}}
+        channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive')}
         if step['where_kind'] == 'fields':
             where = step['where']
             spec['records'] = {'fields': where['fields'], **({'predicates': where['predicates']} if where.get('predicates') else {}),
                                **({'identity': step['identity']} if step.get('identity') else {})}
         elif step['where_kind'] == 'lines':
             conds = step['where']['lines']
-            channel['lines_where'] = {'look_id': look_id, 'look': look, 'conditions': conds, 'identity': step.get('identity') or default_identity(conds)}
-            channel['lines_where']['look_id'] = look_id
-            channel['lines_where']['pid_window'] = (look['pid'], look['window_id'])
+            channel['lines_where'] = {'look_id': look_id, 'look': None, 'conditions': conds, 'identity': step.get('identity') or default_identity(conds)}
         if kind == 'confirm':
             spec['control'] = step['confirm']
             channel['confirm_step'] = {'label': step['confirm'], 'identity': step.get('identity') or carry['identity'], 'before': carry['before']}
         # The window is resolved once (by the first step) and then pinned: every step acts on the same window.
         window = {'title': title} if ctx['pid'] is None else {'pid': ctx['pid'], 'window_id': ctx['window_id']}
-        result = f._do(spec['goal'], window.get('title'), window.get('pid'), window.get('window_id'), spec['records'], spec['operation'], spec['text'],
+        f.prefix_control = step.get('control_match') == 'prefix'
+        try:
+            result = f._do(spec['goal'], window.get('title'), window.get('pid'), window.get('window_id'), spec['records'], spec['operation'], spec['text'],
                        spec['expect'], spec['accept_unknown'], max(0.5, min(budget_s, remaining / 3)), None, spec['control'], spec['treat_as_match'], spec['near'], plan=channel)
+        finally:
+            f.prefix_control = True
         if channel.get('pid') is not None:
             ctx['pid'], ctx['window_id'] = channel['pid'], channel['window_id']
         status = result['status']

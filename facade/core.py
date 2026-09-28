@@ -136,7 +136,8 @@ class Facade:
         self.perception_version = None
         self.perception_state = 'unprobed'  # healthy | not_installed | unhealthy | unprobed
         self.snapshots, self.latest, self.selections, self.readings = {}, {}, {}, {}
-        self.looks = {}  # look_id -> the page a cua_look showed (plans may filter over displayed lines only against one of these)
+        self.looks = {}  # (pid, window_id, look_id) -> the page a cua_look showed (plans may filter over displayed lines only against one of these)
+        self.prefix_control = True  # plan steps set this False (exact label) unless control_match=prefix; the single-step form keeps the whole-word prefix
         self.events = []
         self.lock = threading.RLock()
 
@@ -1225,11 +1226,11 @@ class Facade:
             root, ancestor = ancestor, state['nodes'][ancestor].get('parent_index')
         return None
 
-    @staticmethod
-    def _label_matches(control, label):
-        """Exact label (case and whitespace insensitive), else a whole-word prefix: control "Book" matches "Book Dr. B"."""
+    def _label_matches(self, control, label):
+        """Exact label (case and whitespace insensitive), else a whole-word prefix: control "Book" matches "Book Dr. B". Plan steps are exact only
+        (self.prefix_control False) unless the step says control_match=prefix: "Finish" must never press "Finish later"."""
         norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
-        return norm(label) == norm(control) or norm(label).startswith(norm(control) + ' ')
+        return norm(label) == norm(control) or (self.prefix_control and norm(label).startswith(norm(control) + ' '))
 
     def _shape(self, state, kids, index, depth=5):
         node = state['nodes'][index]
@@ -1669,8 +1670,10 @@ class Facade:
             labels = self._bounded([(nodes[i].get('label') or '')[:40] for i in new_controls])
             shown_lines = [line[:60] for line in dict.fromkeys(l.strip() for l in dialog_text.split('\n') if l.strip())][:6]  # so the caller can judge the dialog itself
             if not cs['identity']:return finish('deferred', reason='confirm_needs_identity', dialog={'controls': labels, 'identity': 'not_checked', 'lines': shown_lines}, verified=False)
-            verdict, shown, missing = planmod.identity_state(dialog_text, cs['identity'])
+            verdict, shown, missing, negated = planmod.identity_state(dialog_text, cs['identity'])
+            if negated:shown_lines = [negated[:60]] + [l for l in shown_lines if l != negated[:60]][:5]  # the negated line first, always shown
             held = {'dialog': {'controls': labels, 'identity': verdict, 'lines': shown_lines}, 'verified': False}
+            if verdict == 'negated':return finish('deferred', reason='confirm_dialog_negated', **held)
             if verdict == 'partial':return finish('deferred', reason='confirm_identity_partial', **held, identity_shown=len(shown), identity_not_shown=len(missing))
             if verdict != 'matched':return finish('deferred', reason='confirm_identity_unknown', **held)
             hits = [i for i in new_controls if norm(nodes[i].get('label')) == norm(cs['label'])]
@@ -1837,8 +1840,8 @@ class Facade:
             picked = {'id': choice['selected_id'], 'description': action['description'][:120]}
             if plan is not None:
                 # The destructive-verb guard on the RESOLVED control (a whole-word prefix such as "Cancel" can resolve to "Cancel and delete account").
-                bad = planmod.destructive_verbs(action.get('name') or '', plan['goal'])
-                if bad:
+                bad = planmod.destructive_verbs(action.get('name') or '')
+                if bad and not planmod.allowed(plan.get('allow'), action.get('name') or ''):
                     self.selections.pop(selection, None)
                     return finish('deferred', reason='destructive_control', selected=picked, verified=False)
             identity = identity_of(reading, state, roots, choice['selected_id']) if reading else {'description': action['description']}
@@ -1961,7 +1964,7 @@ class Facade:
             state, extracted, shown, not_shown = 'not_checked' if not reading else 'unknown', None, [], list(ident_fields)
             if lines_where:
                 # Deterministic: every identity string of the plan must be displayed by the dialog (no reader call).
-                if dialog_text:state, shown, not_shown = planmod.identity_state(dialog_text, lines_where['identity'])
+                if dialog_text:state, shown, not_shown, _ = planmod.identity_state(dialog_text, lines_where['identity'])
             elif reading and comparable and all(comparable.values()) and dialog_text:
                 # The dialog's displayed text is only the NEW region text: the page's own rows can never vouch for the dialog.
                 sid = current['raw']['snapshot_id'];specs = {k: {**fields[k], 'type': 'text'} for k in ident_fields}
@@ -2042,8 +2045,10 @@ class Facade:
             elif pid is None or window_id is None:raise Gap('bad_request: supply title, or pid and window_id')
             count('window', 'driver_inventory')
             if plan is not None:plan['pid'], plan['window_id'] = ctx['pid'], ctx['window_id']
-            if lines_where and lines_where['pid_window'] != (ctx['pid'], ctx['window_id']):
-                raise Gap('look_window_mismatch: that look was of another window; call cua_look on this window and use its look_id')
+            if lines_where:
+                lines_where['look'] = self.looks.get((ctx['pid'], ctx['window_id'], lines_where['look_id']))
+                if lines_where['look'] is None:
+                    raise Gap('look_window_mismatch: no cua_look of THIS window returned that look_id; call cua_look on this window and use its look_id')
             for _ in (1, 2):
                 result = attempt()
                 if result is not self.STALE:return result
