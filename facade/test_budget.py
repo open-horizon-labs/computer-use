@@ -126,7 +126,7 @@ class Measure(unittest.TestCase):
         self.assertTrue(cb.over_budget({**good, 'chooser': 1}, limits))  # the chooser for a grounded singleton
 
     def test_table_flags_oversized_responses_and_primitive_use(self):
-        base = {n: {'calls': 1, 'reader': 0, 'chooser': 0, 'max_bytes': 100, 'status': 'done', 'tools': ['cua_do']} for n in BUDGET['scenarios']}
+        base = {n: {'calls': 1, 'reader': 0, 'chooser': 0, 'max_bytes': 100, 'status': BUDGET['scenarios'][n].get('final_status', 'done'), 'tools': ['cua_do']} for n in BUDGET['scenarios']}
         rows, problems = cb.table(BUDGET, base)
         self.assertTrue(all(r[3] == 'PASS' for r in rows), problems)
         for name, patch in (('booking_list', {'max_bytes': 99999}), ('booking_list', {'tools': ['cua_do', 'cua_read']}), ('booking_list', {'status': 'deferred'})):
@@ -144,7 +144,7 @@ class DefaultPathBudget(unittest.TestCase):
 
     def scenario(self, name):
         m = self.measured[name];limits = BUDGET['scenarios'][name]
-        self.assertEqual(m['status'], 'done', m)
+        self.assertEqual(m['status'], limits.get('final_status', 'done'), m)
         self.assertEqual(cb.over_budget(m, limits), [], m)
         self.assertEqual(set(m['tools']), set(BUDGET['default_path_tools']['value']))
         self.assertLessEqual(m['max_bytes'], BUDGET['max_response_bytes']['value'])
@@ -178,7 +178,7 @@ class DefaultPathBudget(unittest.TestCase):
 
     def test_recovery_and_deferral_paths_are_measured_not_assumed(self):
         # Wrong patch: a harness that makes one call per scenario by construction. These paths must be measured through real invocations.
-        for name, calls in (('stale_recovery', 1), ('driver_failure_recovered', 1), ('unknown_then_accept', 2), ('confirm_deferral', 2), ('ambiguity_deferral', 2)):
+        for name, calls in (('stale_recovery', 1), ('driver_failure_recovered', 1), ('unknown_then_accept', 3), ('confirm_deferral', 2), ('ambiguity_deferral', 2)):
             self.scenario(name);self.assertEqual(self.measured[name]['calls'], calls, name)
         self.assertEqual(self.measured['stale_recovery']['reader'], 2)  # one read per pass, not a hidden re-read loop
 
@@ -189,11 +189,22 @@ class DefaultPathBudget(unittest.TestCase):
         real = Facade.do
         def needs_second(self, *a, **k):
             r = real(self, *a, **k)
-            return {**r, 'status': 'deferred', 'reason': 'retry'} if r['status'] == 'done' and r['trace_summary']['passes'] > 1 else r
+            return {**r, 'status': 'deferred', 'reason': 'records_ambiguous', 'found': {'controls': ['Book']}} if r['status'] == 'done' and r['trace_summary']['passes'] > 1 else r
         with mock.patch.object(Facade, 'do', needs_second):
             m = cb.measure_scenarios()['stale_recovery']
         self.assertGreaterEqual(m['calls'], 2)
         self.assertTrue(any('calls %d' % m['calls'] in v for v in cb.over_budget(m, BUDGET['scenarios']['stale_recovery'])), m)
+
+    def test_the_shape_corpus_is_budgeted_from_an_llm_that_learns_only_from_deferrals(self):
+        # Wrong patch: budgets tuned to fixtures whose first call always succeeds. Orders with nothing known up front costs three calls:
+        # control_needed, the dialog deferral, then a second cua_do quoting a dialog label.
+        m = self.measured
+        self.assertEqual((m['orders_cold']['calls'], m['orders_confirm']['calls']), (3, 1))
+        for name, calls in (('per_record_labels', 1), ('single_record', 1), ('toast_after_click', 1), ('five_button_dialog', 2), ('toolbar_records_ambiguous', 2), ('disabled_record', 1), ('canvas_dead_end', 1)):
+            self.assertEqual(m[name]['calls'], calls, name);self.assertIn(name, BUDGET['scenarios'])
+        self.assertEqual((BUDGET['scenarios']['disabled_record']['final_status'], BUDGET['scenarios']['canvas_dead_end']['final_status']), ('deferred', 'deferred'))
+        self.assertEqual(BUDGET['live_task_budgets']['orders']['max_llm_visible_calls']['value'], m['orders_cold']['calls'])
+        self.assertIn('unrelated', BUDGET['purpose']);self.assertIn('fixture-derived', BUDGET['purpose'])
 
     def test_no_call_count_literal_is_claimed_by_the_tool(self):
         # Wrong patch: llm_visible_calls hardcoded in the response; a tool cannot know how many calls the LLM makes.

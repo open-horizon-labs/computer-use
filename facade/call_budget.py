@@ -129,22 +129,51 @@ def result_text(blocks):
     return content[0].text if isinstance(content, (list, tuple)) and hasattr(content[0], 'text') else json.dumps(blocks)
 
 
+def scripted_llm(goal_words=()):
+    """The minimal LLM policy: it starts knowing ONLY the goal, expect and the fields/predicates it wants, and learns control, identity, labels
+    and ids from the deferral itself. Returns follow(result, current) -> next arguments or None (it gives up)."""
+    def pick(labels, goal, prefer=()):
+        low = goal.lower()
+        for word in list(prefer) + [w for w in re.findall(r'[a-z]+', low) if len(w) > 3]:
+            for label in labels:
+                if word in label.lower():return label
+        return labels[0] if labels else None
+    def follow(result, cur):
+        reason, base = result.get('reason'), {'title': cur['title'], 'expect': cur['expect']}
+        if result.get('dead_end'):return None
+        if reason == 'control_needed':
+            label = pick([c['label'] for c in result['found']['repeated_controls']], cur['goal'])
+            return {**cur, 'control': label} if label else None
+        if reason == 'records_ambiguous':
+            label = pick(result['found']['controls'], cur['goal'])
+            return {**base, 'goal': 'Click "%s"' % label} if label else None
+        if reason in ('unknown_competitors_unacknowledged', 'unknown_or_incomplete_scope') and result.get('unknown_ids'):
+            return {**cur, 'accept_unknown': result['unknown_ids']}
+        if reason == 'confirm_dialog_present':
+            label = pick(result['dialog']['controls'], '', prefer=('yes', 'confirm', 'ok', 'accept'))
+            return {**base, 'goal': 'Click "%s"' % label}
+        if reason == 'confirm_identity_partial':
+            return {**base, 'goal': 'Click "%s"' % pick(result['dialog']['controls'], '', prefer=('yes', 'confirm', 'ok', 'accept'))}
+        return None
+    return follow
+
+
 def measure_scenarios():
-    """Drive the real server tool functions through a counting wrapper under a minimal LLM policy: call cua_do; on a deferral follow the
-    scenario's recovery hint once (or, when the scenario has none, naively repeat the call once); stop at done or after 4 calls.
-    Scenarios run on the REAL captured Chrome trees (facade/fixtures/live_*_ax.json) so tidy-fixture bugs cannot hide.
+    """Drive the real server tool functions through a counting wrapper under scripted_llm(): call cua_do knowing only goal, expect and the fields
+    and predicates, learn control/identity/labels from each deferral, stop at done, a dead end, no hint to follow, or 5 calls.
+    Scenarios run on the REAL captured Chrome trees (facade/fixtures/live_*_ax.json) and on the synthetic shapes a review found missing
+    (facade/shapes.py). No tree from an unrelated real site exists yet (that needs the user's consent), so every number is fixture-derived.
     Returns {name: {calls, reader, chooser, max_bytes, status, tools}} with REAL invocation counts."""
     import server
     from core import Facade, DriverCallFailed
     from test_core import FakeVision
     import test_do as fx
     import test_live_shapes as lv
+    import shapes as sh
 
-    RETRY = object()
-
-    def run(driver, args, reader, chooser=None, follow=RETRY):
-        chooser = chooser or fx.NamedChooser()
-        server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=FakeVision, sleep=lambda s: None)
+    def run(driver, args, reader, chooser=None, follow=None, vision=None):
+        chooser = chooser or fx.NamedChooser();follow = follow or scripted_llm()
+        server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=vision or lv.UnknownVision, sleep=lambda s: None)
         seen = {'calls': 0, 'tools': [], 'max_bytes': 0}
         def call(name, **kw):
             seen['calls'] += 1;seen['tools'].append(name)
@@ -154,8 +183,8 @@ def measure_scenarios():
         current = {'title': 'Demo', **args}
         while True:
             result = call('cua_do', **current)
-            if result['status'] == 'done' or seen['calls'] >= 4:break
-            nxt = current if follow is RETRY else (follow(result, current) if follow else None)
+            if result['status'] == 'done' or seen['calls'] >= 5:break
+            nxt = follow(result, current)
             if nxt is None:break
             current = nxt
         return {'calls': seen['calls'], 'tools': seen['tools'], 'max_bytes': seen['max_bytes'], 'status': result['status'],
@@ -163,8 +192,8 @@ def measure_scenarios():
 
     booking = {'goal': 'Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM', 'expect': 'Booked:',
                'records': {'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE}}
-    orders = {'goal': 'Cancel the Walnut desk lamp order that is still Processing', 'expect': 'Order #1044 cancelled', 'control': 'Cancel',
-              'records': {'fields': lv.ORDER_FIELDS, 'predicates': lv.ORDER_ONE, 'identity': ['order']}}
+    orders = {'goal': 'Cancel the Walnut desk lamp order that is still Processing', 'expect': 'Order #1044 cancelled',
+              'records': {'fields': lv.ORDER_FIELDS, 'predicates': lv.ORDER_ONE}}
     def booking_driver(churn=False):
         d = lv.LiveDriver('live_booking_ax.json');d.script = lv.booked()
         if churn:
@@ -177,11 +206,18 @@ def measure_scenarios():
         return d
     def orders_driver():
         d = lv.LiveDriver('live_orders_ax.json');d.script = lv.orders_flow(d);return d
+    def shape(els, script=None):
+        d = sh.ShapeDriver(els);d.script = script;return d
+    def shape_args(goal='Book Dr. B', **more):
+        return {'goal': goal, 'expect': 'Booked:', 'records': {'fields': sh.NAME_FIELDS, 'predicates': sh.NAME_B}, **more}
+    reader_b, reader_o = (lambda: lv.LiveReader(lv.BOOKING_PATTERNS)), (lambda: lv.LiveReader(lv.ORDER_PATTERNS))
+    reader_s = lambda: lv.LiveReader(sh.PATTERNS)
     out = {}
-    out['booking_list'] = run(booking_driver(), booking, lv.LiveReader(lv.BOOKING_PATTERNS))
-    out['orders_confirm'] = run(orders_driver(), {**orders, 'confirm': 'Yes, cancel order'}, lv.LiveReader(lv.ORDER_PATTERNS))
-    out['confirm_deferral'] = run(orders_driver(), orders, lv.LiveReader(lv.ORDER_PATTERNS),
-        follow=lambda result, cur: {'title': 'Demo', 'goal': 'Click "%s"' % result['dialog']['controls'][0], 'expect': orders['expect']} if result.get('dialog') else None)
+    out['booking_list'] = run(booking_driver(), booking, reader_b())
+    # Orders with everything unknown up front: control_needed, then the dialog deferral, then a second cua_do quoting a dialog label.
+    out['orders_cold'] = run(orders_driver(), orders, reader_o())
+    out['orders_confirm'] = run(orders_driver(), {**orders, 'control': 'Cancel', 'confirm': 'Yes, cancel order'}, reader_o())
+    out['confirm_deferral'] = run(orders_driver(), {**orders, 'control': 'Cancel'}, reader_o())
     d = fx.FlatDriver();d.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};d.capture_id = 'cap'
     real = d.observe
     def canvas(*a):
@@ -190,27 +226,34 @@ def measure_scenarios():
     d.parse_result = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 5, 'y': 10 + 30 * i, 'width': 50, 'height': 20}} for i, t in enumerate(['Save', 'Export', 'Reset'])]}
     class Picks(fx.NamedChooser):
         def __call__(self, step, request):self.requests.append(request);return {'choice': 't1', 'route': 'julia-1', 'action_authorized': True}
-    out['canvas_regions'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported'}, fx.LineReader(), chooser=Picks())
+    out['canvas_regions'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported'}, fx.LineReader(), chooser=Picks(), vision=FakeVision)  # a canvas has no AX text: the screenshot model is the verifier
     many = [('Provider %03d' % i, 'Follow-up', '30 min', '1:%02d PM' % (i % 60)) for i in range(80)]
     d = fx.FlatDriver();d.rows = fx.booking_rows(many);d.confirm_text = 'Booked Provider 041 1:41 PM'
     out['large_page_400'] = run(d, {'goal': 'Book Provider 041', 'expect': 'Booked Provider 041', 'records': {'fields': fx.FIELDS, 'predicates': [{'field': 'provider', 'value': 'Provider 041'}]}}, fx.LineReader())
-    # Recovery and deferral paths on the real shapes: what a clean-looking run costs when the world misbehaves.
-    out['stale_recovery'] = run(booking_driver(churn=True), booking, lv.LiveReader(lv.BOOKING_PATTERNS))
+    # Recovery and deferral paths on the real shapes.
+    out['stale_recovery'] = run(booking_driver(churn=True), booking, reader_b())
     d = booking_driver();real_observe = d.observe;seen_obs = []
     def flaky_observe(*a):
         seen_obs.append(1)
         if len(seen_obs) == 1:raise DriverCallFailed('driver_call_failed: get_window_state exited 1')
         return real_observe(*a)
     d.observe = flaky_observe
-    out['driver_failure_recovered'] = run(d, booking, lv.LiveReader(lv.BOOKING_PATTERNS))
-    decoy = {**orders, 'records': {**orders['records'], 'predicates': [{'field': 'item', 'value': 'Walnut desk lamp'}, {'field': 'status', 'value': 'Processing'}]}, 'confirm': 'Yes, cancel order'}
-    out['unknown_then_accept'] = run(orders_driver(), decoy, lv.LiveReader(lv.ORDER_PATTERNS),
-        follow=lambda result, cur: {**cur, 'accept_unknown': result['unknown_ids']} if result.get('unknown_ids') else None)
+    out['driver_failure_recovered'] = run(d, booking, reader_b())
+    decoy = {**orders, 'control': 'Cancel', 'confirm': 'Yes, cancel order', 'records': {**orders['records'], 'predicates': [{'field': 'item', 'value': 'Walnut desk lamp'}, {'field': 'status', 'value': 'Processing'}]}}
+    out['unknown_then_accept'] = run(orders_driver(), decoy, reader_o())
     class Abstain(fx.NamedChooser):
         def __call__(self, step, request):self.requests.append(request);return {'choice': request['actions'][0]['id'], 'route': 'julia-1', 'action_authorized': False}
     several = {**booking, 'records': {'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE[:2]}}
-    out['ambiguity_deferral'] = run(booking_driver(), several, lv.LiveReader(lv.BOOKING_PATTERNS), chooser=Abstain(),
-        follow=lambda result, cur: {'title': 'Demo', **booking} if result.get('reason') and result['status'] == 'deferred' else None)
+    def narrow(result, cur):return {'title': 'Demo', **booking} if result['status'] == 'deferred' and result.get('reason') else None
+    out['ambiguity_deferral'] = run(booking_driver(), several, reader_b(), chooser=Abstain(), follow=narrow)
+    # The shapes a review found the two captured trees did not cover (synthetic; the LLM knows only goal, expect and the predicates).
+    out['per_record_labels'] = run(shape(sh.cards(label=lambda n: 'Book Dr ' + n), sh.toast(buttons=())), shape_args(), reader_s())
+    out['single_record'] = run(shape(sh.cards(names='B'), sh.toast(buttons=())), shape_args(), reader_s())
+    out['toast_after_click'] = run(shape(sh.cards(), sh.toast()), shape_args(), reader_s())
+    out['five_button_dialog'] = run(shape(sh.cards(), sh.dialog_then_toast(['Yes', 'No', 'Later', 'Help', 'Close'])), shape_args(), reader_s())
+    out['disabled_record'] = run(shape(sh.cards(disabled='B')), shape_args(), reader_s())
+    out['toolbar_records_ambiguous'] = run(shape(sh.toolbar(), sh.toast('Exported', buttons=())), {'goal': 'Export the report', 'expect': 'Exported', 'records': {'fields': sh.NAME_FIELDS, 'predicates': sh.NAME_B}}, reader_s())
+    out['canvas_dead_end'] = run(shape(sh.canvas()), {'goal': 'Click the red dot', 'expect': 'Booked:'}, reader_s())
     return out
 
 
@@ -222,7 +265,7 @@ def table(budget=None, measured=None):
     for name, limits in budget['scenarios'].items():
         m = measured[name]
         bad = over_budget(m, limits)
-        if m['status'] != 'done':bad.append('status %s, expected done' % m['status'])
+        if m['status'] != limits.get('final_status', 'done'):bad.append('status %s, expected %s' % (m['status'], limits.get('final_status', 'done')))
         if m['tools'] and any(t not in budget['default_path_tools']['value'] for t in m['tools']):bad.append('default path used %s' % sorted(set(m['tools'])))
         if m['max_bytes'] > limit_bytes:bad.append('response %d bytes > %d' % (m['max_bytes'], limit_bytes))
         rows.append((name, m['calls'], limits['max_llm_visible_calls']['value'], 'FAIL' if bad else 'PASS',
