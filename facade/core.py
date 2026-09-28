@@ -305,17 +305,19 @@ class Facade:
         if kinds: options['kinds'] = list(kinds)
         if min_confidence is not None: options['min_confidence'] = min_confidence
         if max_regions is not None: options['max_regions'] = max_regions
-        args = {'capture_id': capture_id, **({'options': options} if options else {})}
+        # Driver captures are scoped to the session that made them: without the
+        # same session the Driver answers capture_not_found (verified live, 0.30.3).
+        args = {'capture_id': capture_id, 'session': self.session, **({'options': options} if options else {})}
         try:
             result = self.driver.call('parse_visual_regions', args)
         except DriverCallFailed as gap:
-            message = 'perception_parse_failed: %s (cached for this capture; reobserve to retry)' % gap
+            message = 'perception_parse_failed: %s (cached for this capture; reobserve to retry, and if it persists the Driver session may have been lost)' % gap
             state['regions_failure'] = (capture_id, message)
             raise Gap(message)
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired, OSError, ValueError) as error:
             # A Driver/extension failure is an unavailable capability, never a
             # crash of the caller. Fixed text only: stderr can carry paths and ids.
-            message = 'perception_parse_failed: parse_visual_regions failed (%s; cached for this capture; reobserve to retry)' % type(error).__name__
+            message = 'perception_parse_failed: parse_visual_regions failed (%s; cached for this capture; reobserve to retry, and if it persists the Driver session may have been lost)' % type(error).__name__
             state['regions_failure'] = (capture_id, message)
             raise Gap(message)
         state['regions'] = result
@@ -888,6 +890,30 @@ class Facade:
         return [{'role':n.get('role'),'value':n.get('value')} for i,n in sorted(state['nodes'].items())
                 if i not in members and n.get('role') in ('AXTextField','AXComboBox') and n.get('value')]
 
+    def scope_changes(self,before,after,root):
+        # Diagnostic only, called after the selection is spent: it must never
+        # replace the refusal with its own crash on an unusual tree.
+        try:return self._scope_changes(before,after,root)
+        except Exception:return 'digest differs'
+
+    def _scope_changes(self,before,after,root):
+        """Where a bound scope differs, by element id, role and changed field names
+        only (never page values), so a refusal is diagnosable without leaking text."""
+        if root not in after['nodes']:return 'scope root %s is gone' % ('e'+str(root))
+        _,old=self.subtree(before,'e'+str(root));_,new=self.subtree(after,'e'+str(root))
+        skip={'element_token'};out=[]
+        for i in sorted(old|new):
+            a,b=before['nodes'].get(i) if i in old else None,after['nodes'].get(i) if i in new else None
+            if a is None or b is None:
+                out.append('e%d %s' % (i,'added' if a is None else 'removed'));continue
+            keys=sorted(k for k in set(a)|set(b) if k not in skip and a.get(k)!=b.get(k))
+            if keys:out.append('e%d %s: %s' % (i,b.get('role'),','.join(keys)))
+        a_addr=self.address_fields(before,old) if before['nodes'][root].get('role')=='AXWebArea' else []
+        b_addr=self.address_fields(after,new) if after['nodes'][root].get('role')=='AXWebArea' else []
+        if a_addr!=b_addr:out.append('address field changed')
+        if before['raw'].get('window_title')!=after['raw'].get('window_title'):out.append('window title changed')
+        return ('; '.join(out[:6])+(' ...' if len(out)>6 else '')) or 'digest differs'
+
     def scope_digest(self,state,root):
         _,members=self.subtree(state,'e'+str(root))
         # A page scope also binds the address field (role and value only): a
@@ -915,7 +941,8 @@ class Facade:
             if state['fingerprint']!=current['fingerprint']:
                 raise Gap('UI changed since selection; reobserve and choose again')
         elif root not in current['nodes'] or self.scope_digest(current,root)!=item['scope_digest']:
-            raise Gap('UI changed within the bound content scope since selection; reobserve and choose again')
+            raise Gap('UI changed within the bound content scope since selection (%s); reobserve and choose again'
+                      % self.scope_changes(state,current,root))
         if item['mode']=='visual' and state['image_digest']!=current['image_digest']:
             raise Gap('Visual evidence changed; choose again from current screenshot')
         request=copy.deepcopy(item['request'])
