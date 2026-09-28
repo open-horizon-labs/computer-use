@@ -148,10 +148,10 @@
   "classification": "approved sketch change (S4.8: string readings, controller judgment, read budget)",
   "sketch_clause": "S4.8",
   "input_and_actual": "Live facade booking run 2026-09-28: cua_read with duration typed duration_minutes over 12 slots. NuExtract returned 'half-hour' for the Telehealth slot on all five readings; the typed normalizer raised, the record became unknown, choose deferred with a re-read hint, the agent re-read four times, then a Jev->Qwen cascade chose. 144 s, 42 turns, $1.85; native tools 41 s, 13 turns.",
-  "corrected_behavior": "The reading returns 'half-hour' as a known string; the LLM judges eligibility over the strings; a judged or filter-unique singleton binds directly; a third reading of the same records is refused with the extracted strings.",
-  "tempting_wrong_repair": "Teach the duration normalizer 'half-hour' and 'thirty minutes'; keep the re-read hint; leave readings unbounded; send the singleton to the chooser anyway.",
-  "regression": "facade/test_core.py: test_read_ignores_typed_schema_and_keeps_strings, test_read_budget_refuses_third_read_with_the_strings, test_controller_judged_subset_binds_singleton_without_chooser, test_controller_judgment_cannot_revive_a_record_its_predicates_excluded, test_read_path_has_no_typed_normalization",
-  "adjacent_holes": "Controller judgment over unknown records is traced, not blocked. Chooser accuracy on multi-candidate judged scopes is unmeasured. Live confirmation of the shortened path is pending."
+  "corrected_behavior": "The reading returns 'half-hour' as a known string; the LLM judges eligibility over the strings; a judged or filter-unique singleton binds directly; a third reading of the same records is refused with the extracted strings. A verdict that skips an unknown record defers until the controller names it in accept_unknown (S4.2 section 4 preserved).",
+  "tempting_wrong_repair": "Teach the duration normalizer 'half-hour' and 'thirty minutes'; keep the re-read hint; leave readings unbounded; send the singleton to the chooser anyway.; authorize a verdict that skips unknown records and merely trace them; accept any or wildcard accept_unknown IDs.",
+  "regression": "facade/test_core.py: test_read_ignores_typed_schema_and_keeps_strings, test_read_budget_refuses_third_read_with_the_strings, test_controller_judged_subset_binds_singleton_without_chooser, test_controller_judgment_cannot_revive_a_record_its_predicates_excluded, test_read_path_has_no_typed_normalization, test_verdict_skipping_an_unknown_record_defers_until_acknowledged, test_acknowledgement_must_name_every_skipped_unknown",
+  "adjacent_holes": "Chooser accuracy on multi-candidate judged scopes is unmeasured. Live confirmation of the accept_unknown path is pending (unknowns were absent in the live run)."
  },
  {
   "id": "CE-FACADE-002",

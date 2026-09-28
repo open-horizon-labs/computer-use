@@ -628,7 +628,7 @@ class Facade:
 
     def choose(self, snapshot, goal, candidate_ids=None, mode='semantic', exact_name=None, exact_role=None,
                operation='click', text=None, reading=None, fields=None, predicates=None, order_by=None,
-               coverage_complete=False,record_actions=None):
+               coverage_complete=False,record_actions=None,accept_unknown=None):
         if mode=='regions':
             return self.choose_regions(snapshot,goal,candidate_ids,operation)
         state=self.state(snapshot)
@@ -695,6 +695,21 @@ class Facade:
             else:
                 retained=filt['eligible_ids'];judgment='filter'
             unknown_competitors=[r for r in filt['unknown_ids'] if r not in retained]
+            acknowledged=list(accept_unknown or [])
+            stray=[r for r in acknowledged if r not in filt['unknown_ids']]
+            if stray:raise Gap('accept_unknown names records that are not unknown in this reading: %s' % stray)
+            unacknowledged=[r for r in unknown_competitors if r not in acknowledged]
+            if unacknowledged:
+                # S4.2 section 4: an unknown possible competitor prevents automatic
+                # selection. The controller may release it, but only by naming it.
+                extracted={r['record_id']:r['fields'] for r in read['extraction']['records'] if r['record_id'] in unacknowledged}
+                self.event('choose',snapshot=snapshot,route='scope_guard',mode=mode,authorized=False,
+                           reason='unknown_competitors_unacknowledged',unknown_competitors=len(unacknowledged))
+                return {'status':'defer','route':'scope_guard','reason':'unknown_competitors_unacknowledged',
+                        'unknown_ids':unacknowledged,'extracted':extracted,'judged_ids':retained,
+                        'hint':'Your verdict skips records the reading left unknown. If their strings above show they are '
+                               'ineligible, repeat this call with accept_unknown listing exactly those IDs; otherwise include '
+                               'them in your verdict or narrow the scope. Do not re-read just to fill a format.'}
             mapped=[]
             for root in retained:
                 _,members=self.subtree(state,root)
@@ -724,10 +739,10 @@ class Facade:
                       'binding_digest':request_digest(request),'provider_outputs':[]}
             self.event('choose',snapshot=snapshot,route='grounded_singleton',models=[],mode=mode,decision_ms=0,
                        provider_setup_ms=0,wall_ms=0,authorized=True,reason='grounded_singleton',judgment=judgment,
-                       unknown_competitors=len(unknown_competitors),caller_preselected=judgment=='controller')
+                       unknown_competitors=len(unknown_competitors),accepted_unknown=len(acknowledged),caller_preselected=judgment=='controller')
             return self.issue(snapshot,request,decision,mode,operation,text,
                               {'status':'selected','route':'grounded_singleton','decision':decision,'snapshot':snapshot,
-                               'offered_count':1,'judgment':judgment,'unknown_competitors':unknown_competitors,
+                               'offered_count':1,'judgment':judgment,'unknown_competitors':unknown_competitors,'accepted_unknown':acknowledged,
                                'caller_preselected':judgment=='controller','candidate_scope':'observed_or_filtered_scope'})
         if mode=='semantic' and len(actions)==1 and not reading:
             self.event('choose',snapshot=snapshot,route='scope_guard',mode=mode,
@@ -779,7 +794,7 @@ class Facade:
         result={'status':decision['status'],'route':route,'decision':decision,'snapshot':snapshot,
                 'offered_count':len(actions),'caller_preselected':caller_preselected,
                 'candidate_scope':'caller_subset' if candidate_ids is not None and not reading and mode!='exact' else 'observed_or_filtered_scope',
-                **({'judgment':judgment,'unknown_competitors':unknown_competitors} if reading else {})}
+                **({'judgment':judgment,'unknown_competitors':unknown_competitors,'accepted_unknown':acknowledged} if reading else {})}
         return self.issue(snapshot,request,decision,mode,operation,text,result)
 
     def issue(self,snapshot,request,decision,mode,operation,text,result):

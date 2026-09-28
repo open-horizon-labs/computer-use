@@ -227,13 +227,40 @@ class CoreTests(unittest.TestCase):
         with self.assertRaisesRegex(Gap,'excluded'):
             self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e4'])
 
-    def test_controller_judgment_over_unknowns_is_traced(self):
+    def unknown_reading(self):
         self.reader.missing=True
-        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],
-                      [{'field':'condition','value':'Used'}],coverage_complete=True)
+        return self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],
+                           [{'field':'condition','value':'Used'}],coverage_complete=True)
+
+    def test_verdict_skipping_an_unknown_record_defers_until_acknowledged(self):
+        # S4.2 section 4 preserved. Tempting wrong patch: trace unknown competitors
+        # but authorize anyway, so a wrong slot can bind while a better one was never read.
+        r=self.unknown_reading()
         c=self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'])
+        self.assertEqual(c['status'],'defer');self.assertEqual(c['reason'],'unknown_competitors_unacknowledged')
+        self.assertEqual(set(c['unknown_ids']),{'e4'});self.assertIn('e4',c['extracted']);self.assertNotIn('selection',c)
+        self.assertEqual(self.f.events[-1]['reason'],'unknown_competitors_unacknowledged')
+
+    def test_naming_exactly_the_skipped_unknowns_releases_the_verdict(self):
+        r=self.unknown_reading()
+        c=self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'],accept_unknown=['e4'])
         self.assertEqual(c['selected_id'],'e3');self.assertEqual(c['unknown_competitors'],['e4'])
-        self.assertEqual(self.f.events[-1]['unknown_competitors'],1)
+        self.assertEqual(c['accepted_unknown'],['e4']);self.assertEqual(self.f.events[-1]['accepted_unknown'],1)
+
+    def test_acknowledgement_must_name_every_skipped_unknown(self):
+        # Tempting wrong patch: any non-empty accept_unknown (or a wildcard) waives the gate.
+        self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'condition':None if r['id']!='e1' else 'Used'}} for r in req['records']]}
+        r=self.f.read(self.obs,'Read condition',{'condition':{'description':'Condition'}},['e1','e4'],[{'field':'condition','value':'Used'}],coverage_complete=True)
+        with self.assertRaisesRegex(Gap,'not unknown'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'],accept_unknown=['e1'])
+        with self.assertRaisesRegex(Gap,'not unknown'):
+            self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'],accept_unknown=['*'])
+        c=self.f.choose(self.obs,'Inspect',reading=r['reading'],candidate_ids=['e1'],accept_unknown=[])
+        self.assertEqual(c['reason'],'unknown_competitors_unacknowledged')
+
+    def test_no_unknowns_needs_no_acknowledgement(self):
+        r=self.reading()
+        self.assertEqual(self.f.choose(self.obs,'Inspect',reading=r['reading'])['selected_id'],'e3')
 
     def test_incomplete_scope_defer_shows_extracted_strings_and_forbids_reread(self):
         self.reader.extract=lambda req,sid:{'snapshot_id':sid,'records':[{'record_id':r['id'],'fields':{'n':'7'}} for r in req['records']]}
