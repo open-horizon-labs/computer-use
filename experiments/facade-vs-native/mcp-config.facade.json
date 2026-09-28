@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "cua-task": {
+      "command": "../../.venv-facade/bin/python",
+      "args": ["../../facade/server.py"]
+    }
+  }
+}
