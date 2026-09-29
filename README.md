@@ -30,7 +30,8 @@ The driving LLM does not mediate every hop. Measured live, tool time was about 1
 
 1. `cua_look`: read-only, no model. Returns the page's displayed strings (records, controls, dialogs, canvas texts) and a `look_id`.
 2. `cua_do` with `steps`: the LLM sends ONE small plan from what it saw. The server validates the whole plan, then per step re-observes, binds, acts, verifies `expect`, and recovers from stale state itself (bounded; a click is never retried).
-3. Guardrails in code: a filter is only allowed against a look the server issued (`look_id`); incomparable values are `unknown`, not a guess; destructive controls and dialogs need explicit, exact authorization; the whole plan has a hard time budget.
+3. Waits for the page, in code: a look at a page that is not ready (no snapshot, empty or degraded tree, or a thin web area such as a loading page or any site's "checking your browser" holding page) is re-observed after 0.5 s, then 1 s, and then returned as it is. The rule is structural, with no site or phrase list, applies only to looks (never to the observations around an action), and never solves or bypasses a check. LLMs facing a blank or holding page tend to give up and report it unreadable (both arms did in our real-retailer runs); the deterministic path just looks again. It is verified offline; a live run has not yet exercised it because the pages were ready.
+4. Guardrails in code: a filter is only allowed against a look the server issued (`look_id`); incomparable values are `unknown`, not a guess; destructive controls and dialogs need explicit, exact authorization; the whole plan has a hard time budget.
 
 ```mermaid
 sequenceDiagram
