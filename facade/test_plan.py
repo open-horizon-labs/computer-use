@@ -125,8 +125,8 @@ class Validation(PlanBase):
 
     def test_confirm_is_only_an_explicit_step_after_a_press_with_an_exact_label(self):
         # Wrong patch: a `confirm` field on the press step that clicks whatever dialog appears (the dialog's identity is never checked).
-        r = self.refused([{'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['x'], 'expect': 'x'}], 'bad_request');self.assertIn('follow a press', S(r, 'message'))
-        self.refused([{'do': 'verify', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['x'], 'expect': 'x'}], 'bad_request')
+        r = self.refused([{'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['x'], 'dialog_controls': ['Yes'], 'expect': 'x'}], 'bad_request');self.assertIn('follow a press', S(r, 'message'))
+        self.refused([{'do': 'verify', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['x'], 'dialog_controls': ['Yes'], 'expect': 'x'}], 'bad_request')
         self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x', 'confirm': 'Yes'}], 'bad_request')
         self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'expect': 'x'}], 'bad_request')
         self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'confirm': '  ', 'expect': 'x'}], 'bad_request')
@@ -178,7 +178,7 @@ class Validation(PlanBase):
         self.assertNotEqual(G(r, 'reason'), 'destructive_control')  # declared on the step: validation passes (the run then finds no such control)
 
     def test_a_destructive_confirm_label_is_refused_unless_the_step_declares_it(self):
-        self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes, delete everything', 'dialog_text': ['Delete everything?'], 'expect': 'x'}], 'destructive_control', goal='Update my profile')
+        self.refused([{'do': 'press', 'control': 'Book', 'expect': 'x'}, {'do': 'confirm', 'confirm': 'Yes, delete everything', 'dialog_text': ['Delete everything?'], 'dialog_controls': ['Yes, delete everything'], 'expect': 'x'}], 'destructive_control', goal='Update my profile')
 
     def test_a_bad_abort_if_is_refused(self):
         for abort in ('', '  ', 'x' * 201, 5):
@@ -330,7 +330,7 @@ class OrdersPlans(PlanBase):
 
     def cancel(self, identity=('#1044',), confirm='Yes, cancel order', press_expect='Cancel order #1044', dialog=None, **kw):
         press = {'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'expect': press_expect, **({'identity': list(identity)} if identity else {})}
-        steps = [press, {'do': 'confirm', 'confirm': confirm, 'expect': 'Order #1044 cancelled', 'dialog_text': dialog or self.DIALOG}]
+        steps = [press, {'do': 'confirm', 'confirm': confirm, 'expect': 'Order #1044 cancelled', 'dialog_text': dialog or self.DIALOG, 'dialog_controls': ['Yes, cancel order', 'Keep order']}]
         return self.plan(steps, goal=ORDERS_GOAL, look_id=self.look()['look_id'], **kw)
 
     def test_press_then_an_explicit_confirm_step_cancels_the_right_order_with_no_reader_call(self):
@@ -355,18 +355,18 @@ class OrdersPlans(PlanBase):
 
     def test_the_confirm_label_is_matched_exactly_not_as_a_prefix(self):
         # Wrong patch: reuse press's whole-word-prefix control matching for the confirm label.
-        r = self.cancel(confirm='Yes')
-        self.assertEqual((G(r, 'reason'), self.clicked()), ('confirm_control_not_found', ['67']))
+        r = self.cancel(confirm='Yes')  # "Yes" is not one of the declared dialog_controls: refused before any click (and exact-match at run time as before)
+        self.assertEqual((G(r, 'status'), G(r, 'reason'), self.clicked()), ('refused', 'bad_request', []))
 
     def test_a_confirm_label_that_only_exists_outside_the_dialog_is_never_pressed(self):
         self.shape(sh.cards(), sh.dialog_then_toast(['Yes', 'No']))
         look = self.look()
         steps = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Dr. B'}]}, 'control': 'Book', 'expect': 'Confirm Dr. B'},
-                 {'do': 'confirm', 'confirm': 'Book', 'dialog_text': ['Confirm Dr. B'], 'expect': 'Booked: Dr. B'}]
+                 {'do': 'confirm', 'confirm': 'Book', 'dialog_text': ['Confirm Dr. B'], 'dialog_controls': ['Yes', 'No', 'Book'], 'expect': 'Booked: Dr. B'}]
         r = self.plan(steps, look_id=look['look_id'])
-        self.assertEqual((G(r, 'status'), G(r, 'steps', 1, 'reason'), len(self.driver.executed)), ('stopped', 'confirm_control_not_found', 1))
+        self.assertEqual((G(r, 'status'), G(r, 'steps', 1, 'reason'), len(self.driver.executed)), ('stopped', 'confirm_dialog_unexpected_text', 1))  # Book is not in the dialog: the declared controls differ from the dialog's, nothing pressed
         good = self.shape(sh.cards(), sh.dialog_then_toast(['Yes', 'No']));look = self.look()
-        steps[1] = {'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['Confirm Dr. B'], 'expect': 'Booked: Dr. B'}
+        steps[1] = {'do': 'confirm', 'confirm': 'Yes', 'dialog_text': ['Confirm Dr. B'], 'dialog_controls': ['Yes', 'No'], 'expect': 'Booked: Dr. B'}
         r = self.plan(steps, look_id=look['look_id'])
         self.assertEqual((G(r, 'status'), len(self.driver.executed)), ('done', 2))
 
@@ -382,7 +382,7 @@ class OrdersPlans(PlanBase):
         fields = {'order': {'description': 'Order number'}, 'item': {'description': 'Item'}, 'status': {'description': 'Status'}}
         where = {'fields': fields, 'predicates': [{'field': 'order', 'value': '#1044'}]}
         r = self.plan([{'do': 'press', 'where': where, 'control': 'Cancel', 'identity': ['order'], 'expect': 'Cancel order #1044'},
-                       {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order #1044 (Walnut desk lamp)?'], 'expect': 'Order #1044 cancelled'}], goal=ORDERS_GOAL)
+                       {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order #1044 (Walnut desk lamp)?'], 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'Order #1044 cancelled'}], goal=ORDERS_GOAL)
         self.assertEqual((G(r, 'status'), self.clicked()), ('done', ['67', '17']))
         self.assertEqual(len(self.reader.requests), 1)  # the press's read only; the dialog is checked by displayed strings
 

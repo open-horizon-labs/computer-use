@@ -1,5 +1,5 @@
 {
-  "purpose": "Ceiling on REAL LLM-visible MCP tool calls, measured through the server tool functions under a scripted LLM that starts knowing only the goal, expect and the fields/predicates and learns control, identity and labels from each deferral. Scenarios run on REAL captured Chrome trees, on synthetic shapes for the failures a review found, and on two live findings (n=1 each, one run per cell, so not a rate). No tree captured from an unrelated real site exists yet (capturing one needs the user's consent), so every number is fixture-derived, not a claim about typical pages. Only cua_do and cua_look are visible by default (the primitives need CUA_TASK_ADVANCED=1): option B, look then plan once (CE-FACADE-005), measured with a scripted LLM that starts knowing only the goal and expect and learns the page's strings from cua_look and the plan's deferrals. The plan_* scenarios run through the real server tools on the captured booking and orders trees and on synthetic wizard, 100-row and canvas shapes (n=1 live evidence for the blind-filter failure, none yet for plans). Measured 2026-09: tools were 13% of agent wall time, the driving LLM's turns 87%; a clean booking took 9 mediated calls (native about 5) and the first live cua_do run took 8 because eight tools were visible. Any number changes only with a CE id in changed_by, and that CE's call_budget must record the same number (test_budget.py checks both; CODEOWNERS requires the policy owner's review). The scripted LLM takes its phrases from the goal, so it is a LOWER BOUND on the calls a real LLM needs and the plan_* ceilings guard call counts, not plan correctness; the vocabulary-mismatch, hidden-text, negated-dialog and undeclared-destructive scenarios (review of PR 18) measure what happens when the plan is wrong. Second review: a confirm step declares the dialog text (positive authorization), so the usual confirm flow costs one call more (press, defer with the actual dialog lines, deliberate press: 3 calls; 2 only when the wording is already known).",
+  "purpose": "Ceiling on REAL LLM-visible MCP tool calls, measured through the server tool functions under a scripted LLM that starts knowing only the goal, expect and the fields/predicates and learns control, identity and labels from each deferral. Scenarios run on REAL captured Chrome trees, on synthetic shapes for the failures a review found, and on two live findings (n=1 each, one run per cell, so not a rate). No tree captured from an unrelated real site exists yet (capturing one needs the user's consent), so every number is fixture-derived, not a claim about typical pages. Only cua_do and cua_look are visible by default (the primitives need CUA_TASK_ADVANCED=1): option B, look then plan once (CE-FACADE-005), measured with a scripted LLM that starts knowing only the goal and expect and learns the page's strings from cua_look and the plan's deferrals. The plan_* scenarios run through the real server tools on the captured booking and orders trees and on synthetic wizard, 100-row and canvas shapes (n=1 live evidence for the blind-filter failure, none yet for plans). Measured 2026-09: tools were 13% of agent wall time, the driving LLM's turns 87%; a clean booking took 9 mediated calls (native about 5) and the first live cua_do run took 8 because eight tools were visible. Any number changes only with a CE id in changed_by, and that CE's call_budget must record the same number (test_budget.py checks both; CODEOWNERS requires the policy owner's review). The scripted LLM takes its phrases from the goal, so it is a LOWER BOUND on the calls a real LLM needs and the plan_* ceilings guard call counts, not plan correctness; the vocabulary-mismatch, hidden-text, negated-dialog and undeclared-destructive scenarios (review of PR 18) measure what happens when the plan is wrong. Second review: a confirm step declares the dialog text (positive authorization), so the usual confirm flow costs one call more (press, defer with the actual dialog lines, deliberate press: 3 calls; 2 only when the wording is already known). Third review: dialog text and record text are region-complete (a confirm step also declares dialog_controls), so every confirm scenario declares controls; still fixture-derived, live exposure of images, groups, ARIA state and input values is unverified.",
   "default_path_tools": {
     "value": [
       "cua_do",
@@ -716,6 +716,40 @@
     "plan_checkbox_flip": {
       "description": "synthetic: a checkbox flips between the look and the plan; the look_id covers control state, so the plan stops page_changed_since_look and presses nothing",
       "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_dialog_extra_control": {
+      "description": "REAL orders, third review: the dialog holds a pre-checked \"Also delete my account\" box the caller did not declare in dialog_controls; the confirm defers confirm_dialog_unexpected_text with the actual controls and states and presses nothing further",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_image_badge_seen": {
+      "description": "synthetic, third review: order 1 carries an image labelled \"Cancelled\"; the look shows it as an \"image: Cancelled\" line, so the LLM picks order 2 instead of clicking the cancelled one",
+      "final_status": "done",
       "max_llm_visible_calls": {
         "value": 2,
         "changed_by": "CE-FACADE-005"

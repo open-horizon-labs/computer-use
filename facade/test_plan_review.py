@@ -92,7 +92,7 @@ class Identity(PlanBase):
 
     def cancel(self, ident, text=None):
         steps = [{'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'identity': ident, 'expect': 'order #1044'},
-                 {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order #1044 cancelled', 'dialog_text': [text or self.text]}]
+                 {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order #1044 cancelled', 'dialog_text': [text or self.text], 'dialog_controls': ['Yes, cancel order', 'Keep order']}]
         return self.plan(steps, goal=ORDERS_GOAL, look_id=self.look()['look_id'])
 
     def test_an_identity_that_is_only_a_prefix_of_another_number_is_not_a_match(self):
@@ -192,7 +192,7 @@ class Destructive(PlanBase):
         steps = lambda **kw: [{'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'identity': ['#1044'], 'expect': 'Cancel order'},
                               {'do': 'confirm', 'confirm': 'Yes, cancel order', 'expect': 'Order #1044 cancelled', **kw}]
         # "Yes, cancel order" is not destructive by the list; a destructive confirm label is:
-        r = self.plan([steps()[0], {'do': 'confirm', 'confirm': 'Yes, delete order', 'dialog_text': ['Delete the order?'], 'expect': 'x'}], goal=ORDERS_GOAL, look_id=look['look_id'])
+        r = self.plan([steps()[0], {'do': 'confirm', 'confirm': 'Yes, delete order', 'dialog_text': ['Delete the order?'], 'dialog_controls': ['Yes, delete order'], 'expect': 'x'}], goal=ORDERS_GOAL, look_id=look['look_id'])
         self.assertEqual((G(r, 'reason'), self.driver.executed), ('destructive_control', []))
 
 

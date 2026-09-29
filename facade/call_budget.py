@@ -380,7 +380,7 @@ def measure_plan_scenarios():
             text = ['Cancel order %s (Walnut desk lamp)?' % ident] if declared == 'exact' else ['Cancel order %s?' % ident]
             press = {'do': 'press', 'where': {'lines': conds}, 'control': control, 'expect': dialog_guess.replace('#N', ident), **({'identity': [ident]} if identity else {})}
             goal = 'Cancel the Walnut desk lamp order that is still Processing'
-            first = call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[press, {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': text, 'expect': 'Order %s cancelled' % ident}])
+            first = call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[press, {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': text, 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'Order %s cancelled' % ident}])
             if first['status'] == 'done' or first.get('reason') not in ('confirm_dialog_present', 'confirm_identity_partial', 'confirm_dialog_unexpected_text'):return first
             if first['reason'] in ('confirm_identity_partial', 'confirm_dialog_unexpected_text'):  # the hint: the click is done; read dialog.lines, and if it is the right record press the dialog's control deliberately
                 lines = first['steps'][-1]['dialog']['lines']
@@ -481,7 +481,7 @@ def measure_plan_scenarios():
         ident = unique_line(look, record)
         return call('cua_do', goal='Cancel the Walnut desk lamp order that is still Processing', expect=None, title='Demo', look_id=look['look_id'],
                     steps=[{'do': 'press', 'where': {'lines': conds}, 'control': 'Cancel', 'identity': [ident], 'expect': 'order ' + ident},
-                           {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order %s (Walnut desk lamp)?' % ident], 'expect': 'Order %s cancelled' % ident}])
+                           {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order %s (Walnut desk lamp)?' % ident], 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'Order %s cancelled' % ident}])
     d = lv.LiveDriver('live_orders_ax.json');d.script = tp.orders_dialog('Do NOT cancel order #1044 (Walnut desk lamp)')
     out['plan_negated_dialog'] = run(d, negated_dialog, lv.LiveReader(lv.ORDER_PATTERNS))
 
@@ -532,6 +532,27 @@ def measure_plan_scenarios():
         if dr.executed:sh.E(e2, 1, 'AXStaticText', 'Subscribed', 'Subscribed')
     d = sh.ShapeDriver(els);d.script = box_script
     out['plan_checkbox_flip'] = run(d, checkbox_flip, lv.LiveReader({}))
+
+    # Third review: dialog text and record text are REGION-COMPLETE.
+    import test_plan_review3 as tp3
+    def extra_control(call):
+        look = call('cua_look', title='Demo')
+        conds, record = look_conditions(look, ['Walnut desk lamp', 'Processing'])
+        ident = unique_line(look, record)
+        return call('cua_do', goal='Cancel the Walnut desk lamp order that is still Processing', expect=None, title='Demo', look_id=look['look_id'],
+                    steps=[{'do': 'press', 'where': {'lines': conds}, 'control': 'Cancel', 'identity': [ident], 'expect': 'order ' + ident},
+                           {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order %s (Walnut desk lamp)?' % ident], 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'x'}])
+    d = lv.LiveDriver('live_orders_ax.json');d.script = tp3.dialog_flow(lambda k: [tp3.node(k, 15, 'AXCheckBox', 'Also delete my account', '1', checked=True, actions=['AXPress'])])
+    out['plan_dialog_extra_control'] = run(d, extra_control, lv.LiveReader(lv.ORDER_PATTERNS))  # a pre-checked box the caller never declared: nothing further pressed
+
+    def image_badge(call):
+        look = call('cua_look', title='Demo')
+        badge = [r for r in look['records'] if any(x.startswith('image: ') and 'Cancelled' in x for x in r['lines'])]
+        target = next(r for r in look['records'] if r not in badge)  # the LLM SEES the badge line and picks the other order
+        return call('cua_do', goal='Open the order that is not cancelled', expect=None, title='Demo', look_id=look['look_id'],
+                    steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': target['lines'][0]}]}, 'expect': 'Opened'}])
+    d = sh.ShapeDriver(tp3.record_page(images='Cancelled'));d.script = sh.toast('Opened', buttons=())
+    out['plan_image_badge_seen'] = run(d, image_badge, lv.LiveReader({}))
     return out
 
 

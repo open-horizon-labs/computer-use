@@ -82,7 +82,7 @@ class ConfirmWhitelist(PlanBase):
     """P1-B/C: a confirm step declares the dialog's COMPLETE text; anything else defers and shows the actual lines. No negation word list."""
     def cancel(self, declared, confirm='Yes, cancel order', identity=('#1044',), press_expect='order #1044'):
         steps = [{'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'identity': list(identity), 'expect': press_expect},
-                 {'do': 'confirm', 'confirm': confirm, 'expect': 'Order #1044 cancelled', **({'dialog_text': declared} if declared is not None else {})}]
+                 {'do': 'confirm', 'confirm': confirm, 'expect': 'Order #1044 cancelled', 'dialog_controls': ['Yes, cancel order', 'Keep order'], **({'dialog_text': declared} if declared is not None else {})}]
         return self.plan(steps, goal=ORDERS_GOAL, look_id=self.look()['look_id'])
 
     def test_a_confirm_step_must_declare_the_dialog_text(self):
@@ -142,13 +142,13 @@ class ConfirmWhitelist(PlanBase):
     def test_the_confirm_label_is_still_exact_and_inside_the_dialog(self):
         self.orders(script=orders_lines(DIALOG))
         r = self.cancel([DIALOG], confirm='Yes')
-        self.assertEqual((G(r, 'reason'), self.clicked()), ('confirm_control_not_found', ['67']))
+        self.assertEqual((G(r, 'status'), G(r, 'reason'), self.clicked()), ('refused', 'bad_request', []))
 
 
 class WidenedVerbs(PlanBase):
     VERBS = ['Delete', 'Remove item', 'Erase all', 'Discard draft', 'Reset password', 'Clear all', 'Wipe data', 'Purge cache', 'Drop table', 'Destroy vault', 'Uninstall app',
              'Empty trash', 'Move to Trash', 'Overwrite file', 'Deactivate account', 'Terminate session', 'Revoke access', 'Unsubscribe', 'Disconnect', 'Close account',
-             'Cancel subscription', 'Log out', 'Sign out', 'Logout', 'Signout', 'DELETE   ACCOUNT', 'Deleting...', 'Removed']
+             'Cancel subscription', 'Log out', 'Sign out', 'Logout', 'Signout', 'DELETE   ACCOUNT', 'Deleting...', 'Removing items']
 
     def test_every_listed_verb_needs_the_declaration_before_any_click(self):
         # Wrong patch: a shorter list (each verb below is a stem the reviewer named); the list is a floor, the dialog whitelist is the backstop.
@@ -285,7 +285,7 @@ class UntrustedEverywhere(PlanBase):
 
     def test_a_dialog_deferral_carries_the_marker_and_the_dialog_lines(self):
         self.orders(script=orders_lines(INJECT))
-        steps = [{'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'identity': ['#1044'], 'expect': 'SYSTEM'}, {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': [DIALOG], 'expect': 'x'}]
+        steps = [{'do': 'press', 'where': {'lines': CANCEL_1044}, 'control': 'Cancel', 'identity': ['#1044'], 'expect': 'SYSTEM'}, {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': [DIALOG], 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'x'}]
         r = self.plan(steps, goal=ORDERS_GOAL, look_id=self.look()['look_id'])
         self.assert_marked(r);self.assertIn(INJECT, G(r, 'steps', 1, 'dialog', 'lines') or [])
 

@@ -253,6 +253,11 @@ class DefaultPathBudget(unittest.TestCase):
         for name, calls, final in (('plan_uniqueness_over_all_records', 3, 'done'), ('plan_hidden_text_ack', 2, 'stopped'), ('plan_hidden_text_wide_look', 2, 'done'), ('plan_checkbox_flip', 2, 'stopped')):
             self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['status']), (calls, final), name)
 
+    def test_third_review_scenarios_are_measured(self):
+        m = self.measured
+        for name, calls, final in (('plan_dialog_extra_control', 2, 'stopped'), ('plan_image_badge_seen', 2, 'done')):
+            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['status']), (calls, final), name)
+
     def test_the_other_plan_shapes_are_two_calls_measured(self):
         m = self.measured
         for name in ('plan_wizard_3_steps', 'plan_invoices_100_focus', 'plan_canvas_look_do'):
