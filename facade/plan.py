@@ -19,7 +19,7 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'accept_hidden_text'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
 DO_KINDS = ('press', 'type', 'confirm', 'verify')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
@@ -29,22 +29,26 @@ RESPONSE_BYTES = 5800
 # The destructive-verb guard of option D, applied to plans: a control whose label carries one of these needs the plan's own goal to say so.
 # A FLOOR, not a definition: stems (case/space-insensitive) of labels that need the step's own allow_destructive. It cannot be complete (every language and
 # phrasing needs another entry), so the real backstop for anything that opens a dialog is the confirm step's dialog_text whitelist. Do not extend it to pass a probe.
-DESTRUCTIVE = {'delete': r'\bdelet', 'remove': r'\bremov', 'erase': r'\beras', 'discard': r'\bdiscard', 'reset': r'\breset', 'clear': r'\bclear', 'wipe': r'\bwip(?:e|ing)',
+DESTRUCTIVE = {'delete': r'\bdelet', 'remove': r'\bremov(?:e|es|ing)\b', 'erase': r'\beras', 'discard': r'\bdiscard', 'reset': r'\breset', 'clear': r'\bclear', 'wipe': r'\bwip(?:e|ing)',
                'purge': r'\bpurg', 'drop': r'\bdrop(?!\s*-?down)', 'destroy': r'\bdestroy', 'uninstall': r'\buninstall',
                'empty trash': r'\bempty\s+(?:the\s+)?(?:trash|bin|recycle)', 'move to trash': r'\bmove\s+to\s+(?:the\s+)?(?:trash|bin|recycle)',
                'overwrite': r'\boverwrit', 'deactivate': r'\bdeactivat', 'terminate': r'\bterminat', 'revoke': r'\brevok', 'unsubscribe': r'\bunsubscrib',
-               'disconnect': r'\bdisconnect', 'close account': r'\bclos\w*\s+(?:(?:my|the|your|this)\s+)?account', 'cancel subscription': r'\bcancel\w*\s+(?:(?:my|the|your|this)\s+)?subscription',
-               'log out': r'\blog(?:ging|ged)?[ -]?out', 'sign out': r'\bsign(?:ing|ed)?[ -]?out'}
+               'disconnect': r'\bdisconnect(?:s|ing)?\b', 'close account': r'\bclos\w*\s+(?:(?:my|the|your|this)\s+)?account', 'cancel subscription': r'\bcancel\w*\s+(?:(?:my|the|your|this)\s+)?subscription',
+               'log out': r'\blog(?:ging|ged)?[ -]?out', 'sign out': r'\bsign(?:ing|ed)?[ -]?out',
+               # irreversible or outward-facing
+               'buy': r'\bbuy(?:ing)?\b', 'purchase': r'\bpurchas', 'pay': r'\bpay(?:ing)?\b', 'send': r'\bsend(?:ing)?\b', 'publish': r'\bpublish', 'transfer': r'\btransfer', 'refund': r'\brefund',
+               'void': r'\bvoid\b', 'submit order': r'\bsubmit\s+(?:my\s+|the\s+)?order', 'place order': r'\bplace\s+(?:my\s+|the\s+)?order', 'confirm payment': r'\bconfirm\s+(?:the\s+)?payment'}
 
 
 def destructive_verbs(label):
-    """Destructive verbs in a control label. Goal text NEVER unlocks one (a goal is a regex target for a negation or an injected sentence):
-    only the step's own allow_destructive naming the exact label does."""
-    return [v for v, rx in DESTRUCTIVE.items() if re.search(rx, lk.norm(label))]
+    """Destructive verbs in a control label, matched on FOLDED text (NFKC, zero-width and diacritics stripped, casefold, Cyrillic/Greek look-alikes mapped to Latin).
+    Goal text NEVER unlocks one (a goal is a regex target for a negation or an injected sentence): only the step's own allow_destructive naming the exact label does."""
+    folded = lk.fold(label)
+    return [v for v, rx in DESTRUCTIVE.items() if re.search(rx, folded)]
 
 
 def allowed(step_allow, label):
-    return bool(step_allow) and lk.norm(step_allow) == lk.norm(label)
+    return bool(step_allow) and lk.fold(step_allow) == lk.fold(label)
 
 
 def _gap(message):
@@ -100,6 +104,12 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             declared = step.get('dialog_text')
             if not isinstance(declared, list) or not declared or not all(isinstance(x, str) and x.strip() for x in declared) or len(declared) > 20:
                 raise _gap('bad_request: %s (confirm) needs dialog_text: the COMPLETE text lines of the dialog you expect (1 to 20 texts); nothing is pressed unless the dialog shows exactly them. The dialog text is usually unknown until it appears: a first confirm that misses defers with the actual lines' % at)
+            controls = step.get('dialog_controls')
+            if not isinstance(controls, list) or not controls or not all(isinstance(x, str) and x.strip() for x in controls) or len(controls) > 20:
+                raise _gap('bad_request: %s (confirm) needs dialog_controls: the EXACT list of the dialog\'s control labels (1 to 20), each with its state when it has one, for example "Also delete my account [checked]"; an undeclared control or state defers' % at)
+            bare = {lk.norm(re.sub(r'\s*\[[a-z ]+\]\s*$', '', x)) for x in controls}
+            if lk.norm(step.get('confirm')) not in bare:
+                raise _gap('bad_request: %s (confirm) label %r must be one of dialog_controls' % (at, str(step.get('confirm'))[:40]))
         if step.get('control_match', 'exact') not in ('exact', 'prefix'):
             raise _gap('bad_request: %s control_match is exact (the default) or prefix' % at)
         if 'goal' in step:
@@ -109,7 +119,7 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 raise _gap('bad_request: %s %s must be a list of record ids' % (at, key))
         takes = {'press': {'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'expect', 'treat_as_match', 'accept_unknown', 'allow_destructive', 'accept_hidden_text'},
                  'type': {'do', 'goal', 'control', 'control_match', 'text', 'expect', 'allow_destructive'},
-                 'confirm': {'do', 'goal', 'confirm', 'identity', 'expect', 'allow_destructive', 'dialog_text'},
+                 'confirm': {'do', 'goal', 'confirm', 'identity', 'expect', 'allow_destructive', 'dialog_text', 'dialog_controls'},
                  'verify': {'do', 'goal', 'expect'}}[kind]
         extra = sorted(set(step) - takes)
         if extra:
@@ -429,7 +439,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             channel['lines_where'] = {'look_id': look_id, 'look': None, 'conditions': conds, 'identity': step.get('identity') or default_identity(conds), 'accept_hidden': step.get('accept_hidden_text') is True}
         if kind == 'confirm':
             spec['control'] = step['confirm']
-            channel['confirm_step'] = {'label': step['confirm'], 'identity': step.get('identity') or carry['identity'], 'before': carry['before'], 'dialog_text': step['dialog_text']}
+            channel['confirm_step'] = {'label': step['confirm'], 'identity': step.get('identity') or carry['identity'], 'before': carry['before'], 'dialog_text': step['dialog_text'], 'dialog_controls': step['dialog_controls']}
         # The window is resolved once (by the first step) and then pinned: every step acts on the same window.
         window = {'title': title} if ctx['pid'] is None else {'pid': ctx['pid'], 'window_id': ctx['window_id']}
         f.prefix_control = step.get('control_match') == 'prefix'

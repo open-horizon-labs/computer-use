@@ -1413,10 +1413,53 @@ class Facade:
             if (tagged and controls) or (len(controls) >= 2 and not growth):
                 texts = [str(nodes[i].get('value') or nodes[i].get('label')) for i in sorted(members)
                          if nodes[i].get('role') in ('AXStaticText', 'AXHeading') and (nodes[i].get('value') or nodes[i].get('label'))]
-                regions.append((controls, '\n'.join(dict.fromkeys(texts))))
+                regions.append((controls, '\n'.join(dict.fromkeys(texts)), members, parent))
         modals, replaced = self._new_modals(state, before)
         ambiguous = replaced or len(modals) > 1 or len(regions) > 1
+        self._dialog_cluster = (regions[0][2], regions[0][3]) if regions else None  # read by _dialog_region (same observation, same call)
         return (regions[0][0], regions[0][1], ambiguous) if regions else ([], '', ambiguous)
+
+    def _dialog_region(self, state, before):
+        """EVERY node that belongs to a dialog, for a confirm step's whitelist: (a) all new nodes anywhere in the window (a warning parented outside the cluster, beside the
+        web area, counts; browser chrome such as the tab strip, toolbar and address field is skipped) with their subtrees; (b) the whole subtree of the container that holds the
+        dialog cluster when it is not the page or window root, so text that was ALREADY inside it (identical to text on the page before) is still compared, not dropped;
+        (c) the whole subtree of the nearest dialog-tagged ancestor. A dialog whose container IS the web area is compared by its new nodes only (documented)."""
+        self._new_dialog(state, before)
+        nodes, content, kids = state['nodes'], self._content_ids(state), self._kids(state)
+        sig = lambda n: (n.get('role'), n.get('label') or '', str(n.get('value') or ''))
+        was = {}
+        for n in before['nodes'].values():was[sig(n)] = was.get(sig(n), 0) + 1
+        def chrome(i):
+            a, guard = i, set()
+            while a in nodes and a not in guard:
+                guard.add(a)
+                if nodes[a].get('role') in ('AXTabGroup', 'AXToolbar', 'AXMenuBar', 'AXMenu'):return True
+                a = nodes[a].get('parent_index')
+            return False
+        new = []
+        for i in sorted(nodes):
+            key = sig(nodes[i])
+            if was.get(key, 0) > 0:was[key] -= 1;continue
+            if nodes[i].get('role') in ('AXWindow', 'AXWebArea'):continue
+            if i in content or (not chrome(i) and nodes[i].get('role') not in ('AXTextField', 'AXComboBox', 'AXSearchField')):new.append(i)
+        def below(i):
+            out, stack = set(), [i]
+            while stack:
+                x = stack.pop()
+                if x not in out:out.add(x);stack += kids.get(x, [])
+            return out
+        region = set()
+        for i in new:region |= below(i)
+        cluster = getattr(self, '_dialog_cluster', None)
+        if cluster:
+            parent = cluster[1]
+            if parent in nodes and nodes[parent].get('role') not in ('AXWebArea', 'AXWindow'):region |= below(parent)
+            a, guard = parent, set()
+            while a in nodes and a not in guard:
+                guard.add(a)
+                if nodes[a].get('role') in self.MODAL_ROLES:region |= below(a);break
+                a = nodes[a].get('parent_index')
+        return region
 
     @staticmethod
     def _value_shape(value):
@@ -1553,7 +1596,7 @@ class Facade:
     def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60):
         """Read-only, deterministic look at the strings the page displays (no click, no window move, no model unless `fields`)."""
         import look as lookmod
-        with self.lock:return lookmod.run_look(self, title, pid, window_id, fields, max_records, max_bytes, focus, max_lines, line_chars)
+        with self.lock:return self.mark(lookmod.run_look(self, title, pid, window_id, fields, max_records, max_bytes, focus, max_lines, line_chars))
 
     def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
            expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None,
@@ -1677,12 +1720,16 @@ class Facade:
             if ambiguous:return finish('deferred', reason='confirm_dialog_ambiguous', verified=False)
             if not new_controls:return finish('deferred', reason='confirm_dialog_not_found', verified=False)
             labels = self._bounded([(nodes[i].get('label') or '')[:40] for i in new_controls])
-            shown_lines = [line[:60] for line in dict.fromkeys(l.strip() for l in dialog_text.split('\n') if l.strip())][:6]  # so the caller can judge the dialog itself
             # POSITIVE AUTHORIZATION: the caller declared the dialog's COMPLETE text; every actual line must be declared and every declared line present.
             # No word list (negations, verbs, languages) decides intent: whether the caller declared exactly this text does.
-            actual = list(dict.fromkeys(l.strip() for l in dialog_text.split('\n') if l.strip()))
-            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual}:
-                return finish('deferred', reason='confirm_dialog_unexpected_text', dialog={'controls': labels, 'identity': 'not_checked', 'lines': [l[:80] for l in actual[:12]], 'declared_lines': len(cs['dialog_text']), 'actual_lines': len(actual)}, verified=False)
+            import look as lookmod
+            region_lines, region_controls = lookmod.region_items(self, state, self._dialog_region(state, cs['before']))
+            actual_lines, actual_controls = region_lines, region_controls
+            dialog_text = '\n'.join(actual_lines)  # the identity sanity check reads the whole region, not only static texts
+            shown_lines = [l[:80] for l in actual_lines[:12]]
+            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual_lines} or {norm(x) for x in cs['dialog_controls']} != {norm(x) for x in actual_controls}:
+                return finish('deferred', reason='confirm_dialog_unexpected_text', dialog={'controls': [c[:60] for c in actual_controls[:12]], 'identity': 'not_checked', 'lines': shown_lines,
+                              'declared_lines': len(cs['dialog_text']), 'actual_lines': len(actual_lines), 'declared_controls': len(cs['dialog_controls']), 'actual_controls': len(actual_controls)}, verified=False)
             if not cs['identity']:return finish('deferred', reason='confirm_needs_identity', dialog={'controls': labels, 'identity': 'not_checked', 'lines': shown_lines}, verified=False)
             verdict, shown, missing = planmod.identity_state(dialog_text, cs['identity'])
             held = {'dialog': {'controls': labels, 'identity': verdict, 'lines': shown_lines}, 'verified': False}
@@ -2084,12 +2131,13 @@ class Facade:
             given_back = bool(item) and not item['used'] and ctx['delivery'] == 'none'
             if ctx['delivery'] != 'none' and ctx['selection']:self.selections.pop(ctx['selection'], None)
             if ctx['stage'] in ('act', 'confirm') and not given_back and ctx['delivery'] == 'none':ctx['delivery'] = 'uncertain'
-            return finish('failed', reason='driver_call_failed', message=str(gap), attempts=tries.get(ctx['stage'], 1),
+            return finish('failed', reason='driver_call_failed', message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', attempts=tries.get(ctx['stage'], 1),
                           retryable=ctx['delivery'] == 'none', **({'selection': ctx['selection']} if given_back else {}))
         except self._Ambiguous as gap:
             return finish('deferred', reason='records_ambiguous', message=str(gap))
         except Gap as gap:
-            return finish('refused', reason=self._do_reason(str(gap)), message=str(gap))
+            import look as lookmod
+            return finish('refused', reason=self._do_reason(str(gap)), message=lookmod.safe_message(self._do_reason(str(gap)), str(gap)))
         except (ValueError, RuntimeError, TimeoutError, OSError) as error:
             return finish('failed', reason='provider_failure', error_type=type(error).__name__, attempts=tries.get(ctx['stage'], 1),
                           retryable=ctx['delivery'] == 'none')
