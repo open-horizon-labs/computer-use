@@ -32,7 +32,24 @@ The driving LLM does not mediate every hop. Measured live, tool time was about 1
 2. `cua_do` with `steps`: the LLM sends ONE small plan from what it saw. The server validates the whole plan, then per step re-observes, binds, acts, verifies `expect`, and recovers from stale state itself (bounded; a click is never retried).
 3. Guardrails in code: a filter is only allowed against a look the server issued (`look_id`); incomparable values are `unknown`, not a guess; destructive controls and dialogs need explicit, exact authorization; the whole plan has a hard time budget.
 
-Sequence diagram: [docs/PLAN-B.md#sequence](docs/PLAN-B.md#sequence).
+```mermaid
+sequenceDiagram
+    participant L as Driving LLM
+    participant S as cua-task server
+    participant D as Cua Driver
+    L->>S: cua_look
+    S->>D: observe (read-only)
+    S-->>L: displayed strings + look_id
+    Note over L: writes ONE plan
+    L->>S: cua_do(steps, look_id)
+    loop each step, in code
+        S->>D: observe, bind, act
+        S->>D: observe, verify expect
+    end
+    S-->>L: done, or stopped at step N
+```
+
+Full version (NuExtract, staleness and recovery): [docs/PLAN-B.md#sequence](docs/PLAN-B.md#sequence).
 
 NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosing steps. The primitive tools (`cua_observe`, `cua_choose`, `cua_act`, ...) are hidden unless `CUA_TASK_ADVANCED=1`. The agent tool of option D is experimental and not merged.
 
