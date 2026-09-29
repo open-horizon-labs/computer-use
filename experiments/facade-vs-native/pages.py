@@ -7,6 +7,7 @@ desktop. The three original pages (booking, orders, canvas) live in fixtures.py.
 """
 import html
 import json
+from pathlib import Path
 import random
 
 from fixtures import _PAGE, render_booking, render_canvas, render_orders
@@ -183,10 +184,11 @@ def render_canvas_regions(run):
 
 
 def render_canvas_center(run):
-    """Capture/probe-only (not in tasks.json): ONE button covering the canvas centre, so a click delivered at the element's
-    centre instead of the requested point shows up as a press of `center_only`."""
-    buttons = [['center_only', 'Centre', 270, 105, 100, 50, None], ['corner', 'Corner', 20, 20, 100, 40, None]]
-    return _canvas_page(run, 'canvas_center', f'Centre Canvas {run}', buttons, _STYLE)
+    """Probe-only (not in tasks.json): the cua-driver bug report's repro, verbatim (repro/canvas_center.html), served with the run in the title.
+    One button at a corner, one covering the canvas centre; the page's own <pre> logs which rectangle a click landed in (readable from the
+    AX tree, no server event needed). Live 2026-09-29, driver 0.30.3, background window: aimed at Corner, it logged "pressed center_only at 321,131"."""
+    html = (Path(__file__).resolve().parent / 'repro' / 'canvas_center.html').read_text()
+    return html.replace('<title>Centre Canvas</title>', f'<title>Centre Canvas {run}</title>', 1)
 
 
 # --- duplicate labels in the AX tree --------------------------------------

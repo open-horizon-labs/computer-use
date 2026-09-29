@@ -1,0 +1,37 @@
+<!doctype html>
+<title>Centre Canvas</title>
+
+<canvas id="c" width="640" height="260" style="border:1px solid #999"></canvas>
+<pre id="log"></pre>
+
+<script>
+  // Two buttons drawn as pixels. Nothing here is in the accessibility tree except the <canvas> itself.
+  const buttons = [
+    { id: 'corner',      label: 'Corner', x: 20,  y: 20,  w: 100, h: 40 },  // top-left
+    { id: 'center_only', label: 'Centre', x: 270, y: 105, w: 100, h: 50 },  // covers the canvas centre (320, 130)
+  ];
+
+  const canvas = document.getElementById('c');
+  const g = canvas.getContext('2d');
+  g.font = '24px sans-serif';
+  g.textBaseline = 'middle';
+
+  for (const b of buttons) {
+    g.fillStyle = '#e8eefc';
+    g.fillRect(b.x, b.y, b.w, b.h);
+    g.strokeRect(b.x, b.y, b.w, b.h);
+    g.fillStyle = '#123';
+    g.fillText(b.label, b.x + 10, b.y + b.h / 2);
+  }
+
+  // Log which button, if any, a click lands in.
+  canvas.addEventListener('click', (e) => {
+    const r = canvas.getBoundingClientRect();
+    const px = e.clientX - r.left;
+    const py = e.clientY - r.top;
+    for (const b of buttons) {
+      const inside = px >= b.x && px < b.x + b.w && py >= b.y && py < b.y + b.h;
+      if (inside) log.textContent += `pressed ${b.id} at ${px.toFixed(0)},${py.toFixed(0)}\n`;
+    }
+  });
+</script>
