@@ -279,7 +279,8 @@ class Facade:
         text = []
         for i,n in state['nodes'].items():
             if i in descendants:
-                for key in ('label','value'):
+                # A heading's `value` is its LEVEL ('1', '2'), never text: its label (and its text child) is.
+                for key in (('label',) if n.get('role') == 'AXHeading' else ('label','value')):
                     value = n.get(key)
                     if isinstance(value,str) and value.strip() and value not in text:
                         text.append(value)
@@ -482,11 +483,23 @@ class Facade:
             members = [i for i in children if index < i < high]
         else:
             return None
+        members = [i for i in members if not self._title_member(state, i)]  # the page's own title heading is page text, not the first record's
         texts = []
         for i in members:
             text, _ = self.subtree(state, 'e'+str(i))
             texts += [line for line in text.split('\n') if line and line not in texts]
         return (texts, set(members) | {index}) if texts else None
+
+    @staticmethod
+    def _title_member(state, i):
+        """True for the page's title as text: a heading whose text equals or contains the window title, or a text node that equals it. (Only these, so a record line
+        that merely mentions a word of the title is never dropped.)"""
+        title = re.sub(r'\s+', ' ', str(state['raw'].get('window_title') or '')).strip().casefold()
+        n = state['nodes'].get(i)
+        if not title or not n:return False
+        label = re.sub(r'\s+', ' ', str(n.get('label') or n.get('value') or '')).strip().casefold()
+        if n.get('role') == 'AXHeading':return bool(label) and title in label
+        return label == title
 
     READ_BUDGET = 2  # readings per (snapshot, record scope); S4.2 §7 bounds steps, S4.8 forbids re-read loops
 

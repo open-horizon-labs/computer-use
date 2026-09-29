@@ -44,7 +44,8 @@ def cut(line, chars=LINE_MAX_CHARS):
 
 
 def text_of(node):
-    for key in ('value', 'label'):
+    # Chrome gives an AXHeading a `value` equal to its LEVEL ('1', '2'): the text of a heading is its label (its text child repeats it), never that numeral.
+    for key in (('label',) if node.get('role') == 'AXHeading' else ('value', 'label')):
         item = node.get(key)
         if isinstance(item, str) and item.strip():
             return clean(item)
@@ -80,14 +81,14 @@ def fold(text):
 
 
 def toggle_marker(n, roles=None):
-    """'checked'/'unchecked'/'selected'/'unselected' for a toggle-like node, else None."""
+    """The INFORMATIVE state of a node or None. Real Chrome exposes no checked/expanded/pressed/current/busy key; a radio or checkbox shows value '0'/'1'
+    and selected. Toggle-like roles (or a checked key) give checked/unchecked from value AND selected AND checked; any other node gives 'selected' only when
+    selected is true (Chrome sets selected:false on every plain button: that is noise, never a marker)."""
     role = n.get('role')
     if role in TOGGLE_ROLES or 'checked' in n:
-        on = n.get('checked') is True or str(n.get('value')).strip().lower() in ('1', 'true', 'on', 'checked')
+        on = n.get('checked') is True or n.get('selected') is True or str(n.get('value')).strip().lower() in ('1', 'true', 'on', 'checked')
         return 'checked' if on else 'unchecked'
-    if 'selected' in n:
-        return 'selected' if n.get('selected') else 'unselected'
-    return None
+    return 'selected' if n.get('selected') is True else None
 
 
 def node_line(n):
@@ -152,8 +153,12 @@ def structural_state(f, state, content):
             guard.add(i);out.append('%s:%d' % (nodes[i].get('role'), ordinal.get(i, 0)));i = nodes[i].get('parent_index')
         return '/'.join(reversed(out))
     picked = [i for i in sorted(content) if nodes[i].get('role') in f.CONTROL_ROLES or nodes[i].get('role') in INPUT_ROLES or nodes[i].get('role') in TOGGLE_ROLES
-              or any(k in nodes[i] for k in STATE_FLAGS)]
-    return sorted([path(i)] + [str(nodes[i].get(k)) for k in CONTROL_STATE_KEYS] for i in picked)
+              or any(nodes[i].get(k) for k in STATE_FLAGS)]
+    def entry(i):
+        n = nodes[i]
+        # A falsy flag (Chrome's selected:false on every button) is the same as an absent one; a real state (selected true, radio value 1) changes the entry.
+        return [path(i)] + [str(n.get(k)) if (k in ('role', 'label', 'value', 'enabled') or n.get(k)) else '' for k in CONTROL_STATE_KEYS]
+    return sorted(entry(i) for i in picked)
 
 
 def analyze(f, state):
@@ -185,6 +190,7 @@ def analyze(f, state):
         for i in sorted(indices):
             if i not in content:continue
             n = nodes[i]
+            if f._title_member(state, i):continue
             if n.get('role') in f.CONTROL_ROLES:
                 marker = toggle_marker(n)
                 line = 'state: %s [%s]' % (clean(n.get('label')) or clean(n.get('value')), marker) if marker else None
@@ -291,6 +297,8 @@ def analyze(f, state):
     for i in sorted(outside):
         if is_control(i) and nodes[i].get('label') and clean(nodes[i]['label']) not in other:
             other.append(clean(nodes[i]['label']))
+    toggles = [{'label': clean(nodes[i].get('label'))[:40], 'state': toggle_marker(nodes[i])} for i in sorted(outside)
+               if is_control(i) and nodes[i].get('label') and toggle_marker(nodes[i])]
     inputs = [{'label': clean(nodes[i].get('label'))[:40], 'value': clean(nodes[i].get('value'))[:30]} for i in sorted(outside)
               if nodes[i].get('role') in INPUT_ROLES]
     # A page text can prove an `expect` only when exactly ONE element displays it (Chrome shows a heading twice: the heading and its text child).
@@ -299,7 +307,7 @@ def analyze(f, state):
         holders = sum(1 for i in content if nodes[i].get('role') not in f.CONTROL_ROLES and any(norm(nodes[i].get(k)) == norm(line) for k in ('label', 'value')))
         if holders > 1:
             repeated.append(line)
-    return {'records': records, 'kind': kind, 'header': header, 'text': page_text, 'dialogs': dialogs, 'other_controls': other, 'inputs': inputs,
+    return {'records': records, 'kind': kind, 'header': header, 'text': page_text, 'dialogs': dialogs, 'other_controls': other, 'inputs': inputs, 'toggles': toggles,
             'headings': list(dict.fromkeys(clean(nodes[i].get('label')) or text_of(nodes[i]) for i in sorted(content) if nodes[i].get('role') == 'AXHeading' and (clean(nodes[i].get('label')) or text_of(nodes[i])))),  # a heading's value is its level; its label is the text
             'control_state': structural_state(f, state, content),
             'page_controls': len(page_controls), 'all_controls': len(all_controls), 'notes': notes, 'ctrl_ids': page_controls, 'repeated_text': repeated}
@@ -352,6 +360,7 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
     response = {'status': 'ok', 'untrusted_page_text': True, 'notice': NOTICE, 'window': {'title': extras['title']}, 'look_id': None, 'record_kind': analysis['kind'], 'records': [], 'text': text,
                 'dialogs': analysis['dialogs'][:DIALOG_MAX], 'controls': analysis['other_controls'][:CONTROL_LIST_MAX],
                 **({'inputs': analysis['inputs'][:INPUT_LIST_MAX]} if analysis['inputs'] else {}),
+                **({'toggles': analysis['toggles'][:INPUT_LIST_MAX]} if analysis['toggles'] else {}),
                 **({'header': analysis['header'][:8]} if analysis['header'] else {}),
                 **({'repeated_text': [cut(t)[0] for t in analysis['repeated_text'][:10]]} if analysis['repeated_text'] else {})}
     if extras.get('canvas') is not None:response['canvas'] = extras['canvas']
@@ -359,25 +368,27 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
     response['counts'] = {'records': len(analysis['records']), 'controls': analysis['all_controls'], 'page_controls': analysis['page_controls'],
                           'non_page_controls': analysis['all_controls'] - analysis['page_controls']}
     encoded = [row(r) for r in rows]
-    def size(k):
-        return len(json.dumps({**response, 'records': encoded[:k], 'truncated': {'records': 0, 'lines': 0, 'bytes': 0}, 'notes': extras['notes'] + ['x' * 120], 'ms_by_stage': {'window': 0, 'observe': 0, 'structure': 0, 'extract': 0}, 'look_id': 'lk_0000000000'}))
+    worst_ms = {'window': 99999, 'observe': 99999, 'structure': 99999, 'perception': 99999, 'extract': 99999, 'total': 999999}
+    def full(k):
+        """The COMPLETE response for k records (every section, the counts, the notes it would add, the worst-case timings and extraction block): max_bytes bounds THIS."""
+        shown_k = rows[:k]
+        lost = sum(r['lost'] for r in shown_k) + text_lost
+        bytes_cut = extras.setdefault('rows_total', len(rows)) - k
+        notes_k = list(extras['notes']) + list(analysis['notes'])
+        if extras['records_over_cap']:notes_k.append('%d more records matched but only max_records=%d are shown; pass focus=<words from the record you want> or raise max_records' % (extras['records_over_cap'], extras['max_records']))
+        if bytes_cut:notes_k.append('%d records did not fit max_bytes=%d and are not shown; pass focus=<words> to narrow the list or raise max_bytes' % (bytes_cut, max_bytes))
+        if lost:notes_k.append('lines were cut or omitted: at most %d lines of %d characters are shown per record (pass max_lines and line_chars to see more). A plan that selects such a record needs accept_hidden_text, and negative conditions over it are refused' % extras['opts'])
+        out = {**response, 'records': encoded[:k], 'look_id': view_id(shown_k, extras['title'], analysis), 'truncated': {'records': extras['records_over_cap'], 'lines': lost, 'bytes': bytes_cut}, 'notes': notes_k}
+        return out, shown_k
+    def measured(k):
+        out, _ = full(k)
+        out['ms_by_stage'] = worst_ms
+        if extras.get('fields'):out['extraction'] = {'calls': 999, 'chunks': 999, 'records': 9999, 'failed': 9999, 'skipped': 9999};out['truncated'] = {**out['truncated'], 'values': 9999}
+        return len(json.dumps(out))
     keep = len(encoded)
-    while keep > 0 and size(keep) > max_bytes:
+    while keep > 0 and measured(keep) > max_bytes:
         keep -= 1
-    shown = rows[:keep]
-    lines_lost = sum(r['lost'] for r in shown) + text_lost
-    truncated = {'records': extras['records_over_cap'], 'lines': lines_lost, 'bytes': extras.setdefault('rows_total', len(rows)) - keep}
-    notes = list(extras['notes']) + list(analysis['notes'])
-    if extras['records_over_cap']:
-        notes.append('%d more records matched but only max_records=%d are shown; pass focus=<words from the record you want> or raise max_records' % (extras['records_over_cap'], extras['max_records']))
-    if truncated['bytes']:
-        notes.append('%d records did not fit max_bytes=%d and are not shown; pass focus=<words> to narrow the list or raise max_bytes' % (truncated['bytes'], max_bytes))
-    if lines_lost:
-        notes.append('lines were cut or omitted: at most %d lines of %d characters are shown per record (pass max_lines and line_chars to see more). A plan that selects such a record needs accept_hidden_text, and negative conditions over it are refused' % extras['opts'])
-    response['records'] = encoded[:keep]
-    response['look_id'] = view_id(shown, extras['title'], analysis)
-    response['truncated'] = truncated
-    response['notes'] = notes
+    response, shown = full(keep)
     return response, shown
 
 
@@ -448,7 +459,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         terms = focus_terms(focus)
         rows, filtered_out, matched = select(analysis, terms, cap=max_records, opts=opts)
         stage('structure', began)
-        notes, extras = [], {'title': state['raw'].get('window_title'), 'notes': [], 'records_over_cap': matched - len(rows), 'max_records': max_records, 'opts': opts}
+        notes, extras = [], {'title': state['raw'].get('window_title'), 'notes': [], 'records_over_cap': matched - len(rows), 'max_records': max_records, 'opts': opts, 'fields': fields is not None}
         if terms:
             extras['focus'] = {'terms': terms[:8], 'matched': matched, 'filtered_out': filtered_out}
         if analysis['page_controls'] == 0:
