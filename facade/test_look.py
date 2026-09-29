@@ -315,3 +315,55 @@ class LookFields(unittest.TestCase):
 
 
 if __name__ == '__main__':unittest.main()
+
+
+def _thin(els, keep=3):
+    """The same window, but its web area holds only `keep` nodes: a page still loading, or any site's holding page."""
+    web = next(e['element_index'] for e in els if e.get('role') == 'AXWebArea')
+    inside, frontier = set(), {web}
+    while frontier:
+        frontier = {e['element_index'] for e in els if e.get('parent_index') in frontier};inside |= frontier
+    kept = set(sorted(inside)[:keep])
+    return [e for e in els if e['element_index'] not in inside or e['element_index'] in kept]
+
+
+class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
+    """Site-agnostic: a thin web area is retried 0.5 s then 1 s later; nothing here names a site, title or phrase."""
+    def build(self, thin_for):
+        self.naps = []
+        d = lv.LiveDriver('live_booking_ax.json')
+        d.script = lambda drv, els: _thin(els) if drv.version <= thin_for else None
+        return d, Facade(d, reader_factory=Boom('reader'), generic_factory=Boom('chooser'), visual_factory=Boom('visual'), sleep=self.naps.append)
+
+    def test_a_thin_page_that_fills_in_is_looked_at_again_after_half_a_second(self):
+        # Wrong patch: report the thin first observation (the agent then sees a holding page and gives up).
+        d, f = self.build(thin_for=1)
+        r = f.look('Demo')
+        self.assertEqual((r['status'], r['counts']['records'], self.naps, d.version), ('ok', 12, [0.5], 2))
+
+    def test_a_page_that_stays_thin_is_retried_twice_then_returned_as_is(self):
+        # Wrong patch: loop until ready (unbounded), or return nothing after the retries.
+        d, f = self.build(thin_for=99)
+        r = f.look('Demo')
+        self.assertEqual((self.naps, d.version), ([0.5, 1.0], 3))
+        self.assertIn(r['status'], ('ok', 'deferred'))
+
+    def test_a_full_page_is_observed_once_with_no_wait(self):
+        # Wrong patch: always sleep before looking (every look pays 1.5 s).
+        d, f = self.build(thin_for=0)
+        f.look('Demo')
+        self.assertEqual((self.naps, d.version), ([], 1))
+
+    def test_a_different_title_makes_no_difference(self):
+        # Wrong patch: a title/phrase list (eBay's wording, then the next site's). The rule is the page's structure.
+        for title in ('Pardon Our Interruption', 'Anything at all', ''):
+            d, f = self.build(thin_for=1)
+            d.fix = dict(d.fix, window_title=title)
+            f.look(pid=1, window_id=2)
+            self.assertEqual(self.naps, [0.5], title)
+
+    def test_only_a_look_waits_never_an_action_observation(self):
+        # Wrong patch: retry inside every observe (an action's revalidation would then see a page settle and miss the change).
+        d, f = self.build(thin_for=99)
+        f.observe(1, 2)
+        self.assertEqual((self.naps, d.version), ([], 1))

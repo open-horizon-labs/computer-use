@@ -442,10 +442,10 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         stage('window', began)
         began = f.clock()
         try:
-            fresh = f.observe(pid, window_id)
+            fresh = f.observe(pid, window_id, wait_ready=True)
         except DriverCallFailed:
             f.sleep(f.RETRY_BACKOFF_S)  # one bounded retry of a read-only observation; nothing was clicked either way
-            fresh = f.observe(pid, window_id)
+            fresh = f.observe(pid, window_id, wait_ready=True)
         stage('observe', began)
         handle = fresh['snapshot']
         state = f.state(handle)

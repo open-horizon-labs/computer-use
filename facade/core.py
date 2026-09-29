@@ -24,6 +24,10 @@ from terminal_observation import VisualTerminal
 from ax_aliases import table_aliases
 
 
+OBSERVE_RETRY_DELAYS = (0.5, 1.0)   # seconds before the 2nd and 3rd observation of a page that is not ready
+THIN_PAGE_NODES = 10   # a web page with this few nodes or fewer is still loading or a holding page ("checking your browser"), whatever the site
+
+
 class Gap(ValueError):
     """An observation/authority gap; must not authorize execution."""
 
@@ -181,7 +185,48 @@ class Facade:
             {k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w}
             for w in result.get('windows', []) if w.get('title') and (title is None or w['title']==title)]}
 
-    def observe(self, pid, window_id, timeout=None):
+    def observe(self, pid, window_id, timeout=None, wait_ready=False):
+        """With wait_ready (a look at a page just opened, never the revalidation or recovery observations of an action): observe, waiting out a page that is not ready yet: a bounded, deterministic retry (OBSERVE_RETRY_DELAYS) when the Driver call
+        gave no snapshot while the window is still listed, returned an empty/degraded tree, or the page is THIN (a web area with almost
+        nothing in it: still loading, or a holding page such as "checking your browser", which clears itself). A structural rule, no site or
+        phrase list. A failed Driver call is NOT retried here: _do's own bounded recovery owns it. Read-only, so a retry can never act twice. After the last try
+        the result (or the original error) is returned unchanged; nothing here solves or bypasses a check."""
+        delays = list(OBSERVE_RETRY_DELAYS) if wait_ready else []
+        for attempt in range(len(delays) + 1):
+            last = attempt == len(delays)
+            try:
+                result = self._observe_once(pid, window_id, timeout)
+            except Gap as error:
+                if last or not str(error).startswith('driver_snapshot_unavailable'):
+                    raise
+            else:
+                reason = self._not_ready(result) or ('thin_page' if self._thin_page(result['snapshot']) else None)
+                if last or reason is None:
+                    if attempt:
+                        self.event('observe_retry', attempts=attempt, ready=reason is None, reason=reason)
+                    return result
+            self.sleep(delays[attempt])
+
+    @staticmethod
+    def _not_ready(result):
+        if not result.get('elements'):
+            return 'empty_tree'
+        if result['quality'].get('degraded_reason'):
+            return 'degraded'
+        return None
+
+    def _thin_page(self, handle):
+        state = self.snapshots[handle]
+        web = self._top_web_areas(state)
+        if not web:
+            return False
+        below, frontier = 0, {web[0]}
+        while frontier:
+            frontier = {i for i, n in state['nodes'].items() if n.get('parent_index') in frontier}
+            below += len(frontier)
+        return below <= THIN_PAGE_NODES
+
+    def _observe_once(self, pid, window_id, timeout=None):
         if not self.started:
             self.windows()
         began = self.clock()
