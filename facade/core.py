@@ -136,6 +136,8 @@ class Facade:
         self.perception_version = None
         self.perception_state = 'unprobed'  # healthy | not_installed | unhealthy | unprobed
         self.snapshots, self.latest, self.selections, self.readings = {}, {}, {}, {}
+        self.looks = {}  # (pid, window_id, look_id) -> the page a cua_look showed (plans may filter over displayed lines only against one of these)
+        self.prefix_control = True  # plan steps set this False (exact label) unless control_match=prefix; the single-step form keeps the whole-word prefix
         self.events = []
         self.lock = threading.RLock()
 
@@ -264,16 +266,21 @@ class Facade:
 
     def subtree(self, state, candidate):
         root = self.node(state, candidate)['element_index']
-        descendants = {root}
-        for _ in range(len(state['nodes'])):
-            more = {i for i,n in state['nodes'].items() if n.get('parent_index') in descendants}
-            if more <= descendants:
-                break
-            descendants |= more
+        # Same closure as repeatedly collecting children, from a per-observation child map (a 100-row page made this quadratic).
+        kids = state.get('_kids')
+        if kids is None:
+            kids = {}
+            for i,n in state['nodes'].items():kids.setdefault(n.get('parent_index'), []).append(i)
+            state['_kids'] = kids
+        descendants, stack = {root}, [root]
+        while stack:
+            for child in kids.get(stack.pop(), ()):
+                if child not in descendants:descendants.add(child);stack.append(child)
         text = []
         for i,n in state['nodes'].items():
             if i in descendants:
-                for key in ('label','value'):
+                # A heading's `value` is its LEVEL ('1', '2'), never text: its label (and its text child) is.
+                for key in (('label',) if n.get('role') == 'AXHeading' else ('label','value')):
                     value = n.get(key)
                     if isinstance(value,str) and value.strip() and value not in text:
                         text.append(value)
@@ -476,11 +483,23 @@ class Facade:
             members = [i for i in children if index < i < high]
         else:
             return None
+        members = [i for i in members if not self._title_member(state, i)]  # the page's own title heading is page text, not the first record's
         texts = []
         for i in members:
             text, _ = self.subtree(state, 'e'+str(i))
             texts += [line for line in text.split('\n') if line and line not in texts]
         return (texts, set(members) | {index}) if texts else None
+
+    @staticmethod
+    def _title_member(state, i):
+        """True for the page's title as text: a heading whose text equals or contains the window title, or a text node that equals it. (Only these, so a record line
+        that merely mentions a word of the title is never dropped.)"""
+        title = re.sub(r'\s+', ' ', str(state['raw'].get('window_title') or '')).strip().casefold()
+        n = state['nodes'].get(i)
+        if not title or not n:return False
+        label = re.sub(r'\s+', ' ', str(n.get('label') or n.get('value') or '')).strip().casefold()
+        if n.get('role') == 'AXHeading':return bool(label) and title in label
+        return label == title
 
     READ_BUDGET = 2  # readings per (snapshot, record scope); S4.2 §7 bounds steps, S4.8 forbids re-read loops
 
@@ -1220,11 +1239,11 @@ class Facade:
             root, ancestor = ancestor, state['nodes'][ancestor].get('parent_index')
         return None
 
-    @staticmethod
-    def _label_matches(control, label):
-        """Exact label (case and whitespace insensitive), else a whole-word prefix: control "Book" matches "Book Dr. B"."""
+    def _label_matches(self, control, label):
+        """Exact label (case and whitespace insensitive), else a whole-word prefix: control "Book" matches "Book Dr. B". Plan steps are exact only
+        (self.prefix_control False) unless the step says control_match=prefix: "Finish" must never press "Finish later"."""
         norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
-        return norm(label) == norm(control) or norm(label).startswith(norm(control) + ' ')
+        return norm(label) == norm(control) or (self.prefix_control and norm(label).startswith(norm(control) + ' '))
 
     def _shape(self, state, kids, index, depth=5):
         node = state['nodes'][index]
@@ -1407,10 +1426,53 @@ class Facade:
             if (tagged and controls) or (len(controls) >= 2 and not growth):
                 texts = [str(nodes[i].get('value') or nodes[i].get('label')) for i in sorted(members)
                          if nodes[i].get('role') in ('AXStaticText', 'AXHeading') and (nodes[i].get('value') or nodes[i].get('label'))]
-                regions.append((controls, '\n'.join(dict.fromkeys(texts))))
+                regions.append((controls, '\n'.join(dict.fromkeys(texts)), members, parent))
         modals, replaced = self._new_modals(state, before)
         ambiguous = replaced or len(modals) > 1 or len(regions) > 1
+        self._dialog_cluster = (regions[0][2], regions[0][3]) if regions else None  # read by _dialog_region (same observation, same call)
         return (regions[0][0], regions[0][1], ambiguous) if regions else ([], '', ambiguous)
+
+    def _dialog_region(self, state, before):
+        """EVERY node that belongs to a dialog, for a confirm step's whitelist: (a) all new nodes anywhere in the window (a warning parented outside the cluster, beside the
+        web area, counts; browser chrome such as the tab strip, toolbar and address field is skipped) with their subtrees; (b) the whole subtree of the container that holds the
+        dialog cluster when it is not the page or window root, so text that was ALREADY inside it (identical to text on the page before) is still compared, not dropped;
+        (c) the whole subtree of the nearest dialog-tagged ancestor. A dialog whose container IS the web area is compared by its new nodes only (documented)."""
+        self._new_dialog(state, before)
+        nodes, content, kids = state['nodes'], self._content_ids(state), self._kids(state)
+        sig = lambda n: (n.get('role'), n.get('label') or '', str(n.get('value') or ''))
+        was = {}
+        for n in before['nodes'].values():was[sig(n)] = was.get(sig(n), 0) + 1
+        def chrome(i):
+            a, guard = i, set()
+            while a in nodes and a not in guard:
+                guard.add(a)
+                if nodes[a].get('role') in ('AXTabGroup', 'AXToolbar', 'AXMenuBar', 'AXMenu'):return True
+                a = nodes[a].get('parent_index')
+            return False
+        new = []
+        for i in sorted(nodes):
+            key = sig(nodes[i])
+            if was.get(key, 0) > 0:was[key] -= 1;continue
+            if nodes[i].get('role') in ('AXWindow', 'AXWebArea'):continue
+            if i in content or (not chrome(i) and nodes[i].get('role') not in ('AXTextField', 'AXComboBox', 'AXSearchField')):new.append(i)
+        def below(i):
+            out, stack = set(), [i]
+            while stack:
+                x = stack.pop()
+                if x not in out:out.add(x);stack += kids.get(x, [])
+            return out
+        region = set()
+        for i in new:region |= below(i)
+        cluster = getattr(self, '_dialog_cluster', None)
+        if cluster:
+            parent = cluster[1]
+            if parent in nodes and nodes[parent].get('role') not in ('AXWebArea', 'AXWindow'):region |= below(parent)
+            a, guard = parent, set()
+            while a in nodes and a not in guard:
+                guard.add(a)
+                if nodes[a].get('role') in self.MODAL_ROLES:region |= below(a);break
+                a = nodes[a].get('parent_index')
+        return region
 
     @staticmethod
     def _value_shape(value):
@@ -1544,15 +1606,42 @@ class Facade:
                 'controls': [{'id': 'e'+str(i), 'name': (n.get('label') or '')[:40]} for i, n in state['nodes'].items()
                              if i not in state['aliases'] and self._is_control(n)][:12]}
 
+    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60):
+        """Read-only, deterministic look at the strings the page displays (no click, no window move, no model unless `fields`)."""
+        import look as lookmod
+        with self.lock:return self.mark(lookmod.run_look(self, title, pid, window_id, fields, max_records, max_bytes, focus, max_lines, line_chars))
+
     def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
-           expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None):
+           expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None,
+           steps=None, look_id=None, abort_if=None):
         """One call runs observe -> read -> same-record filter -> (chooser only if several) -> bind -> act -> verify,
         recovering deterministically (bounded) and deferring to the caller only where guessing would be worse.
-        Composes observe/read/choose/act/verify; owns no selection policy. Never retries a click."""
+        Composes observe/read/choose/act/verify; owns no selection policy. Never retries a click.
+        With `steps` it runs a validated PLAN instead (plan.py): each step is this same pipeline on a fresh observation."""
+        return self.mark(self._do_entry(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if))
+
+    def mark(self, result):
+        """Every cua_do response can carry page-derived strings (summary.text, dialog.lines, evidence, found, descriptions): say so, with the fixed sentence."""
+        import look as lookmod
+        if isinstance(result, dict):
+            result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)
+        return result
+
+    def _do_entry(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if):
+        if steps is not None or look_id is not None or abort_if is not None:
+            import plan as planmod
+            with self.lock:
+                if steps is None:
+                    return planmod.run_plan(self, goal, title, pid, window_id, [], look_id, abort_if, budget_s, expect, {})
+                return planmod.run_plan(self, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect,
+                                        {'records': records, 'operation': operation, 'text': text, 'accept_unknown': accept_unknown, 'confirm': confirm,
+                                         'control': control, 'treat_as_match': treat_as_match, 'near': near})
         with self.lock:return self._do(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near)
 
-    def _do(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm=None, control=None, treat_as_match=None, near=None):
+    def _do(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm=None, control=None, treat_as_match=None, near=None, plan=None):
         confirm_label = confirm
+        lines_where = plan.get('lines_where') if plan else None  # option B: a deterministic filter over displayed lines (plan.py), never a reader call
+        if plan is not None:import plan as planmod
         t0 = self.clock();ms, calls, attempts, tries, keep = {}, {}, [], {}, {}
         ctx = {'stage': 'goal', 'pid': pid, 'window_id': window_id, 'delivery': 'none', 'selection': None, 'pass': 0}
         def finish(status, **extra):
@@ -1623,6 +1712,46 @@ class Facade:
             root = next(r for r in roots if index in self.subtree(state, r)[1])
             fields = next(r['fields'] for r in reading['extraction']['records'] if r['record_id'] == root)
             return {k: re.sub(r'\s+', ' ', str(v)).strip() for k, v in sorted(fields.items()) if v is not None}
+        def discovery_defer(why, found):
+            """Records could not be told apart without guessing: defer with what the caller needs (shared by the reader and the lines-where paths)."""
+            # Page text (control labels) lives ONLY in `found`; a hint is fixed text plus the caller's own words, never page text.
+            hints = {'control_needed': 'Each record has several controls (found.repeated_controls lists their labels). Call cua_do again with control=<the exact label of the one to press>.',
+                     'control_not_found': 'No control matches control=%r (found.controls lists what is pressable). Call cua_do again with control set to one of them, or without records and a goal that quotes the exact label.' % (control,),
+                     'control_ambiguous': 'Several controls match control=%r in a record; nothing was guessed. Call cua_do again with control set to the exact full label, or without records and a goal that quotes the exact label of the control (see found.controls).' % (control,),
+                     'records_ambiguous': 'Could not tell which controls are records (found.controls lists them). Call cua_do again WITHOUT records and with a goal that quotes the exact label of the control to press, or pass control=<exact label>. Nothing was guessed or clicked.',
+                     'no_controls': 'No enabled control was found in the page content, so there is nothing cua_do can press here; nothing was clicked.'}
+            dead = {'dead_end': True, 'report_to_user': DEAD_END} if why == 'no_controls' else {}
+            return finish('deferred', reason='records_ambiguous' if why == 'no_controls' else why, found=found, hint=hints[why], **dead,
+                          **({'retry_with': 'cua_do again with control=<one of found.repeated_controls labels>'} if why == 'control_needed' else {}))
+        def confirm_step_check(state):
+            """An explicit confirm step (plan.py): the dialog the PREVIOUS press opened, checked before anything is clicked. Deferred unless it is
+            the only new dialog, displays EVERY string of the selected record's identity, and holds exactly one control labelled exactly as asked."""
+            cs = plan['confirm_step'];nodes = state['nodes'];ctx['stage'] = 'confirm'
+            norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
+            if cs['before'] is None:return finish('deferred', reason='confirm_dialog_not_found', verified=False)
+            new_controls, dialog_text, ambiguous = self._new_dialog(state, cs['before'])
+            if ambiguous:return finish('deferred', reason='confirm_dialog_ambiguous', verified=False)
+            if not new_controls:return finish('deferred', reason='confirm_dialog_not_found', verified=False)
+            labels = self._bounded([(nodes[i].get('label') or '')[:40] for i in new_controls])
+            # POSITIVE AUTHORIZATION: the caller declared the dialog's COMPLETE text; every actual line must be declared and every declared line present.
+            # No word list (negations, verbs, languages) decides intent: whether the caller declared exactly this text does.
+            import look as lookmod
+            region_lines, region_controls = lookmod.region_items(self, state, self._dialog_region(state, cs['before']))
+            actual_lines, actual_controls = region_lines, region_controls
+            dialog_text = '\n'.join(actual_lines)  # the identity sanity check reads the whole region, not only static texts
+            shown_lines = [l[:80] for l in actual_lines[:12]]
+            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual_lines} or {norm(x) for x in cs['dialog_controls']} != {norm(x) for x in actual_controls}:
+                return finish('deferred', reason='confirm_dialog_unexpected_text', dialog={'controls': [c[:60] for c in actual_controls[:12]], 'identity': 'not_checked', 'lines': shown_lines,
+                              'declared_lines': len(cs['dialog_text']), 'actual_lines': len(actual_lines), 'declared_controls': len(cs['dialog_controls']), 'actual_controls': len(actual_controls)}, verified=False)
+            if not cs['identity']:return finish('deferred', reason='confirm_needs_identity', dialog={'controls': labels, 'identity': 'not_checked', 'lines': shown_lines}, verified=False)
+            verdict, shown, missing = planmod.identity_state(dialog_text, cs['identity'])
+            held = {'dialog': {'controls': labels, 'identity': verdict, 'lines': shown_lines}, 'verified': False}
+            if verdict == 'partial':return finish('deferred', reason='confirm_identity_partial', **held, identity_shown=len(shown), identity_not_shown=len(missing))
+            if verdict != 'matched':return finish('deferred', reason='confirm_identity_unknown', **held)
+            hits = [i for i in new_controls if norm(nodes[i].get('label')) == norm(cs['label'])]
+            if len(hits) != 1:return finish('deferred', reason='confirm_control_not_found' if not hits else 'confirm_dialog_ambiguous', **held)
+            plan['confirm_new'] = set(new_controls)
+            return None
         def attempt():
             ctx['pass'] += 1
             pid_, window_ = ctx['pid'], ctx['window_id']
@@ -1636,7 +1765,18 @@ class Facade:
                               hint='The window holds %d separate page areas (for example a browser extension popup beside the page); nothing was clicked. Close the extra one, or give the exact title of the window that holds only the page, and call cua_do again.' % len(webs))
             if operation == 'verify':return verify_only(state)
             reading, pick, roots = None, {}, []
-            if spec:
+            if plan and plan.get('confirm_step'):
+                early = confirm_step_check(state)
+                if early:return early
+            if lines_where:
+                ctx['stage'] = 'read'
+                roots, targets, found, why, disabled_roots = self.discover_records(state, operation, control)
+                if roots is None:return discovery_defer(why, found)
+                outcome = planmod.lines_stage(self, state, snapshot, lines_where, roots, targets, disabled_roots)
+                count('read', 'deterministic_lines')
+                if 'defer' in outcome:return finish('deferred', **outcome['defer'])
+                reading, pick = outcome['reading'], outcome['pick']
+            elif spec:
                 fields, predicates, supplied, coverage, _ = spec
                 ctx['stage'] = 'read'
                 norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
@@ -1653,17 +1793,7 @@ class Facade:
                             targets[root] = 'e'+str(named[0])
                 else:
                     roots, targets, found, why, disabled_roots = self.discover_records(state, operation, control);coverage = True
-                    if roots is None:
-                        labels, seen = found['controls'], ', '.join(map(repr, found['controls'])) or 'none'
-                        quoted = 'Click "%s"' % (labels[0] if labels else '<label>')
-                        hints = {'control_needed': 'Each record has several controls (%s). Call cua_do again with control=<the exact label of the one to press>.' % ', '.join(map(repr, [c['label'] for c in found['repeated_controls']])),
-                                 'control_not_found': 'No control matches control=%r (controls seen: %s). Call cua_do again with control set to one of them, or without records and a goal that quotes the exact label.' % (control, seen),
-                                 'control_ambiguous': 'Several controls match control=%r in a record; nothing was guessed. Call cua_do again with control set to the exact full label, or without records and a goal that quotes the exact label of the control (for example %s).' % (control, quoted),
-                                 'records_ambiguous': 'Could not tell which controls are records (controls seen: %s). Call cua_do again WITHOUT records and with a goal that quotes the exact label of the control to press (for example %s), or pass control=<exact label>. Nothing was guessed or clicked.' % (seen, quoted),
-                                 'no_controls': 'No enabled control was found in the page content, so there is nothing cua_do can press here; nothing was clicked.'}
-                        dead = {'dead_end': True, 'report_to_user': DEAD_END} if why == 'no_controls' else {}
-                        return finish('deferred', reason='records_ambiguous' if why == 'no_controls' else why, found=found, hint=hints[why], **dead,
-                                      **({'retry_with': 'cua_do again with control=<one of found.repeated_controls labels>'} if why == 'control_needed' else {}))
+                    if roots is None:return discovery_defer(why, found)
                 def read_once():
                     try:return self.read(snapshot, goal, fields, roots, predicates, coverage, flat_by_role=True, shape_guard=True)
                     except Gap as gap:
@@ -1701,7 +1831,7 @@ class Facade:
                     missing = [r for r in filt['eligible_ids'] if r not in targets]
                     if missing:
                         return finish('deferred', reason='control_not_found', missing_count=len(missing), found=found,
-                                      hint='A matching record has no control labelled %r (controls seen: %s); nothing was clicked. Call cua_do again with control set to an exact label.' % (control, ', '.join(map(repr, found['controls'])) or 'none'))
+                                      hint='A matching record has no control labelled %r (found.controls lists what is pressable); nothing was clicked. Call cua_do again with control set to an exact label.' % (control,))
                 if targets:pick = {'record_actions': {r: targets[r] for r in filt['eligible_ids']}}
                 elif accept_unknown:pick = {'candidate_ids': list(filt['eligible_ids'])}
             mode = 'semantic';region_choice = None
@@ -1745,6 +1875,8 @@ class Facade:
                         return finish('deferred', reason=why, found={'controls': listing, **({'region_texts': fallback['region_texts']} if fallback and fallback.get('region_texts') else {})}, control_count=len(same),
                                       **({'dead_end': True, 'report_to_user': DEAD_END} if no_help else {}),
                                       hint='%r matched %d pressable controls (labels seen in found.controls; %d present but not press-capable); nothing was clicked. Call cua_do again with an exact control label.' % (label, len(same), len(any_named) - len(same)))
+                    if plan and plan.get('confirm_new') is not None and mode != 'region_exact' and len(same) == 1 and same[0] not in plan['confirm_new']:
+                        return finish('deferred', reason='confirm_control_not_found', verified=False)  # the label exists, but not inside the dialog the previous step opened
                     if len(same) == 1:
                         node = state['nodes'][same[0]];mode = 'exact';choose_args.update(exact_name=node.get('label'), exact_role=node.get('role'))
                 if mode == 'semantic':
@@ -1778,6 +1910,21 @@ class Facade:
                 index = self.node(state, choice['selected_id'])['element_index']
                 if any(index in self.subtree(state, r)[1] for r in keep['treated']):judgment = 'controller'  # the controller's verdict put this record in play
             picked = {'id': choice['selected_id'], 'description': action['description'][:120]}
+            if plan is not None and operation != 'verify':
+                sid_ = choice['selected_id']
+                node = state['nodes'].get(int(sid_[1:]), {}) if isinstance(sid_, str) and sid_[:1] == 'e' and sid_[1:].isdigit() else {}  # a pixel region is no AX control
+                if node.get('role') in planmod.lk.TOGGLE_ROLES or 'checked' in node or 'selected' in node:
+                    # A toggle presses to the OPPOSITE of its current state: only against a look that saw that state, and unchanged since.
+                    seen = self.looks.get((ctx['pid'], ctx['window_id'], plan.get('look_id'))) if plan.get('look_id') else None
+                    why = 'toggle_state_unseen' if seen is None else (None if planmod.look_matches(self, state, seen, plan['look_id'])[0] else 'page_changed_since_look')
+                    if why:
+                        self.selections.pop(selection, None)
+                        return finish('deferred', reason=why, verified=False)
+                # The destructive-verb guard on the RESOLVED control (a whole-word prefix such as "Cancel" can resolve to "Cancel and delete account").
+                bad = planmod.destructive_verbs(action.get('name') or '')
+                if bad and not planmod.allowed(plan.get('allow'), action.get('name') or ''):
+                    self.selections.pop(selection, None)
+                    return finish('deferred', reason='destructive_control', selected=picked, verified=False)
             identity = identity_of(reading, state, roots, choice['selected_id']) if reading else {'description': action['description']}
             keep['picked_identity'] = identity if reading else None
             fold = lambda d: {k: v.casefold() for k, v in d.items()}
@@ -1795,6 +1942,11 @@ class Facade:
                 self.selections.pop(selection, None)
                 return finish('deferred', reason='record_changed', selected=picked, hint='After a stale-UI refusal the fresh pipeline selects a different record than before; nothing was clicked. Re-state the goal against the new content.')
             ctx['stage'] = 'act'
+            if plan is not None:
+                plan['out']['before'] = state  # the observation this click was chosen on: a following confirm step diffs the dialog against it
+                if lines_where:plan['out']['identity_strings'] = list(lines_where['identity'])
+                elif reading:
+                    values = [identity.get(k) for k in spec[4]];plan['out']['identity_strings'] = values if all(values) else None
             try:deliver(selection)
             except StaleUI as gap:
                 if not recoverable(identity):
@@ -1891,7 +2043,10 @@ class Facade:
             comparable = {k: identity.get(k) for k in ident_fields}
             norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
             state, extracted, shown, not_shown = 'not_checked' if not reading else 'unknown', None, [], list(ident_fields)
-            if reading and comparable and all(comparable.values()) and dialog_text:
+            if lines_where:
+                # Deterministic: every identity string of the plan must be displayed by the dialog (no reader call).
+                if dialog_text:state, shown, not_shown = planmod.identity_state(dialog_text, lines_where['identity'])
+            elif reading and comparable and all(comparable.values()) and dialog_text:
                 # The dialog's displayed text is only the NEW region text: the page's own rows can never vouch for the dialog.
                 sid = current['raw']['snapshot_id'];specs = {k: {**fields[k], 'type': 'text'} for k in ident_fields}
                 extraction = self.provider('reader').extract({'snapshot_id': sid, 'task': goal, 'fields': {k: v['description'] for k, v in specs.items()},
@@ -1958,6 +2113,9 @@ class Facade:
             if expect is not None and (not isinstance(expect, str) or not expect.strip()):raise Gap('bad_request: expect must be nonempty text')
             if not isinstance(budget_s, (int, float)) or isinstance(budget_s, bool) or budget_s <= 0:raise Gap('bad_request: budget_s must be positive seconds')
             spec = self._do_records(records) if records is not None else None
+            if lines_where:
+                if records is not None:raise Gap('bad_request: a step filters by where.lines or where.fields, not both')
+                spec = ({'lines': {'description': 'the displayed lines of the record'}}, [], None, True, ['lines'])
             ctx['stage'] = 'window';began = self.clock()
             if title is not None:
                 if pid is not None or window_id is not None:raise Gap('bad_request: give title or pid+window_id, not both')
@@ -1967,6 +2125,11 @@ class Facade:
                 ctx.update(pid=found[0]['pid'], window_id=found[0]['window_id'])
             elif pid is None or window_id is None:raise Gap('bad_request: supply title, or pid and window_id')
             count('window', 'driver_inventory')
+            if plan is not None:plan['pid'], plan['window_id'] = ctx['pid'], ctx['window_id']
+            if lines_where:
+                lines_where['look'] = self.looks.get((ctx['pid'], ctx['window_id'], lines_where['look_id']))
+                if lines_where['look'] is None:
+                    raise Gap('look_window_mismatch: no cua_look of THIS window returned that look_id; call cua_look on this window and use its look_id')
             for _ in (1, 2):
                 result = attempt()
                 if result is not self.STALE:return result
@@ -1981,12 +2144,13 @@ class Facade:
             given_back = bool(item) and not item['used'] and ctx['delivery'] == 'none'
             if ctx['delivery'] != 'none' and ctx['selection']:self.selections.pop(ctx['selection'], None)
             if ctx['stage'] in ('act', 'confirm') and not given_back and ctx['delivery'] == 'none':ctx['delivery'] = 'uncertain'
-            return finish('failed', reason='driver_call_failed', message=str(gap), attempts=tries.get(ctx['stage'], 1),
+            return finish('failed', reason='driver_call_failed', message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', attempts=tries.get(ctx['stage'], 1),
                           retryable=ctx['delivery'] == 'none', **({'selection': ctx['selection']} if given_back else {}))
         except self._Ambiguous as gap:
             return finish('deferred', reason='records_ambiguous', message=str(gap))
         except Gap as gap:
-            return finish('refused', reason=self._do_reason(str(gap)), message=str(gap))
+            import look as lookmod
+            return finish('refused', reason=self._do_reason(str(gap)), message=lookmod.safe_message(self._do_reason(str(gap)), str(gap)))
         except (ValueError, RuntimeError, TimeoutError, OSError) as error:
             return finish('failed', reason='provider_failure', error_type=type(error).__name__, attempts=tries.get(ctx['stage'], 1),
                           retryable=ctx['delivery'] == 'none')
@@ -1996,6 +2160,6 @@ class Facade:
             try:provider.close()
             except Exception:self.event('cleanup',status='worker_close_failed')
         self.providers.clear()
-        self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear()
+        self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear();self.looks.clear()
         return {'status':'closed','trace':self.events,'driver_version':self.driver_version,'driver_version_state':self.driver_version_state,
                 'perception_version':self.perception_version,'perception_state':self.perception_state}

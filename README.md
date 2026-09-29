@@ -95,7 +95,7 @@ python3 scripts/sync_skill_references.py --check
 .venv-facade/bin/python scripts/check_call_budget.py   # table of scenario, calls, budget, PASS/FAIL; nonzero on failure
 ```
 
-`scripts/check_call_budget.py` enforces [facade/CALL_BUDGET.json](facade/CALL_BUDGET.json): the default path (`cua_do`, the only tool visible unless `CUA_TASK_ADVANCED=1`) stays within its measured LLM-visible calls on the real captured Chrome trees, because the driving LLM's turns were 87% of agent wall time. Adding a tool or a mandatory step to the default path requires a CE and a CALL_BUDGET.json change; see [FACADE.md](docs/FACADE.md#call-budget).
+`scripts/check_call_budget.py` enforces [facade/CALL_BUDGET.json](facade/CALL_BUDGET.json): the default path (look, then do: `cua_look` and `cua_do`, the only tools visible unless `CUA_TASK_ADVANCED=1`) stays within its measured LLM-visible calls on the real captured Chrome trees and synthetic wizard, 100-row and canvas shapes; `scripts/check_plan_mutations.py` proves the wrong patches fail by assertion and `scripts/look_compare.py` reports the structure of the look claim (live latency and accuracy are not measured), because the driving LLM's turns were 87% of agent wall time. Adding a tool or a mandatory step to the default path requires a CE and a CALL_BUDGET.json change; see [FACADE.md](docs/FACADE.md#call-budget) and, for look-then-plan, [PLAN-B.md](docs/PLAN-B.md).
 
 The simulation gate checks 28 scenarios, 40 metamorphic variants, 20 unit/contract tests, 35 recorded decisions and seven deliberately wrong repairs. It writes results into the simulation directory. Exact-output checks and capable-model sketch review are separate; retained review is a historical self-review, not fresh independent certification.
 

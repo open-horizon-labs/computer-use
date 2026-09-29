@@ -120,7 +120,7 @@ class Discovery(unittest.TestCase):
         r, d, _ = sh.run(sh.toolbar())
         self.assertEqual((r['status'], r['reason'], d.executed), ('deferred', 'records_ambiguous', []))
         self.assertNotIn('record_ids', r['hint']);self.assertFalse(PRIMITIVES.search(json.dumps(r)))
-        self.assertIn('Click "Export"', r['hint']);self.assertEqual(r['found']['controls'], ['Export', 'Save'])
+        self.assertIn('quotes the exact label', r['hint']);self.assertNotIn('Export', r['hint']);self.assertEqual(r['found']['controls'], ['Export', 'Save'])
         followed, d2, _ = sh.run(sh.toolbar(), goal='Click "Export"', records=None)  # the hinted path works
         self.assertEqual((followed['judgment'], len(d2.executed)), ('exact', 1))
 
