@@ -37,8 +37,13 @@ sequenceDiagram
     participant L as Driving LLM
     participant S as cua-task server
     participant D as Cua Driver
+    participant N as NuExtract3 (optional)
     L->>S: cua_look
     S->>D: observe (read-only)
+    opt fields requested (big or messy page)
+        S->>N: read fields, 10 records per call
+        N-->>S: value strings
+    end
     S-->>L: displayed strings + look_id
     Note over L: writes ONE plan
     L->>S: cua_do(steps, look_id)
@@ -46,6 +51,7 @@ sequenceDiagram
         S->>D: observe, bind, act
         S->>D: observe, verify expect
     end
+    Note over S,N: where.fields in a step also uses NuExtract3
     S-->>L: done, or stopped at step N
 ```
 
