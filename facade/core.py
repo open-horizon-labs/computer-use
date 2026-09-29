@@ -16,7 +16,7 @@ import uuid
 
 DISPATCH = Path(__file__).resolve().parents[1] / 'inference/cua-decider/capability-dispatch'
 sys.path.insert(0, str(DISPATCH))
-from dispatch import Engine, execute_bound, request_digest
+from dispatch import Engine, execute_bound, request_digest, predicate as dispatch_predicate, typed as dispatch_typed
 from page_candidates import NuExtractPage, filter_records
 from providers import generic_from_config, RemoteSpans
 from rollout import Strangler
@@ -26,6 +26,11 @@ from ax_aliases import table_aliases
 
 class Gap(ValueError):
     """An observation/authority gap; must not authorize execution."""
+
+
+class StaleUI(Gap):
+    """act() refused: the bound observation changed before delivery. Nothing was clicked.
+    Typed, so cua_do recovers from it without matching on message text."""
 
 
 class DriverCallFailed(Gap):
@@ -97,7 +102,7 @@ class Driver:
             raise Gap('Driver refused: ' + str(value.get('refusal', {}).get('code', 'unknown')))
         return value
 
-    def observe(self, pid, window_id, session):
+    def observe(self, pid, window_id, session, timeout=20):
         # resolve() avoids Driver rejecting /tmp's symlink as a nondirectory.
         try:
             directory_context = tempfile.TemporaryDirectory(prefix='cua-facade-')
@@ -107,7 +112,7 @@ class Driver:
             path = Path(directory).resolve()/'window.png'
             result = self.call('get_window_state', {'pid': pid, 'window_id': window_id,
                 'session': session, 'max_elements': 15000, 'max_dimension': 1280,
-                'screenshot_out_file': str(path)})
+                'screenshot_out_file': str(path)}, timeout=timeout)
             try:
                 result['_image'] = path.read_bytes() if path.exists() else b''
             except OSError:
@@ -117,8 +122,9 @@ class Driver:
 
 class Facade:
     def __init__(self, driver=None, generic_factory=generic_from_config, reader_factory=NuExtractPage,
-                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic):
+                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep):
         self.driver = driver or Driver()
+        self.sleep = sleep
         self.factories = {'generic': generic_factory, 'reader': reader_factory,
                           'spans': spans_factory, 'visual': visual_factory}
         self.providers = {}
@@ -173,11 +179,11 @@ class Facade:
             {k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w}
             for w in result.get('windows', []) if w.get('title') and (title is None or w['title']==title)]}
 
-    def observe(self, pid, window_id):
+    def observe(self, pid, window_id, timeout=None):
         if not self.started:
             self.windows()
         began = self.clock()
-        raw = self.driver.observe(pid, window_id, self.session)
+        raw = self.driver.observe(pid, window_id, self.session, *([timeout] if timeout is not None else []))
         if not raw.get('snapshot_id') or raw.get('pid', pid) != pid or raw.get('window_id', window_id) != window_id:
             # A vague message here just makes the agent guess three times. Say
             # whether the window is gone or the Driver degraded/refused instead.
@@ -442,7 +448,7 @@ class Facade:
         inferred = self.sibling_record(state, index)
         return '\n'.join(inferred[0]) if inferred else ''
 
-    def sibling_record(self, state, index):
+    def sibling_record(self, state, index, by_role=False):
         """Flat trees (Chrome often prunes each <li> wrapper): split the parent's
         children at each repeat of this control. Records must consistently sit
         on one side of their control -- text before the first repeat and none
@@ -454,6 +460,9 @@ class Facade:
         kind = (node.get('role'), node.get('label'))
         children = sorted(i for i,n in state['nodes'].items() if n.get('parent_index') == parent)
         repeats = [i for i in children if (state['nodes'][i].get('role'), state['nodes'][i].get('label')) == kind]
+        if by_role and len(repeats) < 2:
+            # Per-record labels ("Book Dr A", "Book Dr B"): the peers are the same-role controls of the same parent.
+            repeats = [i for i in children if state['nodes'][i].get('role') == node.get('role') and self._is_control(state['nodes'][i])]
         if len(repeats) < 2 or index not in repeats:
             return None
         before = [i for i in children if i < repeats[0]]
@@ -475,7 +484,7 @@ class Facade:
 
     READ_BUDGET = 2  # readings per (snapshot, record scope); S4.2 §7 bounds steps, S4.8 forbids re-read loops
 
-    def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False):
+    def read(self, snapshot, task, fields, record_ids, predicates=None, coverage_complete=False, flat_by_role=False, shape_guard=False):
         state = self.state(snapshot)
         fields = copy.deepcopy(fields)
         # S4.8: readings are the displayed strings. Supplied types are ignored
@@ -500,7 +509,7 @@ class Facade:
             if len(members) == 1:
                 # A lone control in a flat tree: use its sibling-order record,
                 # labelled so the weaker grouping stays visible downstream.
-                inferred = self.sibling_record(state, root)
+                inferred = self.sibling_record(state, root, flat_by_role)
                 if inferred:
                     text, members = '\n'.join(inferred[0] + ([text] if text else [])), inferred[1]
                     record_basis[candidate] = 'sibling_order'
@@ -515,6 +524,7 @@ class Facade:
             'task':task, 'fields':{k:v['description'] for k,v in fields.items()}, 'records':records},state['raw']['snapshot_id'])
         filtered = filter_records(extraction,fields=fields,predicates=predicates or [],
             coverage_complete=coverage_complete,current_snapshot=state['raw']['snapshot_id'])
+        if shape_guard:filtered = self._reclassify_shapes(fields, predicates or [], extraction, filtered)
         handle = 'read_' + uuid.uuid4().hex
         result = {'reading':handle, 'snapshot':snapshot, 'route':'nuextract3', 'extraction':extraction, 'filter':filtered,
                   **({'record_basis':record_basis} if record_basis else {}), **({'types_ignored':types_ignored} if types_ignored else {})}
@@ -896,6 +906,13 @@ class Facade:
                 'offered_count':len(actions),'caller_preselected':caller_preselected,
                 'candidate_scope':'caller_subset' if candidate_ids is not None and not reading and mode!='exact' else 'observed_or_filtered_scope',
                 **({'judgment':judgment,'unknown_competitors':unknown_competitors,'accepted_unknown':acknowledged} if reading else {})}
+        if mode=='exact' and not decision.get('action_authorized'):
+            # Additive diagnosis of exact_target_not_unique: the offered actions only include press-capable nodes, so a control that
+            # Chrome did not advertise AXPress on is invisible here and the target looks absent, not duplicated (live orders dialog).
+            observed=[n for i,n in state['nodes'].items() if i not in state['aliases'] and n.get('label')==exact_name and (exact_role is None or n.get('role')==exact_role)]
+            offered_named=[a for a in actions if a['name']==exact_name and (exact_role is None or a['role']==exact_role)]
+            result['diagnostic']={'observed_named':len(observed),'offered_named':len(offered_named),
+                'not_press_capable':len(observed)-len(offered_named) if len(observed)>len(offered_named) else 0}
         return self.issue(snapshot,request,decision,mode,operation,text,result)
 
     def issue(self,snapshot,request,decision,mode,operation,text,result):
@@ -985,9 +1002,9 @@ class Facade:
         root=item.get('scope_root')
         if root is None:
             if state['fingerprint']!=current['fingerprint']:
-                raise Gap('UI changed since selection; reobserve and choose again')
+                raise StaleUI('UI changed since selection; reobserve and choose again')
         elif root not in current['nodes'] or self.scope_digest(current,root)!=item['scope_digest']:
-            raise Gap('UI changed within the bound content scope since selection (%s); reobserve and choose again'
+            raise StaleUI('UI changed within the bound content scope since selection (%s); reobserve and choose again'
                       % self.scope_changes(state,current,root))
         if item['mode']=='visual' and state['image_digest']!=current['image_digest']:
             raise Gap('Visual evidence changed; choose again from current screenshot')
@@ -1108,6 +1125,871 @@ class Facade:
                    assessment_ms=max(0,(self.clock()-assessment_start)*1000-setup),
                    provider_setup_ms=setup,wall_ms=(self.clock()-began)*1000)
         return {**result,'snapshot':fresh['snapshot'],'independent_observation':True,'observation':fresh}
+
+    # --- cua_do: the dispatcher runs the evidence chain and its bounded recovery (S4.1-S4.2, S4.6-S4.8) ---
+    DO_OPS = ('eq', 'neq', 'contains', 'not_contains')
+    DO_LIST_CAP = 20
+    RETRY_BACKOFF_S = 0.3
+    MODAL_ROLES = ('AXSheet', 'AXDialog')
+    # A record is defined by its repeated ACTIONABLE control. Real Chrome trees advertise AXPress on every static text, cell and row,
+    # so press-capability alone says nothing: the role must be a control role.
+    CONTROL_ROLES = ('AXButton', 'AXLink', 'AXMenuItem', 'AXMenuButton', 'AXPopUpButton', 'AXRadioButton', 'AXCheckBox')
+
+    @staticmethod
+    def _top_web_areas(state):
+        """AXWebArea nodes that are not inside another web area (an iframe's web area is part of its page, not a second page)."""
+        nodes, out = state['nodes'], []
+        for i, n in sorted(nodes.items()):
+            if n.get('role') != 'AXWebArea':continue
+            a, nested, seen = n.get('parent_index'), False, {i}
+            while a in nodes and a not in seen:
+                seen.add(a);nested = nested or nodes[a].get('role') == 'AXWebArea';a = nodes[a].get('parent_index')
+            if not nested:out.append(i)
+        return out
+
+    def _content_ids(self, state):
+        """Node indices of the page content (the first top-level AXWebArea subtree), else every node. The browser's own menu bar
+        (hundreds of AXMenuItems) and toolbar are chrome, never the records or candidates of a page goal."""
+        web = self._top_web_areas(state)
+        return set(state['nodes']) if not web else self.subtree(state, 'e'+str(web[0]))[1]
+
+    def _escalate(self, state, expect, remaining_s):
+        """Perception exact-presence (never satisfies on a digit-bearing quote), then the screenshot model. Deliberately NOT cua_verify's
+        AX quote check, which counts control labels and the tab strip."""
+        handle = next(h for h, x in self.snapshots.items() if x is state);hint = None
+        if self.perception_state == 'healthy':
+            try:hint = self._perception_fuzzy_check([expect], self.regions(handle))
+            except Gap:hint = None
+        if hint and hint['status'] == 'satisfied':return {'status': 'satisfied', 'route': hint['route']}
+        import base64
+        try:
+            seen = self.provider('visual').inspect({**state['raw'], 'screenshot_data_url': 'data:image/png;base64,' + base64.b64encode(state['image']).decode() if state['image'] else None},
+                                                   'The window shows "%s"' % expect, max(0.01, min(20.0, remaining_s)))
+        except (ValueError, RuntimeError, TimeoutError, OSError) as error:
+            seen = {'state': 'unknown', 'reason': 'visual_provider_failure', 'error_type': type(error).__name__}
+        return {'status': 'satisfied' if seen.get('state') == 'ready' else 'unknown', 'route': 'systemone_vision', **({'perception_hint': hint} if hint else {})}
+
+    @staticmethod
+    def _column_copies(state):
+        """Nodes inside AXColumn projections of a table that also has AXRow children. Chrome exposes every cell twice (by row and by
+        column); the alias detector abstains without positive frames, so these copies would otherwise double every record."""
+        nodes, kids, skip = state['nodes'], {}, set()
+        for i, n in nodes.items():kids.setdefault(n.get('parent_index'), []).append(i)
+        for table, node in nodes.items():
+            if node.get('role') != 'AXTable' or not any(nodes[c].get('role') == 'AXRow' for c in kids.get(table, [])):continue
+            stack = [c for c in kids.get(table, []) if nodes[c].get('role') == 'AXColumn']
+            while stack:
+                x = stack.pop();skip.add(x);stack += kids.get(x, [])
+        return skip
+
+    @classmethod
+    def _is_control(cls, node):
+        return node.get('role') in cls.CONTROL_ROLES and node.get('enabled') is not False
+    STALE = object()
+
+    class _Ambiguous(Exception):pass
+
+    @staticmethod
+    def _do_reason(message):
+        match = re.match(r'([a-z_]+):', message or '')
+        return match.group(1) if match else 'refused'
+
+    def _do_records(self, records):
+        """Validate the caller's records spec (displayed strings, S4.8) before any Driver call."""
+        if not isinstance(records, dict):raise Gap('bad_request: records must be {fields, predicates, record_ids}')
+        fields = records.get('fields')
+        if not isinstance(fields, dict) or not fields or not all(isinstance(v, dict) and v.get('description') for v in fields.values()):
+            raise Gap('bad_request: records.fields maps each name to {description}')
+        predicates = list(records.get('predicates') or [])
+        for rule in predicates:
+            if rule.get('field') not in fields:raise Gap('bad_request: predicate field %r is not in records.fields' % rule.get('field'))
+            if rule.get('op', 'eq') not in self.DO_OPS:raise Gap('bad_request: predicate op must be one of %s' % ', '.join(self.DO_OPS))
+        supplied = records.get('record_ids')
+        if supplied is not None and (not supplied or len(set(supplied)) != len(supplied)):raise Gap('bad_request: record_ids must be distinct observed roots')
+        identity = records.get('identity')
+        if identity is not None and (not identity or any(k not in fields for k in identity)):raise Gap('bad_request: records.identity must name fields from records.fields')
+        return fields, predicates, supplied, records.get('coverage_complete') is True, list(identity) if identity else (list(dict.fromkeys(r['field'] for r in predicates if r.get('op', 'eq') == 'eq')) or list(fields))
+
+    def _record_root(self, state, index):
+        """Outermost ancestor still holding exactly one control of this kind (as record_context)."""
+        kind = lambda n: (n.get('role'), n.get('label'))
+        want, root, ancestor, seen = kind(state['nodes'][index]), index, state['nodes'][index].get('parent_index'), {index}
+        while ancestor in state['nodes'] and ancestor not in seen:
+            seen.add(ancestor)
+            if sum(1 for i in self.subtree(state, 'e'+str(ancestor))[1] if kind(state['nodes'][i]) == want) > 1:return root
+            root, ancestor = ancestor, state['nodes'][ancestor].get('parent_index')
+        return None
+
+    @staticmethod
+    def _label_matches(control, label):
+        """Exact label (case and whitespace insensitive), else a whole-word prefix: control "Book" matches "Book Dr. B"."""
+        norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
+        return norm(label) == norm(control) or norm(label).startswith(norm(control) + ' ')
+
+    def _shape(self, state, kids, index, depth=5):
+        node = state['nodes'][index]
+        return (node.get('role'), tuple(self._shape(state, kids, c, depth-1) for c in kids.get(index, [])) if depth > 0 else ())
+
+    def _kids(self, state):
+        kids = {}
+        for i, n in sorted(state['nodes'].items()):kids.setdefault(n.get('parent_index'), []).append(i)
+        return kids
+
+    def _structural_units(self, state, controls):
+        """Records from structure, not labels: {unit root: [controls]}. A unit is the lowest ancestor of a control that has a same-role,
+        same-shape sibling (li cards, table rows, grid groups); a flat list (field texts and controls are siblings) makes each control its
+        own unit when it has same-role peers with a consistent sibling-order record."""
+        nodes, kids, content = state['nodes'], self._kids(state), self._content_ids(state)
+        units, loose = {}, []
+        for c in controls:
+            a, found = nodes[c].get('parent_index'), None
+            while a in nodes and a in content and nodes[a].get('role') != 'AXWebArea':
+                p = nodes[a].get('parent_index');mine = self._shape(state, kids, a)
+                if any(x != a and nodes[x].get('role') == nodes[a].get('role') and self._shape(state, kids, x) == mine for x in kids.get(p, [])):found = a;break
+                a = p
+            if found is None:loose.append(c)
+            else:units.setdefault(found, []).append(c)
+        flat = {}
+        for c in loose:flat.setdefault((nodes[c].get('parent_index'), nodes[c].get('role')), []).append(c)
+        for peers in flat.values():
+            if len(peers) >= 2 and all(self.sibling_record(state, c, True) for c in peers):
+                for c in peers:units[c] = [c]
+        return units
+
+    def discover_records(self, state, operation, control=None):
+        """Records are defined by ACTIONABLE controls (role in CONTROL_ROLES, press-capable, inside the page content), never by repeated
+        static text, cells or rows. (1) the same role+label repeated >= 2 times; else (2) structure: same-shaped units (cards, rows, groups,
+        flat sibling runs) whose controls carry per-record labels; else (3) ONE actionable candidate is the record. `control` matches a
+        label exactly, else as a whole-word prefix. Returns (roots, {root: control}, found, reason, disabled_roots); roots is None with a
+        reason (control_needed, control_not_found, control_ambiguous, records_ambiguous) when the records cannot be told without guessing."""
+        norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
+        content, nodes = self._content_ids(state) - self._column_copies(state), state['nodes']
+        enabled, disabled = [], []
+        for i, n in sorted(nodes.items()):
+            if i not in content or i in state['aliases'] or n.get('role') not in self.CONTROL_ROLES:continue
+            if n.get('enabled') is False:disabled.append(i)
+            elif self._operation_compatible(n, operation):enabled.append(i)
+        allc = sorted(enabled + disabled)
+        labels = sorted({nodes[i].get('label') or '' for i in allc})
+        found = {'controls': self._bounded([l for l in labels if l])}
+        groups = {}
+        for i in allc:groups.setdefault((nodes[i].get('role'), nodes[i].get('label') or ''), []).append(i)
+        repeated = {k: v for k, v in groups.items() if len(v) >= 2}
+        found['repeated_controls'] = [{'role': k[0], 'label': k[1], 'count': len(v)} for k, v in list(repeated.items())[:8]]
+        if not allc:return None, {}, found, 'no_controls', set()
+        units = {}
+        if repeated:
+            wanted = repeated
+            if control is not None:
+                wanted = {k: v for k, v in repeated.items() if norm(k[1]) == norm(control)}
+                if not wanted:wanted = {k: v for k, v in repeated.items() if self._label_matches(control, k[1])}
+                if not wanted:return None, {}, found, 'control_not_found', set()
+                if len(wanted) > 1:return None, {}, found, 'control_ambiguous', set()
+            elif len(wanted) > 1:return None, {}, found, 'control_needed', set()
+            for i in next(iter(wanted.values())):
+                root = self._record_root(state, i)
+                if root is None or root in units or (root == i and not self.sibling_record(state, i)):return None, {}, found, 'records_ambiguous', set()
+                units[root] = [i]
+        else:
+            structural = self._structural_units(state, allc)
+            if len(structural) >= 2:
+                units = structural
+                if control is None and any(len([c for c in cs if c in enabled]) > 1 for cs in units.values()):
+                    return None, {}, {**found, 'repeated_controls': [{'role': 'AXButton', 'label': l, 'count': 1} for l in found['controls'][:8]]}, 'control_needed', set()
+            else:
+                pool = [i for i in allc if control is None or self._label_matches(control, nodes[i].get('label') or '')]
+                if control is not None and not pool:return None, {}, found, 'control_not_found', set()
+                if len(pool) != 1:return None, {}, found, 'records_ambiguous', set()
+                # One record: the nearest ancestor (below the page) that carries text besides the control itself.
+                a, root = nodes[pool[0]].get('parent_index'), None
+                while a in nodes and a in content and nodes[a].get('role') != 'AXWebArea':
+                    if any(nodes[i].get('role') not in self.CONTROL_ROLES and (nodes[i].get('value') or nodes[i].get('label')) for i in self.subtree(state, 'e'+str(a))[1] if i != a):root = a;break
+                    a = nodes[a].get('parent_index')
+                if root is None:return None, {}, found, 'records_ambiguous', set()
+                units = {root: [pool[0]]}
+        targets, disabled_roots = {}, set()
+        for root, cs in units.items():
+            mine = [c for c in cs if control is None or nodes[c].get('label') == control or norm(nodes[c].get('label')) == norm(control)] or \
+                   [c for c in cs if control is not None and self._label_matches(control, nodes[c].get('label') or '')]
+            live = [c for c in mine if c in enabled]
+            if len(live) > 1:return None, {}, found, 'control_ambiguous', set()
+            if live:targets['e'+str(root)] = 'e'+str(live[0])
+            elif any(c in disabled for c in mine):disabled_roots.add('e'+str(root))
+        return ['e'+str(r) for r in units], targets, found, None, disabled_roots
+
+    def _bounded(self, values):
+        if isinstance(values, dict):
+            items = list(values.items());kept = dict(items[:self.DO_LIST_CAP])
+            return kept if len(items) <= self.DO_LIST_CAP else {**kept, '_truncated': len(items)-self.DO_LIST_CAP}
+        return list(values)[:self.DO_LIST_CAP]
+
+    def _visual_available(self):
+        try:self.provider('visual');return True
+        except Exception:return False
+
+    def _expect_check(self, state, before, expect, target=None, typed=None):
+        """Case-insensitive exact, else contains, each required in exactly ONE text-bearing NON-control node of the page content
+        (static text, status text, field values other than the typed target): a button label, the address bar and the tab strip prove
+        nothing. Absence is unknown, never failed. Presence that proves nothing is `unproven` (no presence-based step can prove it):
+        the text was already there before the click, it is the text just typed, or it is the label of a control. before=None (a
+        verify-only look) has no before-state, so presence is all it can report."""
+        norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
+        needle = norm(expect)
+        skip = (target.get('role'), target.get('label')) if target else None
+        def bearing(tree):
+            content = self._content_ids(tree)
+            return [n for i, n in tree['nodes'].items() if i in content and n.get('role') not in self.CONTROL_ROLES and (n.get('role'), n.get('label')) != skip]
+        def hits(tree, exact):
+            return sum(1 for n in bearing(tree) if any((norm(n.get(k)) == needle) if exact else (needle in norm(n.get(k))) for k in ('label', 'value')))
+        if typed is not None and (needle in norm(typed) or norm(typed) in needle):
+            return {'status': 'unknown', 'route': 'ax_expect', 'reason': 'expect_echoes_typed_text', 'unproven': True}
+        content = self._content_ids(state)
+        if any(n.get('role') in self.CONTROL_ROLES and norm(n.get('label')) == needle for i, n in state['nodes'].items() if i in content):
+            return {'status': 'unknown', 'route': 'ax_expect', 'reason': 'expect_is_a_control_label', 'unproven': True}
+        if before is not None and hits(before, False) > 0:
+            return {'status': 'unknown', 'route': 'ax_expect', 'reason': 'expect_present_before_action', 'present_before': True, 'unproven': True}
+        exact, loose = hits(state, True), hits(state, False)
+        present_before = False if before is not None else 'unknown'
+        if exact == 1 or (exact == 0 and loose == 1):
+            return {'status': 'satisfied', 'route': 'ax_expect_' + ('exact' if exact else 'contains'), 'present_before': present_before}
+        return {'status': 'unknown', 'route': 'ax_expect', 'present_before': present_before,
+                'reason': 'expect_ambiguous' if max(exact, loose) > 1 else 'absence_not_proven'}
+
+    def _modal_signature(self, state, root):
+        members = self.subtree(state, 'e'+str(root))[1];node = state['nodes'][root]
+        return (node.get('role'), node.get('label'), tuple(sorted((n.get('role'), n.get('label') or '', str(n.get('value') or ''), tuple(n.get('actions', [])))
+                                                            for n in (state['nodes'][i] for i in members))))
+
+    def _new_modals(self, state, before):
+        """(new dialog roots, replaced). A dialog is new only when no identical one (by content, not index or count)
+        was open before the click; if any dialog was open before, a different one now is `replaced` (ambiguous)."""
+        roots = lambda st: sorted(i for i, n in st['nodes'].items() if n.get('role') in self.MODAL_ROLES)
+        was = [self._modal_signature(before, i) for i in roots(before)];had = bool(was);new = []
+        for i in roots(state):
+            signature = self._modal_signature(state, i)
+            if signature in was:was.remove(signature)
+            else:new.append(i)
+        return new, bool(new and had)
+
+    def _new_dialog(self, state, before):
+        """(dialog control ids, dialog text, ambiguous). Real pages show a confirm dialog as page content, so roles cannot detect it.
+        New content is a content diff (by role, label, value) inside the page. A REGION is a run of sibling subtrees whose nodes are ALL new.
+        It is a dialog only if it is role-tagged (AXDialog/AXSheet) with a control, or holds >= 2 controls, and is not list growth (a new
+        subtree that mirrors an existing sibling's shape, or only re-creates controls the parent already has). A toast with one Undo is not
+        a dialog; a 5- or 8-button dialog is. Text is only the region's own static text, so the page's rows never vouch for it."""
+        nodes, aliases = state['nodes'], state['aliases']
+        sig = lambda n: (n.get('role'), n.get('label') or '', str(n.get('value') or ''))
+        was = {}
+        for i in self._content_ids(before):was[sig(before['nodes'][i])] = was.get(sig(before['nodes'][i]), 0) + 1
+        new = []
+        for i in sorted(self._content_ids(state)):
+            key = sig(nodes[i])
+            if was.get(key, 0) > 0:was[key] -= 1
+            else:new.append(i)
+        newset, kids = set(new), self._kids(state)
+        def below(i):
+            out, stack = set(), [i]
+            while stack:
+                x = stack.pop();out.add(x);stack += kids.get(x, [])
+            return out
+        clusters = {}
+        for i in new:
+            if nodes[i].get('parent_index') not in newset and below(i) <= newset:clusters.setdefault(nodes[i].get('parent_index'), []).append(i)
+        regions = []
+        for parent, roots in clusters.items():
+            members = set().union(*(below(i) for i in roots))
+            controls = [i for i in sorted(members) if i not in aliases and self._is_control(nodes[i])]
+            tagged = any(nodes[i].get('role') in self.MODAL_ROLES for i in members)
+            old = [x for x in kids.get(parent, []) if x not in newset]
+            shapes = {self._shape(state, kids, x) for x in old}
+            growth = all(self._shape(state, kids, i) in shapes for i in roots) or (
+                bool(controls) and all(any((nodes[x].get('role'), nodes[x].get('label')) == (nodes[c].get('role'), nodes[c].get('label')) for x in old) for c in controls))
+            if (tagged and controls) or (len(controls) >= 2 and not growth):
+                texts = [str(nodes[i].get('value') or nodes[i].get('label')) for i in sorted(members)
+                         if nodes[i].get('role') in ('AXStaticText', 'AXHeading') and (nodes[i].get('value') or nodes[i].get('label'))]
+                regions.append((controls, '\n'.join(dict.fromkeys(texts))))
+        modals, replaced = self._new_modals(state, before)
+        ambiguous = replaced or len(modals) > 1 or len(regions) > 1
+        return (regions[0][0], regions[0][1], ambiguous) if regions else ([], '', ambiguous)
+
+    @staticmethod
+    def _value_shape(value):
+        """(has a digit, clock time, currency): a small deterministic shape signature of a displayed string."""
+        text = str(value)
+        return (bool(re.search(r'\d', text)), bool(re.search(r'\d{1,2}:\d{2}', text)), bool(re.search(r'[$\u20ac\u00a3]\s?\d|\d\s?[$\u20ac\u00a3]', text)))
+
+    def _incomparable(self, predicate_value, value, majority):
+        """S4.2 s4: a value that differs in SHAPE from what the predicate talks about (a digit-bearing predicate against 'half-hour'; NOT the reverse: a text predicate such as 'Walnut' or 'PM' against a string with incidental digits is ordinary),
+        or that is an outlier of the field's majority shape in this reading, cannot be judged: it is unknown, never excluded."""
+        a, b = self._value_shape(predicate_value), self._value_shape(value)
+        return (a[0] and not b[0]) or (a[1] and not b[1]) or (a[2] and not b[2]) or (majority is not None and b != majority)
+
+    def _reclassify_shapes(self, fields, predicates, extraction, filtered):
+        """A record excluded ONLY by predicates that cannot be compared with its value becomes unknown. A comparable failure on any
+        field (S4.2) still excludes. Recomputes eligible/unknown/excluded and completeness."""
+        rows = {r['record_id']: r['fields'] for r in extraction['records']}
+        majority = {}
+        for name in fields:
+            counts = {}
+            for row in rows.values():
+                if row.get(name) not in (None, ''):counts[self._value_shape(row[name])] = counts.get(self._value_shape(row[name]), 0) + 1
+            top = max(counts.items(), key=lambda kv: kv[1]) if counts else None
+            majority[name] = top[0] if top and top[1] * 2 > sum(counts.values()) else None
+        checks = filtered['checks'];moved = False
+        for aid in list(filtered['excluded_ids']):
+            gaps, real = list(checks[aid]['gaps']), []
+            for name in checks[aid]['failed']:
+                value = rows[aid].get(name);rules = [r for r in predicates if r['field'] == name]
+                failing = []
+                for rule in rules:
+                    try:
+                        if not dispatch_predicate(dispatch_typed(value, fields[name]), rule, fields[name]) and not self._incomparable(rule['value'], value, majority[name]):failing.append(rule)
+                    except (ValueError, TypeError, ArithmeticError):pass
+                (real if failing else gaps).append(name)
+            if not real and set(gaps) - set(checks[aid]['gaps']):
+                checks[aid] = {'state': 'unknown', 'failed': [], 'gaps': gaps};moved = True
+        if not moved:return filtered
+        order = [r['record_id'] for r in extraction['records']]
+        states = {aid: checks[aid]['state'] for aid in order}
+        for key, state in (('eligible_ids', 'eligible'), ('unknown_ids', 'unknown'), ('excluded_ids', 'excluded')):filtered[key] = [a for a in order if states[a] == state]
+        filtered['complete'] = filtered['coverage_complete'] and not filtered['unknown_ids']
+        return filtered
+
+    def _promote_unknown(self, reading, ids):
+        """Controller verdict (treat_as_match): these UNKNOWN records satisfy the predicates. Updates the stored reading the chooser will see."""
+        for holder in (reading, self.readings.get(reading['reading'])):
+            filt = holder['filter'];order = [r['record_id'] for r in holder['extraction']['records']]
+            for aid in ids:filt['checks'][aid] = {'state': 'eligible', 'failed': [], 'gaps': [], 'controller_verdict': True}
+            filt['unknown_ids'] = [a for a in filt['unknown_ids'] if a not in ids]
+            filt['eligible_ids'] = [a for a in order if a in set(filt['eligible_ids']) | set(ids)]
+            filt['complete'] = filt['coverage_complete'] and not filt['unknown_ids']
+
+    def _excluded_values(self, reading, predicates):
+        """Audit: per predicate field, the distinct strings of the EXCLUDED records (at most 8, each cut to 40 characters)."""
+        rows = {r['record_id']: r['fields'] for r in reading['extraction']['records']}
+        out = {}
+        for name in dict.fromkeys(r['field'] for r in predicates):
+            values = list(dict.fromkeys(str(rows[a][name])[:40] for a in reading['filter']['excluded_ids'] if rows[a].get(name) not in (None, '')))
+            out[name] = values[:8]
+        return out
+
+    REGION_NEAR_PX = 300
+
+    def _text_regions(self, snapshot):
+        return [r for r in self.regions(snapshot).get('regions', []) if r.get('kind') == 'text' and (r.get('text') or '').strip() and r.get('bounds')]
+
+    def _region_texts(self, regions):
+        """Distinct on-screen texts with how often each is drawn (bounded): what a caller may pass as control."""
+        counts = {}
+        for r in regions:counts[r['text'].strip()[:40]] = counts.get(r['text'].strip()[:40], 0) + 1
+        return [{'text': t, 'count': c} for t, c in sorted(counts.items())][:self.DO_LIST_CAP]
+
+    def _region_neighbor(self, region, regions):
+        """Text of the nearest text region ABOVE or LEFT of this one within REGION_NEAR_PX; None when there is none or two tie."""
+        b, best = region['bounds'], []
+        for other in regions:
+            if other is region:continue
+            o = other['bounds'];tol = 4
+            x_overlap = o['x'] < b['x'] + b['width'] and b['x'] < o['x'] + o['width'];y_overlap = o['y'] < b['y'] + b['height'] and b['y'] < o['y'] + o['height']
+            if o['y'] + o['height'] <= b['y'] + tol and x_overlap:best.append((b['y'] - (o['y'] + o['height']), other))
+            elif o['x'] + o['width'] <= b['x'] + tol and y_overlap:best.append((b['x'] - (o['x'] + o['width']), other))
+        best = sorted([(max(0, d), o['id'], o) for d, o in best if d <= self.REGION_NEAR_PX], key=lambda t: (t[0], t[1]))
+        if not best or (len(best) > 1 and best[0][0] == best[1][0]):return None
+        return best[0][2]['text']
+
+    def region_exact(self, snapshot, label, goal, near=None):
+        """Pixel-only pages: resolve `label` against TEXT regions exactly (normalized) and UNIQUELY, with the near-edit veto of region_corroborated
+        (an OCR twin such as 'Sove' for 'Save' vetoes). Several exact matches defer unless `near` (the text of the nearest region above or left)
+        picks exactly one. Capture-bound click at the region centre, as choose_regions. Returns {'status': selected|defer|none, ...}."""
+        state = self.state(snapshot);capture_id = state['raw'].get('capture_id')
+        regions = self._text_regions(snapshot);norm = self._ocr_normalize;want = norm(label)
+        texts = self._region_texts(regions)
+        exact = [r for r in regions if norm(r['text']) == want]
+        if not exact:return {'status': 'none', 'region_texts': texts}
+        twins = [r for r in regions if norm(r['text']) != want and len(want) >= 3 and self._within_one_edit(norm(r['text']), want)]
+        if twins:
+            return {'status': 'defer', 'reason': 'region_uncorroborated', 'region_texts': texts, 'twin_count': len(twins),
+                    'hint': 'Another text on the screen reads almost the same as %r (an OCR-style twin), so the label cannot be trusted; nothing was clicked. Call cua_do again with near=<the text just above or left of the control> and the exact label, or stop and report it.' % label}
+        neighbors = {r['id']: self._region_neighbor(r, regions) for r in exact}
+        if near is not None:exact = [r for r in exact if neighbors[r['id']] is not None and norm(neighbors[r['id']]) == norm(near)]
+        if len(exact) != 1:
+            everyone = [r for r in regions if norm(r['text']) == want]
+            matches = [{'x': int(round(r['bounds']['x'] / 50.0) * 50), 'y': int(round(r['bounds']['y'] / 50.0) * 50), 'near': (neighbors[r['id']] or '')[:40]} for r in everyone][:8]
+            return {'status': 'defer', 'reason': 'region_ambiguous', 'matches': matches, 'region_texts': texts,
+                    'hint': '%d text regions read %r%s; nothing was clicked. Call cua_do again with the same control and near=<the text just above or left of the one you mean> (see matches[].near).'
+                            % (len(everyone), label, '' if near is None else ' and none is right beside %r' % near)}
+        target = exact[0];bounds = target['bounds']
+        action = {'id': target['id'], 'name': target['text'], 'role': 'perception_region:text', 'operation': 'click', 'enabled': True, 'evidence_text': target['text'],
+                  'description': target['text'], 'record_basis': 'perception_layout',
+                  'arguments': {'pid': state['pid'], 'window_id': state['window_id'], 'session': self.session, 'capture_id': capture_id, 'delivery_mode': 'background',
+                                'target': {'kind': 'window', 'pid': state['pid'], 'window_id': state['window_id']},
+                                'x': bounds.get('x', 0) + bounds.get('width', 0) / 2, 'y': bounds.get('y', 0) + bounds.get('height', 0) / 2}}
+        request = {'snapshot_id': state['raw']['snapshot_id'], 'kind': 'semantic', 'operation': 'click', 'goal': goal, 'actions': [action], 'observation': target['text']}
+        decision = {'status': 'selected', 'action_id': target['id'], 'action_authorized': True, 'reason': 'exact_region_label', 'snapshot_id': request['snapshot_id'],
+                    'binding_digest': request_digest(request), 'provider_outputs': []}
+        handle = 'sel_' + uuid.uuid4().hex
+        self.selections[handle] = {'snapshot': snapshot, 'request': copy.deepcopy(request), 'decision': copy.deepcopy(decision), 'mode': 'regions', 'operation': 'click',
+                                   'text': None, 'used': False, 'capture_id': capture_id}
+        while len(self.selections) > 32:self.selections.pop(next(iter(self.selections)))
+        self.event('choose', snapshot=snapshot, route='exact_region_label', mode='regions', authorized=True, reason='exact_region_label', near_used=near is not None)
+        return {'status': 'selected', 'route': 'exact_region_label', 'selection': handle, 'selected_id': target['id'], 'decision': decision}
+
+    def _do_observation(self, pid, window_id):
+        handle = self.latest.get((pid, window_id));state = self.snapshots.get(handle)
+        if not state:return None
+        roles = {}
+        for n in state['nodes'].values():roles[n.get('role')] = roles.get(n.get('role'), 0) + 1
+        return {'snapshot': handle, 'title': state['raw'].get('window_title'), 'element_count': len(state['nodes']),
+                'top_roles': dict(sorted(roles.items(), key=lambda kv: (-kv[1], str(kv[0])))[:6]),
+                'controls': [{'id': 'e'+str(i), 'name': (n.get('label') or '')[:40]} for i, n in state['nodes'].items()
+                             if i not in state['aliases'] and self._is_control(n)][:12]}
+
+    def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
+           expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None):
+        """One call runs observe -> read -> same-record filter -> (chooser only if several) -> bind -> act -> verify,
+        recovering deterministically (bounded) and deferring to the caller only where guessing would be worse.
+        Composes observe/read/choose/act/verify; owns no selection policy. Never retries a click."""
+        with self.lock:return self._do(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near)
+
+    def _do(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm=None, control=None, treat_as_match=None, near=None):
+        confirm_label = confirm
+        t0 = self.clock();ms, calls, attempts, tries, keep = {}, {}, [], {}, {}
+        ctx = {'stage': 'goal', 'pid': pid, 'window_id': window_id, 'delivery': 'none', 'selection': None, 'pass': 0}
+        def finish(status, **extra):
+            result = {'status': status, 'stage': ctx['stage'], **extra, 'delivery': ctx['delivery'],
+                      'trace_summary': {'calls_by_route': dict(calls), 'ms_by_stage': dict(ms), 'passes': ctx['pass'],
+                                        'attempts': attempts[:10], 'follow_up_needed': status not in ('done', 'observed')}}
+            if ctx['pid'] is not None:
+                observation = self._do_observation(ctx['pid'], ctx['window_id'])
+                if observation:result['observation'] = observation
+            if keep.get('audit') is not None and status != 'refused':result['evidence'] = {**result.get('evidence', {}), 'excluded_values': keep['audit']}
+            self.event('do', stage=ctx['stage'], status=status, delivery=ctx['delivery'], passes=ctx['pass'],
+                       attempts=len(attempts), calls_by_route=dict(calls), reason=extra.get('reason'))
+            return result
+        DEAD_END = 'this page needs the operator to enable the advanced tools (CUA_TASK_ADVANCED=1); do not loop'
+        def count(name, route):
+            calls[route] = calls.get(route, 0) + 1
+            self.event('do_stage', stage=name, route=route, ms=ms.get(name, 0), pass_no=ctx['pass'])
+        def over():return self.clock()-t0-ms.get('act', 0)/1000-ms.get('confirm', 0)/1000 > budget_s
+        def hard():return self.clock()-t0 > 3*budget_s  # click and confirm time count here: slow stages cannot run on indefinitely
+        def over_all():return over() or hard()
+        def remaining():return max(1.0, min(20.0, budget_s - (self.clock()-t0-ms.get('act', 0)/1000-ms.get('confirm', 0)/1000)))
+        def budget(**more):
+            return finish('deferred', reason='budget_exceeded', budget_exceeded=True, budget_s=budget_s, **more,
+                          hint='The wall budget ran out before the next step (a hard cap of 3x budget_s counts click time too); no further step ran and nothing was clicked after it. If a click had landed, call cua_do with operation="verify" and an expect to check it; otherwise call cua_do again.')
+        def transient(error):
+            return isinstance(error, DriverCallFailed) or (isinstance(error, (ValueError, RuntimeError, TimeoutError, OSError)) and not isinstance(error, Gap))
+        def guarded(stage, fn):
+            """Retry a pre-click stage ONCE after a short bounded backoff on a transient Driver/provider failure."""
+            ctx['stage'] = stage
+            for n in (1, 2):
+                tries[stage] = n;began = self.clock()
+                try:return fn()
+                except Exception as error:
+                    if not transient(error) or n == 2 or over_all():raise
+                    attempts.append({'pass': ctx['pass'], 'stage': stage, 'kind': 'retry_after_transient_failure', 'error_type': type(error).__name__})
+                    self.sleep(self.RETRY_BACKOFF_S)
+                    if over_all():raise
+                finally:ms[stage] = ms.get(stage, 0) + round((self.clock()-began)*1000)
+        def deliver(selection):
+            """act() once. A failure BEFORE the click (selection given back) may be retried once; a click never is."""
+            stage = ctx['stage']
+            for n in (1, 2):
+                tries[stage] = n;began = self.clock()
+                try:return self.act(selection)
+                except DriverCallFailed as error:
+                    if self.selections[selection]['used'] or n == 2 or over_all():raise
+                    attempts.append({'pass': ctx['pass'], 'stage': stage, 'kind': 'retry_before_click', 'error_type': type(error).__name__})
+                    self.sleep(self.RETRY_BACKOFF_S)
+                finally:ms[stage] = ms.get(stage, 0) + round((self.clock()-began)*1000)
+        def deferred(payload, **more):
+            keep_keys = {k: payload[k] for k in ('reason', 'hint', 'suggested_id', 'offered_count', 'excluded_count', 'missing_fields',
+                                                 'eligible_ids', 'unknown_ids', 'judged_ids', 'found') if k in payload}
+            for key in ('eligible_ids', 'unknown_ids', 'judged_ids'):
+                if key in keep_keys:keep_keys[key + '_count'] = len(keep_keys[key]);keep_keys[key] = self._bounded(keep_keys[key])
+            if 'missing_fields' in keep_keys:keep_keys['missing_fields'] = self._bounded(keep_keys['missing_fields'])
+            keep_keys.setdefault('reason', (payload.get('decision') or {}).get('reason') or 'no_selection')
+            if payload.get('extracted'):more['evidence'] = {**more.get('evidence', {}), 'extracted': self._bounded(payload['extracted'])}
+            if keep_keys['reason'] in ('unknown_competitors_unacknowledged', 'unknown_or_incomplete_scope') and payload.get('unknown_ids'):
+                more['retry_with'] = 'cua_do again with the same arguments plus accept_unknown=[ids] (they do NOT match) or treat_as_match=[ids] (they DO match)'
+                keep_keys['hint'] = ('Some records could not be compared with your predicates (unknown_ids; their strings are in evidence.extracted, and evidence.excluded_values shows what the predicates threw away). '
+                                     'Call cua_do again with the same arguments plus ONE of: accept_unknown=<ids> if the strings show those records do NOT match; '
+                                     'treat_as_match=<ids> if you judge they DO match (for example "half-hour" means 30 minutes). Nothing was clicked.')
+            return finish('deferred', **keep_keys, **more)
+        def identity_of(reading, state, roots, selected):
+            """What the selected record IS: its extracted strings (records mode) or its description."""
+            if not reading:return None
+            index = self.node(state, selected)['element_index']
+            root = next(r for r in roots if index in self.subtree(state, r)[1])
+            fields = next(r['fields'] for r in reading['extraction']['records'] if r['record_id'] == root)
+            return {k: re.sub(r'\s+', ' ', str(v)).strip() for k, v in sorted(fields.items()) if v is not None}
+        def attempt():
+            ctx['pass'] += 1
+            pid_, window_ = ctx['pid'], ctx['window_id']
+            snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot)
+            count('observe', 'cua-driver')
+            self.reject_answer_leak(state, goal)
+            if over_all():return budget()
+            webs = self._top_web_areas(state)
+            if len(webs) > 1:
+                return finish('deferred', reason='web_area_ambiguous', found={'web_areas': len(webs)},
+                              hint='The window holds %d separate page areas (for example a browser extension popup beside the page); nothing was clicked. Close the extra one, or give the exact title of the window that holds only the page, and call cua_do again.' % len(webs))
+            if operation == 'verify':return verify_only(state)
+            reading, pick, roots = None, {}, []
+            if spec:
+                fields, predicates, supplied, coverage, _ = spec
+                ctx['stage'] = 'read'
+                norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
+                if supplied:
+                    roots, targets, found = list(supplied), {}, {}
+                    if control is not None:
+                        for root in roots:
+                            members = self.subtree(state, root)[1]
+                            named = [i for i in sorted(members) if i not in state['aliases'] and self._is_control(state['nodes'][i]) and self._operation_compatible(state['nodes'][i], operation)
+                                     and norm(state['nodes'][i].get('label')) == norm(control)]
+                            if len(named) != 1:
+                                return finish('deferred', reason='control_not_found' if not named else 'control_ambiguous', record=root,
+                                              hint='control=%r must match exactly one enabled control inside each record; nothing was clicked.' % control)
+                            targets[root] = 'e'+str(named[0])
+                else:
+                    roots, targets, found, why, disabled_roots = self.discover_records(state, operation, control);coverage = True
+                    if roots is None:
+                        labels, seen = found['controls'], ', '.join(map(repr, found['controls'])) or 'none'
+                        quoted = 'Click "%s"' % (labels[0] if labels else '<label>')
+                        hints = {'control_needed': 'Each record has several controls (%s). Call cua_do again with control=<the exact label of the one to press>.' % ', '.join(map(repr, [c['label'] for c in found['repeated_controls']])),
+                                 'control_not_found': 'No control matches control=%r (controls seen: %s). Call cua_do again with control set to one of them, or without records and a goal that quotes the exact label.' % (control, seen),
+                                 'control_ambiguous': 'Several controls match control=%r in a record; nothing was guessed. Call cua_do again with control set to the exact full label, or without records and a goal that quotes the exact label of the control (for example %s).' % (control, quoted),
+                                 'records_ambiguous': 'Could not tell which controls are records (controls seen: %s). Call cua_do again WITHOUT records and with a goal that quotes the exact label of the control to press (for example %s), or pass control=<exact label>. Nothing was guessed or clicked.' % (seen, quoted),
+                                 'no_controls': 'No enabled control was found in the page content, so there is nothing cua_do can press here; nothing was clicked.'}
+                        dead = {'dead_end': True, 'report_to_user': DEAD_END} if why == 'no_controls' else {}
+                        return finish('deferred', reason='records_ambiguous' if why == 'no_controls' else why, found=found, hint=hints[why], **dead,
+                                      **({'retry_with': 'cua_do again with control=<one of found.repeated_controls labels>'} if why == 'control_needed' else {}))
+                def read_once():
+                    try:return self.read(snapshot, goal, fields, roots, predicates, coverage, flat_by_role=True, shape_guard=True)
+                    except Gap as gap:
+                        if str(gap).startswith(('Overlapping', 'Record has no observed text')):raise self._Ambiguous(str(gap))
+                        raise
+                reading = guarded('read', read_once);count('read', 'nuextract3')
+                if reading['filter']['unknown_ids'] and not accept_unknown and not treat_as_match and not over_all():
+                    # An unknown/garbled field: ONE re-read (READ_BUDGET caps it at 2), then stop and defer with the strings.
+                    attempts.append({'pass': ctx['pass'], 'stage': 'read', 'kind': 'reread_unknown_field'})
+                    reading = guarded('read', read_once);count('read', 'nuextract3')
+                if over_all():return budget()
+                ctx['stage'] = 'filter';filt = reading['filter']
+                if treat_as_match:
+                    stray = [r for r in treat_as_match if r not in filt['unknown_ids']]
+                    if stray:
+                        keep['audit'] = self._excluded_values(reading, predicates)
+                        return finish('refused', reason='treat_as_match_invalid', stray_ids=self._bounded(stray), unknown_ids=self._bounded(filt['unknown_ids']),
+                                      message='treat_as_match may name only records this reading left UNKNOWN (never excluded or unknown-to-this-page ids).',
+                                      hint='Call cua_do again with treat_as_match limited to unknown_ids from this response.')
+                    self._promote_unknown(reading, list(treat_as_match));keep['treated'] = list(treat_as_match)
+                keep['audit'] = self._excluded_values(reading, predicates)
+                if not filt['eligible_ids']:
+                    if filt['unknown_ids']:return deferred(self.incomplete_scope_defer(filt, reading))
+                    return finish('deferred', reason='no_eligible_record', excluded_count=len(filt['excluded_ids']),
+                                  evidence={'extracted': self._bounded({r['record_id']: r['fields'] for r in reading['extraction']['records']})},
+                                  hint='No record satisfies the predicates (the strings read from the records are in evidence); nothing was clicked. Call cua_do again with corrected fields/predicates.')
+                # The judged path (record_actions/candidate_ids) skips the coverage gate, so it is used only when
+                # coverage is guaranteed (discovered) or the caller names the unknowns it excludes (accept_unknown).
+                if supplied and targets and not accept_unknown and not filt['complete']:return deferred(self.incomplete_scope_defer(filt, reading))
+                if not supplied:
+                    blocked = [r for r in filt['eligible_ids'] if r in disabled_roots]
+                    if blocked:
+                        return finish('deferred', reason='record_disabled', disabled_count=len(blocked),
+                                      hint='%d record(s) that match are disabled, so their control cannot be pressed; nothing was clicked. Report that the item is unavailable, or call cua_do again with different predicates.' % len(blocked))
+                    missing = [r for r in filt['eligible_ids'] if r not in targets]
+                    if missing:
+                        return finish('deferred', reason='control_not_found', missing_count=len(missing), found=found,
+                                      hint='A matching record has no control labelled %r (controls seen: %s); nothing was clicked. Call cua_do again with control set to an exact label.' % (control, ', '.join(map(repr, found['controls'])) or 'none'))
+                if targets:pick = {'record_actions': {r: targets[r] for r in filt['eligible_ids']}}
+                elif accept_unknown:pick = {'candidate_ids': list(filt['eligible_ids'])}
+            mode = 'semantic';region_choice = None
+            choose_args = dict(operation=operation, text=text)
+            if reading:choose_args.update(reading=reading['reading'], accept_unknown=list(accept_unknown or []) or None, **pick)
+            else:
+                norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
+                tokens = self.quoted_tokens(goal)
+                label = control if control is not None else (tokens[0] if len(tokens) == 1 else None)
+                def pool(st):
+                    # click: real page controls only (Chrome advertises AXPress on static text; its menu bar is chrome); type_text: any compatible field
+                    content = self._content_ids(st) - self._column_copies(st)
+                    return [i for i, n in st['nodes'].items() if i in content and i not in st['aliases'] and n.get('enabled') is not False
+                            and (self._is_control(n) if operation == 'click' else True)]
+                def named(st):
+                    ids = [i for i in pool(st) if label is not None and norm(st['nodes'][i].get('label')) == norm(label)]
+                    if not ids and control is not None:ids = [i for i in pool(st) if self._label_matches(control, st['nodes'][i].get('label') or '')]
+                    return ids, [i for i in ids if self._operation_compatible(st['nodes'][i], operation)]
+                offered = [i for i in pool(state) if self._operation_compatible(state['nodes'][i], operation)]
+                if label is not None:
+                    any_named, same = named(state)
+                    if any_named and not same:
+                        # Chrome can omit the press action on a fresh read: reobserve ONCE before concluding anything.
+                        attempts.append({'pass': ctx['pass'], 'stage': 'choose', 'kind': 'reobserve_unpressable_control'})
+                        self.sleep(self.RETRY_BACKOFF_S)
+                        snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot);count('observe', 'cua-driver')
+                        any_named, same = named(state);offered = [i for i in pool(state) if self._operation_compatible(state['nodes'][i], operation)]
+                    listing = self._bounded(sorted({state['nodes'][i].get('label') or '' for i in offered}))
+                    fallback = None
+                    if not any_named and operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
+                        try:fallback = self.region_exact(snapshot, label, goal, near)
+                        except Gap:fallback = None
+                        if fallback and fallback['status'] == 'selected':region_choice = fallback;mode = 'region_exact'
+                        elif fallback and fallback['status'] == 'defer':
+                            self.event('choose', snapshot=snapshot, route='exact_region_label', mode='regions', authorized=False, reason=fallback['reason'])
+                            return finish('deferred', **{k: v for k, v in fallback.items() if k != 'status'})
+                    if mode != 'region_exact' and (any_named and not same or (control is not None and len(same) != 1)):
+                        # Never claim a control is unique (or absent) when it is merely not press-capable in this snapshot.
+                        why = 'control_not_found' if not any_named else ('control_not_pressable' if not same else 'control_ambiguous')
+                        no_help = not listing and not (fallback and fallback.get('region_texts'))
+                        return finish('deferred', reason=why, found={'controls': listing, **({'region_texts': fallback['region_texts']} if fallback and fallback.get('region_texts') else {})}, control_count=len(same),
+                                      **({'dead_end': True, 'report_to_user': DEAD_END} if no_help else {}),
+                                      hint='%r matched %d pressable controls (labels seen in found.controls; %d present but not press-capable); nothing was clicked. Call cua_do again with an exact control label.' % (label, len(same), len(any_named) - len(same)))
+                    if len(same) == 1:
+                        node = state['nodes'][same[0]];mode = 'exact';choose_args.update(exact_name=node.get('label'), exact_role=node.get('role'))
+                if mode == 'semantic':
+                    if offered:choose_args.update(candidate_ids=['e'+str(i) for i in offered])
+                    else:
+                        seen_texts = []
+                        if operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
+                            try:seen_texts = self._region_texts(self._text_regions(snapshot))
+                            except Gap:seen_texts = []
+                        if seen_texts:
+                            return finish('deferred', reason='region_label_needed', found={'region_texts': seen_texts},
+                                          hint='This page has no pressable controls, but text is drawn on it (found.region_texts). Call cua_do again with control=<the exact text of the button as drawn>; if that text appears more than once (count above 1), also pass near=<the text just above or left of the one you mean>.')
+                        return finish('deferred', reason='no_actionable_controls', dead_end=True, report_to_user=DEAD_END,
+                                       hint='No enabled, press-capable control was found in the page content, so no cua_do parameter can move forward; nothing was clicked. Stop and report this to the user; do not retry.')
+            def choose_once():
+                made = self.choose(snapshot, goal, mode=mode, **choose_args)
+                # The dispatcher turns a chooser transport failure into a defer; that is a failed call, not a judgment.
+                if 'selection' not in made and (made.get('decision') or {}).get('reason') == 'provider_failed':raise RuntimeError('chooser provider_failed')
+                return made
+            choice = region_choice or guarded('choose', choose_once)
+            count('choose', 'exact_observed_control' if mode == 'exact' else (choice['route'] if isinstance(choice.get('route'), str) else 'chooser'))
+            if 'selection' not in choice:return deferred({**choice, 'reason': choice.get('reason') or (choice.get('decision') or {}).get('reason')})
+            if over_all():
+                self.selections.pop(choice.get('selection'), None)  # bound but never delivered: leave no usable authority behind
+                return budget()
+            selection = choice['selection'];ctx['selection'] = selection
+            item = self.selections[selection]
+            action = next(a for a in item['request']['actions'] if a['id'] == choice['selected_id'])
+            judgment = choice.get('judgment') if choice.get('route') == 'grounded_singleton' else ('exact' if mode in ('exact', 'region_exact') else 'chooser')
+            if keep.get('treated') and reading:
+                index = self.node(state, choice['selected_id'])['element_index']
+                if any(index in self.subtree(state, r)[1] for r in keep['treated']):judgment = 'controller'  # the controller's verdict put this record in play
+            picked = {'id': choice['selected_id'], 'description': action['description'][:120]}
+            identity = identity_of(reading, state, roots, choice['selected_id']) if reading else {'description': action['description']}
+            keep['picked_identity'] = identity if reading else None
+            fold = lambda d: {k: v.casefold() for k, v in d.items()}
+            def recoverable(picked_identity):
+                # A record can be found again by its fields only if ALL requested fields were read and no other record shows the same ones.
+                if not reading:return True
+                complete = len(picked_identity) == len(spec[0]) and all(picked_identity.values())
+                twins = sum(1 for r in reading['extraction']['records'] if fold({k: re.sub(r'\s+', ' ', str(v)).strip() for k, v in r['fields'].items() if v is not None}) == fold(picked_identity))
+                return complete and twins == 1
+            if 'identity' in keep and not recoverable(identity):
+                self.selections.pop(selection, None)
+                return finish('deferred', reason='record_changed_unverifiable', selected=picked, hint='The record cannot be identified by its fields (a field is missing or two records read the same); nothing was clicked again.')
+            if 'identity' in keep and fold(keep['identity']) != fold(identity):
+                # Recovery re-ran the whole pipeline and it picked a different record: a real change (case C).
+                self.selections.pop(selection, None)
+                return finish('deferred', reason='record_changed', selected=picked, hint='After a stale-UI refusal the fresh pipeline selects a different record than before; nothing was clicked. Re-state the goal against the new content.')
+            ctx['stage'] = 'act'
+            try:deliver(selection)
+            except StaleUI as gap:
+                if not recoverable(identity):
+                    return finish('deferred', reason='record_changed_unverifiable', selected=picked,
+                                  hint='The UI changed before the click and the selected record cannot be re-identified by its fields (a field is missing or two records read the same); nothing was clicked. Re-state the goal.')
+                keep['identity'] = identity
+                attempts.append({'pass': ctx['pass'], 'stage': 'act', 'kind': 'stale_ui', 'recovery': 'reobserve_and_rerun_pipeline' if ctx['pass'] < 2 else 'exhausted'})
+                return self.STALE
+            finally:count('act', 'cua-driver')
+            ctx['delivery'] = 'delivered'
+            return after_click(state, reading, roots, picked, judgment, goal_fields=spec)
+        def observe_state():
+            began = self.clock()
+            handle = self.observe(ctx['pid'], ctx['window_id'], timeout=remaining())['snapshot']
+            ms['verify'] = ms.get('verify', 0) + round((self.clock()-began)*1000)
+            return self.state(handle)
+        def check_outcome(current, before, target, typed, base):
+            """(verification, early). AX text in exactly one non-control node; unproven presence never escalates; then Perception, then the screenshot model."""
+            check = self._expect_check(current, before, expect, target, typed) if expect else None
+            if check and check['status'] == 'satisfied':return check, None
+            if check and check.get('unproven'):
+                # Presence that was already there, the typed text echoed back, or a control's own label proves nothing, and no presence-based step can prove it either.
+                return {k: v for k, v in check.items() if k != 'unproven'}, None
+            if not expect:return {'status': 'unverified', 'route': 'none', 'reason': 'expect_not_given'}, None
+            if over_all():return None, budget(**base)
+            # Deterministic escalation, all server-side and never through a check that counts control labels: Perception exact-presence (never on digits), then the screenshot model.
+            seen = self._escalate(current, expect, remaining())
+            why = (check or {}).get('reason')
+            return {**seen, **({'reason': why} if why else {}), **({'present_before': check['present_before']} if check else {})}, None
+        def verify_only(state):
+            ctx['stage'] = 'verify'
+            try:verification, early = check_outcome(state, None, None, None, {'verified': False})
+            except (Gap, ValueError, RuntimeError, TimeoutError, OSError) as error:
+                verification, early = {'status': 'unknown', 'route': 'verify_error', 'error_type': type(error).__name__}, None
+            if early:return early
+            count('verify', verification['route'])
+            if verification['status'] == 'satisfied':
+                # No before-state exists, so this can only be a presence check: never `done`.
+                return finish('observed', reason='presence_only', verification={**verification, 'present_before': 'unknown'}, verified=False,
+                              hint='The text is visible now, but a verify-only look has no before-state: it cannot tell whether it was already there. It proves presence, not that an action worked.')
+            return finish('deferred', reason='not_verified', verification=verification, verified=False,
+                          hint='The text was not established in the current window (control labels never count). Nothing was clicked. Call cua_do with operation="verify" and a different expect, or report what you can see in observation.controls.')
+        def after_click(before, reading, roots, picked, judgment, goal_fields):
+            ctx['stage'] = 'verify';began = self.clock()
+            base = {'selected': picked, 'judgment': judgment, 'verified': False}
+            if over_all():return budget(**base)
+            confirmation = None
+            try:
+                current = observe_state()
+                target = self.node(before, picked['id']) if operation == 'type_text' and picked['id'] in {'e'+str(i) for i in before['nodes']} else None
+                typed = text if operation == 'type_text' else None
+                # expect FIRST: new text that satisfies it (a success toast, even with an Undo button) is the outcome; dialog detection is skipped.
+                proven = expect and self._expect_check(current, before, expect, target, typed)['status'] == 'satisfied'
+                new_controls, dialog_text, ambiguous = ([], '', False) if proven else self._new_dialog(current, before)
+                if new_controls or ambiguous:
+                    early, confirmation = confirm(current, before, new_controls, dialog_text, ambiguous, reading, goal_fields, picked)
+                    if early:return early
+                    if over_all():return budget(**base)
+                    ctx['stage'] = 'verify'  # the confirm click landed: a failure from here on is a verification failure, not a dialog failure
+                    current = observe_state()
+                verification, early = check_outcome(current, before, target, typed, base)
+                if early:return early
+            except (Gap, ValueError, RuntimeError, TimeoutError, OSError) as error:
+                if ctx['stage'] == 'confirm':
+                    if isinstance(error, DriverCallFailed):raise
+                    return finish('deferred', reason='confirm_error', error_type=type(error).__name__, **base,
+                                  hint='The dialog could not be handled; the first click was delivered and nothing further was clicked. Call cua_do with operation="verify" and an expect to check the outcome.')
+                verification = {'status': 'unknown', 'route': 'verify_error', 'error_type': type(error).__name__}
+            ms['verify'] = ms.get('verify', 0) + round((self.clock()-began)*1000);count('verify', verification['route'])
+            extra = {'selected': picked, 'judgment': judgment, 'verification': verification,
+                     **({'confirmation': confirmation} if confirmation else {}),
+                     **({'evidence': {'eligible': len(reading['filter']['eligible_ids']), 'excluded': len(reading['filter']['excluded_ids']),
+                                      'unknown': len(reading['filter']['unknown_ids'])}} if reading else {})}
+            if verification['status'] == 'satisfied':return finish('done', **extra, verified=True)
+            if not expect:
+                return finish('delivered_unverified', reason='expect_not_given', verified=False, **extra,
+                              hint='The click was delivered but no expect was given, so nothing was checked. Do not click again. To check, call cua_do with operation="verify" and expect=<text that should now be visible>.')
+            # (A) a click that may have been delivered and could not be verified: the caller decides; never a re-click.
+            return finish('deferred', reason='delivery_unverified', verified=False, **extra,
+                          hint='The click was delivered but the outcome could not be verified. Do not click again blindly. To re-check without clicking, call cua_do with operation="verify" and an expect that is visible page text (never a button label; see observation.controls for the buttons).')
+        def confirm(current, before, new_controls, dialog_text, ambiguous, reading, fields_spec, picked):
+            """A dialog after the first click. The goal never authorized pressing anything in it, so confirming is OPT-IN:
+            only with `confirm` (an exact control label), a COMPLETE displayed-identity match with the selected record (S4.2 s7),
+            and exactly ONE enabled control in the new dialog region with that label. Never the chooser, never a lone control by default."""
+            ctx['stage'] = 'confirm';snapshot = next(h for h, s in self.snapshots.items() if s is current)
+            if ambiguous:
+                return finish('deferred', reason='confirm_dialog_ambiguous', selected=picked, verified=False,
+                              hint='A dialog was already open, was replaced, or several appeared; the first click is done and nothing further was clicked. Call cua_do with operation="verify" and an expect, or act deliberately with a fresh goal.'), None
+            nodes = current['nodes']
+            labels = self._bounded([(nodes[i].get('label') or '')[:40] for i in new_controls])
+            fields = fields_spec[0] if fields_spec else {}
+            ident_fields = fields_spec[4] if fields_spec else []
+            identity = keep.get('picked_identity') or {}
+            comparable = {k: identity.get(k) for k in ident_fields}
+            norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
+            state, extracted, shown, not_shown = 'not_checked' if not reading else 'unknown', None, [], list(ident_fields)
+            if reading and comparable and all(comparable.values()) and dialog_text:
+                # The dialog's displayed text is only the NEW region text: the page's own rows can never vouch for the dialog.
+                sid = current['raw']['snapshot_id'];specs = {k: {**fields[k], 'type': 'text'} for k in ident_fields}
+                extraction = self.provider('reader').extract({'snapshot_id': sid, 'task': goal, 'fields': {k: v['description'] for k, v in specs.items()},
+                                                              'records': [{'id': 'dialog', 'text': dialog_text}]}, sid)
+                calls['nuextract3'] = calls.get('nuextract3', 0) + 1
+                filt = filter_records(extraction, fields=specs, predicates=[{'field': k, 'op': 'eq', 'value': v} for k, v in comparable.items()],
+                                      coverage_complete=True, current_snapshot=sid)
+                got = extraction['records'][0]['fields'];extracted = self._bounded({'dialog': got})
+                shown = [k for k in ident_fields if got.get(k) not in (None, '')];not_shown = [k for k in ident_fields if k not in shown]
+                differs = [k for k in shown if norm(got[k]) != norm(comparable[k])]
+                state = 'matched' if filt['eligible_ids'] else ('mismatch' if differs else ('partial' if shown else 'unknown'))
+            held = {'selected': picked, 'verified': False, 'dialog': {'controls': labels, 'identity': state}, **({'evidence': {'extracted': extracted}} if extracted else {})}
+            # The wall budget binds the confirm step too: a slow dialog read must not be followed by a second click.
+            if over_all():return budget(selected=picked, verified=False), None
+            if not confirm_label:
+                return finish('deferred', reason='confirm_dialog_present', **held,
+                              next_call={'goal': 'Click "<one of dialog.controls, exact label>"', 'expect': '<text that will appear once it is done>'},
+                              hint='The first click is done: do not repeat this goal. A dialog is showing and nothing in it was pressed. To press one of dialog.controls, call cua_do again '
+                                   'with a goal that quotes its exact label (that call does not re-click the first control) and an expect. To have this goal press it on its own, '
+                                   'pass confirm=<exact control label>.'), None
+            if not reading:return finish('deferred', reason='confirm_dialog_needs_identity', **held), None
+            if state == 'partial':
+                return finish('deferred', reason='confirm_identity_partial', **held, identity_shown=shown, identity_not_shown=not_shown,
+                              hint='The dialog shows only part of the record identity (shown: %s; not shown: %s); nothing further was clicked. The first click is done: do not repeat this goal. If you judge it is the right dialog, '
+                                   'call cua_do again with a goal that quotes one of dialog.controls and an expect. Next time pass records.identity=%s so that confirm=<label> can press it on its own.'
+                                   % (', '.join(shown), ', '.join(not_shown), json.dumps(shown))), None
+            if state != 'matched':
+                return finish('deferred', reason='confirm_identity_mismatch' if state == 'mismatch' else 'confirm_identity_unknown', **held,
+                              hint='The dialog does not display the identity of the selected record (fields %s); nothing further was clicked. Press it deliberately with a fresh cua_do that quotes its label.' % ', '.join(ident_fields)), None
+            hits = [i for i in new_controls if norm(nodes[i].get('label')) == norm(confirm_label)]
+            if len(hits) != 1:
+                return finish('deferred', reason='confirm_control_not_found' if not hits else 'confirm_dialog_ambiguous', **held), None
+            if 'AXPress' not in nodes[hits[0]].get('actions', []):
+                # Chrome can omit the press action on the first read of fresh content: reobserve ONCE, never click blind.
+                attempts.append({'pass': ctx['pass'], 'stage': 'confirm', 'kind': 'reobserve_unpressable_control'})
+                self.sleep(self.RETRY_BACKOFF_S)
+                current = observe_state();snapshot = next(h for h, s in self.snapshots.items() if s is current);nodes = current['nodes']
+                new_controls, _, ambiguous = self._new_dialog(current, before)
+                hits = [i for i in new_controls if norm(nodes[i].get('label')) == norm(confirm_label)]
+                if ambiguous or len(hits) != 1:return finish('deferred', reason='confirm_dialog_ambiguous', **held), None
+                if 'AXPress' not in nodes[hits[0]].get('actions', []):
+                    return finish('deferred', reason='control_not_pressable', **held,
+                                  hint='The dialog control is present but the Driver does not advertise a press action for it; nothing was clicked. Call cua_do again with a goal quoting its label.'), None
+            choice = self.choose(snapshot, goal, mode='exact', exact_name=nodes[hits[0]].get('label'), exact_role=nodes[hits[0]].get('role'), operation='click')
+            count('confirm', 'exact_observed_control')
+            if 'selection' not in choice:return deferred({**choice, 'reason': choice.get('reason') or 'confirm_unselected'}, **held), None
+            ctx['selection'] = choice['selection']
+            if over_all():
+                self.selections.pop(choice['selection'], None);ctx['selection'] = None
+                return budget(selected=picked, verified=False), None
+            try:deliver(choice['selection'])
+            except StaleUI:return finish('deferred', reason='confirm_ui_changed', **held, hint='The dialog changed before it was confirmed; the first click was delivered. Call cua_do with operation="verify" and an expect to check the outcome.'), None
+            finally:count('confirm_click', 'cua-driver')
+            return None, {'status': 'confirmed', 'identity': 'matched', 'selected_id': choice['selected_id']}
+        try:
+            if not isinstance(goal, str) or not goal.strip():raise Gap('bad_request: goal is required')
+            # Before any Driver/provider call: observed IDs are unknowable yet, so ANY element-ID token is a leak.
+            self.reject_answer_leak({'nodes': {int(m): 0 for m in self.OBSERVED_ID.findall(goal)}}, goal)
+            if operation not in ('click', 'type_text', 'verify'):raise Gap('bad_request: operation must be click, type_text or verify')
+            if operation == 'verify' and (expect is None or records is not None or control is not None):raise Gap('bad_request: operation verify needs expect (and takes no records or control); it never clicks')
+            if control is not None and (not isinstance(control, str) or not control.strip()):raise Gap('bad_request: control must be the exact label of the control to press')
+            if operation == 'type_text' and text is None:raise Gap('bad_request: type_text requires text')
+            if confirm_label is not None and (not isinstance(confirm_label, str) or not confirm_label.strip()):raise Gap('bad_request: confirm must be the exact label of a dialog control')
+            if expect is not None and (not isinstance(expect, str) or not expect.strip()):raise Gap('bad_request: expect must be nonempty text')
+            if not isinstance(budget_s, (int, float)) or isinstance(budget_s, bool) or budget_s <= 0:raise Gap('bad_request: budget_s must be positive seconds')
+            spec = self._do_records(records) if records is not None else None
+            ctx['stage'] = 'window';began = self.clock()
+            if title is not None:
+                if pid is not None or window_id is not None:raise Gap('bad_request: give title or pid+window_id, not both')
+                found = guarded('window', lambda: self.windows(title))['windows']
+                if len(found) != 1:
+                    raise Gap('window_%s: %d windows match the exact title; check the exact window title' % ('not_found' if not found else 'ambiguous', len(found)))
+                ctx.update(pid=found[0]['pid'], window_id=found[0]['window_id'])
+            elif pid is None or window_id is None:raise Gap('bad_request: supply title, or pid and window_id')
+            count('window', 'driver_inventory')
+            for _ in (1, 2):
+                result = attempt()
+                if result is not self.STALE:return result
+                # Stale UI refused BEFORE any click: never reuse that selection or its tokens (S4.3); reobserve and re-run everything.
+                if ctx['pass'] == 2:
+                    return finish('deferred', reason='ui_changed_repeatedly', hint='The content changed again during the second pass; nothing was clicked. Re-state the goal against the current observation.')
+                if over():return budget()
+            return budget()
+        except DriverCallFailed as gap:
+            item = self.selections.get(ctx['selection']) if ctx['selection'] else None
+            # Once ANY click was delivered nothing may be handed back: a returned selection could click a dialog the goal never authorized.
+            given_back = bool(item) and not item['used'] and ctx['delivery'] == 'none'
+            if ctx['delivery'] != 'none' and ctx['selection']:self.selections.pop(ctx['selection'], None)
+            if ctx['stage'] in ('act', 'confirm') and not given_back and ctx['delivery'] == 'none':ctx['delivery'] = 'uncertain'
+            return finish('failed', reason='driver_call_failed', message=str(gap), attempts=tries.get(ctx['stage'], 1),
+                          retryable=ctx['delivery'] == 'none', **({'selection': ctx['selection']} if given_back else {}))
+        except self._Ambiguous as gap:
+            return finish('deferred', reason='records_ambiguous', message=str(gap))
+        except Gap as gap:
+            return finish('refused', reason=self._do_reason(str(gap)), message=str(gap))
+        except (ValueError, RuntimeError, TimeoutError, OSError) as error:
+            return finish('failed', reason='provider_failure', error_type=type(error).__name__, attempts=tries.get(ctx['stage'], 1),
+                          retryable=ctx['delivery'] == 'none')
 
     def close(self):
         for provider in self.providers.values():

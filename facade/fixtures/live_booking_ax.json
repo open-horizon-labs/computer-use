@@ -1,0 +1,874 @@
+{
+"source": "synthetic fixture page captured from Chrome AX (web content only); tab strip and address bar are synthetic",
+"window_title": "Clinic Slots facade-booking-0-1790630020",
+"elements": [
+{
+"element_index": 0,
+"parent_index": null,
+"role": "AXWindow",
+"enabled": true
+},
+{
+"element_index": 15,
+"parent_index": 0,
+"role": "AXWebArea",
+"enabled": true,
+"label": "Clinic Slots facade-booking-0-1790630020",
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 16,
+"parent_index": 15,
+"role": "AXHeading",
+"enabled": true,
+"label": "Clinic Slots facade-booking-0-1790630020",
+"value": "1",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 17,
+"parent_index": 16,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Clinic Slots facade-booking-0-1790630020",
+"value": "Clinic Slots facade-booking-0-1790630020",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 18,
+"parent_index": 15,
+"role": "AXList",
+"enabled": true,
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 19,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Morgan Reyes",
+"value": "Dr. Morgan Reyes",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 20,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Consultation",
+"value": "Consultation",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 21,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "60 min",
+"value": "60 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 22,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 1:30 PM",
+"value": "Starts 1:30 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 23,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 24,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Morgan Lee, NP",
+"value": "Morgan Lee, NP",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 25,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Follow-up",
+"value": "Follow-up",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 26,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 27,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 2:00 PM",
+"value": "Starts 2:00 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 28,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 29,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Priya Shah",
+"value": "Dr. Priya Shah",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 30,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Follow-up",
+"value": "Follow-up",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 31,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 32,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 2:15 PM",
+"value": "Starts 2:15 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 33,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Covering for Dr. Morgan Reyes",
+"value": "Covering for Dr. Morgan Reyes",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 34,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 35,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Morgan Reyes",
+"value": "Dr. Morgan Reyes",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 36,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Consultation",
+"value": "Consultation",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 37,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "45 min",
+"value": "45 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 38,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 2:30 PM",
+"value": "Starts 2:30 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 39,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 40,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Morgan Reyes",
+"value": "Dr. Morgan Reyes",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 41,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Follow-up",
+"value": "Follow-up",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 42,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 43,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 1:45 PM",
+"value": "Starts 1:45 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 44,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 45,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Morgan Reyesford",
+"value": "Dr. Morgan Reyesford",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 46,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Follow-up",
+"value": "Follow-up",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 47,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 48,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 2:45 PM",
+"value": "Starts 2:45 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 49,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 50,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Morgan Reyes",
+"value": "Dr. Morgan Reyes",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 51,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Follow-up",
+"value": "Follow-up",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 52,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 53,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 3:15 PM",
+"value": "Starts 3:15 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 54,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 55,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Morgan Reyes",
+"value": "Dr. Morgan Reyes",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 56,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Follow-up",
+"value": "Follow-up",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 57,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 58,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 4:00 PM",
+"value": "Starts 4:00 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 59,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 60,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Alan Morgan",
+"value": "Dr. Alan Morgan",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 61,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Follow-up",
+"value": "Follow-up",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 62,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 63,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 2:05 PM",
+"value": "Starts 2:05 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 64,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 65,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Morgan Reyes",
+"value": "Dr. Morgan Reyes",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 66,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Telehealth",
+"value": "Telehealth",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 67,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "half-hour",
+"value": "half-hour",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 68,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 3:00 PM",
+"value": "Starts 3:00 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 69,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Video visit",
+"value": "Video visit",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 70,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 71,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Morgan Reyes",
+"value": "Dr. Morgan Reyes",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 72,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Follow-up",
+"value": "Follow-up",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 73,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 74,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 11:00 AM",
+"value": "Starts 11:00 AM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 75,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 76,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Dr. Kim Ortega",
+"value": "Dr. Kim Ortega",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 77,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Consultation",
+"value": "Consultation",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 78,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "30 min",
+"value": "30 min",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 79,
+"parent_index": 18,
+"role": "AXStaticText",
+"enabled": true,
+"label": "Starts 2:20 PM",
+"value": "Starts 2:20 PM",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 80,
+"parent_index": 18,
+"role": "AXButton",
+"enabled": true,
+"label": "Book",
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+]
+},
+{
+"element_index": 380,
+"parent_index": 0,
+"role": "AXTabGroup",
+"enabled": true
+},
+{
+"element_index": 381,
+"parent_index": 380,
+"role": "AXRadioButton",
+"label": "Fixture page - Memory usage - 90.0 MB",
+"enabled": true
+},
+{
+"element_index": 382,
+"parent_index": 0,
+"role": "AXTextField",
+"value": "127.0.0.1:8934/booking?run=fixture",
+"enabled": true
+}
+]
+}
