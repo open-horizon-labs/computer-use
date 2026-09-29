@@ -137,7 +137,7 @@ MUTATIONS = {
         ['test_plan_review.Destructive.test_a_negated_goal_never_unlocks_a_destructive_control', 'test_plan_review.Destructive.test_a_goal_that_says_delete_still_needs_the_declaration']),
     'any_declaration_unlocks': (
         'allow_destructive of any text unlocks the control (review P1-3)',
-        [('plan.py', "    return bool(step_allow) and lk.norm(step_allow) == lk.norm(label)", "    return bool(step_allow)")],
+        [('plan.py', "    return bool(step_allow) and lk.fold(step_allow) == lk.fold(label)", "    return bool(step_allow)")],
         ['test_plan_review.Destructive.test_a_declaration_for_another_label_does_not_allow_it']),
     'prefix_control_in_plans': (
         'reuse the whole-word prefix in plans: Finish presses Finish later (review P2-5)',
@@ -154,7 +154,7 @@ MUTATIONS = {
         ['test_plan_review.TwoWindows.test_identical_rows_in_two_windows_do_not_overwrite_each_others_look']),
     'page_text_unmarked': (
         'return page text with no untrusted marker (review P3-6)',
-        [('look.py', "'untrusted_page_text': True, 'notice': NOTICE, ", "")],
+        [('look.py', "'untrusted_page_text': True, 'notice': NOTICE, ", ""), ('core.py', "            result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)", "            pass")],
         ['test_plan_review.UntrustedText.test_every_look_says_the_page_text_is_untrusted_data']),
     'child_map_cached_on_the_facade': (
         'cache the subtree child map across observations (review P3-7)',
@@ -171,19 +171,19 @@ MUTATIONS = {
         ['test_plan_review2.UniquenessOverAllRecords.test_a_capped_look_cannot_turn_an_ambiguous_condition_into_a_click', 'test_plan_review2.UniquenessOverAllRecords.test_a_focused_look_cannot_either', 'test_plan_review2.UniquenessOverAllRecords.test_on_the_booking_page_a_focus_on_one_slot_still_counts_the_others']),
     'confirm_whitelist_off': (
         'the dialog text is not compared with the declaration (second review P1-B/C)',
-        [('core.py', "            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual}:", '            if False:')],
+        [('core.py', "            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual_lines} or {norm(x) for x in cs['dialog_controls']} != {norm(x) for x in actual_controls}:", '            if False:')],
         ['test_plan_review2.ConfirmWhitelist.test_an_extra_line_the_caller_did_not_declare_defers_and_shows_the_actual_lines', 'test_plan_review2.ConfirmWhitelist.test_any_different_line_defers_whatever_the_language_or_verb', 'test_plan_review2.ConfirmWhitelist.test_a_declared_line_that_is_missing_defers']),
     'whitelist_allows_extra_actual_lines': (
         'the declared lines only need to be present (subset check): "Do not proceed" on the next line passes',
-        [('core.py', "            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual}:", "            if not {norm(x) for x in cs['dialog_text']} <= {norm(x) for x in actual}:")],
+        [('core.py', "            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual_lines} or {norm(x) for x in cs['dialog_controls']} != {norm(x) for x in actual_controls}:", "            if not {norm(x) for x in cs['dialog_text']} <= {norm(x) for x in actual_lines} or {norm(x) for x in cs['dialog_controls']} != {norm(x) for x in actual_controls}:")],
         ['test_plan_review2.ConfirmWhitelist.test_an_extra_line_the_caller_did_not_declare_defers_and_shows_the_actual_lines']),
     'whitelist_allows_missing_declared_lines': (
         'every actual line is declared but declared lines may be absent',
-        [('core.py', "            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual}:", "            if not {norm(x) for x in actual} <= {norm(x) for x in cs['dialog_text']}:")],
+        [('core.py', "            if {norm(x) for x in cs['dialog_text']} != {norm(x) for x in actual_lines} or {norm(x) for x in cs['dialog_controls']} != {norm(x) for x in actual_controls}:", "            if not {norm(x) for x in actual_lines} <= {norm(x) for x in cs['dialog_text']} or {norm(x) for x in cs['dialog_controls']} != {norm(x) for x in actual_controls}:")],
         ['test_plan_review2.ConfirmWhitelist.test_a_declared_line_that_is_missing_defers']),
     'dialog_text_optional': (
         'a confirm step without dialog_text is accepted (judged by nothing)',
-        [('plan.py', '            if not isinstance(declared, list) or not declared or not all(isinstance(x, str) and x.strip() for x in declared) or len(declared) > 20:', '            declared = declared or []\n            if False:'), ('plan.py', "'dialog_text': step['dialog_text']}", "'dialog_text': step.get('dialog_text') or []}")],
+        [('plan.py', '            if not isinstance(declared, list) or not declared or not all(isinstance(x, str) and x.strip() for x in declared) or len(declared) > 20:', '            declared = declared or []\n            if False:'), ('plan.py', "'dialog_text': step['dialog_text'],", "'dialog_text': step.get('dialog_text') or [],")],
         ['test_plan_review2.ConfirmWhitelist.test_a_confirm_step_must_declare_the_dialog_text']),
     'destructive_list_shrunk_wipe': (
         'SHRINK: the wipe stem is dropped from the destructive list',
@@ -301,6 +301,122 @@ MUTATIONS = {
         'a control label is put into a hint (second review P2-C)',
         [('core.py', "'control_needed': 'Each record has several controls (found.repeated_controls lists their labels). Call cua_do again with control=<the exact label of the one to press>.',", "'control_needed': 'Each record has several controls (%s). Call cua_do again with control=<the exact label of the one to press>.' % ', '.join(c['label'] for c in found['repeated_controls']),")],
         ['test_plan_review2.UntrustedEverywhere.test_single_step_responses_carry_the_marker_and_no_page_text_in_hints']),
+    'region_compares_static_text_only': (
+        'the dialog whitelist compares only static texts and headings (third review P1-1)',
+        [('look.py', "        line, dropped = node_line(n)\n        if dropped:line = 'text: '", "        line, dropped = (text_of(n) if n.get('role') in ('AXStaticText', 'AXHeading') else None), False\n        if dropped:line = 'text: '")],
+        ['test_plan_review3.DialogRegion.test_extra_text_in_an_image_node_inside_the_dialog_defers', 'test_plan_review3.DialogRegion.test_extra_text_in_a_group_label_or_description_defers', 'test_plan_review3.DialogRegion.test_extra_text_in_a_text_area_value_defers', 'test_plan_review3.DialogRegion.test_a_prefilled_text_field_defers_and_declaring_it_authorizes_it']),
+    'dialog_controls_not_compared': (
+        'declared dialog_controls are not compared with the actual controls',
+        [('core.py', " or {norm(x) for x in cs['dialog_controls']} != {norm(x) for x in actual_controls}:", ':')],
+        ['test_plan_review3.DialogRegion.test_an_extra_button_next_to_the_declared_ones_defers', 'test_plan_review3.DialogRegion.test_an_extra_link_defers_too']),
+    'control_state_marker_dropped': (
+        'SHRINK: a control state ([checked]) is not part of its declared item',
+        [('look.py', "    if marker in ('checked', 'selected'):item += ' [%s]' % marker", '    pass')],
+        ['test_plan_review3.DialogRegion.test_a_prechecked_checkbox_defers_with_its_state_and_declaring_the_state_authorizes_it']),
+    'region_only_new_nodes_in_content': (
+        'SHRINK: new nodes outside the web area are ignored',
+        [('core.py', "            if i in content or (not chrome(i) and nodes[i].get('role') not in ('AXTextField', 'AXComboBox', 'AXSearchField')):new.append(i)", '            if i in content:new.append(i)')],
+        ['test_plan_review3.DialogRegion.test_a_warning_parented_outside_the_cluster_defers']),
+    'region_without_container': (
+        'SHRINK: the container holding the dialog cluster is not compared (already-present text dropped)',
+        [('core.py', "            if parent in nodes and nodes[parent].get('role') not in ('AXWebArea', 'AXWindow'):region |= below(parent)", '            if False:region |= below(parent)')],
+        ['test_plan_review3.DialogRegion.test_text_already_on_the_page_inside_the_dialog_container_is_still_compared']),
+    'dialog_controls_optional': (
+        'dialog_controls accepted as absent',
+        [('plan.py', '            if not isinstance(controls, list) or not controls or not all(isinstance(x, str) and x.strip() for x in controls) or len(controls) > 20:', "            controls = controls or list(step.get('dialog_controls') or [step.get('confirm')])\n            step['dialog_controls'] = controls\n            if False:")],
+        ['test_plan_review3.DialogRegion.test_dialog_controls_are_required_and_the_confirm_label_must_be_among_them']),
+    'record_lines_text_only': (
+        'record lines drop image, group, field and state text (third review P1-2)',
+        [('look.py', '                lines, dropped = tagged_under(members, root)', '                lines, dropped = texts_under(members), 0')],
+        ['test_plan_review3.RecordText.test_an_image_label_inside_a_record_is_a_tagged_line', 'test_plan_review3.RecordText.test_a_negative_condition_sees_the_image_badge']),
+    'unrepresentable_text_not_counted_hidden': (
+        'a text-bearing container the look cannot show is silently dropped',
+        [('look.py', '                if drop and i != root:dropped += 1', '                pass')],
+        ['test_plan_review3.RecordText.test_a_text_bearing_node_the_look_cannot_represent_counts_as_hidden']),
+    'look_id_by_element_index': (
+        'SHRINK: the state hash is keyed by element index, not structural path (third review P2-3)',
+        [('look.py', '    return sorted([path(i)] + [str(nodes[i].get(k)) for k in CONTROL_STATE_KEYS] for i in picked)', '    return sorted([str(i)] + [str(nodes[i].get(k)) for k in CONTROL_STATE_KEYS] for i in picked)')],
+        ['test_plan_review3.LookIdStructure.test_a_banner_before_the_list_does_not_change_the_id_but_an_input_value_does', 'test_plan_review3.LookIdStructure.test_a_banner_before_the_list_still_lets_a_plan_proceed']),
+    'input_value_not_hashed': (
+        'SHRINK: the value is dropped from the hashed control state',
+        [('look.py', "CONTROL_STATE_KEYS = ('role', 'label', 'value', ", "CONTROL_STATE_KEYS = ('role', 'label', ")],
+        ['test_plan_review3.LookIdStructure.test_a_page_level_input_value_or_chosen_option_is_in_the_id']),
+    'aria_state_keys_shrunk': (
+        'SHRINK: current and busy dropped from the hashed state keys',
+        [('look.py', "'pressed', 'current', 'busy')  # whatever", "'pressed')  # whatever")],
+        ['test_plan_review3.LookIdStructure.test_a_current_or_busy_state_exposed_by_the_observation_is_in_the_id']),
+    'look_marker_only_on_ok': (
+        'the untrusted marker is applied only inside the ok path',
+        [('core.py', '        with self.lock:return self.mark(lookmod.run_look(', '        with self.lock:return (lookmod.run_look(')],
+        ['test_plan_review3.MarkerOnEveryPath.test_every_look_path_carries_the_marker']),
+    'driver_failure_message_raw': (
+        'the single-step driver failure echoes str(gap)',
+        [('core.py', "message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', attempts=", 'message=str(gap), attempts=')],
+        ['test_plan_review3.MarkerOnEveryPath.test_every_do_path_carries_the_marker_and_no_message_is_raw']),
+    'fold_homoglyphs_dropped': (
+        'SHRINK: Cyrillic/Greek look-alikes are not mapped',
+        [('look.py', '_HOMOGLYPHS.get(c, c)', 'c')],
+        ['test_plan_review3.DestructiveFold.test_look_alike_and_invisible_characters_are_folded_before_matching']),
+    'fold_zero_width_kept': (
+        'SHRINK: zero-width characters are not stripped (replaced by a letter instead)',
+        [('look.py', "\\ufeff\\u00ad]', '', t)", "\\ufeff\\u00ad]', 'x', t)")],
+        ['test_plan_review3.DestructiveFold.test_look_alike_and_invisible_characters_are_folded_before_matching']),
+    'fold_diacritics_kept': (
+        'SHRINK: diacritics are not dropped',
+        [('look.py', "unicodedata.category(c) != 'Mn'", 'True')],
+        ['test_plan_review3.DestructiveFold.test_look_alike_and_invisible_characters_are_folded_before_matching']),
+    'fold_nfkc_dropped': (
+        'SHRINK: no NFKC (fullwidth letters, non-breaking spaces survive)',
+        [('look.py', "    t = unicodedata.normalize('NFKC', str(text or ''))", "    t = str(text or '')"), ('look.py', "unicodedata.normalize('NFKD', t)", "unicodedata.normalize('NFD', t)")],
+        ['test_plan_review3.DestructiveFold.test_look_alike_and_invisible_characters_are_folded_before_matching']),
+    'destructive_list_shrunk_buy': (
+        'SHRINK: the buy stem is dropped from the irreversible/outward list',
+        [('plan.py', 'buy(?:ing)?', 'buyXX(?:ing)?')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_purchase': (
+        'SHRINK: the purchase stem is dropped from the irreversible/outward list',
+        [('plan.py', 'bpurchas', 'bpurchasXX')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_pay': (
+        'SHRINK: the pay stem is dropped from the irreversible/outward list',
+        [('plan.py', 'pay(?:ing)?', 'payXX(?:ing)?')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_send': (
+        'SHRINK: the send stem is dropped from the irreversible/outward list',
+        [('plan.py', 'send(?:ing)?', 'sendXX(?:ing)?')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_publish': (
+        'SHRINK: the publish stem is dropped from the irreversible/outward list',
+        [('plan.py', 'bpublish', 'bpublishXX')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_transfer': (
+        'SHRINK: the transfer stem is dropped from the irreversible/outward list',
+        [('plan.py', 'btransfer', 'btransferXX')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_refund': (
+        'SHRINK: the refund stem is dropped from the irreversible/outward list',
+        [('plan.py', 'brefund', 'brefundXX')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_void': (
+        'SHRINK: the void stem is dropped from the irreversible/outward list',
+        [('plan.py', 'bvoid', 'bvoidXX')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_submit_order': (
+        'SHRINK: the submit order stem is dropped from the irreversible/outward list',
+        [('plan.py', 'bsubmit', 'bsubmitXX')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_place_order': (
+        'SHRINK: the place order stem is dropped from the irreversible/outward list',
+        [('plan.py', 'bplace', 'bplaceXX')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'destructive_list_shrunk_confirm_payment': (
+        'SHRINK: the confirm payment stem is dropped from the irreversible/outward list',
+        [('plan.py', 'bconfirm', 'bconfirmXX')],
+        ['test_plan_review3.DestructiveFold.test_irreversible_and_outward_verbs_need_the_declaration']),
+    'whole_word_stems_widened': (
+        'SHRINK: disconnect and remove match as prefixes again (Disconnected, Removed items)',
+        [('plan.py', 'disconnect(?:s|ing)?\\b', 'disconnect\\w*'), ('plan.py', 'remov(?:e|es|ing)\\b', 'remov\\w*')],
+        ['test_plan_review3.DestructiveFold.test_documented_false_positives_stay_and_whole_word_stems_do_not_overmatch']),
     'budget_look_reader': (
         'the default look reads through NuExtract (measured through the real server tools)',
         [('look.py', "        f.looks[(pid, window_id, response['look_id'])] = {", "        try:f.provider('reader').extract({'snapshot_id': state['raw']['snapshot_id'], 'task': 't', 'fields': {'x': 'x'}, 'records': [{'id': 'e1', 'text': 't'}]}, state['raw']['snapshot_id'])\n        except Exception:pass  # the fake reader counts the request before it looks for a pattern\n        f.looks[(pid, window_id, response['look_id'])] = {")],

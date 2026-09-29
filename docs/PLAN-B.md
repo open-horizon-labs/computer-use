@@ -60,6 +60,7 @@ New: whole-plan validation before any Driver action; `look_id`; `page_changed_si
 3. Several `where.lines` matches stop (`where_matches_several`) instead of asking the chooser or clicking the first.
 4. A `confirm` step must directly follow a `press`; a dialog that was already open is not confirmable by a plan.
 5. A confirm step declares the dialog's COMPLETE text (second review): the negation word list was deleted because word lists cannot be complete; the whitelist decides. Cost: press, defer with the actual lines, deliberate press (3 calls; 2 when the wording is known). The destructive-label list (widened) is a floor, not a definition.
+5b. Third review: `dialog_controls` is required beside `dialog_text`; the dialog region is compared in full; records show tagged image/group/field/state lines and unrepresentable text counts as hidden; look_id is structural.
 5a. Where.lines uniqueness covers all records; hidden-text selection needs `accept_hidden_text`; control state is in the `look_id`; toggles need a look; every response is marked untrusted.
 6. The default identity of a `where.lines` press is the values its `eq`/`contains` conditions required; if the dialog does not show all of them, the confirm step stops (measured: 3 calls instead of 2).
 7. Conditions are evaluated on the DISPLAYED (cut) lines; values are at most 60 characters.
@@ -87,6 +88,12 @@ fields, focus=Northwind            1799    6/100      1       1  done, clicked I
 
 What this shows, and only this: a policy that already knows the target can act on the data. The deterministic look contains every string that policy needs; on 100 rows the default caps show 40, so the LLM needs `focus` (or `max_records` and `max_bytes` raised: 11 KB) to see the target, and `fields` adds a response of 19.6 KB and 10 reader calls for values that repeat the displayed lines. **Offline numbers are structure and size only**: the fake reader is exact by construction and instant. What remains, to be measured live: (1) the wall time of `look(fields=...)` on 100 rows (10 reader calls; the extractor chunks 5 records at a time under a 20 s deadline); (2) NuExtract accuracy on those records against the displayed strings (`--reader package.module:callable` runs the same record texts through a real reader and scores them); (3) whether an LLM writes correct plans from the deterministic look alone on messy pages, and the wrong-click rate against native. Until then the question stays open and NuExtract stays out of the default look.
 
+## Third review: what counts as page text (region-complete), and what only a live capture can settle
+
+Dialog text and record text were compared and shown only for static texts and headings of one cluster. Now a confirm step declares `dialog_text` AND `dialog_controls` and the whole dialog REGION is compared (every new node in the window with subtrees, the container that holds the dialog cluster, the nearest dialog-tagged ancestor; every text of any role, every control with its state), and a record's lines carry image, group, field and state text (tagged) with unrepresentable text counted as hidden. The `look_id` hashes structural paths (not indices) and every input value, chosen option and exposed ARIA state. Every look and every `cua_do` response, on every path, carries the untrusted marker; failures carry fixed messages. The destructive list gained irreversible/outward verbs and matches on folded text; it is a floor, the dialog whitelist is the backstop.
+
+**Verifiable ONLY live (the capture pass must check):** (1) that real Chrome exposes images (`AXImage` with a label or description), `AXGroup` labels/descriptions, text-area and field values, and pre-checked checkbox state (`checked`/`value`) inside a dialog and inside records; (2) which ARIA states the Driver surfaces at all (`checked`, `selected`, `expanded`, `pressed`, `current`, `busy`) and under which keys, since the hash and the state markers only cover what the observation exposes; (3) where a real page dialog attaches (under the web area vs a dialog-tagged container): a dialog whose container IS the web area is compared by its new nodes only; (4) that virtualized lists expose what the look assumes ("all records" means all exposed in the accessibility tree); (5) that a confirm dialog's own header, close button and backdrop do not add controls or text nobody would declare (they must be declared: friction to measure); (6) the false-positive rate of the widened destructive list on real pages (`Send`, `Pay`, `Clear`, `Reset` labels).
+
 ## Not measured
 
 The scripted LLM's phrases come from the goal, so the budget is a LOWER BOUND on the calls a real LLM needs (it guards call counts, not plan correctness). Live latency and cost of look-then-plan; LLM plan correctness; NuExtract accuracy and latency on 100 rows; any tree from an unrelated real site (no consent to capture one yet), so every budget is fixture-derived and the shapes beyond booking and orders are synthetic. The CE's invalidation condition: more than a third of the suite's tasks cannot be expressed as plans, or the wrong-click rate is above native.
@@ -96,7 +103,7 @@ The scripted LLM's phrases come from the goal, so the budget is a LOWER BOUND on
 ```
 .venv-facade/bin/python -m unittest discover -s facade -p 'test_*.py'
 .venv-facade/bin/python scripts/check_call_budget.py
-.venv-facade/bin/python scripts/check_plan_mutations.py     # 66 wrong patches (incl. SHRINKING patches: verbs and boundary characters dropped, visible->all reverted), each must fail its test BY ASSERTION
+.venv-facade/bin/python scripts/check_plan_mutations.py     # 95 wrong patches (incl. SHRINKING patches: verbs and boundary characters dropped, visible->all reverted), each must fail its test BY ASSERTION
 .venv-facade/bin/python scripts/look_compare.py             # structure and size only
 .venv-facade/bin/python facade/check_protocol.py            # default, CUA_TASK_ADVANCED=1
 ```
