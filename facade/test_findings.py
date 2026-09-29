@@ -11,7 +11,7 @@ import re
 import unittest
 
 import shapes as sh
-from core import Facade
+from core import Facade, Gap
 from page_candidates import filter_records
 from test_core import FakeChooser, FakeVision
 from test_live_shapes import BOOKING_FIELDS, BOOKING_PATTERNS, LiveBase, LiveReader, UnknownVision, booked
@@ -157,7 +157,7 @@ class CanvasRegions(unittest.TestCase):
         driver.parse_result = parsed if parsed is not None else regions(*self.PAGE)
         self.chooser = FakeChooser()
         facade = Facade(driver, generic_factory=lambda: self.chooser, reader_factory=lambda: LiveReader({}), visual_factory=vision or UnknownVision, sleep=lambda s: None)
-        kw.setdefault('expect', None)
+        kw.setdefault('expect', None);kw.setdefault('allow_foreground', True)  # the drawn-surface click needs the explicit permission (CanvasForeground tests cover its absence)
         return facade.do(goal, title='Demo', **kw), driver
 
     def test_a_unique_exact_label_is_clicked_in_capture_space_and_ends_delivered_unverified(self):
@@ -251,3 +251,65 @@ class CanvasRegions(unittest.TestCase):
 
 
 if __name__ == '__main__':unittest.main()
+
+
+class CanvasForeground(CanvasRegions):
+    """Probe 2026-09-29 on our own fixture: a BACKGROUND pixel click on a canvas is turned into an AXPress on the element under it, which
+    Chrome delivers at that element's CENTRE (aimed at a corner button, the centre button was pressed and reported as success). So it is
+    a wrong click, never sent; a real pointer event needs the Driver's foreground delivery, which only the caller's explicit
+    allow_foreground permits. Each test names the wrong patch it fails."""
+    ONE = [('Toolbar', 10, 10), ('Export', 10, 40)]
+
+    def test_without_permission_nothing_is_clicked_and_the_reason_says_why(self):
+        # Wrong patch: send the background click anyway (it lands at the centre) or report it delivered_unverified.
+        r, d = self.go(regions(*self.ONE), control='Export', allow_foreground=None)
+        self.assertEqual((r['status'], r['reason'], d.executed, r['delivery']), ('refused', 'pointer_not_deliverable_in_background', [], 'none'))
+        self.assertIn('allow_foreground', r['message']);self.assertIn('nothing was clicked', r['message'])
+
+    def test_false_is_not_permission(self):
+        r, d = self.go(regions(*self.ONE), control='Export', allow_foreground=False)
+        self.assertEqual((r['reason'], d.executed), ('pointer_not_deliverable_in_background', []))
+
+    def test_with_permission_the_one_click_is_delivered_in_foreground_mode(self):
+        # Wrong patch: accept the flag but keep delivery_mode background (the Driver would still press the centre).
+        r, d = self.go(regions(*self.ONE), control='Export', allow_foreground=True)
+        self.assertEqual((r['status'], len(d.executed), d.executed[0]['delivery_mode'], d.executed[0]['capture_id']), ('delivered_unverified', 1, 'foreground', 'cap'))
+
+    def test_permission_does_not_outlive_the_call(self):
+        # Wrong patch: a facade-level flag that stays set (the next caller's canvas click would front the window unasked).
+        driver = sh.ShapeDriver(sh.canvas());driver.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};driver.capture_id = 'cap'
+        driver.parse_result = regions(*self.ONE)
+        f = Facade(driver, generic_factory=FakeChooser, reader_factory=lambda: LiveReader({}), visual_factory=UnknownVision, sleep=lambda s: None)
+        first = f.do('Press the Export button', title='Demo', expect=None, control='Export', allow_foreground=True)
+        second = f.do('Press the Export button', title='Demo', expect=None, control='Export')
+        self.assertEqual((first['status'], second['status'], second['reason'], len(driver.executed)), ('delivered_unverified', 'refused', 'pointer_not_deliverable_in_background', 1))
+
+    def test_permission_does_not_leak_into_the_primitive_path(self):
+        # Wrong patch: set the flag for the call and never clear it (a later cua_choose/cua_act on a canvas would front the window unasked).
+        driver = sh.ShapeDriver(sh.canvas());driver.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};driver.capture_id = 'cap'
+        driver.parse_result = regions(('Toolbar', 10, 10), ('Export', 10, 40))
+        f = Facade(driver, generic_factory=FakeChooser, reader_factory=lambda: LiveReader({}), visual_factory=UnknownVision, sleep=lambda s: None)
+        f.do('Press the Export button', title='Demo', expect=None, control='Export', allow_foreground=True)
+        obs = f.observe(1, 2)['snapshot']
+        selection = f.region_exact(obs, 'Export', 'Press the Export button')['selection']  # the same exact-label path cua_do took
+        with self.assertRaisesRegex(Gap, 'pointer_not_deliverable_in_background'):f.act(selection)
+        self.assertEqual(len(driver.executed), 1)
+
+    def test_an_ax_control_is_never_fronted_even_with_permission(self):
+        # Wrong patch: apply foreground delivery to every click once the flag is given. An AX press works in the background; fronting it is the policy breach.
+        driver = sh.ShapeDriver(sh.cards(names='A'))
+        f = Facade(driver, generic_factory=FakeChooser, reader_factory=lambda: LiveReader({}), visual_factory=UnknownVision, sleep=lambda s: None)
+        r = f.do('Press Book', title='Demo', expect=None, control='Book', allow_foreground=True)
+        self.assertEqual((r['status'], len(driver.executed)), ('delivered_unverified', 1))
+        self.assertNotEqual(driver.executed[0].get('delivery_mode'), 'foreground')
+
+    def test_a_plan_step_carries_its_own_permission(self):
+        # Wrong patch: a plan ignores the step flag (every canvas step refused) or reads it from the call level (no step-level control).
+        r, d = self.go(regions(*self.ONE), allow_foreground=None, steps=[{'do': 'press', 'control': 'Export', 'expect': None, 'allow_foreground': True}])
+        self.assertEqual((r['status'], len(d.executed), d.executed[0]['delivery_mode']), ('delivered_unverified', 1, 'foreground'))
+        r, d = self.go(regions(*self.ONE), allow_foreground=None, steps=[{'do': 'press', 'control': 'Export', 'expect': None}])
+        self.assertEqual((r['status'], d.executed), ('refused', []));self.assertEqual(r.get('reason') or r['steps'][0].get('reason'), 'pointer_not_deliverable_in_background')
+
+    def test_a_plan_step_flag_must_be_true_or_absent(self):
+        r, d = self.go(regions(*self.ONE), allow_foreground=None, steps=[{'do': 'press', 'control': 'Export', 'expect': None, 'allow_foreground': False}])
+        self.assertEqual((r['status'], r['reason'], d.executed), ('refused', 'bad_request', []));self.assertIn('allow_foreground', r['message'])

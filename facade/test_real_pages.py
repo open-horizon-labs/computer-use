@@ -235,7 +235,7 @@ class CanvasPages(unittest.TestCase):
         f, d = facade_for(page)
         kw = {'control': control} if control else {}
         if near:kw['near'] = near
-        r = f.do(goal or 'Press "%s"' % control, title='Demo', expect=None, **kw)
+        r = f.do(goal or 'Press "%s"' % control, title='Demo', expect=None, allow_foreground=True, **kw)  # the drawn-surface click needs the explicit permission (test_findings.CanvasForeground)
         return r, d
 
     def test_the_look_lists_the_drawn_texts_when_ax_has_no_controls(self):

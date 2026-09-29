@@ -182,6 +182,13 @@ def render_canvas_regions(run):
                         captions=[('Toolbar', 20, 18), ('Footer', 20, 158)])
 
 
+def render_canvas_center(run):
+    """Capture/probe-only (not in tasks.json): ONE button covering the canvas centre, so a click delivered at the element's
+    centre instead of the requested point shows up as a press of `center_only`."""
+    buttons = [['center_only', 'Centre', 270, 105, 100, 50, None], ['corner', 'Corner', 20, 20, 100, 40, None]]
+    return _canvas_page(run, 'canvas_center', f'Centre Canvas {run}', buttons, _STYLE)
+
+
 # --- duplicate labels in the AX tree --------------------------------------
 
 def render_settings(run):
@@ -290,6 +297,7 @@ def render_directory(run):
 
 
 PAGES = {
+    'canvas_center': render_canvas_center,
     'booking': render_booking, 'orders': render_orders, 'canvas': render_canvas,
     'form': render_form, 'wizard': render_wizard, 'invoices': render_invoices,
     'canvas_small': render_canvas_small, 'canvas_lowcontrast': render_canvas_lowcontrast,

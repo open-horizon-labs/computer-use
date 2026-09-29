@@ -60,7 +60,7 @@
   "status": "accepted",
   "classification": "projection defect",
   "authority": "Existing user-governed sketch authorizes implementation repair; assistant conformance review, not new user policy approval.",
-  "sketch_clause": "S4.2.3–4",
+  "sketch_clause": "S4.2.3\u20134",
   "input_and_actual": "NaN confidence bypassed threshold comparisons.",
   "corrected_behavior": "Require finite probability in [0,1].",
   "sketch_change": "None: repair projection to existing clause",
@@ -75,7 +75,7 @@
   "status": "accepted",
   "classification": "projection defect",
   "authority": "Existing user-governed sketch authorizes implementation repair; assistant conformance review, not new user policy approval.",
-  "sketch_clause": "S4.2.4–5",
+  "sketch_clause": "S4.2.4\u20135",
   "input_and_actual": "Ordering-only request was rejected for lacking predicates.",
   "corrected_behavior": "Apply zero or more supplied predicates, then supplied ordering.",
   "sketch_change": "None: repair projection to existing clause",
@@ -337,6 +337,24 @@
    "scenarios.plan_image_badge_seen.max_reader_calls": 0,
    "scenarios.plan_image_badge_seen.max_chooser_calls": 0,
    "live_task_budgets.booking.max_llm_visible_calls": 2
+  }
+ },
+ {
+  "id": "CE-FACADE-006",
+  "status": "proposed",
+  "authority": "Proposed; pending user approval. Live probe 2026-09-29 on the repo's own canvas fixtures (user consented), cua-driver 0.30.3, real Chrome, background windows.",
+  "classification": "projection fix (facade act path) plus a proposed sketch note under S4.2 section 7 / S4.6: delivery of a pixel-addressed click is part of the evidence chain, not assumed.",
+  "sketch_clause": "S4.2 section 7 (bounded recovery), S4.6 (independent verification)",
+  "input_and_actual": "Small suite, canvas_regions task, both arms: the click on the drawn Export button was reported delivered (native: effect unverifiable, route accessibility, 'PX hit-test pressed the background element via AX'; stack: driver_call_failed after 1.9 s) and the fixture logged NO press. Probe: with delivery_mode background, cua-driver turns EVERY pixel click (with or without capture_id) into an AX hit-test plus AXPress on the element under the point, i.e. the whole <canvas>; Chrome delivers that press at the element's CENTRE. Second probe, a fixture with one button at the centre and one at a corner: aimed at the corner, the CENTRE button was pressed and the call reported success. So a background pixel click on a drawn surface is a wrong click, not a no-op.",
+  "corrected_behavior": "A regions-mode selection (perception_region target) is never sent with background delivery: act refuses pointer_not_deliverable_in_background before any Driver call (nothing clicked, the selection given back), and the refusal names the only way through: the caller's explicit allow_foreground (cua_do call, or the plan step) which sets delivery_mode foreground on that click only, so the Driver fronts the window briefly for a real pointer event and restores the previous app. The flag never outlives its call or step, never applies to AX clicks, and false is not permission. No retry ladder: a second background attempt would press the centre again.",
+  "tempting_wrong_repair": "Retry the same background click (presses the centre again); switch every canvas click to foreground silently (the window-moving behaviour the user forbade); treat effect unverifiable as delivered_unverified (it hides a wrong click); keep a facade-wide flag (the next caller's canvas click would front the window unasked); apply foreground to AX presses too.",
+  "regression": "facade/test_findings.py CanvasForeground (7 tests: no permission refuses and clicks nothing; false is not permission; permission gives ONE foreground click on the original capture; permission does not outlive the call nor leak into the primitive path; AX presses are never fronted; a plan step carries its own flag; the flag must be true or absent). Five mutations each fail a named test. Budget scenarios canvas_regions, canvas_regions_unique and plan_canvas_look_do carry the flag. experiments/facade-vs-native/pages.py canvas_center is the probe page.",
+  "adjacent_holes": "Whether the Driver's foreground delivery actually lands a pointer event on a canvas has NOT been run live (the probe covered background only). The Driver behaviour is reported upstream as a bug (a pixel click that resolves to an AXPress loses the point; canvas/WebGL targets need the CGEvent path even in background); if a later driver version delivers background pixel clicks at the point, the refusal should be lifted per driver version, not removed.",
+  "invalidation": "Withdraw if a live run shows a background pixel click (any driver version this repo pins) landing at the requested point on the canvas_center fixture, or if the foreground click does not land either.",
+  "call_budget": {
+   "scenarios.canvas_regions.max_llm_visible_calls": 2,
+   "scenarios.canvas_regions_unique.max_llm_visible_calls": 1,
+   "scenarios.plan_canvas_look_do.max_llm_visible_calls": 2
   }
  }
 ]

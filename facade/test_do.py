@@ -714,7 +714,7 @@ class RegionsAndGuards(DoBase):
             def __call__(inner, step, request):
                 inner.requests.append(request);return {'choice': 't1', 'route': 'julia-1', 'action_authorized': True}
         self.chooser = Picks()
-        r = self.do('Press "Export"', expect='Exported')
+        r = self.do('Press "Export"', expect='Exported', allow_foreground=True)
         self.assertEqual((r['status'], r['selected']['id']), ('done', 't1'))
         self.assertEqual(r['delivery'], 'delivered');self.assertEqual(self.driver.executed[0]['capture_id'], 'cap')
 

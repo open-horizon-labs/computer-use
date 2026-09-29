@@ -19,7 +19,7 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
 DO_KINDS = ('press', 'type', 'confirm', 'verify')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
@@ -100,6 +100,8 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 raise _gap('bad_request: %s %s must be nonempty text' % (at, key))
         if 'accept_hidden_text' in step and step['accept_hidden_text'] is not True:
             raise _gap('bad_request: %s accept_hidden_text is true (an explicit acknowledgement) or absent' % at)
+        if 'allow_foreground' in step and step['allow_foreground'] is not True:
+            raise _gap('bad_request: %s allow_foreground is true (an explicit permission to front the window briefly) or absent' % at)
         if kind == 'confirm':
             declared = step.get('dialog_text')
             if not isinstance(declared, list) or not declared or not all(isinstance(x, str) and x.strip() for x in declared) or len(declared) > 20:
@@ -117,7 +119,7 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         for key in ('treat_as_match', 'accept_unknown'):
             if key in step and (not isinstance(step[key], list) or not step[key] or not all(isinstance(x, str) and x for x in step[key])):
                 raise _gap('bad_request: %s %s must be a list of record ids' % (at, key))
-        takes = {'press': {'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'expect', 'treat_as_match', 'accept_unknown', 'allow_destructive', 'accept_hidden_text'},
+        takes = {'press': {'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'expect', 'treat_as_match', 'accept_unknown', 'allow_destructive', 'accept_hidden_text', 'allow_foreground'},
                  'type': {'do', 'goal', 'control', 'control_match', 'text', 'expect', 'allow_destructive'},
                  'confirm': {'do', 'goal', 'confirm', 'identity', 'expect', 'allow_destructive', 'dialog_text', 'dialog_controls'},
                  'verify': {'do', 'goal', 'expect'}}[kind]
@@ -443,11 +445,12 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         # The window is resolved once (by the first step) and then pinned: every step acts on the same window.
         window = {'title': title} if ctx['pid'] is None else {'pid': ctx['pid'], 'window_id': ctx['window_id']}
         f.prefix_control = step.get('control_match') == 'prefix'
+        f.foreground_ok = step.get('allow_foreground') is True  # this step only
         try:
             result = f._do(spec['goal'], window.get('title'), window.get('pid'), window.get('window_id'), spec['records'], spec['operation'], spec['text'],
                        spec['expect'], spec['accept_unknown'], max(0.5, min(budget_s, remaining / 3)), None, spec['control'], spec['treat_as_match'], spec['near'], plan=channel)
         finally:
-            f.prefix_control = True
+            f.prefix_control = True;f.foreground_ok = False
         if channel.get('pid') is not None:
             ctx['pid'], ctx['window_id'] = channel['pid'], channel['window_id']
         status = result['status']
