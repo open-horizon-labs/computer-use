@@ -24,6 +24,27 @@ For example: the LLM requests provider name, appointment duration and start time
 
 CESS preserves the sketch, accepted counterexamples and executable regression checks. A failure either calls for repairing code to existing policy or proposing a policy change. Tests alone do not authorize a new rule.
 
+## Current approach: look, then plan once, execute in code
+
+The driving LLM does not mediate every hop. Measured live, tool time was about 13% of a run and LLM turns about 87%, so the default path minimizes turns and keeps recovery in deterministic code (design: [docs/PLAN-B.md](docs/PLAN-B.md), CE-FACADE-005).
+
+1. `cua_look`: read-only, no model. Returns the page's displayed strings (records, controls, dialogs, canvas texts) and a `look_id`.
+2. `cua_do` with `steps`: the LLM sends ONE small plan from what it saw. The server validates the whole plan, then per step re-observes, binds, acts, verifies `expect`, and recovers from stale state itself (bounded; a click is never retried).
+3. Guardrails in code: a filter is only allowed against a look the server issued (`look_id`); incomparable values are `unknown`, not a guess; destructive controls and dialogs need explicit, exact authorization; the whole plan has a hard time budget.
+
+NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosing steps. The primitive tools (`cua_observe`, `cua_choose`, `cua_act`, ...) are hidden unless `CUA_TASK_ADVANCED=1`. The agent tool of option D is experimental and not merged.
+
+**Evidence so far (n=1 per cell, Sonnet 5.5, real Chrome, directional only):** on 3 tasks the stack used about 2.5x less cost than native Cua Driver tools ($0.90 vs $2.69 total) with the same accuracy: booking and ax_dup correct on both arms, no wrong clicks; canvas_regions failed on both arms (click unverifiable). Turns and wall time were about equal. Method and preregistered rules: [experiments/facade-vs-native](experiments/facade-vs-native/PREREGISTRATION.md).
+
+**Minimal check (offline, no desktop, no GPU):**
+
+```sh
+scripts/setup_facade.sh --no-perception
+.venv-facade/bin/python -m unittest discover -s facade -p 'test_*.py'   # 559 tests
+.venv-facade/bin/python scripts/check_call_budget.py
+python3 inference/cua-decider/capability-dispatch/simulation_gate.py
+```
+
 ## Agent-facing task tools
 
 Register the local [CUA task MCP facade](docs/FACADE.md) to expose observation, NuExtract reading, Jev/Julia/GLiNER2 selection, bound action and verification directly to agents. `scripts/setup_facade.sh` also installs the pinned [Cua Perception](docs/FACADE.md#cua-perception-screenshot-regions) extension by default for on-device screenshot regions (`--no-perception` to skip). See the [fresh-agent adoption evidence and limitations](docs/FACADE-ADOPTION.md).
