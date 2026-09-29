@@ -10,6 +10,49 @@ The user approved this shape from the solution-space review: the LLM SEES the pa
 
 Measured live (Sonnet 5.5, real Chrome): the single-tool `cua_do` cut turns from 6-7 to 3-5 and cost 4-6x, but the LLM wrote its filter BLIND (`duration contains "30"`), the correct slot's duration was displayed as "half-hour", and `cua_do` booked a decoy and reported done. Option D (a fast model choosing every step) failed for a different reason and costs 1 to 3 s per step. Blind filters are the failure class: the fix is sight, then a plan, not a smarter chooser.
 
+## Sequence
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant L as Driving LLM
+    participant S as cua-task server
+    participant D as Cua Driver
+    participant N as NuExtract3 (opt-in)
+    participant P as Chrome window
+
+    L->>S: cua_look(title, focus?, fields?)
+    S->>D: observe (session-scoped, read-only)
+    D->>P: read AX tree (+ OCR regions on canvas)
+    D-->>S: elements
+    opt fields given
+        loop 10 records per call
+            S->>N: read requested fields
+            N-->>S: value strings
+        end
+    end
+    S-->>L: records, controls, dialogs, look_id
+
+    Note over L: reads the strings, writes ONE plan
+    L->>S: cua_do(steps, look_id, expect per step)
+    S->>S: validate whole plan (no Driver action yet)
+
+    loop each step
+        S->>D: fresh observe
+        D-->>S: elements
+        S->>S: look_id hash still matches? else stop page_changed_since_look
+        S->>S: bind target, check scope and destructive rules
+        S->>D: click / type (bound selection, never retried)
+        D->>P: act
+        S->>D: observe again
+        S->>S: verify expect (independent of the click result)
+        alt stale before delivery
+            S->>S: re-run THAT step with a new selection (bounded)
+        end
+    end
+    S-->>L: done, or stopped at step N with the reason
+```
+
 ## Design
 
 ```

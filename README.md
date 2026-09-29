@@ -32,6 +32,8 @@ The driving LLM does not mediate every hop. Measured live, tool time was about 1
 2. `cua_do` with `steps`: the LLM sends ONE small plan from what it saw. The server validates the whole plan, then per step re-observes, binds, acts, verifies `expect`, and recovers from stale state itself (bounded; a click is never retried).
 3. Guardrails in code: a filter is only allowed against a look the server issued (`look_id`); incomparable values are `unknown`, not a guess; destructive controls and dialogs need explicit, exact authorization; the whole plan has a hard time budget.
 
+Sequence diagram: [docs/PLAN-B.md#sequence](docs/PLAN-B.md#sequence).
+
 NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosing steps. The primitive tools (`cua_observe`, `cua_choose`, `cua_act`, ...) are hidden unless `CUA_TASK_ADVANCED=1`. The agent tool of option D is experimental and not merged.
 
 **Evidence so far (n=1 per cell, Sonnet 5.5, real Chrome, directional only):** on 3 tasks the stack used about 2.5x less cost than native Cua Driver tools ($0.90 vs $2.69 total) with the same accuracy: booking and ax_dup correct on both arms, no wrong clicks; canvas_regions failed on both arms (click unverifiable). Turns and wall time were about equal. Method and preregistered rules: [experiments/facade-vs-native](experiments/facade-vs-native/PREREGISTRATION.md).
