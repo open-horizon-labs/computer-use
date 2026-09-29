@@ -17,6 +17,7 @@ import html
 
 BOOKING_EXPECTED_ID = 's10'
 ORDERS_EXPECTED_ID = '1044'
+CANVAS_EXPECTED_ID = 'export'
 
 # id, provider, service, duration, start, note
 BOOKING_SLOTS = [
@@ -103,3 +104,23 @@ def render_orders(run):
 </dialog>""")
     table = '<table><tr><th>Order</th><th>Item</th><th>Status</th><th>Actions</th></tr>' + '\n'.join(rows) + '</table>'
     return _PAGE.format(title=f'Orders {run}', body=table)
+
+
+def render_canvas(run):
+    """Pixel-only surface: four labelled buttons drawn on one <canvas>. The DOM
+    (and so the accessibility tree) exposes no button, name or label for them,
+    so only pixels carry the labels. A click is hit-tested and logged."""
+    body = f"""<canvas id="c" width="640" height="260" style="border:1px solid #999"></canvas>
+<script>
+const buttons=[['save','Save',20,20],['export','Export',340,20],['exportall','Export All',20,140],['reset','Reset',340,140]];
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+function draw(msg){{g.clearRect(0,0,640,260);g.font='24px sans-serif';g.textBaseline='middle';
+ for(const [id,label,x,y] of buttons){{g.fillStyle='#e8eefc';g.fillRect(x,y,280,100);g.strokeStyle='#345';g.strokeRect(x,y,280,100);
+  g.fillStyle='#123';g.fillText(label,x+24,y+50);}}
+ g.fillStyle='#050';g.fillText(msg||'',20,244);}}
+draw('');
+cv.addEventListener('click',e=>{{const r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
+ for(const [id,label,x,y] of buttons){{if(px>=x&&px<x+280&&py>=y&&py<y+100){{
+  log({{run:'{run}',task:'canvas',action:'press',id:id}});draw('Pressed: '+label);return;}}}}}});
+</script>"""
+    return _PAGE.format(title=f'Canvas {run}', body=body)

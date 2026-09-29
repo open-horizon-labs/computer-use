@@ -16,35 +16,38 @@ the facade's own "never move the user's windows" policy (fix 7).
 """
 import argparse
 import json
+import os
 import subprocess
+import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
-from fixtures import BOOKING_EXPECTED_ID, ORDERS_EXPECTED_ID
+from tasks import load_tasks
 
 HERE = Path(__file__).resolve().parent
+TASKS = load_tasks()
 
-# Neutral user intent only: never name the answer or enumerate decoys, or the
+# Neutral user intent only (tasks.json `prompt`): never name the answer or enumerate decoys, or the
 # comparison measures prompt hints instead of the tools.
-PROMPTS = {
-    'booking': 'Book the earliest 30-minute appointment with Dr. Morgan Reyes that starts at or after 2:00 PM. Book exactly one appointment.',
-    'orders': 'Cancel my walnut desk lamp order that has not shipped yet. Do not cancel or change any other order.',
-}
 PROMPT_FRAME = ('A Google Chrome window whose title begins with {title!r} is open on this Mac. {goal} '
                 'Use only the computer-use tools available to you. Do not open, navigate, or act on any other '
                 'window or tab. When finished, report exactly what you did and how you verified the result.')
 
-TITLES = {'booking': 'Clinic Slots {run}', 'orders': 'Orders {run}'}
-
-ALLOWED_TOOLS = {
-    'facade': ['mcp__cua-task'],
-    'native': ['mcp__cua-driver'],
-}
-DISALLOWED_TOOLS = {
-    'facade': ['Bash', 'Edit', 'Write', 'WebFetch', 'WebSearch', 'Agent'],
-    'native': ['Bash', 'Edit', 'Write', 'WebFetch', 'WebSearch', 'Agent', 'Skill'],
-}
+# arm -> server family. `facade` is the legacy name for `stack`.
+ARM_SERVER = {'native': 'cua-driver', 'native-skill': 'cua-driver', 'stack': 'cua-task', 'stack-advanced': 'cua-task', 'stack-agent': 'cua-task', 'facade': 'cua-task'}
+ARMS = list(ARM_SERVER)
+ALLOWED_TOOLS = {arm: ['mcp__' + server] + (['Skill'] if arm == 'native-skill' else []) for arm, server in ARM_SERVER.items()}
+# Exploratory arm (option D, PR 17): ONLY the experimental server-side agent tool is allowed, so the driving LLM cannot fall back to cua_do.
+ALLOWED_TOOLS['stack-agent'] = ['mcp__cua-task__cua_agent']
+# Tool-choice hint per arm: it names the toolset the arm is defined by, never the answer or a decoy (the prompt lint checks this).
+ARM_HINT = {'stack-agent': ' Use the cua_agent tool: state the goal, and in `expect` the text that will appear on the page when it has succeeded.'}
+# File and shell tools are off for every arm: an agent that can Read would load repo
+# context and stop being a clean tool-set comparison. Native additionally has no Skill (unless the
+# `native-skill` arm), since the installed skill would reintroduce facade guidance.
+_BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'Task']
+DISALLOWED_TOOLS = {arm: _BASE_DENY + ([] if arm in ('native-skill',) or ARM_SERVER[arm] == 'cua-task' else ['Skill'])
+                    for arm in ARM_SERVER}
 
 
 def chrome(script):
@@ -69,23 +72,32 @@ def close_window(window_id):
 
 def mcp_config(arm, out_dir):
     root = HERE.parents[1]
-    servers = {'facade': {'cua-task': {'command': str(root / '.venv-facade/bin/python'), 'args': [str(root / 'facade/server.py')]}},
-               'native': {'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}}
-    path = out_dir / f'mcp-config.{arm}.json'
-    path.write_text(json.dumps({'mcpServers': servers[arm]}, indent=2))
+    py = os.environ.get('CUA_FACADE_PYTHON') or str(root / '.venv-facade/bin/python')
+    stack = {'command': py, 'args': [str(root / 'facade/server.py')]}
+    if arm == 'stack-advanced':
+        stack['env'] = {'CUA_TASK_ADVANCED': '1'}
+    if arm == 'stack-agent':
+        stack['env'] = {'CUA_TASK_EXPERIMENTAL_AGENT': '1'}
+    servers = {'cua-task': stack, 'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
+    server = ARM_SERVER[arm]
+    path = Path(out_dir).resolve() / f'mcp-config.{arm}.json'  # absolute: the agent runs from a scratch cwd
+    path.write_text(json.dumps({'mcpServers': {server: servers[server]}}, indent=2))
     return path
 
 
-def run_agent(arm, task, title, out_path, model):
-    prompt = PROMPT_FRAME.format(title=title, goal=PROMPTS[task])
-    cmd = ['claude', '-p', prompt, '--model', model, '--max-turns', '80',
+def run_agent(arm, task, title, out_path, model, max_turns=80, timeout=600):
+    prompt = PROMPT_FRAME.format(title=title, goal=TASKS[task]['prompt']) + ARM_HINT.get(arm, '')
+    cmd = ['claude', '-p', prompt, '--model', model, '--max-turns', str(max_turns),
            '--strict-mcp-config', '--mcp-config', str(mcp_config(arm, out_path.parent)),
            '--allowedTools', ','.join(ALLOWED_TOOLS[arm]),
            '--disallowedTools', ','.join(DISALLOWED_TOOLS[arm]),
            '--output-format', 'stream-json', '--verbose']
     began = time.monotonic()
     with out_path.open('w') as out:
-        result = subprocess.run(cmd, stdout=out, stderr=subprocess.STDOUT, timeout=600, cwd=str(HERE))
+        try:
+            result = subprocess.run(cmd, stdout=out, stderr=subprocess.STDOUT, timeout=timeout, cwd=tempfile.mkdtemp(prefix='cua-ab-'))  # outside the repo: no AGENTS.md/memory contamination
+        except subprocess.TimeoutExpired:
+            return {'wall_s': time.monotonic() - began, 'returncode': 'timeout'}
     return {'wall_s': time.monotonic() - began, 'returncode': result.returncode}
 
 
@@ -103,9 +115,11 @@ def wait_for_server(base_url, timeout=10):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--base-url', default='http://127.0.0.1:8934')
-    parser.add_argument('--arms', nargs='+', default=['facade', 'native'], choices=['facade', 'native'])
-    parser.add_argument('--tasks', nargs='+', default=['booking', 'orders'], choices=['booking', 'orders'])
+    parser.add_argument('--arms', nargs='+', default=['stack', 'native'], choices=ARMS)
+    parser.add_argument('--tasks', nargs='+', default=['booking', 'orders'], choices=list(TASKS))
     parser.add_argument('--model', default='claude-opus-5-5')
+    parser.add_argument('--max-turns', type=int, default=80)
+    parser.add_argument('--agent-timeout', type=int, default=600, help='seconds per run')
     parser.add_argument('--runs', type=int, default=1, help='runs per (arm, task) pair')
     parser.add_argument('--out-dir', default=str(HERE / 'runs'))
     parser.add_argument('--events', default=str(HERE / 'events.jsonl'))
@@ -124,14 +138,14 @@ def main():
         for task in args.tasks:
             for run_index in range(args.runs):
                 run_id = f'{arm}-{task}-{run_index}-{int(time.time())}'
-                url = f'{args.base_url}/{task}?run={run_id}'
-                title = TITLES[task].format(run=run_id)
+                url = f'{args.base_url}{TASKS[task]["route"]}?run={run_id}'
+                title = TASKS[task]['title'].format(run=run_id)
                 transcript = out_dir / f'{run_id}.jsonl'
                 print(f'== {arm}/{task} run={run_id} ==')
                 window_id = open_page(url)
                 time.sleep(1)  # let the tab actually load before the agent starts
                 try:
-                    outcome = run_agent(arm, task, title, transcript, args.model)
+                    outcome = run_agent(arm, task, title, transcript, args.model, args.max_turns, args.agent_timeout)
                 finally:
                     close_window(window_id)
                 manifest.append({'arm': arm, 'task': task, 'run_id': run_id,

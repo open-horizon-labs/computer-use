@@ -1,0 +1,964 @@
+{
+ "version": 1,
+ "tasks": [
+  {
+   "id": "booking",
+   "tags": [
+    "list-select",
+    "decoys",
+    "dom"
+   ],
+   "prompt": "Book the earliest 30-minute appointment with Dr. Morgan Reyes that starts at or after 2:00 PM. Book exactly one appointment.",
+   "route": "/booking",
+   "title": "Clinic Slots {run}",
+   "expected": [
+    {
+     "action": "book",
+     "id": "s10"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "book",
+     "id_not": [
+      "s10"
+     ]
+    }
+   ],
+   "max_turns": 50,
+   "timeout_s": 300,
+   "answer_labels": [
+    "Telehealth",
+    "Video visit",
+    "half-hour"
+   ],
+   "decoy_labels": [
+    "Dr. Morgan Reyesford",
+    "Alan Morgan",
+    "Morgan Lee, NP"
+   ],
+   "intent_terms": [
+    "Dr. Morgan Reyes"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "book",
+      "id": "s07"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "small",
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "orders",
+   "tags": [
+    "table",
+    "confirm-dialog",
+    "decoys",
+    "dom"
+   ],
+   "prompt": "Cancel my walnut desk lamp order that has not shipped yet. Do not cancel or change any other order.",
+   "route": "/orders",
+   "title": "Orders {run}",
+   "expected": [
+    {
+     "action": "cancel_request",
+     "id": "1044"
+    },
+    {
+     "action": "cancel_confirm",
+     "id": "1044"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "cancel_confirm",
+     "id_not": [
+      "1044"
+     ]
+    },
+    {
+     "action": "cancel_request",
+     "id_not": [
+      "1044"
+     ]
+    }
+   ],
+   "max_turns": 50,
+   "timeout_s": 300,
+   "answer_labels": [
+    "1044"
+   ],
+   "decoy_labels": [
+    "Brass desk lamp",
+    "Walnut floor lamp",
+    "Walnut desk organizer"
+   ],
+   "intent_terms": [
+    "walnut desk lamp"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "cancel_request",
+      "id": "1042"
+     },
+     {
+      "action": "cancel_confirm",
+      "id": "1042"
+     }
+    ],
+    "partial": [
+     {
+      "action": "cancel_request",
+      "id": "1044"
+     }
+    ]
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "canvas",
+   "tags": [
+    "canvas",
+    "hard-surface"
+   ],
+   "prompt": "Press the Export button. Press only one button.",
+   "route": "/canvas",
+   "title": "Canvas {run}",
+   "expected": [
+    {
+     "action": "press",
+     "id": "export"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "press",
+     "id_not": [
+      "export"
+     ]
+    }
+   ],
+   "max_turns": 30,
+   "timeout_s": 300,
+   "answer_labels": [
+    "Export"
+   ],
+   "decoy_labels": [
+    "Export All",
+    "Save",
+    "Reset"
+   ],
+   "intent_terms": [
+    "Export"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "press",
+      "id": "exportall"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "full"
+   ]
+  },
+  {
+   "id": "form",
+   "tags": [
+    "form-fill",
+    "type-text",
+    "dom"
+   ],
+   "prompt": "Apply as a volunteer with the name Ada Okonkwo, the email ada.okonkwo@example.org, and the postal code 30301.",
+   "route": "/form",
+   "title": "Volunteer Form {run}",
+   "expected": [
+    {
+     "action": "submit",
+     "id": "form",
+     "values": {
+      "name": "Ada Okonkwo",
+      "email": "ada.okonkwo@example.org",
+      "postal": "30301"
+     }
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "submit",
+     "id": "form",
+     "unless_values": {
+      "name": "Ada Okonkwo",
+      "email": "ada.okonkwo@example.org",
+      "postal": "30301"
+     }
+    },
+    {
+     "action": "cancel",
+     "id": "*"
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [],
+   "decoy_labels": [
+    "Reset",
+    "Cancel"
+   ],
+   "intent_terms": [
+    "Ada Okonkwo",
+    "ada.okonkwo@example.org",
+    "30301"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "submit",
+      "id": "form",
+      "values": {
+       "name": "Ada Okonkwo",
+       "email": "ada.okonkwo@example.org",
+       "postal": "03301"
+      }
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "wizard",
+   "tags": [
+    "wizard",
+    "multi-step",
+    "dom"
+   ],
+   "prompt": "Set up the Team plan with annual billing and finish the setup.",
+   "route": "/wizard",
+   "title": "Setup Wizard {run}",
+   "expected": [
+    {
+     "action": "choose_plan",
+     "id": "team"
+    },
+    {
+     "action": "choose_billing",
+     "id": "annual"
+    },
+    {
+     "action": "finish",
+     "id": "team:annual"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "finish",
+     "id_not": [
+      "team:annual"
+     ]
+    },
+    {
+     "action": "cancel",
+     "id": "*"
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [],
+   "decoy_labels": [
+    "Basic",
+    "Pro",
+    "Monthly"
+   ],
+   "intent_terms": [
+    "Team",
+    "annual",
+    "team:annual"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "choose_plan",
+      "id": "pro"
+     },
+     {
+      "action": "choose_billing",
+      "id": "annual"
+     },
+     {
+      "action": "finish",
+      "id": "pro:annual"
+     }
+    ],
+    "partial": [
+     {
+      "action": "choose_plan",
+      "id": "team"
+     }
+    ]
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "invoices",
+   "tags": [
+    "list-select",
+    "long-list",
+    "decoys",
+    "dom"
+   ],
+   "prompt": "Approve the invoice from Northwind Traders for $1,240.00.",
+   "route": "/invoices",
+   "title": "Invoices {run}",
+   "expected": [
+    {
+     "action": "approve",
+     "id": "inv-063"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "approve",
+     "id_not": [
+      "inv-063"
+     ]
+    }
+   ],
+   "max_turns": 60,
+   "timeout_s": 300,
+   "answer_labels": [
+    "INV-063"
+   ],
+   "decoy_labels": [
+    "Northwind Trading",
+    "$1,204.00",
+    "$12,400.00"
+   ],
+   "intent_terms": [
+    "Northwind Traders",
+    "$1,240.00"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "approve",
+      "id": "inv-017"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "canvas_small",
+   "tags": [
+    "canvas",
+    "hard-surface",
+    "small-text"
+   ],
+   "prompt": "Press the Archive button. Press only one button.",
+   "route": "/canvas_small",
+   "title": "Small Canvas {run}",
+   "expected": [
+    {
+     "action": "press",
+     "id": "archive"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "press",
+     "id_not": [
+      "archive"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [
+    "Archive"
+   ],
+   "decoy_labels": [
+    "Archive All",
+    "Archived",
+    "Restore"
+   ],
+   "intent_terms": [
+    "Archive"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "press",
+      "id": "archiveall"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "full"
+   ]
+  },
+  {
+   "id": "canvas_lowcontrast",
+   "tags": [
+    "canvas",
+    "hard-surface",
+    "low-contrast"
+   ],
+   "prompt": "Press the Approve button. Press only one button.",
+   "route": "/canvas_lowcontrast",
+   "title": "Low Contrast Canvas {run}",
+   "expected": [
+    {
+     "action": "press",
+     "id": "approve"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "press",
+     "id_not": [
+      "approve"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [
+    "Approve"
+   ],
+   "decoy_labels": [
+    "Approve All",
+    "Reject",
+    "Discard"
+   ],
+   "intent_terms": [
+    "Approve"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "press",
+      "id": "approveall"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "full"
+   ]
+  },
+  {
+   "id": "canvas_garbled",
+   "tags": [
+    "canvas",
+    "hard-surface",
+    "similar-labels"
+   ],
+   "prompt": "Press the Save button. Press only one button.",
+   "route": "/canvas_garbled",
+   "title": "Garbled Canvas {run}",
+   "expected": [
+    {
+     "action": "press",
+     "id": "save"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "press",
+     "id_not": [
+      "save"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [
+    "Save"
+   ],
+   "decoy_labels": [
+    "Sove",
+    "Save As",
+    "Sava",
+    "Seve"
+   ],
+   "intent_terms": [
+    "Save"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "press",
+      "id": "saveas"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "canvas_icon",
+   "tags": [
+    "canvas",
+    "hard-surface",
+    "icon-only"
+   ],
+   "prompt": "Press the button with the downward arrow that puts the file on this computer. Press only one button.",
+   "route": "/canvas_icon",
+   "title": "Icon Canvas {run}",
+   "expected": [
+    {
+     "action": "press",
+     "id": "download"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "press",
+     "id_not": [
+      "download"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [],
+   "decoy_labels": [
+    "trash",
+    "gear",
+    "upload"
+   ],
+   "intent_terms": [],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "press",
+      "id": "upload"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "canvas_regions",
+   "tags": [
+    "canvas",
+    "hard-surface",
+    "region-disambiguation"
+   ],
+   "prompt": "Press the Export button in the toolbar. Press only one button.",
+   "route": "/canvas_regions",
+   "title": "Regions Canvas {run}",
+   "expected": [
+    {
+     "action": "press",
+     "id": "export_toolbar"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "press",
+     "id_not": [
+      "export_toolbar"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [
+    "Toolbar"
+   ],
+   "decoy_labels": [
+    "Footer",
+    "Print",
+    "Close"
+   ],
+   "intent_terms": [
+    "Export",
+    "toolbar"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "press",
+      "id": "export_footer"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "small",
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "ax_dup",
+   "tags": [
+    "duplicate-labels",
+    "ax-tree",
+    "dom"
+   ],
+   "prompt": "Save the shipping address.",
+   "route": "/settings",
+   "title": "Settings {run}",
+   "expected": [
+    {
+     "action": "press",
+     "id": "form_save"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "press",
+     "id_not": [
+      "form_save"
+     ]
+    }
+   ],
+   "max_turns": 30,
+   "timeout_s": 300,
+   "answer_labels": [
+    "form_save"
+   ],
+   "decoy_labels": [
+    "Notification preferences"
+   ],
+   "intent_terms": [
+    "shipping address"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "press",
+      "id": "header_save"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "small",
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "dynamic",
+   "tags": [
+    "dynamic-ui",
+    "stale-page",
+    "dom"
+   ],
+   "prompt": "Assign the on-call shift to Dana Whitfield.",
+   "route": "/roster",
+   "title": "On-call Roster {run}",
+   "expected": [
+    {
+     "action": "assign",
+     "id": "dana_w"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "assign",
+     "id_not": [
+      "dana_w"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [
+    "dana_w"
+   ],
+   "decoy_labels": [
+    "Dan Whitford",
+    "Dana Whitfield-Cole"
+   ],
+   "intent_terms": [
+    "Dana Whitfield"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "assign",
+      "id": "dan_w"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "destructive",
+   "tags": [
+    "destructive-decoy",
+    "dialog",
+    "dom"
+   ],
+   "prompt": "Download a CSV copy of my account data.",
+   "route": "/account",
+   "title": "Account {run}",
+   "expected": [
+    {
+     "action": "press",
+     "id": "export_open"
+    },
+    {
+     "action": "download",
+     "id": "csv"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "delete",
+     "id": "*"
+    },
+    {
+     "action": "download",
+     "id_not": [
+      "csv"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [
+    "csv"
+   ],
+   "decoy_labels": [
+    "Delete account",
+    "Download JSON"
+   ],
+   "intent_terms": [
+    "CSV"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "press",
+      "id": "export_open"
+     },
+     {
+      "action": "delete",
+      "id": "account"
+     }
+    ],
+    "partial": [
+     {
+      "action": "press",
+      "id": "export_open"
+     }
+    ]
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "swap",
+   "tags": [
+    "mid-task-change",
+    "stale-identity",
+    "dom"
+   ],
+   "prompt": "Resolve the ticket titled Printer offline.",
+   "route": "/tickets",
+   "title": "Support Tickets {run}",
+   "expected": [
+    {
+     "action": "select",
+     "id": "t2"
+    },
+    {
+     "action": "resolve",
+     "id": "t2"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "select",
+     "id_not": [
+      "t2"
+     ]
+    },
+    {
+     "action": "resolve",
+     "id_not": [
+      "t2"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [
+    "t2"
+   ],
+   "decoy_labels": [
+    "Printer offline (floor 2)",
+    "Printer toner low"
+   ],
+   "intent_terms": [
+    "Printer offline"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "select",
+      "id": "t3"
+     },
+     {
+      "action": "resolve",
+      "id": "t3"
+     }
+    ],
+    "partial": [
+     {
+      "action": "select",
+      "id": "t2"
+     }
+    ]
+   },
+   "suites": [
+    "core",
+    "full"
+   ]
+  },
+  {
+   "id": "flat_ax",
+   "tags": [
+    "flat-ax",
+    "no-wrappers",
+    "duplicates",
+    "dom"
+   ],
+   "prompt": "Call Priya Nair on her mobile number.",
+   "route": "/contacts",
+   "title": "Contacts {run}",
+   "expected": [
+    {
+     "action": "call",
+     "id": "priya_mobile"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "call",
+     "id_not": [
+      "priya_mobile"
+     ]
+    }
+   ],
+   "max_turns": 30,
+   "timeout_s": 300,
+   "answer_labels": [
+    "priya_mobile"
+   ],
+   "decoy_labels": [
+    "Priya Natarajan",
+    "Joy Nair"
+   ],
+   "intent_terms": [
+    "Priya Nair"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "call",
+      "id": "priya_work"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "full"
+   ]
+  },
+  {
+   "id": "nested",
+   "tags": [
+    "nested-groups",
+    "duplicates",
+    "dom"
+   ],
+   "prompt": "Message Sam Okafor on the Platform team.",
+   "route": "/directory",
+   "title": "Directory {run}",
+   "expected": [
+    {
+     "action": "message",
+     "id": "platform_sam_okafor"
+    }
+   ],
+   "forbidden": [
+    {
+     "action": "message",
+     "id_not": [
+      "platform_sam_okafor"
+     ]
+    }
+   ],
+   "max_turns": 40,
+   "timeout_s": 300,
+   "answer_labels": [
+    "platform_sam_okafor"
+   ],
+   "decoy_labels": [
+    "Sam Okonkwo",
+    "Brand",
+    "Data"
+   ],
+   "intent_terms": [
+    "Sam Okafor",
+    "Platform"
+   ],
+   "synthetic": {
+    "wrong": [
+     {
+      "action": "message",
+      "id": "data_sam_okafor"
+     }
+    ],
+    "partial": []
+   },
+   "suites": [
+    "full"
+   ]
+  }
+ ]
+}
