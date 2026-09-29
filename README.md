@@ -39,9 +39,14 @@ sequenceDiagram
     participant L as Driving LLM
     participant S as cua-task server
     participant D as Cua Driver
+    participant P as Cua Perception (canvas pages)
     participant N as NuExtract3 (optional)
     L->>S: cua_look
     S->>D: observe (read-only)
+    opt page is a canvas / no AX tree
+        S->>P: parse_visual_regions (on-device OCR)
+        P-->>S: text regions, used only as candidate labels
+    end
     opt fields requested (big or messy page)
         S->>N: read fields, 10 records per call
         N-->>S: value strings
