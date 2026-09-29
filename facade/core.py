@@ -129,6 +129,7 @@ class Facade:
                  spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep):
         self.driver = driver or Driver()
         self.sleep = sleep
+        self.foreground_ok = False  # per call/step: allow_foreground; a background pixel click cannot reach a canvas (see act)
         self.factories = {'generic': generic_factory, 'reader': reader_factory,
                           'spans': spans_factory, 'visual': visual_factory}
         self.providers = {}
@@ -796,7 +797,7 @@ class Facade:
         if decision.get('action_authorized'):
             handle='sel_'+uuid.uuid4().hex
             self.selections[handle]={'snapshot':snapshot,'request':copy.deepcopy(request),'decision':copy.deepcopy(decision),
-                                     'mode':'regions','operation':operation,'text':None,'used':False,'capture_id':capture_id}
+                                     'mode':'regions','operation':operation,'text':None,'used':False,'allow_foreground':self.foreground_ok,'capture_id':capture_id}
             while len(self.selections)>32:self.selections.pop(next(iter(self.selections)))
             result.update(selection=handle,selected_id=decision['action_id'])
         return result
@@ -1082,6 +1083,15 @@ class Facade:
             if self.clock()-state['created']>PERCEPTION_CAPTURE_TTL_S:
                 raise Gap('capture_expired: perception captures expire after %ds upstream; reobserve and choose again'
                           % PERCEPTION_CAPTURE_TTL_S)
+            # A background pixel click never reaches a drawn surface: cua-driver 0.30.x turns it into an AXPress on the element
+            # under the point, which Chrome delivers at that element's CENTRE (probe 2026-09-29 on our own fixture: aimed at a
+            # corner button, the centre button was pressed, reported as success). So it is a wrong click, not a no-op, and it is
+            # never sent. A real pointer event needs the Driver's foreground delivery, which fronts the window briefly: only the
+            # caller's explicit allow_foreground (this call or this step) permits that.
+            if not item.get('allow_foreground'):
+                item['used']=False  # nothing was clicked
+                raise Gap("pointer_not_deliverable_in_background: a background pixel click on a drawn surface lands at the element's centre, not at %r; nothing was clicked. Pass allow_foreground=true (this call or step) to let the Driver briefly front the window for a real pointer event, only if the user allows that" % (item['request']['actions'][0].get('name') or '')[:40])
+            for action in request['actions']:action['arguments']['delivery_mode']='foreground'
             request['snapshot_id']=current['raw']['snapshot_id']
             decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
         else:
@@ -1636,7 +1646,7 @@ class Facade:
                     'binding_digest': request_digest(request), 'provider_outputs': []}
         handle = 'sel_' + uuid.uuid4().hex
         self.selections[handle] = {'snapshot': snapshot, 'request': copy.deepcopy(request), 'decision': copy.deepcopy(decision), 'mode': 'regions', 'operation': 'click',
-                                   'text': None, 'used': False, 'capture_id': capture_id}
+                                   'text': None, 'used': False, 'allow_foreground': self.foreground_ok, 'capture_id': capture_id}
         while len(self.selections) > 32:self.selections.pop(next(iter(self.selections)))
         self.event('choose', snapshot=snapshot, route='exact_region_label', mode='regions', authorized=True, reason='exact_region_label', near_used=near is not None)
         return {'status': 'selected', 'route': 'exact_region_label', 'selection': handle, 'selected_id': target['id'], 'decision': decision}
@@ -1658,12 +1668,12 @@ class Facade:
 
     def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
            expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None,
-           steps=None, look_id=None, abort_if=None):
+           steps=None, look_id=None, abort_if=None, allow_foreground=None):
         """One call runs observe -> read -> same-record filter -> (chooser only if several) -> bind -> act -> verify,
         recovering deterministically (bounded) and deferring to the caller only where guessing would be worse.
         Composes observe/read/choose/act/verify; owns no selection policy. Never retries a click.
         With `steps` it runs a validated PLAN instead (plan.py): each step is this same pipeline on a fresh observation."""
-        return self.mark(self._do_entry(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if))
+        return self.mark(self._do_entry(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground))
 
     def mark(self, result):
         """Every cua_do response can carry page-derived strings (summary.text, dialog.lines, evidence, found, descriptions): say so, with the fixed sentence."""
@@ -1672,7 +1682,7 @@ class Facade:
             result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)
         return result
 
-    def _do_entry(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if):
+    def _do_entry(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground=None):
         if steps is not None or look_id is not None or abort_if is not None:
             import plan as planmod
             with self.lock:
@@ -1681,7 +1691,10 @@ class Facade:
                 return planmod.run_plan(self, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect,
                                         {'records': records, 'operation': operation, 'text': text, 'accept_unknown': accept_unknown, 'confirm': confirm,
                                          'control': control, 'treat_as_match': treat_as_match, 'near': near})
-        with self.lock:return self._do(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near)
+        self.foreground_ok = allow_foreground is True
+        try:
+            with self.lock:return self._do(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near)
+        finally:self.foreground_ok = False
 
     def _do(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm=None, control=None, treat_as_match=None, near=None, plan=None):
         confirm_label = confirm

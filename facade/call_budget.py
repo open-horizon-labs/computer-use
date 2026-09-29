@@ -239,12 +239,13 @@ def measure_scenarios():
     d.parse_result = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 5, 'y': 10 + 30 * i, 'width': 50, 'height': 20}} for i, t in enumerate(['Save', 'Export', 'Reset'])]}
     class Picks(fx.NamedChooser):
         def __call__(self, step, request):self.requests.append(request);return {'choice': 't1', 'route': 'julia-1', 'action_authorized': True}
-    out['canvas_regions_unique'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported'}, fx.LineReader(), chooser=Picks(), vision=FakeVision)  # a canvas has no AX text: the screenshot model is the verifier
+    out['canvas_regions_unique'] = run(d, {'goal': 'Press "Export"', 'expect': 'Exported', 'allow_foreground': True}, fx.LineReader(), chooser=Picks(), vision=FakeVision)  # a canvas has no AX text: the screenshot model is the verifier
+    # allow_foreground on the canvas scenarios: a background pixel click lands at the canvas CENTRE (probe 2026-09-29, CE-FACADE-006 proposed), so a drawn-surface press is refused without it.
     # The live finding: two Export buttons drawn on a canvas, labelled by Toolbar and Footer texts (synthetic parse result). The LLM knows only the goal.
     d = sh.ShapeDriver(sh.canvas());d.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};d.capture_id = 'cap'
     d.parse_result = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 10, 'y': y, 'width': 80, 'height': 24}}
                                   for i, (t, y) in enumerate([('Toolbar', 10), ('Export', 40), ('Footer', 500), ('Export', 530)])]}
-    out['canvas_regions'] = run(d, {'goal': 'Press the Export button in the toolbar', 'expect': 'Exported'}, lv.LiveReader({}), vision=FakeVision)
+    out['canvas_regions'] = run(d, {'goal': 'Press the Export button in the toolbar', 'expect': 'Exported', 'allow_foreground': True}, lv.LiveReader({}), vision=FakeVision)
     many = [('Provider %03d' % i, 'Follow-up', '30 min', '1:%02d PM' % (i % 60)) for i in range(80)]
     d = fx.FlatDriver();d.rows = fx.booking_rows(many);d.confirm_text = 'Booked Provider 041 1:41 PM'
     out['large_page_400'] = run(d, {'goal': 'Book Provider 041', 'expect': 'Booked Provider 041', 'records': {'fields': fx.FIELDS, 'predicates': [{'field': 'provider', 'value': 'Provider 041'}]}}, fx.LineReader())
@@ -431,7 +432,7 @@ def measure_plan_scenarios():
         look = call('cua_look', title='Demo')
         export = next(t for t in look['canvas']['text_regions'] if t['text'] == 'Export')
         near = next(n for n in export['near'] if n.lower() in 'press the export button in the toolbar')
-        return call('cua_do', goal='Press the Export button in the toolbar', expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Export', 'near': near, 'expect': 'Exported'}])
+        return call('cua_do', goal='Press the Export button in the toolbar', expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Export', 'near': near, 'expect': 'Exported', 'allow_foreground': True}])
     out['plan_canvas_look_do'] = run(canvas_driver(), canvas, lv.LiveReader({}), vision=FakeVision)
 
     def churn(driver, els):

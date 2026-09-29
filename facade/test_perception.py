@@ -383,6 +383,7 @@ class PerceptionRouteTests(unittest.TestCase):
         # admitted against the SAME capture it was chosen from, never a newer one.
         self.driver.capture_id = 'cap_orig'; self.driver.parse_result = BOOK_REGIONS
         obs = self.f.observe(1, 2)['snapshot']
+        self.f.foreground_ok = True  # a drawn-surface click needs the explicit permission (test_findings.CanvasForeground)
         selection = self.f.choose(obs, 'Pick the "Provider A" slot', mode='regions')['selection']
         self.driver.capture_id = 'cap_new'
         self.f.act(selection)
