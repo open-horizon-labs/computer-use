@@ -23,8 +23,7 @@ MUTATIONS = {
         ['test_look.LookReal.test_the_default_look_calls_no_model_and_no_reader', 'test_look.LookFields.test_without_fields_the_reader_is_never_called']),
     'silent_truncation': (
         'slice the records and say nothing about what was cut',
-        [('look.py', "    truncated = {'records': extras['records_over_cap'], 'lines': lines_lost, 'bytes': extras.setdefault('rows_total', len(rows)) - keep}",
-          "    truncated = {'records': 0, 'lines': 0, 'bytes': 0}\n    extras['records_over_cap'] = 0")],
+        [('look.py', "'truncated': {'records': extras['records_over_cap'], 'lines': lost, 'bytes': bytes_cut}", "'truncated': {'records': 0, 'lines': 0, 'bytes': 0}")],
         ['test_look.LookShapes.test_a_100_row_list_is_bounded_and_every_cut_is_counted_never_silent',
          'test_look.LookShapes.test_max_bytes_bounds_the_response_and_reports_the_records_it_dropped',
          'test_look.LookShapes.test_long_and_many_lines_are_cut_visibly_and_counted']),
@@ -335,7 +334,7 @@ MUTATIONS = {
         ['test_plan_review3.RecordText.test_a_text_bearing_node_the_look_cannot_represent_counts_as_hidden']),
     'look_id_by_element_index': (
         'SHRINK: the state hash is keyed by element index, not structural path (third review P2-3)',
-        [('look.py', '    return sorted([path(i)] + [str(nodes[i].get(k)) for k in CONTROL_STATE_KEYS] for i in picked)', '    return sorted([str(i)] + [str(nodes[i].get(k)) for k in CONTROL_STATE_KEYS] for i in picked)')],
+        [('look.py', "        return [path(i)] + [str(n.get(k))", "        return [str(i)] + [str(n.get(k))")],
         ['test_plan_review3.LookIdStructure.test_a_banner_before_the_list_does_not_change_the_id_but_an_input_value_does', 'test_plan_review3.LookIdStructure.test_a_banner_before_the_list_still_lets_a_plan_proceed']),
     'input_value_not_hashed': (
         'SHRINK: the value is dropped from the hashed control state',
@@ -417,6 +416,46 @@ MUTATIONS = {
         'SHRINK: disconnect and remove match as prefixes again (Disconnected, Removed items)',
         [('plan.py', 'disconnect(?:s|ing)?\\b', 'disconnect\\w*'), ('plan.py', 'remov(?:e|es|ing)\\b', 'remov\\w*')],
         ['test_plan_review3.DestructiveFold.test_documented_false_positives_stay_and_whole_word_stems_do_not_overmatch']),
+    'heading_value_read_as_text': (
+        'a heading value (its LEVEL) is read as text (live capture D1/D3)',
+        [('look.py', "    for key in (('label',) if node.get('role') == 'AXHeading' else ('value', 'label')):", "    for key in ('value', 'label'):")],
+        ['test_real_pages.RecordPages.test_the_page_text_has_no_heading_level_numerals', 'test_real_pages.RecordPages.test_nested_records_have_no_level_numerals_and_keep_the_section_headings']),
+    'subtree_reads_heading_level': (
+        'the shared subtree text reads a heading value (cua_do/D record text)',
+        [('core.py', "                for key in (('label',) if n.get('role') == 'AXHeading' else ('label','value')):", "                for key in ('label','value'):")],
+        ['test_real_pages.RecordPages.test_cua_do_record_context_of_nested_has_no_heading_level_numerals']),
+    'title_heading_glued_to_the_first_record': (
+        'SHRINK: the page title is never recognized as page text',
+        [('core.py', '        if not title or not n:return False', '        return False')],
+        ['test_real_pages.RecordPages.test_flat_ax_first_record_carries_neither_the_heading_nor_its_level', 'test_real_pages.RecordPages.test_cua_do_record_context_agrees_with_the_look', 'test_real_pages.RecordPages.test_a_where_lines_plan_cannot_select_the_first_flat_record_by_the_page_title']),
+    'sibling_record_keeps_the_title': (
+        'sibling_record no longer skips the title heading',
+        [('core.py', "        members = [i for i in members if not self._title_member(state, i)]  # the page's own title heading is page text, not the first record's", '        members = members')],
+        ['test_real_pages.RecordPages.test_cua_do_record_context_agrees_with_the_look']),
+    'selected_false_is_a_state': (
+        'selected:false on a plain button is emitted as [unselected] noise (live capture D2)',
+        [('look.py', "    return 'selected' if n.get('selected') is True else None", "    return 'selected' if n.get('selected') is True else ('unselected' if 'selected' in n else None)")],
+        ['test_real_pages.RecordPages.test_plain_buttons_add_no_state_noise_to_any_record', 'test_real_pages.InputPages.test_toggle_marker_unit']),
+    'radio_value_ignored': (
+        'SHRINK: a radio or checkbox state is not read from value 0/1',
+        [('look.py', " or str(n.get('value')).strip().lower() in ('1', 'true', 'on', 'checked')", ' or False')],
+        ['test_real_pages.InputPages.test_wizard_radios_read_their_state_from_value_and_selected', 'test_real_pages.InputPages.test_toggle_marker_unit']),
+    'radio_selected_ignored': (
+        'SHRINK: a radio state is not read from selected',
+        [('look.py', "n.get('checked') is True or n.get('selected') is True or", "n.get('checked') is True or")],
+        ['test_real_pages.InputPages.test_wizard_radios_read_their_state_from_value_and_selected', 'test_real_pages.InputPages.test_toggle_marker_unit']),
+    'look_id_hashes_selected_false': (
+        'the look_id hashes falsy state flags (Chrome selected:false on every button)',
+        [('look.py', "if (k in ('role', 'label', 'value', 'enabled') or n.get(k)) else ''", "if True else ''")],
+        ['test_real_pages.RecordPages.test_look_id_ignores_selected_false_noise_but_sees_real_state']),
+    'page_toggles_not_shown': (
+        'the look does not list page-level toggle states',
+        [('look.py', "                **({'toggles': analysis['toggles'][:INPUT_LIST_MAX]} if analysis['toggles'] else {}),", '')],
+        ['test_real_pages.InputPages.test_wizard_radios_read_their_state_from_value_and_selected']),
+    'max_bytes_underestimated': (
+        'max_bytes bounds an estimate, not the response (live capture: 6015 > 6000 on invoices)',
+        [('look.py', '        return len(json.dumps(out))\n    keep = len(encoded)', '        return len(json.dumps(out)) - 3000\n    keep = len(encoded)')],
+        ['test_real_pages.RecordPages.test_invoices_reports_the_byte_cap_and_does_not_silently_drop']),
     'budget_look_reader': (
         'the default look reads through NuExtract (measured through the real server tools)',
         [('look.py', "        f.looks[(pid, window_id, response['look_id'])] = {", "        try:f.provider('reader').extract({'snapshot_id': state['raw']['snapshot_id'], 'task': 't', 'fields': {'x': 'x'}, 'records': [{'id': 'e1', 'text': 't'}]}, state['raw']['snapshot_id'])\n        except Exception:pass  # the fake reader counts the request before it looks for a pattern\n        f.looks[(pid, window_id, response['look_id'])] = {")],
