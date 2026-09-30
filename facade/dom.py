@@ -29,11 +29,25 @@ DOM_LINE_MAX = 6            # dom_lines shown per record
 GROUP_CLIMB = 4             # ancestors searched when placing a DOM-only line in a record
 UNPLACED_MAX = 10
 
+# Roles whose name IS text the page shows. A container's name (listitem/group/region/generic, often an aria-label such as 'Slot s04')
+# and the document's own name are not displayed lines; measured live 2026-09-30 on the booking fixture (semantic_v2): counting them
+# reported 12 'DOM-only' texts that the page never shows.
+# Measured live 2026-09-30: with the daemon's --grant existing-profile the bind still refuses browser_consent_required until browser_prepare
+# has run once for the window; only a cua_do navigation step prepares it.
+NOT_PREPARED = frozenset({'browser_consent_required', 'browser_requires_setup', 'consumer_profile_endpoint_requires_grant'})
+DISPLAY_ROLES = frozenset({'statictext', 'text', 'heading', 'paragraph', 'cell', 'gridcell', 'columnheader', 'rowheader', 'label', 'caption',
+                           'listitemmarker', 'definition', 'term', 'mark', 'strong', 'emphasis', 'code', 'time'})
 OUTLINE_LINE = re.compile(r'^(?P<indent>\s*)-\s+(?P<role>[A-Za-z][\w-]*)(?:\s+"(?P<name>(?:[^"\\]|\\.)*)")?(?P<rest>.*)$')
 
 
 def _failure(code, note):
     return {'ok': False, 'degraded': code, 'note': note}
+
+
+def _refused(code):
+    if code in NOT_PREPARED:
+        return _failure('semantic_not_prepared', 'the page text was read from the accessibility tree only: the browser endpoint is not prepared yet (%s); a cua_do goto or open_tab step prepares it (the look itself never changes your browser)' % code[:60])
+    return _failure('semantic_refused', 'the page text was read from the accessibility tree only: the Driver refused the browser semantic snapshot (%s)' % code[:60])
 
 
 def _call(f, args, timeout):
@@ -46,11 +60,9 @@ def _call(f, args, timeout):
             return _failure('semantic_timeout', 'the page text was read from the accessibility tree only: the browser semantic snapshot did not answer within %gs' % timeout)
         return _failure('semantic_failed', 'the page text was read from the accessibility tree only: the browser semantic snapshot call failed (%s)' % (error.kind or 'error'))
     except Gap as error:
-        code = browser._refusal_code(error) or 'refused'
-        return _failure('semantic_refused', 'the page text was read from the accessibility tree only: the Driver refused the browser semantic snapshot (%s)' % code[:60])
+        return _refused(browser._refusal_code(error) or 'refused')
     if isinstance(value, dict) and (value.get('refusal') or value.get('status') == 'refused'):
-        code = str((value.get('refusal') or {}).get('code', 'refused'))
-        return _failure('semantic_refused', 'the page text was read from the accessibility tree only: the Driver refused the browser semantic snapshot (%s)' % code[:60])
+        return _refused(str((value.get('refusal') or {}).get('code', 'refused')))
     return {'value': value if isinstance(value, dict) else {}}
 
 
@@ -105,6 +117,8 @@ def read(f, pid, window_id):
         for item in list(value.get('content_refs') or []) + list(value.get('refs') or []):
             if isinstance(item, dict):
                 refs += 1
+                if str(item.get('role') or '').lower() not in DISPLAY_ROLES:
+                    continue
                 for key in ('name', 'value'):
                     if isinstance(item.get(key), str) and item[key].strip():
                         names.append(item[key])
@@ -164,6 +178,8 @@ def compare(analysis, semantic, ax_texts):
     nodes = parse_outline(semantic['outline'])
     dom_texts = []
     for n in nodes:
+        if n['role'].lower() not in DISPLAY_ROLES:
+            continue
         for t in n['text']:
             if t not in dom_texts:
                 dom_texts.append(t)
