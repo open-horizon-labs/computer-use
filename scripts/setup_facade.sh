@@ -39,4 +39,11 @@ else
   echo "Skipping Cua Perception install (--no-perception); perception-dependent facade tools will report a Gap naming this installer."
 fi
 
+if command -v npm >/dev/null 2>&1; then
+  echo "Pre-fetching mobile-mcp 1.0.6 for Android/iOS device targets (optional: the server fetches it itself on first device use) ..."
+  npm cache add "@mobilenext/mobile-mcp@1.0.6" >/dev/null 2>&1 || echo "  could not pre-fetch; it will be fetched on first use"
+else
+  echo "Node.js (npm/npx) not found: Android/iOS device targets need Node.js 18+ (the server answers mobile_backend_unavailable until then); Mac windows are unaffected."
+fi
+
 echo "Done. Register the server: codex mcp add computer-use -- \"$ROOT/.venv-facade/bin/python\" \"$ROOT/computer_use/server.py\""

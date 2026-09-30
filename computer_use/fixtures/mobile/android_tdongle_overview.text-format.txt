@@ -1,0 +1,70 @@
+One element per line: @ref Type text= label= name= value= id= at=x,y size=WxH [focused] [selected] [checked] [disabled]
+@e1 FrameLayout id="com.android.systemui:id/navigation_bar_frame" at=0,2208 size=1080x132
+@e2 FrameLayout id="com.android.systemui:id/navigation_inflater" at=0,2208 size=1080x132
+@e3 FrameLayout id="com.android.systemui:id/horizontal" at=50,2208 size=980x132
+@e4 FrameLayout id="com.android.systemui:id/nav_buttons" at=72,2208 size=936x132
+@e5 LinearLayout id="com.android.systemui:id/ends_group" at=72,2208 size=936x132
+@e6 ImageView label="Back" id="com.android.systemui:id/back" at=165,2208 size=187x132
+@e7 ImageView label="Overview" id="com.android.systemui:id/recent_apps" at=726,2208 size=188x132
+@e8 LinearLayout id="com.android.systemui:id/center_group" at=430,2208 size=220x132
+@e9 FrameLayout id="com.android.systemui:id/home" at=430,2208 size=220x132
+@e10 ImageView label="Home" id="com.android.systemui:id/home_button" at=430,2208 size=220x132
+@e11 ImageView id="com.android.systemui:id/red" at=526,2260 size=28x28
+@e12 ImageView id="com.android.systemui:id/blue" at=526,2260 size=28x28
+@e13 ImageView id="com.android.systemui:id/green" at=526,2260 size=28x28
+@e14 ImageView id="com.android.systemui:id/yellow" at=526,2260 size=28x28
+@e15 ImageView id="com.android.systemui:id/white_cutout" at=496,2230 size=88x88
+@e16 ImageView id="com.android.systemui:id/white" at=496,2230 size=88x88
+@e17 FrameLayout id="com.android.systemui:id/status_bar_container" at=0,0 size=1080x145
+@e18 FrameLayout id="com.android.systemui:id/status_bar" at=0,0 size=1080x145
+@e19 LinearLayout id="com.android.systemui:id/status_bar_contents" at=136,0 size=894x145
+@e20 LinearLayout id="com.android.systemui:id/status_bar_left_side" at=158,6 size=425x139
+@e21 TextView text="5:28" label="5:28 PM" id="com.android.systemui:id/clock" at=158,6 size=94x139
+@e22 FrameLayout id="com.android.systemui:id/notification_icon_area" at=252,6 size=331x139
+@e23 LinearLayout id="com.android.systemui:id/notification_icon_area_inner" at=252,6 size=331x139
+@e24 FrameLayout id="com.android.systemui:id/notificationIcons" at=252,6 size=331x139
+@e25 LinearLayout id="com.android.systemui:id/system_icon_area" at=583,6 size=425x139
+@e26 LinearLayout id="com.android.systemui:id/system_icons" at=583,6 size=425x139
+@e27 LinearLayout id="com.android.systemui:id/statusIcons" at=583,6 size=404x139
+@e28 FrameLayout label="Wifi signal full." id="com.android.systemui:id/wifi_combo" at=881,45 size=48x61
+@e29 LinearLayout id="com.android.systemui:id/wifi_group" at=888,45 size=41x61
+@e30 FrameLayout id="com.android.systemui:id/wifi_combo" at=888,55 size=41x41
+@e31 ImageView id="com.android.systemui:id/wifi_signal" at=888,55 size=41x41
+@e32 FrameLayout label="Phone three bars." id="com.android.systemui:id/mobile_combo" at=929,45 size=41x61
+@e33 LinearLayout id="com.android.systemui:id/mobile_group" at=929,45 size=41x61
+@e34 ImageView id="com.android.systemui:id/mobile_signal" at=929,55 size=41x41
+@e35 LinearLayout label="Battery 100 percent." id="com.android.systemui:id/battery" at=987,6 size=21x139
+@e36 LinearLayout id="com.muness.tdongle.debug:id/action_bar_root" at=0,0 size=1080x2340
+@e37 FrameLayout id="android:id/content" at=0,0 size=1080x2340
+@e38 TextView text="T-Dongle" at=44,192 size=237x82
+@e39 TextView text="Wi-Fi is connected" at=66,376 size=948x117
+@e40 TextView text="Your hotspot is connected. Check internet access to finish." at=66,526 size=948x125
+@e41 TextView text="Dongle · connected\nWi-Fi · connected\nEthernet · ready" at=121,739 size=838x191
+@e42 TextView text="Internet\nInternet has not been checked." at=121,963 size=838x108
+@e43 Button text="Verify internet connection" at=66,1192 size=948x154
+@e44 Button text="Refresh connection" at=66,1368 size=948x154
+@e45 FrameLayout label="Overview" at=0,1988 size=270x220 selected
+@e46 FrameLayout id="com.muness.tdongle.debug:id/navigation_bar_item_icon_container" at=47,2021 size=176x88 selected
+@e47 View id="com.muness.tdongle.debug:id/navigation_bar_item_active_indicator_view" at=47,2021 size=176x88 selected
+@e48 ImageView id="com.muness.tdongle.debug:id/navigation_bar_item_icon_view" at=102,2032 size=66x66 selected
+@e49 ViewGroup id="com.muness.tdongle.debug:id/navigation_bar_item_labels_group" at=59,2129 size=151x79 selected
+@e50 TextView text="Overview" id="com.muness.tdongle.debug:id/navigation_bar_item_large_label_view" at=59,2129 size=151x44 selected
+@e51 FrameLayout label="Networks" at=270,1988 size=270x220
+@e52 FrameLayout id="com.muness.tdongle.debug:id/navigation_bar_item_icon_container" at=317,2021 size=176x88
+@e53 View id="com.muness.tdongle.debug:id/navigation_bar_item_active_indicator_view" at=370,2021 size=70x88
+@e54 ImageView id="com.muness.tdongle.debug:id/navigation_bar_item_icon_view" at=372,2032 size=66x66
+@e55 ViewGroup id="com.muness.tdongle.debug:id/navigation_bar_item_labels_group" at=328,2129 size=154x79
+@e56 TextView text="Networks" id="com.muness.tdongle.debug:id/navigation_bar_item_small_label_view" at=328,2129 size=153x44
+@e57 FrameLayout label="Activity" at=540,1988 size=270x220
+@e58 FrameLayout id="com.muness.tdongle.debug:id/navigation_bar_item_icon_container" at=587,2021 size=176x88
+@e59 View id="com.muness.tdongle.debug:id/navigation_bar_item_active_indicator_view" at=640,2021 size=70x88
+@e60 ImageView id="com.muness.tdongle.debug:id/navigation_bar_item_icon_view" at=642,2032 size=66x66
+@e61 ViewGroup id="com.muness.tdongle.debug:id/navigation_bar_item_labels_group" at=613,2129 size=124x79
+@e62 TextView text="Activity" id="com.muness.tdongle.debug:id/navigation_bar_item_small_label_view" at=615,2129 size=120x44
+@e63 FrameLayout label="Help" at=810,1988 size=270x220
+@e64 FrameLayout id="com.muness.tdongle.debug:id/navigation_bar_item_icon_container" at=857,2021 size=176x88
+@e65 View id="com.muness.tdongle.debug:id/navigation_bar_item_active_indicator_view" at=910,2021 size=70x88
+@e66 ImageView id="com.muness.tdongle.debug:id/navigation_bar_item_icon_view" at=912,2032 size=66x66
+@e67 ViewGroup id="com.muness.tdongle.debug:id/navigation_bar_item_labels_group" at=907,2129 size=75x79
+@e68 TextView text="Help" id="com.muness.tdongle.debug:id/navigation_bar_item_small_label_view" at=907,2129 size=74x44
+@e69 View id="android:id/navigationBarBackground" at=0,2208 size=1080x132

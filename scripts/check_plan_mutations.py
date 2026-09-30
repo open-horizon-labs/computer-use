@@ -485,6 +485,53 @@ MUTATIONS = {
         "invoke_menu (which activates the window) without the caller's allow_foreground",
         [('menu.py', "        if not f.foreground_ok:\n            raise _gap('%s: the Driver refused to press", "        if False:\n            raise _gap('%s: the Driver refused to press")],
         ['test_menu.Routing.test_the_refusal_is_preserved_without_allow_foreground_because_invoke_menu_fronts_the_window']),
+    # CE-FACADE-008 (#54): a device is look, then do through mobile-mcp. Each wrong patch below is a tempting shortcut of that contract.
+    'device_tap_on_the_looks_stale_list': (
+        'reuse the element list the look read (cheaper): after any layout change the ref or bounds point at another control',
+        [('mobile.py', "        return parse_elements(text)\n", "        return self.__dict__.setdefault('_stale', {}).setdefault(device, parse_elements(text))\n")],
+        ['test_mobile.DoPress.test_a_press_taps_the_fresh_element_not_what_the_look_showed', 'test_mobile.DoPress.test_a_two_step_plan_reads_fresh_for_every_step']),
+    'device_first_of_several_matches': (
+        'tap the first of several elements that carry the label instead of refusing',
+        [('mobile.py', "        if len(ok) == 1:\n            return ok[0], None", "        if ok:\n            return ok[0], None")],
+        ['test_mobile.DoPress.test_several_matching_elements_are_never_guessed']),
+    'device_trust_the_taps_ok': (
+        "call a tap done because mobile-mcp answered \"Clicked on\" (a locked phone drops taps silently: upstream found exactly that)",
+        [('mobile.py', "    return x.settle(step, before, TAP_DELAYS, extra={'selected': selected})", "    return {'status': 'done', 'delivery': 'delivered', 'selected': selected}")],
+        ['test_mobile.DoPress.test_a_tap_the_device_did_not_act_on_is_never_done',
+         'test_mobile.DoPress.test_a_tap_that_changed_the_screen_but_not_as_expected_is_unverified_not_done',
+         'test_mobile.DoPress.test_no_expect_on_the_last_step_ends_delivered_unverified_never_done']),
+    'device_missing_node_crashes': (
+        'skip the Node.js check and let the spawn failure speak (no install instruction, a start attempted)',
+        [('mobile.py', "        if self.which(exe) is None:\n            if exe == 'npx':", "        if False:\n            if exe == 'npx':")],
+        ['test_mobile.Lifecycle.test_without_node_the_answer_is_a_typed_refusal_naming_what_to_install']),
+    'device_action_resent_after_the_child_died': (
+        'retry the tap on the restarted mobile-mcp (it may already have landed)',
+        [('mobile.py', "                if mutating:\n                    raise MobileGap('mobile_action_failed', 'the mobile-mcp process exited during the action", "                if False:\n                    raise MobileGap('mobile_action_failed', 'the mobile-mcp process exited during the action")],
+        ['test_mobile.Lifecycle.test_an_action_is_never_re_sent_when_the_child_dies_under_it']),
+    'device_type_without_checking_the_focus': (
+        'type after the tap without looking where the focus went (a dropped tap leaves it on the other field)',
+        [('mobile.py', "    if (mine is None or not mine['focused']) and others:", "    if False:")],
+        ['test_mobile.DoType.test_nothing_is_typed_when_the_focus_is_on_another_field']),
+    'device_destructive_guard_on_the_literal_label_only': (
+        'check only the label the caller wrote, not the names of the element it resolved to',
+        [('mobile.py', "    for name in list(element['names']) + [literal]:", "    for name in [literal]:")],
+        ['test_mobile.DoPress.test_a_control_that_only_resolves_to_a_destructive_element_is_not_pressed']),
+    'device_raw_backend_text_in_the_answer': (
+        "return mobile-mcp's own error text to the model (a local path and a stack)",
+        [('mobile.py', "        reason, message, delivery = classify(text)\n        raise MobileGap(reason, message, delivery)", "        reason, message, delivery = classify(text)\n        raise MobileGap(reason, message + ' ' + str(text), delivery)")],
+        ['test_mobile.LookOnDevices.test_an_ios_device_without_the_agent_is_a_typed_refusal_that_carries_no_raw_text']),
+    'device_look_truncates_silently': (
+        'cut the device look to max_bytes and report nothing cut',
+        [('mobile.py', "        response['truncated'] = {'records': 0, 'lines': lost, 'bytes': bytes_cut}", "        response['truncated'] = {'records': 0, 'lines': 0, 'bytes': 0}")],
+        ['test_mobile.LookOnDevices.test_bounds_are_reported_never_silent']),
+    'device_typed_text_proves_itself': (
+        'accept the text just typed as the proof that typing worked (it is in the field either way)',
+        [('mobile.py', "    if typed is not None and (needle in lk.norm(typed) or lk.norm(typed) in needle):", "    if False:")],
+        ['test_mobile.DoType.test_the_text_just_typed_never_proves_itself']),
+    'device_close_leaves_the_child_running': (
+        'never stop mobile-mcp when the server shuts down',
+        [('mobile.py', "        with self._lock:\n            self._teardown()\n\n    # -- calls", "        pass\n\n    # -- calls")],
+        ['test_mobile.Lifecycle.test_close_stops_the_child_and_the_next_call_starts_a_fresh_one']),
 }
 
 

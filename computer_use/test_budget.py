@@ -317,6 +317,7 @@ class DefaultPathBudget(unittest.TestCase):
         real = Facade.look
         def look_with_extraction(self, *a, **k):
             out = real(self, *a, **k)
+            if not self.snapshots:return out  # a device look (CE-FACADE-008) has no window snapshot to extract from
             snap = next(iter(self.snapshots))
             try:self.provider('reader').extract({'snapshot_id': self.snapshots[snap]['raw']['snapshot_id'], 'task': 't', 'fields': {'provider': 'p'}, 'records': [{'id': 'e1', 'text': 'Dr. A'}]}, self.snapshots[snap]['raw']['snapshot_id'])
             except KeyError:pass  # the fake reader counted the request before it looked for a pattern

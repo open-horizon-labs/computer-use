@@ -84,6 +84,8 @@ python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 
 Register the local [computer-use MCP facade](docs/FACADE.md) to expose observation, NuExtract reading, Jev/Julia/GLiNER2 selection, bound action and verification directly to agents. `scripts/setup_facade.sh` also installs the pinned [Cua Perception](docs/FACADE.md#cua-perception-screenshot-regions) extension by default for on-device screenshot regions (`--no-perception` to skip). See the [fresh-agent adoption evidence and limitations](docs/FACADE-ADOPTION.md).
 
+**Phones and emulators.** `look` and `do` also take `device=<id>` instead of a window title: Android (emulators, devices) and iOS (simulators, devices) through [mobile-mcp](https://github.com/mobile-next/mobile-mcp) 1.0.6, the best driver for mobile. The server starts it itself on first use (`npx`, so Node.js 18+ is the only prerequisite; without it the answer is a typed refusal naming what to install), and the same contract holds: a fresh element list before every tap, exact label binding, a verification on another fresh list, no blind coordinates. `look(device="list")` lists the devices. See [Phones and emulators](docs/FACADE.md#phones-and-emulators-mobile-mcp).
+
 ## Install the skill
 
 This repository is public. Clone it over HTTPS or SSH, then:

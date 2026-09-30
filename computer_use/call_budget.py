@@ -605,6 +605,10 @@ def measure_plan_scenarios():
         assert [p['status'] for p in pages] == ['ok', 'failed', 'ok'] and pages[1]['landing'] == 'navigated_elsewhere', result
         return result  # the LLM has two pages and the verdict of the third: it reports, it does not retry
     out['nav_read_pages_one_fails'] = run(pages_driver({trp.B: trp.ELSEWHERE}), read_one_fails, lv.LiveReader({}))
+
+    # CE-FACADE-008 (#54): a device is look, then do through mobile-mcp (a fake backend serving the REAL emulator element list); fixture-derived, not a rate.
+    import test_mobile as tm
+    out.update(tm.budget_scenarios())
     return out
 
 
