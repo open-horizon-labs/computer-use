@@ -60,7 +60,7 @@ class DriverCallFailed(Gap):
     output). Typed, so callers never match on message text. Carries no stderr.
     tool, kind (exit, timeout, unusable_output) and restarted (a session restart was tried, #31) are the sanitized diagnosis (#30)."""
     def __init__(self, message='', tool=None, kind=None):
-        super().__init__(message);self.tool, self.kind, self.restarted = tool, kind, False
+        super().__init__(message);self.tool, self.kind, self.restarted, self.code = tool, kind, False, None
 
 
 
@@ -117,7 +117,17 @@ class Driver:
                                     capture_output=True, text=True, timeout=timeout, check=True)
             value = json.loads(result.stdout)
         except subprocess.CalledProcessError as error:
-            raise DriverCallFailed('driver_call_failed: %s exited %s%s' % (tool, error.returncode, note), tool, 'exit')
+            # The Driver often prints a JSON {"code": ...} on stdout when it exits 1 (live 2026-09-30: invalid_action_target on every
+            # canvas press was invisible as driver_call_failed). Keep that code when it is a plain token; never any other Driver text.
+            code = None
+            try:
+                parsed = json.loads(error.stdout or '')
+                code = parsed.get('code') if isinstance(parsed, dict) and re.fullmatch(r'[a-z][a-z0-9_]{0,63}', str(parsed.get('code') or '')) else None
+            except (ValueError, TypeError):
+                code = None
+            failure = DriverCallFailed('driver_call_failed: %s exited %s%s%s' % (tool, error.returncode, ' (%s)' % code if code else '', note), tool, 'exit')
+            failure.code = code
+            raise failure
         except subprocess.TimeoutExpired:
             raise DriverCallFailed('driver_call_failed: %s timed out after %ss%s' % (tool, timeout, note), tool, 'timeout')
         except (OSError, ValueError):
@@ -1433,7 +1443,7 @@ class Facade:
     @staticmethod
     def _failure_detail(gap):
         """Sanitized diagnosis of a failed Driver call (#30, #31): the tool, the exit class and whether a session restart was tried. Never stderr."""
-        return {'tool': getattr(gap, 'tool', None), 'exit_class': getattr(gap, 'kind', None), 'session_restart_tried': getattr(gap, 'restarted', False)}
+        return {'tool': getattr(gap, 'tool', None), 'exit_class': getattr(gap, 'kind', None), 'session_restart_tried': getattr(gap, 'restarted', False), **({'driver_code': gap.code} if getattr(gap, 'code', None) else {})}
 
     @staticmethod
     def _do_reason(message):
