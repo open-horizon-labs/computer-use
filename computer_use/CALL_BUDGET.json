@@ -848,6 +848,74 @@
         "changed_by": "CE-FACADE-007"
       },
       "native_reference_calls": 5
+    },
+    "mobile_look_do": {
+      "description": "REAL emulator element list (T-Dongle app) behind a fake mobile-mcp: look(device) -> do(press Networks, expect Saved networks) on a fresh element list; 2 LLM-visible calls, no reader, no chooser",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
+    "mobile_ambiguous_label_stop": {
+      "description": "REAL emulator tree: \"Overview\" is both the app nav item and the system Overview button; the press refuses control_ambiguous before any tap: look + one refused do, no retry",
+      "final_status": "refused",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
+    "mobile_dropped_tap_stop": {
+      "description": "REAL emulator tree, a tap the device drops silently (a locked phone): the fresh list is unchanged so the step stops screen_unchanged_after_action, never done; look + one stopped do, no retry",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
+    "mobile_backend_missing_stop": {
+      "description": "No Node.js: the first device call is refused mobile_backend_unavailable naming what to install, nothing done, no retry; 1 call",
+      "final_status": "refused",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
     }
   },
   "live_task_budgets": {

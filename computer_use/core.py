@@ -166,7 +166,7 @@ class Driver:
 
 class Facade:
     def __init__(self, driver=None, generic_factory=generic_from_config, reader_factory=NuExtractPage,
-                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep):
+                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None):
         self.driver = driver or Driver()
         self.sleep = sleep
         self._settled_titles = {}  # (pid, window_id) -> window title of the last settled look (see SETTLE_DELAY_S)
@@ -186,6 +186,7 @@ class Facade:
         self.prefix_control = True  # plan steps set this False (exact label) unless control_match=prefix; the single-step form keeps the whole-word prefix
         self.events = []
         self.lock = threading.RLock()
+        self._mobile = mobile  # mobile-mcp (CE-FACADE-008): created and started by the first look/do that names a device (mobile.py)
 
     def event(self, operation, **data):
         # Content-free route audit: no screenshots, text, command payloads or secrets.
@@ -1843,18 +1844,25 @@ class Facade:
                 'controls': [{'id': 'e'+str(i), 'name': (n.get('label') or '')[:40]} for i, n in state['nodes'].items()
                              if i not in state['aliases'] and self._is_control(n)][:12]}
 
-    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60):
+    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60, device=None):
         """Read-only, deterministic look at the strings the page displays (no click, no window move, no model unless `fields`)."""
         import look as lookmod
+        if device is not None:
+            import mobile as mobilemod
+            if title is not None or pid is not None or window_id is not None:return self.mark({'status': 'refused', 'reason': 'bad_request', 'message': 'bad_request: give device, or title or pid+window_id, not both'})
+            with self.lock:return self.mark(mobilemod.look(self, device, fields, max_records, max_bytes, focus, max_lines, line_chars))
         with self.lock:return self.mark(lookmod.run_look(self, title, pid, window_id, fields, max_records, max_bytes, focus, max_lines, line_chars))
 
     def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
            expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None,
-           steps=None, look_id=None, abort_if=None, allow_foreground=None):
+           steps=None, look_id=None, abort_if=None, allow_foreground=None, device=None):
         """One call runs observe -> read -> same-record filter -> (chooser only if several) -> bind -> act -> verify,
         recovering deterministically (bounded) and deferring to the caller only where guessing would be worse.
         Composes observe/read/choose/act/verify; owns no selection policy. Never retries a click.
         With `steps` it runs a validated PLAN instead (plan.py): each step is this same pipeline on a fresh observation."""
+        if device is not None:  # a phone or emulator through mobile-mcp: same plan contract, its own observation and delivery (mobile.py, CE-FACADE-008)
+            import mobile as mobilemod
+            with self.lock:return self.mark(mobilemod.do(self, goal, device, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if))
         return self.mark(self._do_entry(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground))
 
     def mark(self, result):
@@ -2410,6 +2418,7 @@ class Facade:
             try:provider.close()
             except Exception:self.event('cleanup',status='worker_close_failed')
         self.providers.clear()
+        if self._mobile is not None:self._mobile.close()  # stops the mobile-mcp child process; the next device call starts a fresh one
         self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear();self.looks.clear()
         return {'status':'closed','trace':self.events,'driver_version':self.driver_version,'driver_version_state':self.driver_version_state,
                 'perception_version':self.perception_version,'perception_state':self.perception_state}

@@ -25,6 +25,10 @@ An application-menu item (the menu bar is not page content) is a `press` step wi
 
 Any refusal is stop-and-ask the user: `permission_required` (the Driver cannot attach to the profile; it names the grant), `foreground_required`, `pointer_not_deliverable_in_background`, `tab_close_control_not_found` / `tab_close_control_ambiguous`. Report the `reason` and message, say what the user would need to allow (the grant, `allow_foreground`, a visible tab strip), and wait. Never reroute to another browser, another profile or a raw Driver call to get the same effect, and never add `allow_foreground` or `allow_launch` yourself: the user grants those.
 
+### Phone or emulator (Android, iOS)
+
+`look` with `device="list"` shows the device ids; then `look` and `do` with `device=<id>` instead of the window title. The server starts mobile-mcp itself; if it cannot (no Node.js) the answer is `mobile_backend_unavailable`: tell the user what to install, never reroute to screenshots. On a device `press` and `type` take the exact label (there are no records, so no `where`), every step is read and verified on a fresh screen, and `screen_unchanged_after_action` means the tap may have been dropped (for example a locked phone): do not repeat it blindly, look again.
+
 ## Advanced primitives (opt-in escape hatches)
 
 The primitives exist only when the server runs with `CUA_TASK_ADVANCED=1`; then use the **`computer-use` MCP primitives** only for finer control or an operation `do` does not cover. Start with `windows(title=...)` when the window title is known, then `observe`; use `read` for requested fields from nonoverlapping observed record roots, `choose` for contextual or genuinely exact selection, `act` for its opaque selection handle, and `verify` for a fresh postcondition check. End with `finish` to release task workers; `trace` exposes actual routes, bypass reasons, `caller_preselected` flags and the detected `driver_version`.
