@@ -1,6 +1,6 @@
 # Terminal observation and action integration
 
-The `local-mac` profile defaults to Julia-1 and GLiNER2 local workers when installed. Screenshot interpretation still requires a separately configured vision worker; the local profile intentionally has no SystemOne/Qwen fallback. Choose `fleet` for the configured homelab endpoints. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
+The `local-mac` profile defaults to Julia-1 and GLiNER2 local workers when installed. Screenshot interpretation still requires a separately configured vision worker; the local profile intentionally has no SystemOne fallback. Choose `fleet` for the configured homelab endpoints. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
 
 The Cua Driver binary still observes and executes locally. `terminal_observation.py` is a reusable controller helper around its `get_window_state` API. It does not replace the Driver or run terminal commands behind the UI. Configure the installed Driver executable and reuse its session/window.
 
@@ -12,7 +12,7 @@ Also confirm the actual command's scope. For the installed swamp CLI, `swamp` de
 
 ## Configure visual interpretation
 
-The selected local profile uses `CUA_SYSTEMONE_URL` with the existing screenshot-capable `/v1/systemone` facade. It returns finite visual postcondition assessments; these are not transcriptions, and `visible_controls` remains empty until grounded by the controller. For other installations without that setting, use a deployed **screenshot-capable** chat-completion endpoint. The adapter does not enable vision on a text-only model. Configure `QWEN_BASE_URL` (including `/v1`), `QWEN_MODEL`, and runtime `QWEN_API_KEY`/`QWEN_API_KEY_FILE` or documented Fleet secret retrieval. No keys belong in screenshots, traces, or configuration committed to Git.
+The selected local profile uses `CUA_SYSTEMONE_URL` with the existing screenshot-capable `/v1/systemone` facade. It returns finite visual postcondition assessments; these are not transcriptions, and `visible_controls` remains empty until grounded by the controller. Without `CUA_SYSTEMONE_URL` the visual worker is unavailable: it sends nothing anywhere (there is no chat-completion fallback; #8), every visual inspection fails, and verification ends `unverified`/`unknown` and a visual choose defers. The endpoint must confirm image processing (`vision: true`). No keys belong in screenshots, traces, or configuration committed to Git.
 
 ```sh
 export PYTHONPATH=/absolute/path/computer-use/inference/cua-decider/capability-dispatch

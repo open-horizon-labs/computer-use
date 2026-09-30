@@ -1,6 +1,6 @@
 # Provider configuration
 
-**Current default profile:** `local-mac`, with Julia-1 as the chooser and no hosted fallback. `fleet` remains selectable for NuExtract3 page reading, Jev/Qwen choice, GLiNER2 spans, and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
+**Current default profile:** `local-mac`, with Julia-1 as the chooser and no hosted fallback. `fleet` remains selectable for NuExtract3 page reading, Jev/Qwen choice, GLiNER2 spans, and SystemOne screenshots (the only visual route: without `CUA_SYSTEMONE_URL` the visual provider is unavailable and nothing is sent; there is no chat-completion fallback). Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
 
 ## Provider profiles
 
