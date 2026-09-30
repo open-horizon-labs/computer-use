@@ -19,9 +19,9 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
-DO_KINDS = ('press', 'type', 'confirm', 'verify')
+DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
 MAX_CONDITIONS = 6
 MAX_VALUE_CHARS = 60
@@ -122,7 +122,8 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         takes = {'press': {'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'expect', 'treat_as_match', 'accept_unknown', 'allow_destructive', 'accept_hidden_text', 'allow_foreground'},
                  'type': {'do', 'goal', 'control', 'control_match', 'text', 'expect', 'allow_destructive'},
                  'confirm': {'do', 'goal', 'confirm', 'identity', 'expect', 'allow_destructive', 'dialog_text', 'dialog_controls'},
-                 'verify': {'do', 'goal', 'expect'}}[kind]
+                 'verify': {'do', 'goal', 'expect'},
+                 'goto': {'do', 'goal', 'url', 'expect'}}[kind]
         extra = sorted(set(step) - takes)
         if extra:
             raise _gap('bad_request: %s (%s) does not take %s' % (at, kind, ', '.join(extra)))
@@ -136,6 +137,14 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         if kind == 'type':
             if 'control' not in step or 'text' not in step:
                 raise _gap('bad_request: %s (type) needs control (the field\'s label) and text' % at)
+        if kind == 'goto':
+            import browser
+            if 'url' not in step:
+                raise _gap('bad_request: %s (goto) needs url (http or https)' % at)
+            try:
+                step['url'] = browser.check_url(step['url'])
+            except Exception as error:
+                raise _gap(str(error).replace('bad_request: ', 'bad_request: %s ' % at, 1))
         if kind == 'confirm':
             if 'confirm' not in step:
                 raise _gap('bad_request: %s (confirm) needs confirm=<the exact label of the dialog control>' % at)
@@ -428,7 +437,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             break
         began = f.clock()
         kind = step['do']
-        spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify'}[kind],
+        spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify', 'goto': 'verify'}[kind],
                 'control': step.get('control'), 'text': step.get('text'), 'near': step.get('near'), 'expect': step.get('expect'),
                 'accept_unknown': step.get('accept_unknown'), 'treat_as_match': step.get('treat_as_match'), 'records': None}
         channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive'), 'look_id': look_id}
@@ -444,6 +453,46 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             channel['confirm_step'] = {'label': step['confirm'], 'identity': step.get('identity') or carry['identity'], 'before': carry['before'], 'dialog_text': step['dialog_text'], 'dialog_controls': step['dialog_controls']}
         # The window is resolved once (by the first step) and then pinned: every step acts on the same window.
         window = {'title': title} if ctx['pid'] is None else {'pid': ctx['pid'], 'window_id': ctx['window_id']}
+        if kind == 'goto':
+            # CE-FACADE-007: navigate the pinned window's active tab; done only when the tab reports the requested page and, when given,
+            # expect is visible on a fresh observation. A refusal to attach is permission_required, never another browser.
+            import browser
+            from core import Gap
+            try:
+                if ctx['pid'] is None:
+                    found = f.windows(title)['windows']
+                    if len(found) != 1:
+                        raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
+                    ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+                page = browser.navigate(f, ctx['pid'], ctx['window_id'], step['url'])['page']
+                result = {'status': 'delivered_unverified', 'delivery': 'delivered'}
+                if step.get('expect'):
+                    result = {**f._do(spec['goal'], None, ctx['pid'], ctx['window_id'], None, 'verify', None, step['expect'], None,
+                                      max(0.5, min(budget_s, remaining / 3)), None, None, None, None, plan=channel), 'delivery': 'delivered'}
+                if result['status'] == 'observed':
+                    result['status'] = 'done'  # a verified navigation is an action that worked, not an observation
+                result['page'] = {'url': page['url'][:200], 'title': page['title'][:120]}
+            except Gap as gap:
+                reason = str(gap).split(':', 1)[0]
+                result = {'status': 'refused' if reason in ('permission_required', 'bad_request') else 'failed', 'reason': reason, 'message': str(gap),
+                          'delivery': 'none' if reason == 'permission_required' else 'unknown'}
+            status = result['status']
+            entry = {'n': n, 'do': kind, 'status': {'deferred': 'stopped'}.get(status, status), 'ms': round((f.clock() - began) * 1000)}
+            for key in ('reason', 'page'):
+                if result.get(key):entry[key] = result[key]
+            if result.get('verification'):
+                entry['verification'] = {k: result['verification'].get(k) for k in ('status', 'route')}
+            if result.get('delivery') not in (None, 'none'):
+                delivery = 'delivered'
+            ok = status in ('done', 'observed') or (status == 'delivered_unverified' and n == len(plan_steps))
+            if not ok:
+                entry['message'] = lk.safe_message(result.get('reason'), result.get('message'))
+                failed = {'n': n, 'reason': result.get('reason') or status, 'status': status}
+            entries.append(entry)
+            carry['before'], carry['identity'] = None, None
+            if not ok:
+                break
+            continue
         f.prefix_control = step.get('control_match') == 'prefix'
         f.foreground_ok = step.get('allow_foreground') is True  # this step only
         try:
