@@ -27,9 +27,9 @@ fi
 
 echo "Installing facade requirements ..."
 if command -v uv >/dev/null 2>&1; then
-  uv pip install --python .venv-facade/bin/python -r facade/requirements.txt
+  uv pip install --python .venv-facade/bin/python -r computer_use/requirements.txt
 else
-  .venv-facade/bin/python -m pip install -r facade/requirements.txt
+  .venv-facade/bin/python -m pip install -r computer_use/requirements.txt
 fi
 
 if [ "$INSTALL_PERCEPTION" -eq 1 ]; then
@@ -39,4 +39,4 @@ else
   echo "Skipping Cua Perception install (--no-perception); perception-dependent facade tools will report a Gap naming this installer."
 fi
 
-echo "Done. Register the server: codex mcp add cua-task -- \"$ROOT/.venv-facade/bin/python\" \"$ROOT/facade/server.py\""
+echo "Done. Register the server: codex mcp add computer-use -- \"$ROOT/.venv-facade/bin/python\" \"$ROOT/computer_use/server.py\""

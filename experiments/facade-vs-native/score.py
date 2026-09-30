@@ -16,8 +16,8 @@ from pathlib import Path
 
 from fixtures import BOOKING_EXPECTED_ID, CANVAS_EXPECTED_ID, ORDERS_EXPECTED_ID
 
-# Ceiling on LLM-visible MCP calls per task on the facade's default path (facade/CALL_BUDGET.json).
-BUDGET_PATH = Path(__file__).resolve().parents[2] / 'facade' / 'CALL_BUDGET.json'
+# Ceiling on LLM-visible MCP calls per task on the facade's default path (computer_use/CALL_BUDGET.json).
+BUDGET_PATH = Path(__file__).resolve().parents[2] / 'computer_use' / 'CALL_BUDGET.json'
 EXPECTED = {'booking': {BOOKING_EXPECTED_ID}, 'orders': {ORDERS_EXPECTED_ID}, 'canvas': {CANVAS_EXPECTED_ID}}
 # For orders, only a cancel that reaches confirmation counts as a real attempt.
 TERMINAL_ACTION = {'booking': 'book', 'orders': 'cancel_confirm', 'canvas': 'press'}
@@ -66,7 +66,7 @@ def scan_transcript(transcript_path):
 
     Tool results are opaque JSON text inside content blocks; we don't assume
     a fixed schema, we just walk every parsed object looking for the fields
-    the facade's cua_trace/cua_choose/cua_verify results carry (route,
+    the facade's trace/choose/verify results carry (route,
     caller_preselected, driver_version) plus turn count / cost / timing that
     `claude -p --output-format stream-json` reports on its own top-level
     'result' event.
@@ -179,7 +179,7 @@ def main(argv=None):
     parser.add_argument('--manifest', required=True)
     parser.add_argument('--events', required=True)
     parser.add_argument('--fail-over-budget', action='store_true',
-                        help='exit nonzero when a facade run used more LLM-visible calls than facade/CALL_BUDGET.json allows')
+                        help='exit nonzero when a facade run used more LLM-visible calls than computer_use/CALL_BUDGET.json allows')
     args = parser.parse_args(argv)
     manifest = json.loads(Path(args.manifest).read_text())
     rows = []

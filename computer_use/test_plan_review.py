@@ -38,7 +38,7 @@ class HiddenText(PlanBase):
         self.assertGreater(look['truncated']['lines'], 0);self.assertNotIn('SOLD', json.dumps(rec))
         r = self.plan([self.lines_press(BOOK_1_45 + [{'line': 'not_contains', 'value': 'sold out'}], expect='Booked:')], look_id=look['look_id'], goal='Book the 1:45 slot unless it is sold out')
         self.assertEqual((G(r, 'status'), G(r, 'reason'), self.driver.executed), ('stopped', 'negative_condition_over_cut_lines', []))
-        self.assertIn('r5', json.dumps(G(r, 'steps', 0, 'evidence')));self.assertIn('cua_look', S(r, 'hint'))
+        self.assertIn('r5', json.dumps(G(r, 'steps', 0, 'evidence')));self.assertIn('look', S(r, 'hint'))
 
     def test_neq_over_a_cut_line_is_refused_too(self):
         self.hidden(' SOLD OUT')
@@ -295,13 +295,13 @@ class UntrustedText(PlanBase):
     def test_the_docstring_and_docs_carry_the_same_sentence(self):
         import server
         from pathlib import Path
-        tool = next(t for t in __import__('asyncio').run(server.mcp.list_tools()) if t.name == 'cua_look')
+        tool = next(t for t in __import__('asyncio').run(server.mcp.list_tools()) if t.name == 'look')
         self.assertIn(self.NOTICE, tool.description)
         self.assertIn(self.NOTICE, (Path(__file__).resolve().parents[1] / 'docs/FACADE.md').read_text())
 
     def test_the_do_docstring_pushes_the_look_first_and_warns_that_blind_calls_may_defer(self):
         import server
-        tool = next(t for t in __import__('asyncio').run(server.mcp.list_tools()) if t.name == 'cua_do')
+        tool = next(t for t in __import__('asyncio').run(server.mcp.list_tools()) if t.name == 'do')
         text = ' '.join(tool.description.split())
         self.assertIn('unless the page is a single obvious control', text);self.assertRegex(text, r'blind calls? may defer')
 

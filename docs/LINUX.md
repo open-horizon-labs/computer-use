@@ -8,12 +8,12 @@ The Linux reference documents the `get_window_state` element schema (`element_in
 
 ## Support tier to claim
 
-`limits.mdx` validates typed browser mutation on Linux X11 Chrome and Edge (and Sway with Chrome only when identity and geometry are exact). Generic GNOME/KDE Wayland is read-only or refused; Firefox and Safari have no typed mutation. So the first Linux target is **X11 (or XWayland) Chrome**. Wayland is out of scope for the first milestone except possibly read-only `cua_look`.
+`limits.mdx` validates typed browser mutation on Linux X11 Chrome and Edge (and Sway with Chrome only when identity and geometry are exact). Generic GNOME/KDE Wayland is read-only or refused; Firefox and Safari have no typed mutation. So the first Linux target is **X11 (or XWayland) Chrome**. Wayland is out of scope for the first milestone except possibly read-only `look`.
 
 ## macOS assumptions, Linux equivalent, smallest change
 
 **1. Role and action names are macOS AX** (`AXWebArea`, `AXButton`, `AXLink`, `AXMenuItem`, `AXCheckBox`, `AXTextField`, `AXTable`/`AXRow`/`AXCell`, `AXHeading`, `AXStaticText`, `AXGroup`, `AXList`, action `AXPress`).
-- Where: `facade/core.py:1210` (CONTROL_ROLES), `:1217`, `:1320`, `:336-337`, `:547`, `:604-606`, `:697-698`, `:988`, `:1504`; `facade/look.py:26-30`, `:47`, `:66`, `:103`, `:234-273`, `:311`; `facade/ax_aliases.py:37-44`; `facade/plan.py:367`.
+- Where: `computer_use/core.py:1210` (CONTROL_ROLES), `:1217`, `:1320`, `:336-337`, `:547`, `:604-606`, `:697-698`, `:988`, `:1504`; `computer_use/look.py:26-30`, `:47`, `:66`, `:103`, `:234-273`, `:311`; `computer_use/ax_aliases.py:37-44`; `computer_use/plan.py:367`.
 - Linux: elements carry AT-SPI roles and AT-SPI action names in `actions`; exact strings unknown until captured.
 - Smallest change: one normalisation layer at the observation boundary (`Facade._observe_once`, `core.py:228-265`) that maps Linux role and action names to the AX names the rest of the code uses, selected by a platform flag. Do not fork the role sets.
 
@@ -38,7 +38,7 @@ The Linux reference documents the `get_window_state` element schema (`element_in
 - Smallest change: treat as unavailable. `perception_state` already degrades to `not_installed` and every Perception path raises a Gap naming the installer. `setup_facade.sh` should skip Perception with a clear message on non-Darwin (or pass through to `install_extension`) instead of dying on "Unsupported platform". Canvas pages then rely on `allow_foreground` plus the screenshot model, as they do today without Perception.
 
 **6. Hotkeys Cmd+T and Cmd+W.**
-- Where: `facade/browser.py:158`, `:189-191`, `:200-215`, `:244-264` (literal `['cmd','t']` at `:205`, `['cmd','w']` at `:256`; error text at `:202`, `:215`, `:247`, `:250`, `:264`).
+- Where: `computer_use/browser.py:158`, `:189-191`, `:200-215`, `:244-264` (literal `['cmd','t']` at `:205`, `['cmd','w']` at `:256`; error text at `:202`, `:215`, `:247`, `:250`, `:264`).
 - Linux: `hotkey` takes `["ctrl","t"]` and `["ctrl","w"]`. On X11, background hotkeys reach the target without focus steal. WM chords (`super+*`, `alt+tab`, `ctrl+alt+*`) are refused with `wm_chord_unavailable`; `ctrl+t/w` are application shortcuts, not WM chords. Chrome may still ignore some accelerators in the background (macOS `Cmd+W` needed foreground); Linux is unmeasured.
 - Smallest change: choose the modifier from the Driver platform (`cmd` on macOS, `ctrl` elsewhere) and fix the messages. Measure background versus foreground for both on X11 Chrome before deciding whether `close_tab` keeps requiring `allow_foreground` there.
 
@@ -60,15 +60,15 @@ The Linux reference documents the `get_window_state` element schema (`element_in
 **10. `scripts/setup_facade.sh`.** Plain bash, uv/venv; only the Perception step is macOS-specific (item 5). Smallest change: guard that step by `uname`.
 
 **11. Browser CDP path** (`browser_prepare`, `get_browser_state`, `browser_navigate`).
-- Where: `facade/browser.py` (whole file).
+- Where: `computer_use/browser.py` (whole file).
 - Linux: same typed tools, validated on X11 Chrome; generic Wayland is refused.
 - Smallest change: none expected; check `NEW_TAB_URLS` (`browser.py:162`) against Linux Chrome's actual new-tab URL in the fixture.
 
-Also watch: `look.py` budgets and `CALL_BUDGET.json` come from macOS Chrome trees (`facade/fixtures/real`); Linux trees may differ in node count, so the call budget needs its own Linux measurement and must not borrow macOS numbers.
+Also watch: `look.py` budgets and `CALL_BUDGET.json` come from macOS Chrome trees (`computer_use/fixtures/real`); Linux trees may differ in node count, so the call budget needs its own Linux measurement and must not borrow macOS numbers.
 
 ## Captured Linux Chrome fixtures needed
 
-Same pages and method as `facade/fixtures/real/` (read-only capture with the facade's own `Driver.observe`, sanitised, raw Driver element format, no clicks), stored under `facade/fixtures/linux/`:
+Same pages and method as `computer_use/fixtures/real/` (read-only capture with the facade's own `Driver.observe`, sanitised, raw Driver element format, no clicks), stored under `computer_use/fixtures/linux/`:
 
 1. `booking`, `orders`, `invoices` (list, table, cards): record-discovery shapes.
 2. `flat_ax`, `nested`, `form`, `wizard`, `destructive`: control and confirmation shapes.
@@ -84,7 +84,7 @@ Validate it separately, later. The emulator is an ordinary Linux window, but wha
 
 ## Ordered task list (each one PR)
 
-1. **L1, capture.** Capture `booking` and `orders` Chrome trees on Linux X11 plus the raw metadata, commit under `facade/fixtures/linux/`, add the role/action vocabulary to this document. First failing test: the skipped `facade/test_linux.py` test, which loads `booking.ax.json` and asserts exactly one top-level web area via `_top_web_areas`.
+1. **L1, capture.** Capture `booking` and `orders` Chrome trees on Linux X11 plus the raw metadata, commit under `computer_use/fixtures/linux/`, add the role/action vocabulary to this document. First failing test: the skipped `computer_use/test_linux.py` test, which loads `booking.ax.json` and asserts exactly one top-level web area via `_top_web_areas`.
 2. **L2, role normaliser.** A pure, table-driven `normalize_platform(elements, platform)` at the observation boundary. Test: the Linux `booking` and `orders` fixtures give the same `look` record shape as the macOS expectations in `test_real_pages.py`.
 3. **L3, content scoping and thin-tree gate.** Adjust `_content_ids` if needed; add the AT-SPI-off/Cinnamon message. Test: a thin Linux tree raises the named Gap; toolbar text never enters page content.
 4. **L4, geometry.** Decide `window_bounds` versus `screenshot_width/height` from L1 data and adjust `_pixel_scale`. Test: `_pixel_scale` on a Linux fixture returns the measured value or `None`.
@@ -92,4 +92,4 @@ Validate it separately, later. The emulator is an ordinary Linux window, but wha
 6. **L6, setup and preflight.** `setup_facade.sh` skips Perception on non-Darwin; `check_permissions` preflight note. Test: extend `scripts/test_install_perception.py` for the unsupported-platform message.
 7. **L7, Linux call budget.** Run the budget scenarios over the Linux fixtures. Per `AGENTS.md`, any new tool or mandatory step needs a CE and a `CALL_BUDGET.json` change; this plan adds neither. Then decide on the Android follow-up.
 
-The default path (`cua_look` then `cua_do`) is unchanged by every step.
+The default path (`look` then `do`) is unchanged by every step.

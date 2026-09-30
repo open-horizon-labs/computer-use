@@ -1,4 +1,4 @@
-"""cua_do against REAL captured Chrome AX shapes (facade/fixtures/live_booking_ax.json, live_orders_ax.json).
+"""do against REAL captured Chrome AX shapes (computer_use/fixtures/live_booking_ax.json, live_orders_ax.json).
 
 The tidy fixtures in test_do.py hid the live failures: Chrome advertises AXPress on every static text, cell and row, the
 booking page is a flat AXList whose field texts and Book button are siblings, orders rows hold TWO buttons (Track, Cancel)
@@ -16,7 +16,7 @@ from core import Facade, Gap
 from test_core import FakeDriver, FakeVision, FakeChooser
 
 FIX = Path(__file__).resolve().parent / 'fixtures'
-PRIMITIVES = re.compile(r'cua_(?:windows|observe|read|choose|act|verify|trace|finish)\b')
+PRIMITIVES = re.compile(r'(?i)(?:\b(?:call|calls|called|use|using|run|invoke|then|via)\s+`?|__)(?:windows|observe|read|choose|act|verify|trace|finish)\b')
 
 
 def load(name):
@@ -217,8 +217,8 @@ class LiveOrders(LiveBase):
         self.assertEqual((self.chooser.requests, self.starts, len(self.reader.requests)), ([], [], 2))
         self.assertEqual(len(self.reader.requests[0]['records']), 7)
 
-    def test_dialog_without_confirm_carries_labels_and_a_second_cua_do_finishes_without_primitives(self):
-        # F5c. Wrong patch: tell the LLM to use cua_choose/cua_act, or re-run the goal (re-clicking the first control).
+    def test_dialog_without_confirm_carries_labels_and_a_second_do_finishes_without_primitives(self):
+        # F5c. Wrong patch: tell the LLM to use choose/act, or re-run the goal (re-clicking the first control).
         first = self.cancel(control='Cancel')
         self.assertEqual((first['status'], first['reason'], first['delivery'], len(self.driver.executed)), ('deferred', 'confirm_dialog_present', 'delivered', 1))
         self.assertEqual((first['dialog']['controls'], first['dialog']['identity']), (['Yes, cancel order', 'Keep order'], 'matched'))
@@ -253,7 +253,7 @@ class LiveOrders(LiveBase):
 
     def test_exact_reports_a_control_without_press_as_not_press_capable_not_as_a_duplicate(self):
         # F4 root cause: choose(mode=exact) offers only press-capable nodes, so a dialog button whose AXPress Chrome omitted
-        # looked absent and was reported exact_target_not_unique while cua_do (which counted by label) called it unique.
+        # looked absent and was reported exact_target_not_unique while do (which counted by label) called it unique.
         self.driver.no_press_obs = 99
         self.cancel(control='Cancel')
         snap = self.f.observe(1, 2)['snapshot']
@@ -275,7 +275,7 @@ class LiveOrders(LiveBase):
 
 class Hints(LiveBase):
     def test_no_deferral_or_refusal_sends_the_llm_to_a_primitive_tool(self):
-        # F5a. Wrong patch: hints that say "use cua_choose / cua_verify / cua_observe" (those tools are not visible by default).
+        # F5a. Wrong patch: hints that say "use choose / verify / observe" (those tools are not visible by default).
         book = lambda **kw: self.do('Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM', records={'fields': BOOKING_FIELDS, 'predicates': BOOKING_ONE}, **kw)
         results = [book(expect='Booked:', title='Nope'), book(expect='Booked:', control='Reserve'), book(expect=None, budget_s=0)]
         self.driver.script = booked()
@@ -295,14 +295,14 @@ class Schema(unittest.TestCase):
         # F3. Wrong patch: keep expect optional (the live LLM never passed it, so every result was unverified).
         import asyncio
         import server
-        tool = next(t for t in asyncio.run(server.mcp.list_tools()) if t.name == 'cua_do')
+        tool = next(t for t in asyncio.run(server.mcp.list_tools()) if t.name == 'do')
         self.assertIn('expect', tool.inputSchema['required']);self.assertIn('goal', tool.inputSchema['required'])
         kinds = [x.get('type') for x in tool.inputSchema['properties']['expect'].get('anyOf', [])]
         self.assertIn('null', kinds);self.assertIn('string', kinds)
         doc = tool.description.lower()
         self.assertIn('required', doc);self.assertIn('e.g. "booked:"', doc)
         self.assertNotRegex(doc, r'expect (?:is )?optional|may omit|can omit|skip expect|optionally pass expect')
-        self.assertEqual([t.name for t in asyncio.run(server.mcp.list_tools())], ['cua_do', 'cua_look'])  # look, then do (CE-FACADE-005)
+        self.assertEqual([t.name for t in asyncio.run(server.mcp.list_tools())], ['do', 'look'])  # look, then do (CE-FACADE-005)
 
 
 

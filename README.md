@@ -28,8 +28,8 @@ CESS preserves the sketch, accepted counterexamples and executable regression ch
 
 The driving LLM does not mediate every hop. Measured live, tool time was about 13% of a run and LLM turns about 87%, so the default path minimizes turns and keeps recovery in deterministic code (design: [docs/PLAN-B.md](docs/PLAN-B.md), CE-FACADE-005).
 
-1. `cua_look`: read-only, no model. Returns the page's displayed strings (records, controls, dialogs, canvas texts) and a `look_id`.
-2. `cua_do` with `steps`: the LLM sends ONE small plan from what it saw. The server validates the whole plan, then per step re-observes, binds, acts, verifies `expect`, and recovers from stale state itself (bounded; a click is never retried).
+1. `look`: read-only, no model. Returns the page's displayed strings (records, controls, dialogs, canvas texts) and a `look_id`.
+2. `do` with `steps`: the LLM sends ONE small plan from what it saw. The server validates the whole plan, then per step re-observes, binds, acts, verifies `expect`, and recovers from stale state itself (bounded; a click is never retried).
 3. Waits for the page, in code: a look at a page that is not ready (no snapshot, empty or degraded tree, or a thin web area such as a loading page or any site's "checking your browser" holding page) is re-observed after 0.5 s, then 1 s, and then returned as it is. The rule is structural, with no site or phrase list, applies only to looks (never to the observations around an action), and never solves or bypasses a check. LLMs facing a blank or holding page tend to give up and report it unreadable (both arms did in our real-retailer runs); the deterministic path just looks again. It is unit-tested against a fake driver (a thin page that fills in, one that stays thin, a full page). Live, eBay showed a "checking your browser" page that cleared by itself (watched by the user): native got an empty tree and a blank title on that run and read the page fine on the next, which is the case this automates. The facade keeps its events in memory only, so there is no log showing the retry itself firing; add persistent events before quoting a firing rate.
 4. Never clicks where it did not aim: a background pixel click on a drawn surface (canvas) lands at the element's centre, not at the point (live probe on our fixture: aimed at a corner button, the centre button was pressed and reported as success). The stack refuses it before any Driver call and names the one way through, an explicit `allow_foreground` on that call or step, which fronts the window briefly for a real pointer event. Reported upstream as a driver bug.
 5. Guardrails in code: a filter is only allowed against a look the server issued (`look_id`); incomparable values are `unknown`, not a guess; destructive controls and dialogs need explicit, exact authorization; the whole plan has a hard time budget.
@@ -37,11 +37,11 @@ The driving LLM does not mediate every hop. Measured live, tool time was about 1
 ```mermaid
 sequenceDiagram
     participant L as Driving LLM
-    participant S as cua-task server
+    participant S as computer-use server
     participant D as Cua Driver
     participant P as Cua Perception (canvas pages)
     participant N as NuExtract3 (optional)
-    L->>S: cua_look
+    L->>S: look
     S->>D: observe (read-only)
     opt page is a canvas / no AX tree
         S->>P: parse_visual_regions (on-device OCR)
@@ -53,7 +53,7 @@ sequenceDiagram
     end
     S-->>L: displayed strings + look_id
     Note over L: writes ONE plan
-    L->>S: cua_do(steps, look_id)
+    L->>S: do(steps, look_id)
     loop each step, in code
         S->>D: observe, bind, act
         S->>D: observe, verify expect
@@ -64,7 +64,7 @@ sequenceDiagram
 
 Full version (NuExtract, staleness and recovery): [docs/PLAN-B.md#sequence](docs/PLAN-B.md#sequence).
 
-NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosing steps. The primitive tools (`cua_observe`, `cua_choose`, `cua_act`, ...) are hidden unless `CUA_TASK_ADVANCED=1`. The agent tool of option D is experimental and not merged.
+NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosing steps. The primitive tools (`observe`, `choose`, `act`, ...) are hidden unless `CUA_TASK_ADVANCED=1`. The agent tool of option D is experimental and not merged.
 
 **Evidence so far (n=1 per cell, Sonnet 5.5, real Chrome, directional only, two independent runs that agree):**
 - Fixture pages, 3 tasks: the stack cost $0.90 against $2.69 for native Cua Driver tools (about 3x less). Booking and ax_dup were correct on both arms with no wrong clicks; canvas_regions failed on both: the background pixel click was delivered at the canvas centre, not at the button (see point 4 above), and both arms reported it as unverifiable rather than wrong. Turns and wall time were about equal.
@@ -75,24 +75,24 @@ NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosin
 
 ```sh
 scripts/setup_facade.sh --no-perception
-.venv-facade/bin/python -m unittest discover -s facade -p 'test_*.py'   # 559 tests
+.venv-facade/bin/python -m unittest discover -s computer_use -p 'test_*.py'   # 559 tests
 .venv-facade/bin/python scripts/check_call_budget.py
 python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 ```
 
 ## Agent-facing task tools
 
-Register the local [CUA task MCP facade](docs/FACADE.md) to expose observation, NuExtract reading, Jev/Julia/GLiNER2 selection, bound action and verification directly to agents. `scripts/setup_facade.sh` also installs the pinned [Cua Perception](docs/FACADE.md#cua-perception-screenshot-regions) extension by default for on-device screenshot regions (`--no-perception` to skip). See the [fresh-agent adoption evidence and limitations](docs/FACADE-ADOPTION.md).
+Register the local [computer-use MCP facade](docs/FACADE.md) to expose observation, NuExtract reading, Jev/Julia/GLiNER2 selection, bound action and verification directly to agents. `scripts/setup_facade.sh` also installs the pinned [Cua Perception](docs/FACADE.md#cua-perception-screenshot-regions) extension by default for on-device screenshot regions (`--no-perception` to skip). See the [fresh-agent adoption evidence and limitations](docs/FACADE-ADOPTION.md).
 
 ## Install the skill
 
 This repository is public. Clone it over HTTPS or SSH, then:
 
 ```sh
-npx skills add open-horizon-labs/computer-use --skill cua-capability-dispatch
+npx skills add open-horizon-labs/computer-use --skill computer-use
 ```
 
-For global Codex use, append `--agent codex --global`. The [skills CLI](https://github.com/vercel-labs/skills) installs the skill's **[setup reference](skills/cua-capability-dispatch/references/setup.md)** and bundled sketch. It installs guidance, not model environments or a running dispatcher.
+For global Codex use, append `--agent codex --global`. The [skills CLI](https://github.com/vercel-labs/skills) installs the skill's **[setup reference](skills/computer-use/references/setup.md)** and bundled sketch. It installs guidance, not model environments or a running dispatcher.
 
 ## Set up the runtime
 
@@ -103,7 +103,7 @@ export CUA_CAPABILITY_ROOT="$PWD"
 python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 ```
 
-The offline check needs only Python 3.10+. For real inference, choose a profile and configure its local or hosted workers in `~/.config/computer-use/runtime.json`; see the [setup reference](skills/cua-capability-dispatch/references/setup.md). Installing the skill does not install model environments or modify the standalone Fleet selector.
+The offline check needs only Python 3.10+. For real inference, choose a profile and configure its local or hosted workers in `~/.config/computer-use/runtime.json`; see the [setup reference](skills/computer-use/references/setup.md). Installing the skill does not install model environments or modify the standalone Fleet selector.
 
 ## Alternative Jev API and endpoint setup
 
@@ -117,11 +117,11 @@ export TYPESAFE_DEFAULT_MODEL='jev-latest'
 
 The file must already contain your key. `TYPESAFE_API_KEY` is the direct-environment alternative. Jev's SDK calls `https://api.typesafe.ai/v1/systemone`; the base URL has **no `/v1` suffix**. Qwen instead uses `QWEN_BASE_URL` **with `/v1`**, plus its own `QWEN_API_KEY` or `QWEN_API_KEY_FILE`. Both providers need configuration for the cascade.
 
-See [full key/endpoint setup and Jev-only smoke check](skills/cua-capability-dispatch/references/setup.md#jev-api-key-endpoint-and-model), including secret-file precedence and optional Fleet retrieval. Installing the skill does not create API accounts or credentials.
+See [full key/endpoint setup and Jev-only smoke check](skills/computer-use/references/setup.md#jev-api-key-endpoint-and-model), including secret-file precedence and optional Fleet retrieval. Installing the skill does not create API accounts or credentials.
 
 ## Start here
 
-- [Custom skill](skills/cua-capability-dispatch/SKILL.md): request construction and safe integration with stock tools.
+- [Custom skill](skills/computer-use/SKILL.md): request construction and safe integration with stock tools.
 - [Sketch S](inference/cua-decider/capability-dispatch/SKETCH.md): authorized routing and matching policy, including approved boundary recheck.
 - [Counterexamples A](inference/cua-decider/capability-dispatch/COUNTEREXAMPLES.json): accepted failures and their authority.
 - [Projection P](inference/cua-decider/capability-dispatch/dispatch.py): dispatch, matching, recovery and binding.
@@ -139,19 +139,19 @@ python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 python3 -m unittest discover -s inference/cua-decider -p 'test_*.py'
 ```
 
-The facade, its call-budget guardrail and the live scorer's tests need the facade requirements (`scripts/setup_facade.sh`, or `pip install -r facade/requirements.txt`); CI runs all of these on every pull request (`.github/workflows/offline-gates.yml`):
+The facade, its call-budget guardrail and the live scorer's tests need the facade requirements (`scripts/setup_facade.sh`, or `pip install -r computer_use/requirements.txt`); CI runs all of these on every pull request (`.github/workflows/offline-gates.yml`):
 
 ```sh
-python3 -m unittest discover -s facade -p 'test_*.py'
+python3 -m unittest discover -s computer_use -p 'test_*.py'
 (cd inference/cua-decider/capability-dispatch && python3 -m unittest test_dispatch)
 python3 -m unittest discover -s scripts -p 'test_*.py'
 python3 -m unittest discover -s experiments/facade-vs-native -p 'test_*.py'
 python3 scripts/sync_skill_references.py --check
-.venv-facade/bin/python facade/check_protocol.py
+.venv-facade/bin/python computer_use/check_protocol.py
 .venv-facade/bin/python scripts/check_call_budget.py   # table of scenario, calls, budget, PASS/FAIL; nonzero on failure
 ```
 
-`scripts/check_call_budget.py` enforces [facade/CALL_BUDGET.json](facade/CALL_BUDGET.json): the default path (look, then do: `cua_look` and `cua_do`, the only tools visible unless `CUA_TASK_ADVANCED=1`) stays within its measured LLM-visible calls on the real captured Chrome trees and synthetic wizard, 100-row and canvas shapes; `scripts/check_plan_mutations.py` proves the wrong patches fail by assertion and `scripts/look_compare.py` reports the structure of the look claim (live latency and accuracy are not measured), because the driving LLM's turns were 87% of agent wall time. Adding a tool or a mandatory step to the default path requires a CE and a CALL_BUDGET.json change; see [FACADE.md](docs/FACADE.md#call-budget) and, for look-then-plan, [PLAN-B.md](docs/PLAN-B.md).
+`scripts/check_call_budget.py` enforces [computer_use/CALL_BUDGET.json](computer_use/CALL_BUDGET.json): the default path (look, then do: `look` and `do`, the only tools visible unless `CUA_TASK_ADVANCED=1`) stays within its measured LLM-visible calls on the real captured Chrome trees and synthetic wizard, 100-row and canvas shapes; `scripts/check_plan_mutations.py` proves the wrong patches fail by assertion and `scripts/look_compare.py` reports the structure of the look claim (live latency and accuracy are not measured), because the driving LLM's turns were 87% of agent wall time. Adding a tool or a mandatory step to the default path requires a CE and a CALL_BUDGET.json change; see [FACADE.md](docs/FACADE.md#call-budget) and, for look-then-plan, [PLAN-B.md](docs/PLAN-B.md).
 
 The simulation gate checks 28 scenarios, 40 metamorphic variants, 20 unit/contract tests, 35 recorded decisions and seven deliberately wrong repairs. It writes results into the simulation directory. Exact-output checks and capable-model sketch review are separate; retained review is a historical self-review, not fresh independent certification.
 

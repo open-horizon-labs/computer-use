@@ -1,7 +1,7 @@
 """The question (CE-FACADE-005): does a deterministic look suffice on a 100-row page, so that NuExtract stays out of the default look unless it wins? UNMEASURED live.
 
-Runs the synthetic 100-row `invoices` page (facade/shapes.py: rows with several fields and near-duplicates, shaped like the eval suite's
-`invoices` task) through cua_look without and with `fields`, then executes the plan a scripted LLM writes from each look, and reports:
+Runs the synthetic 100-row `invoices` page (computer_use/shapes.py: rows with several fields and near-duplicates, shaped like the eval suite's
+`invoices` task) through look without and with `fields`, then executes the plan a scripted LLM writes from each look, and reports:
 response bytes, extraction calls and chunks, and whether the plan clicked the right row.
 
 WHAT THIS DOES NOT MEASURE, and the report says so every time: the scripted policy ALREADY KNOWS the target (its phrases come from the goal), so a CORRECT row says only that a policy that already knows the target can act on the data. with the default fake reader the numbers are STRUCTURE AND SIZE ONLY.
@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'facade'))
+sys.path.insert(0, str(ROOT / 'computer_use'))
 sys.path.insert(0, str(ROOT / 'inference/cua-decider/capability-dispatch'))
 
 import shapes as sh  # noqa: E402

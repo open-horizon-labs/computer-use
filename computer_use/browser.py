@@ -330,7 +330,7 @@ def close_tab(f, pid, window_id, allow_foreground=False):
     mine = [t for t in getattr(f, 'opened_tabs', []) if t['window'] == (pid, window_id)]
     same = [t for t in tabs if mine and t['url'] == mine[0]['url']]
     if not (mine and len(same) == 1 and len(tabs) == mine[0]['count']):
-        raise _gap('tab_not_opened_by_facade: the tab is not recognisably the one cua_do opened (its address must appear once and the tab count must be unchanged since open_tab); only that tab is closed. Nothing was pressed')
+        raise _gap('tab_not_opened_by_facade: the tab is not recognisably the one do opened (its address must appear once and the tab count must be unchanged since open_tab); only that tab is closed. Nothing was pressed')
     control = None
     try:
         control = close_control(f, pid, window_id, mine[0]['title'])
@@ -342,7 +342,7 @@ def close_tab(f, pid, window_id, allow_foreground=False):
         # title settles), which refuses StaleUI with nothing pressed (live 2026-09-30: read_pages left a tab open). Re-find and retry ONCE.
         for tries in (1, 2):
             try:
-                f.act(f.bind_press(control[0], control[1], 'Close the tab cua_do opened'))
+                f.act(f.bind_press(control[0], control[1], 'Close the tab do opened'))
                 break
             except StaleUI:
                 if tries == 2:
@@ -352,7 +352,7 @@ def close_tab(f, pid, window_id, allow_foreground=False):
         how = 'pressing its Close button'
     else:
         if not _titled(getattr(f, 'native_title', ''), mine[0]['title']):
-            raise _gap('tab_not_opened_by_facade: the window is not showing the tab cua_do opened, and Cmd+W closes the active tab. Nothing was pressed')
+            raise _gap('tab_not_opened_by_facade: the window is not showing the tab do opened, and Cmd+W closes the active tab. Nothing was pressed')
         _hotkey(f, pid, window_id, ['cmd', 'w'], foreground=True)
         how = 'Cmd+W'
     seen = {}
@@ -384,7 +384,7 @@ TEXT_LINES = 4
 
 
 def _page_summary(response):
-    """A small, bounded view of one page's look (its look_id says what it showed; the full look is one cua_look away on that page)."""
+    """A small, bounded view of one page's look (its look_id says what it showed; the full look is one look away on that page)."""
     import look as lk
     out = {'title': (response.get('window') or {}).get('title'), 'record_kind': response.get('record_kind'), 'records': (response.get('counts') or {}).get('records', 0),
            'text': [lk.cut(x, SAMPLE_CHARS)[0] for x in (response.get('text') or [])[:TEXT_LINES]]}

@@ -1,6 +1,6 @@
 """press {menu: [...]}: an application-menu item pressed through the Driver's invoke_menu route when the ordinary press is refused (#39, #5).
 
-The menu bar is chrome: cua_do's page scope never offers it, and the Driver refuses an ordinary press on a menu item it cannot prove belongs to the
+The menu bar is chrome: do's page scope never offers it, and the Driver refuses an ordinary press on a menu item it cannot prove belongs to the
 window (`element_outside_target_window`, #5 on Driver 0.28 to 0.30.4) while `invoke_menu` with the exact menu path worked and was verified independently.
 So a press step names the path it wants (`menu: ["Profiles", "Person 1"]`) and the facade:
 
@@ -120,7 +120,7 @@ def press(f, pid, window_id, path, goal, allow_destructive=None):
         if not refused:
             raise  # any other refusal or failure stays exactly what it is: never rerouted
         if not f.foreground_ok:
-            raise _gap('%s: the Driver refused to press this application-menu item (it cannot prove the item belongs to the window); nothing was clicked. The Driver can invoke it by its menu path, but that briefly fronts the window: only if the user allows that, call cua_do again with the same step plus allow_foreground=true' % REFUSAL)
+            raise _gap('%s: the Driver refused to press this application-menu item (it cannot prove the item belongs to the window); nothing was clicked. The Driver can invoke it by its menu path, but that briefly fronts the window: only if the user allows that, call do again with the same step plus allow_foreground=true' % REFUSAL)
     # The element IS an observed AXMenuItem under the AXMenuBar and the user allowed fronting: the same window, the observed path.
     f.driver.call('invoke_menu', {'session': f.session, 'pid': state['pid'], 'window_id': state['window_id'], 'path': observed})
     f.event('act', route='invoke_menu', path_depth=len(observed), original_refusal=REFUSAL, verification='pending')

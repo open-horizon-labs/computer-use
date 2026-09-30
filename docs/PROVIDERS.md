@@ -8,7 +8,7 @@ The default is `fleet`: a clean install (no `runtime.json`) resolves to it, and 
 
 The profile is a provider policy, not an installer. Julia-1 CPU inference and GLiNER2 CPU inference need local Python environments and cached checkpoints. The current NuExtract page adapter and screenshot provider still require a separately implemented local MLX worker; in `local-mac`, those capabilities fail closed when unavailable. Do not configure hosted URLs in a local-only deployment. See [Mac local runtime status](LOCAL-MAC.md) for the supported subset and remaining work.
 
-For hosted Jev, start with the [API key, endpoint and model setup](../skills/cua-capability-dispatch/references/setup.md#jev-api-key-endpoint-and-model). It also documents the separate Qwen key and endpoint, credential precedence, and a Jev-only smoke check.
+For hosted Jev, start with the [API key, endpoint and model setup](../skills/computer-use/references/setup.md#jev-api-key-endpoint-and-model). It also documents the separate Qwen key and endpoint, credential precedence, and a Jev-only smoke check.
 
 Offline tests use injected responses. Live calls require explicit runtime configuration and credentials; extracting this repo does not deploy anything.
 

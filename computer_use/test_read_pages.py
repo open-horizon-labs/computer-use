@@ -1,4 +1,4 @@
-"""CE-FACADE-007 (#34): read_pages {urls, fields?}, a cua_do step: for each url open_tab -> look -> close_tab, per-page landing verdict, look summary and look_id.
+"""CE-FACADE-007 (#34): read_pages {urls, fields?}, a do step: for each url open_tab -> look -> close_tab, per-page landing verdict, look summary and look_id.
 
 Same fakes as test_browser.py: the REAL captured Chrome booking tree behind a faked Driver browser (shapes measured live on 0.31.0) with a SYNTHETIC
 tab strip. Each test names the tempting wrong patch it fails.

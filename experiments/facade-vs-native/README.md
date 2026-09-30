@@ -1,6 +1,6 @@
 # Facade vs. native A/B harness
 
-Compares the `cua-task` MCP facade against native `cua-driver` MCP on two
+Compares the `computer-use` MCP facade against native `cua-driver` MCP on two
 fixture tasks (a 12-record booking list, an orders table with a
 cancel-confirm step), scored against a server-side ground-truth log rather
 than the driving agent's own self-report. This is the harness that produced
@@ -36,8 +36,8 @@ list the decoys, or the comparison measures prompt hints rather than tools.
    - runs a headless `claude -p` agent with `--strict-mcp-config` and
      `--mcp-config` pointed at *only* that arm's server
      (generated per run with absolute paths: `.venv-facade/bin/python
-     facade/server.py`, or `$HOME/.local/bin/cua-driver mcp`),
-     `--allowedTools` restricted to that server (`mcp__cua-task` or
+     computer_use/server.py`, or `$HOME/.local/bin/cua-driver mcp`),
+     `--allowedTools` restricted to that server (`mcp__computer-use` or
      `mcp__cua-driver`), and `--disallowedTools`
      covering `Bash,Edit,Write,WebFetch,WebSearch,Agent` (native also adds
      `Skill`, since the installed skill would otherwise reintroduce facade

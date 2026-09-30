@@ -6,7 +6,7 @@ Never operates the desktop or a model: fixtures and fakes only.
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'facade'))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'computer_use'))
 
 try:
     import call_budget

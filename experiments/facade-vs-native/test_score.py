@@ -31,7 +31,7 @@ class ScoreGuards(unittest.TestCase):
 
     def test_counts_only_mcp_tool_use_blocks_in_assistant_events(self):
         # Wrong patches: count every tool_use (Bash/Read are not MCP hops), count tool_result echoes, or count the result event.
-        text = transcript([call('mcp__cua-task__cua_do'), call('Bash')], [call('mcp__cua-task__cua_finish')], [{'type': 'text', 'text': 'mcp__x'}])
+        text = transcript([call('mcp__computer-use__do'), call('Bash')], [call('mcp__computer-use__finish')], [{'type': 'text', 'text': 'mcp__x'}])
         self.assertEqual(score.count_llm_visible_calls(self.write('t.jsonl', text)), 2)
 
     def test_missing_transcript_counts_zero(self):

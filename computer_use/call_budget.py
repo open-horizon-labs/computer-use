@@ -1,8 +1,8 @@
-"""Call-budget guardrails: the default path is look, then do (cua_look, cua_do): two tools and a measured, ceilinged number of LLM-visible calls (facade/CALL_BUDGET.json).
+"""Call-budget guardrails: the default path is look, then do (look, do): two tools and a measured, ceilinged number of LLM-visible calls (computer_use/CALL_BUDGET.json).
 
 Measures the REAL server tool functions through a counting harness on fake fixtures (no Driver, model,
 desktop or network), and lints the tool surface and the skill's default workflow. Shared by
-facade/test_budget.py and scripts/check_call_budget.py.
+computer_use/test_budget.py and scripts/check_call_budget.py.
 """
 import ast
 import asyncio
@@ -16,9 +16,11 @@ ROOT = HERE.parent
 sys.path.insert(0, str(HERE))
 BUDGET = HERE / 'CALL_BUDGET.json'
 CES = ROOT / 'inference/cua-decider/capability-dispatch/COUNTEREXAMPLES.json'
-SKILL = ROOT / 'skills/cua-capability-dispatch/SKILL.md'
+SKILL = ROOT / 'skills/computer-use/SKILL.md'
 SERVER = HERE / 'server.py'
-PRIMITIVE_CHAIN = ('cua_observe', 'cua_read', 'cua_choose', 'cua_act', 'cua_verify')
+# Tool names in prose are the backticked bare names (`look`, `do`, `observe`, ...): the MCP tools have no prefix since #53.
+TOOL_NAME_IN_TEXT = r'`(look|do|windows|observe|read|choose|act|verify|trace|finish|agent)`'
+PRIMITIVE_CHAIN = ('observe', 'read', 'choose', 'act', 'verify')
 
 
 def load_budget():
@@ -85,7 +87,7 @@ def surface_violations(source, budget=None):
 
 
 def advanced_run(code):
-    """Run python code with CUA_TASK_ADVANCED=1 in a fresh interpreter from facade/ (the surface is decided at import time)."""
+    """Run python code with CUA_TASK_ADVANCED=1 in a fresh interpreter from computer_use/ (the surface is decided at import time)."""
     import os
     import subprocess
     env = {**os.environ, 'CUA_TASK_ADVANCED': '1'}
@@ -106,12 +108,12 @@ def default_workflow_section(text):
 def skill_violations(text):
     section = default_workflow_section(text)
     if section is None:return ['SKILL.md has no "## Default workflow" section']
-    named = re.findall(r'cua_[a-z_]+', section)
+    named = re.findall(TOOL_NAME_IN_TEXT, section)
     out = []
-    if not named or named[0] != 'cua_look':out.append('the default workflow must mention cua_look first (look, then do), got %s' % (named[:1],))
-    if named and set(named) - {'cua_look', 'cua_do'}:out.append('the default workflow names tools other than cua_look and cua_do: %s' % sorted(set(named) - {'cua_look', 'cua_do'}))
+    if not named or named[0] != 'look':out.append('the default workflow must mention look first (look, then do), got %s' % (named[:1],))
+    if named and set(named) - {'look', 'do'}:out.append('the default workflow names tools other than look and do: %s' % sorted(set(named) - {'look', 'do'}))
     if len(set(named)) > 2:out.append('the default workflow names %d tools (max 2): %s' % (len(set(named)), sorted(set(named))))
-    if re.search(r'cua_(?:observe|read|choose|act)\b.*cua_(?:read|choose|act|verify)\b', section, re.S):
+    if re.search(r'`(?:observe|read|choose|act)`.*`(?:read|choose|act|verify)`', section, re.S):
         out.append('the default workflow instructs the observe/read/choose/act/verify chain')
     return out
 
@@ -172,10 +174,10 @@ def scripted_llm(goal_words=()):
 
 
 def measure_scenarios():
-    """Drive the real server tool functions through a counting wrapper under scripted_llm(): call cua_do knowing only goal, expect and the fields
+    """Drive the real server tool functions through a counting wrapper under scripted_llm(): call do knowing only goal, expect and the fields
     and predicates, learn control/identity/labels from each deferral, stop at done, a dead end, no hint to follow, or 5 calls.
-    Scenarios run on the REAL captured Chrome trees (facade/fixtures/live_*_ax.json) and on the synthetic shapes a review found missing
-    (facade/shapes.py). No tree from an unrelated real site exists yet (that needs the user's consent), so every number is fixture-derived.
+    Scenarios run on the REAL captured Chrome trees (computer_use/fixtures/live_*_ax.json) and on the synthetic shapes a review found missing
+    (computer_use/shapes.py). No tree from an unrelated real site exists yet (that needs the user's consent), so every number is fixture-derived.
     Returns {name: {calls, reader, chooser, max_bytes, status, tools}} with REAL invocation counts."""
     import server
     from core import Facade, DriverCallFailed
@@ -195,7 +197,7 @@ def measure_scenarios():
             return json.loads(text)
         current = {'title': 'Demo', **args}
         while True:
-            result = call('cua_do', **current)
+            result = call('do', **current)
             if result['status'] == 'done' or seen['calls'] >= 5:break
             nxt = follow(result, current)
             if nxt is None:break
@@ -227,7 +229,7 @@ def measure_scenarios():
     reader_s = lambda: lv.LiveReader(sh.PATTERNS)
     out = {}
     out['booking_list'] = run(booking_driver(), booking, reader_b())
-    # Orders with everything unknown up front: control_needed, then the dialog deferral, then a second cua_do quoting a dialog label.
+    # Orders with everything unknown up front: control_needed, then the dialog deferral, then a second do quoting a dialog label.
     out['orders_cold'] = run(orders_driver(), orders, reader_o())
     out['orders_confirm'] = run(orders_driver(), {**orders, 'control': 'Cancel', 'confirm': 'Yes, cancel order'}, reader_o())
     out['confirm_deferral'] = run(orders_driver(), {**orders, 'control': 'Cancel'}, reader_o())
@@ -289,7 +291,7 @@ def measure_scenarios():
 
 
 def look_conditions(look, want):
-    """The scripted LLM's part of a plan: from what cua_look SHOWED, choose eq (a line equals the phrase) or contains (it only appears inside a line)
+    """The scripted LLM's part of a plan: from what look SHOWED, choose eq (a line equals the phrase) or contains (it only appears inside a line)
     for each phrase it wants, and accept them only if the conjunction singles out exactly one displayed record. Returns (conditions, the record)."""
     def holds(record, cond):
         lines = [x.lower() for x in record['lines']];value = cond['value'].lower()
@@ -309,7 +311,7 @@ def unique_line(look, record):
 
 
 def measure_plan_scenarios():
-    """Option B (CE-FACADE-005): the scripted LLM starts knowing ONLY the goal and expect, calls cua_look, writes its plan from the strings it saw,
+    """Option B (CE-FACADE-005): the scripted LLM starts knowing ONLY the goal and expect, calls look, writes its plan from the strings it saw,
     and reads the plan's deferrals. Every call goes through the REAL server tools; calls, reader and chooser are counted, not assumed.
     Fixture-derived like every number here (real Chrome trees for booking and orders; synthetic shapes for the wizard, the 100-row list and the canvas)."""
     import server
@@ -339,30 +341,30 @@ def measure_plan_scenarios():
     out = {}
 
     def booking_look_do(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         conds, _ = look_conditions(look, ['Dr. Morgan Reyes', 'Follow-up', '1:45 PM'])
-        return call('cua_do', goal=booking_goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
+        return call('do', goal=booking_goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
     out['plan_booking_look_do'] = run(booking_driver(), booking_look_do, lv.LiveReader(lv.BOOKING_PATTERNS))
 
     def booking_half_hour(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         conds, _ = look_conditions(look, ['Dr. Morgan Reyes', 'half-hour'])  # the LLM saw the string, so it filters on it: the blind "30" is never written
-        return call('cua_do', goal='Book the Morgan Reyes half-hour slot', expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
+        return call('do', goal='Book the Morgan Reyes half-hour slot', expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
     out['plan_booking_half_hour_look_do'] = run(booking_driver(), booking_half_hour, lv.LiveReader(lv.BOOKING_PATTERNS))
 
     def booking_no_look(call):
         conds = [{'line': 'eq', 'value': 'Dr. Morgan Reyes'}, {'line': 'eq', 'value': 'Follow-up'}, {'line': 'contains', 'value': '1:45 PM'}]
-        first = call('cua_do', goal=booking_goal, expect=None, title='Demo', look_id='lk_0000000000', steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
+        first = call('do', goal=booking_goal, expect=None, title='Demo', look_id='lk_0000000000', steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
         if first['status'] != 'refused':return first
-        return booking_look_do(call)  # the refusal says: call cua_look first
+        return booking_look_do(call)  # the refusal says: call look first
     out['plan_booking_no_look'] = run(booking_driver(), booking_no_look, lv.LiveReader(lv.BOOKING_PATTERNS))
 
     def booking_blind_fields(call):
         blind = {'fields': lv.BOOKING_FIELDS, 'predicates': [{'field': 'provider', 'op': 'contains', 'value': 'Morgan Reyes'}, {'field': 'duration', 'op': 'contains', 'value': '30'}]}
-        first = call('cua_do', goal='Book the Morgan Reyes half-hour slot', expect=None, title='Demo', steps=[{'do': 'press', 'where': blind, 'expect': 'Booked:'}])
+        first = call('do', goal='Book the Morgan Reyes half-hour slot', expect=None, title='Demo', steps=[{'do': 'press', 'where': blind, 'expect': 'Booked:'}])
         if first.get('reason') != 'unknown_competitors_unacknowledged':return first
         ids = next(e for e in first['steps'] if e['status'] == 'stopped')['unknown_ids']
-        return call('cua_do', goal='Book the Morgan Reyes half-hour slot', expect=None, title='Demo', steps=[{'do': 'press', 'where': blind, 'treat_as_match': ids, 'expect': 'Booked:'}])
+        return call('do', goal='Book the Morgan Reyes half-hour slot', expect=None, title='Demo', steps=[{'do': 'press', 'where': blind, 'treat_as_match': ids, 'expect': 'Booked:'}])
     class ByDescription(fx.NamedChooser):
         def __call__(self, step, request):
             self.requests.append(request);pick = next((a for a in request['actions'] if 'Telehealth' in a['description']), request['actions'][0])
@@ -374,22 +376,22 @@ def measure_plan_scenarios():
         the scripted LLM guesses a short text, the confirm defers with the ACTUAL lines, it reads them and presses the dialog control deliberately (3 calls).
         declared='exact': it already knows the wording (best case, 2 calls)."""
         def policy(call):
-            look = call('cua_look', title='Demo')
+            look = call('look', title='Demo')
             conds, record = look_conditions(look, ['Walnut desk lamp', 'Processing'])
             control = next(c for c in record['controls'] if c.lower() in 'cancel the walnut desk lamp order')
             ident = unique_line(look, record)
             text = ['Cancel order %s (Walnut desk lamp)?' % ident] if declared == 'exact' else ['Cancel order %s?' % ident]
             press = {'do': 'press', 'where': {'lines': conds}, 'control': control, 'expect': dialog_guess.replace('#N', ident), **({'identity': [ident]} if identity else {})}
             goal = 'Cancel the Walnut desk lamp order that is still Processing'
-            first = call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[press, {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': text, 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'Order %s cancelled' % ident}])
+            first = call('do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[press, {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': text, 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'Order %s cancelled' % ident}])
             if first['status'] == 'done' or first.get('reason') not in ('confirm_dialog_present', 'confirm_identity_partial', 'confirm_dialog_unexpected_text'):return first
             if first['reason'] in ('confirm_identity_partial', 'confirm_dialog_unexpected_text'):  # the hint: the click is done; read dialog.lines, and if it is the right record press the dialog's control deliberately
                 lines = first['steps'][-1]['dialog']['lines']
                 if not any(ident in line for line in lines):return first
-                return call('cua_do', goal=goal, expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Yes, cancel order', 'expect': 'Order %s cancelled' % ident}])
+                return call('do', goal=goal, expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Yes, cancel order', 'expect': 'Order %s cancelled' % ident}])
             # the dialog was not what the guess said: the click is done, so press the dialog's own control
             label = first['steps'][0]['dialog']['controls'][0]
-            return call('cua_do', goal=goal, expect=None, title='Demo', steps=[{'do': 'press', 'control': label, 'expect': 'Order %s cancelled' % ident}])
+            return call('do', goal=goal, expect=None, title='Demo', steps=[{'do': 'press', 'control': label, 'expect': 'Order %s cancelled' % ident}])
         return policy
     out['plan_orders_look_do'] = run(orders_driver(), orders_plan('Cancel order #N'), lv.LiveReader(lv.ORDER_PATTERNS))  # declares a guess: confirm defers with the actual dialog lines, then a deliberate press
     out['plan_orders_declared_dialog'] = run(orders_driver(), orders_plan('Cancel order #N', declared='exact'), lv.LiveReader(lv.ORDER_PATTERNS))  # best case: the caller already knows the wording
@@ -398,14 +400,14 @@ def measure_plan_scenarios():
 
     def wizard(final_label):
         def policy(call):
-            look = call('cua_look', title='Demo')
+            look = call('look', title='Demo')
             assert 'Step 1 of 3' in ' '.join(look['text']) and 'Next' in look['controls']
             steps = [{'do': 'press', 'control': 'Next', 'expect': 'Step 2 of 3'}, {'do': 'press', 'control': 'Next', 'expect': 'Step 3 of 3'}, {'do': 'press', 'control': final_label, 'expect': 'Setup complete.'}]
-            first = call('cua_do', goal='Complete the setup wizard', expect=None, title='Demo', steps=steps)
+            first = call('do', goal='Complete the setup wizard', expect=None, title='Demo', steps=steps)
             if first['status'] == 'done' or first.get('reason') != 'control_not_found':return first
             done = first['failed_step'] - 1  # the hint: steps before it are done; found.controls lists what is pressable
             label = next(c for c in first['steps'][-1]['found']['controls'] if c not in ('Back', 'Cancel'))
-            return call('cua_do', goal='Complete the setup wizard', expect=None, title='Demo', steps=[{'do': 'press', 'control': label, 'expect': 'Setup complete.'}])
+            return call('do', goal='Complete the setup wizard', expect=None, title='Demo', steps=[{'do': 'press', 'control': label, 'expect': 'Setup complete.'}])
         return policy
     def wizard_driver():
         d = sh.ShapeDriver(sh.wizard_els(1));d.script = sh.wizard_script;return d
@@ -414,9 +416,9 @@ def measure_plan_scenarios():
 
     def invoices(fields):
         def policy(call):
-            look = call('cua_look', title='Demo', focus='Northwind', **({'fields': {'vendor': {'description': 'Vendor'}, 'amount': {'description': 'Amount'}}} if fields else {}))
+            look = call('look', title='Demo', focus='Northwind', **({'fields': {'vendor': {'description': 'Vendor'}, 'amount': {'description': 'Amount'}}} if fields else {}))
             conds, record = look_conditions(look, ['Northwind Traders', '$1,240.00'])
-            return call('cua_do', goal='Approve the invoice from Northwind Traders for $1,240.00', expect=None, title='Demo', look_id=look['look_id'],
+            return call('do', goal='Approve the invoice from Northwind Traders for $1,240.00', expect=None, title='Demo', look_id=look['look_id'],
                         steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Approved ' + record['lines'][0]}])
         return policy
     def invoice_driver():
@@ -429,10 +431,10 @@ def measure_plan_scenarios():
         d.parse_result = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 10, 'y': y, 'width': 80, 'height': 24}}
                                       for i, (t, y) in enumerate([('Toolbar', 10), ('Export', 40), ('Footer', 500), ('Export', 530)])]};return d
     def canvas(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         export = next(t for t in look['canvas']['text_regions'] if t['text'] == 'Export')
         near = next(n for n in export['near'] if n.lower() in 'press the export button in the toolbar')
-        return call('cua_do', goal='Press the Export button in the toolbar', expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Export', 'near': near, 'expect': 'Exported', 'allow_foreground': True}])
+        return call('do', goal='Press the Export button in the toolbar', expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Export', 'near': near, 'expect': 'Exported', 'allow_foreground': True}])
     out['plan_canvas_look_do'] = run(canvas_driver(), canvas, lv.LiveReader({}), vision=FakeVision)
 
     def churn(driver, els):
@@ -442,8 +444,8 @@ def measure_plan_scenarios():
     def stale_driver():
         d = sh.ShapeDriver(sh.wizard_els(1));d.script = churn;return d
     def stale(call):
-        look = call('cua_look', title='Demo')
-        return call('cua_do', goal='Complete the setup wizard', expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Next', 'expect': 'Step 2 of 3'}, {'do': 'press', 'control': 'Next', 'expect': 'Step 3 of 3'}])
+        look = call('look', title='Demo')
+        return call('do', goal='Complete the setup wizard', expect=None, title='Demo', steps=[{'do': 'press', 'control': 'Next', 'expect': 'Step 2 of 3'}, {'do': 'press', 'control': 'Next', 'expect': 'Step 3 of 3'}])
     out['plan_stale_mid_plan'] = run(stale_driver(), stale, lv.LiveReader({}))
     # Review of PR 18 (budget honesty): the scripted LLM above takes its phrases from the goal, so it never writes a wrong filter and these ceilings
     # guard CALL COUNTS, not plan correctness (a LOWER BOUND on what a real LLM needs). These scenarios make it write plans the guards must stop.
@@ -452,15 +454,15 @@ def measure_plan_scenarios():
         return next(e for e in els if e['element_index'] == i)
 
     def vocab_mismatch(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         goal = 'Book the Morgan Reyes Telehealth slot that lasts 30 min'
         conds = [{'line': 'eq', 'value': 'Dr. Morgan Reyes'}, {'line': 'eq', 'value': 'Telehealth'}, {'line': 'contains', 'value': '30 min'}]  # the LLM's own vocabulary
-        first = call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
+        first = call('do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
         if first.get('reason') != 'no_matching_record':return first
         rec = next(r for r in look['records'] if 'Telehealth' in r['lines'] and 'Dr. Morgan Reyes' in r['lines'])  # back to the look's own strings
         duration = next(x for x in rec['lines'] if x not in ('Dr. Morgan Reyes', 'Telehealth') and not x.startswith('Starts') and x != 'Video visit')
         conds = [{'line': 'eq', 'value': 'Dr. Morgan Reyes'}, {'line': 'eq', 'value': 'Telehealth'}, {'line': 'eq', 'value': duration}]
-        return call('cua_do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
+        return call('do', goal=goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': 'Booked:'}])
     out['plan_booking_vocab_mismatch'] = run(booking_driver(), vocab_mismatch, lv.LiveReader(lv.BOOKING_PATTERNS))
 
     def hidden_driver():
@@ -470,17 +472,17 @@ def measure_plan_scenarios():
             lv.booked()(dr, els)
         d.script = script;return d
     def hidden_negative(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         conds, _ = look_conditions(look, ['Dr. Morgan Reyes', 'Follow-up', '1:45 PM'])
-        return call('cua_do', goal=booking_goal + ' unless it is sold out', expect=None, title='Demo', look_id=look['look_id'],
+        return call('do', goal=booking_goal + ' unless it is sold out', expect=None, title='Demo', look_id=look['look_id'],
                     steps=[{'do': 'press', 'where': {'lines': conds + [{'line': 'not_contains', 'value': 'sold out'}]}, 'expect': 'Booked:'}])
     out['plan_hidden_text_negative'] = run(hidden_driver(), hidden_negative, lv.LiveReader(lv.BOOKING_PATTERNS))
 
     def negated_dialog(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         conds, record = look_conditions(look, ['Walnut desk lamp', 'Processing'])
         ident = unique_line(look, record)
-        return call('cua_do', goal='Cancel the Walnut desk lamp order that is still Processing', expect=None, title='Demo', look_id=look['look_id'],
+        return call('do', goal='Cancel the Walnut desk lamp order that is still Processing', expect=None, title='Demo', look_id=look['look_id'],
                     steps=[{'do': 'press', 'where': {'lines': conds}, 'control': 'Cancel', 'identity': [ident], 'expect': 'order ' + ident},
                            {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order %s (Walnut desk lamp)?' % ident], 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'Order %s cancelled' % ident}])
     d = lv.LiveDriver('live_orders_ax.json');d.script = tp.orders_dialog('Do NOT cancel order #1044 (Walnut desk lamp)')
@@ -493,9 +495,9 @@ def measure_plan_scenarios():
     def destructive(declared_after_refusal):
         def policy(call):
             step = {'do': 'press', 'control': 'Delete account', 'expect': 'Account deleted'}
-            first = call('cua_do', goal='Delete my account', expect=None, title='Demo', steps=[step])
+            first = call('do', goal='Delete my account', expect=None, title='Demo', steps=[step])
             if first['status'] != 'refused' or not declared_after_refusal:return first
-            return call('cua_do', goal='Delete my account', expect=None, title='Demo', steps=[{**step, 'allow_destructive': 'Delete account'}])  # the refusal names the declaration
+            return call('do', goal='Delete my account', expect=None, title='Demo', steps=[{**step, 'allow_destructive': 'Delete account'}])  # the refusal names the declaration
         return policy
     out['plan_destructive_undeclared'] = run(delete_page(), destructive(False), lv.LiveReader({}))
     out['plan_destructive_declared_after_refusal'] = run(delete_page(), destructive(True), lv.LiveReader({}))
@@ -503,30 +505,30 @@ def measure_plan_scenarios():
     # Second review of PR 18.
     import test_plan_review2 as tp2
     def capped_uniqueness(call):
-        look = call('cua_look', title='Demo', focus='1:45')  # the LLM focuses on the slot it wants; other real records still satisfy a loose condition
+        look = call('look', title='Demo', focus='1:45')  # the LLM focuses on the slot it wants; other real records still satisfy a loose condition
         loose = [{'line': 'eq', 'value': 'Dr. Morgan Reyes'}, {'line': 'eq', 'value': 'Follow-up'}]
-        first = call('cua_do', goal=booking_goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': loose}, 'expect': 'Booked:'}])
+        first = call('do', goal=booking_goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': loose}, 'expect': 'Booked:'}])
         if first.get('reason') != 'where_matches_several':return first
-        return call('cua_do', goal=booking_goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': loose + [{'line': 'contains', 'value': '1:45 PM'}]}, 'expect': 'Booked:'}])
+        return call('do', goal=booking_goal, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': loose + [{'line': 'contains', 'value': '1:45 PM'}]}, 'expect': 'Booked:'}])
     out['plan_uniqueness_over_all_records'] = run(booking_driver(), capped_uniqueness, lv.LiveReader(lv.BOOKING_PATTERNS))
 
     def hidden_page():
         d = sh.ShapeDriver(tp2.two_orders(hidden=('Status: Cancelled',)));d.script = sh.toast('Opened', buttons=());return d
     def hidden_ack(call):
-        look = call('cua_look', title='Demo')
-        return call('cua_do', goal='Open the active order A', expect=None, title='Demo', look_id=look['look_id'],
+        look = call('look', title='Demo')
+        return call('do', goal='Open the active order A', expect=None, title='Demo', look_id=look['look_id'],
                     steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Order A'}, {'line': 'eq', 'value': 'Status: Active'}]}, 'expect': 'Opened'}])
     out['plan_hidden_text_ack'] = run(hidden_page(), hidden_ack, lv.LiveReader({}))
     def hidden_wide(call):
-        look = call('cua_look', title='Demo', max_lines=20, line_chars=200)  # the whole record is visible, so the LLM can see order A is cancelled and picks B
-        return call('cua_do', goal='Open the active order', expect=None, title='Demo', look_id=look['look_id'],
+        look = call('look', title='Demo', max_lines=20, line_chars=200)  # the whole record is visible, so the LLM can see order A is cancelled and picks B
+        return call('do', goal='Open the active order', expect=None, title='Demo', look_id=look['look_id'],
                     steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Status: Active'}, {'line': 'not_contains', 'value': 'Cancelled'}]}, 'expect': 'Opened'}])
     out['plan_hidden_text_wide_look'] = run(hidden_page(), hidden_wide, lv.LiveReader({}))
 
     def checkbox_flip(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         box['value'] = '1'  # someone else subscribed between the look and the plan
-        return call('cua_do', goal='Subscribe to the newsletter', expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'control': 'Subscribe', 'expect': 'Subscribed'}])
+        return call('do', goal='Subscribe to the newsletter', expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'control': 'Subscribe', 'expect': 'Subscribed'}])
     els, web = sh.base();sh.E(els, web, 'AXStaticText', 'Newsletter', 'Newsletter');idx = sh.E(els, web, 'AXCheckBox', 'Subscribe', '0');box = {'value': '0'}
     def box_script(dr, e2):
         by(e2, idx)['value'] = box['value']
@@ -537,20 +539,20 @@ def measure_plan_scenarios():
     # Third review: dialog text and record text are REGION-COMPLETE.
     import test_plan_review3 as tp3
     def extra_control(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         conds, record = look_conditions(look, ['Walnut desk lamp', 'Processing'])
         ident = unique_line(look, record)
-        return call('cua_do', goal='Cancel the Walnut desk lamp order that is still Processing', expect=None, title='Demo', look_id=look['look_id'],
+        return call('do', goal='Cancel the Walnut desk lamp order that is still Processing', expect=None, title='Demo', look_id=look['look_id'],
                     steps=[{'do': 'press', 'where': {'lines': conds}, 'control': 'Cancel', 'identity': [ident], 'expect': 'order ' + ident},
                            {'do': 'confirm', 'confirm': 'Yes, cancel order', 'dialog_text': ['Cancel order %s (Walnut desk lamp)?' % ident], 'dialog_controls': ['Yes, cancel order', 'Keep order'], 'expect': 'x'}])
     d = lv.LiveDriver('live_orders_ax.json');d.script = tp3.dialog_flow(lambda k: [tp3.node(k, 15, 'AXCheckBox', 'Also delete my account', '1', checked=True, actions=['AXPress'])])
     out['plan_dialog_extra_control'] = run(d, extra_control, lv.LiveReader(lv.ORDER_PATTERNS))  # a pre-checked box the caller never declared: nothing further pressed
 
     def image_badge(call):
-        look = call('cua_look', title='Demo')
+        look = call('look', title='Demo')
         badge = [r for r in look['records'] if any(x.startswith('image: ') and 'Cancelled' in x for x in r['lines'])]
         target = next(r for r in look['records'] if r not in badge)  # the LLM SEES the badge line and picks the other order
-        return call('cua_do', goal='Open the order that is not cancelled', expect=None, title='Demo', look_id=look['look_id'],
+        return call('do', goal='Open the order that is not cancelled', expect=None, title='Demo', look_id=look['look_id'],
                     steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': target['lines'][0]}]}, 'expect': 'Opened'}])
     d = sh.ShapeDriver(tp3.record_page(images='Cancelled'));d.script = sh.toast('Opened', buttons=())
     out['plan_image_badge_seen'] = run(d, image_badge, lv.LiveReader({}))
@@ -563,42 +565,42 @@ def measure_plan_scenarios():
         if press:d.script = lv.booked()
         return d
     def goto_look_plan(call):
-        first = call('cua_do', goal='Open the booking page', expect=None, title='Demo', steps=[{'do': 'goto', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
+        first = call('do', goal='Open the booking page', expect=None, title='Demo', steps=[{'do': 'goto', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
         if first['status'] != 'done':return first
         return booking_look_do(call)
     out['nav_goto_look_plan'] = run(nav_driver(press=True), goto_look_plan, lv.LiveReader(lv.BOOKING_PATTERNS))
 
     def open_read_close(call):
-        first = call('cua_do', goal='Open the booking page in a new tab', expect=None, title='Demo', steps=[{'do': 'open_tab', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
+        first = call('do', goal='Open the booking page in a new tab', expect=None, title='Demo', steps=[{'do': 'open_tab', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
         if first['status'] != 'done':return first
-        look = call('cua_look', title='Demo')  # the read: the look's records are the answer, nothing is clicked
+        look = call('look', title='Demo')  # the read: the look's records are the answer, nothing is clicked
         assert look['records'], look
-        return call('cua_do', goal='Close the tab this task opened', expect=None, title='Demo', steps=[{'do': 'close_tab'}])
+        return call('do', goal='Close the tab this task opened', expect=None, title='Demo', steps=[{'do': 'close_tab'}])
     out['nav_open_tab_read_close'] = run(nav_driver(strip=True), open_read_close, lv.LiveReader(lv.BOOKING_PATTERNS))
 
     def permission_stop(call):
-        result = call('cua_do', goal='Open the booking page', expect=None, title='Demo', steps=[{'do': 'goto', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
+        result = call('do', goal='Open the booking page', expect=None, title='Demo', steps=[{'do': 'goto', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
         assert result['steps'][0]['reason'] == 'permission_required', result
         return result  # stop and ask the user: no retry, no other browser or profile
     d = nav_driver();d.refuse = {'get_browser_state': 'browser_requires_setup', 'browser_prepare': 'existing_profile_not_granted'}
     out['nav_permission_required_stop'] = run(d, permission_stop, lv.LiveReader({}))
     assert d.called('browser_navigate') == [] and d.executed == [], 'a permission stop must deliver nothing'
 
-    # CE-FACADE-007 (#34): a multi-page read is ONE cua_do call (open_tab -> look -> close_tab per url, each page with its own look_id and landing verdict),
-    # where comparing N pages with goto plus cua_look costs 2N calls. Same fakes as above (REAL booking tree, SYNTHETIC tab strip); fixture-derived, not a rate.
+    # CE-FACADE-007 (#34): a multi-page read is ONE do call (open_tab -> look -> close_tab per url, each page with its own look_id and landing verdict),
+    # where comparing N pages with goto plus look costs 2N calls. Same fakes as above (REAL booking tree, SYNTHETIC tab strip); fixture-derived, not a rate.
     import test_read_pages as trp
     def pages_driver(dest=None):
         d = trp.PagesDriver(trp.Clock());d.dest = dest or {}
         return d
     def read_three(call):
-        result = call('cua_do', goal='Compare the three booking pages', expect=None, title='Demo', steps=[{'do': 'read_pages', 'urls': [trp.A, trp.B, trp.C]}])
+        result = call('do', goal='Compare the three booking pages', expect=None, title='Demo', steps=[{'do': 'read_pages', 'urls': [trp.A, trp.B, trp.C]}])
         pages = result['steps'][0]['pages']
         assert [p['status'] for p in pages] == ['ok'] * 3 and all(p['look_id'] for p in pages), result
         return result
     out['nav_read_pages_3'] = run(pages_driver(), read_three, lv.LiveReader({}))
 
     def read_one_fails(call):
-        result = call('cua_do', goal='Compare the three booking pages', expect=None, title='Demo', steps=[{'do': 'read_pages', 'urls': [trp.A, trp.B, trp.C]}])
+        result = call('do', goal='Compare the three booking pages', expect=None, title='Demo', steps=[{'do': 'read_pages', 'urls': [trp.A, trp.B, trp.C]}])
         pages = result['steps'][0]['pages']
         assert [p['status'] for p in pages] == ['ok', 'failed', 'ok'] and pages[1]['landing'] == 'navigated_elsewhere', result
         return result  # the LLM has two pages and the verdict of the third: it reports, it does not retry

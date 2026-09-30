@@ -9,13 +9,13 @@ The skill installs guidance and references. Running the dispatcher also requires
 Requirements: Node.js/npm and Git.
 
 ```sh
-npx skills add open-horizon-labs/computer-use --skill cua-capability-dispatch
+npx skills add open-horizon-labs/computer-use --skill computer-use
 ```
 
 For a global Codex installation:
 
 ```sh
-npx skills add open-horizon-labs/computer-use --skill cua-capability-dispatch --agent codex --global
+npx skills add open-horizon-labs/computer-use --skill computer-use --agent codex --global
 ```
 
 The [skills CLI](https://github.com/vercel-labs/skills) installs the public repository. No token belongs in skill files.

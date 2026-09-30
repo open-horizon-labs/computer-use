@@ -1,4 +1,4 @@
-"""FakeDriver over the REAL live-captured accessibility trees (facade/fixtures/real/, sanitized, RAW driver element format).
+"""FakeDriver over the REAL live-captured accessibility trees (computer_use/fixtures/real/, sanitized, RAW driver element format).
 
 Captured 2026-09-28 with the facade's own Driver.observe against our fixture pages (no clicks); canvas pages also carry a real Perception parse.
 Helper for tests and scripts, not a test module.

@@ -1,4 +1,4 @@
-"""cua_look (option B, CE-FACADE-005): a deterministic, read-only look at the strings a page displays.
+"""look (option B, CE-FACADE-005): a deterministic, read-only look at the strings a page displays.
 
 The live failure it closes: the LLM wrote its filter blind (`duration contains "30"`) and the right slot was displayed as "half-hour".
 Each test names the tempting wrong patch it fails. Fakes and captured fixtures only: no Driver, model, desktop or network.

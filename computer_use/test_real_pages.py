@@ -1,6 +1,6 @@
-"""The 17 suite pages as REAL Chrome exposed them (live capture 2026-09-28, read-only, no clicks; facade/fixtures/real/, sanitized, raw driver format).
+"""The 17 suite pages as REAL Chrome exposed them (live capture 2026-09-28, read-only, no clicks; computer_use/fixtures/real/, sanitized, raw driver format).
 
-Asserts per page what the look and cua_do discovery must produce, and the three defects the capture found in the shared record inference (D1 the page's
+Asserts per page what the look and do discovery must produce, and the three defects the capture found in the shared record inference (D1 the page's
 heading level and title leaking into the first record of a flat list, D2 'selected: false' noise on every plain button, D3 heading levels in the page text).
 Facts the capture established (docs/PLAN-B.md): the Driver exposes only actions, depth, element_index, element_token, enabled, frame, in_web_content, label,
 parent_index, role, screenshot_frame, selected and value: checked/expanded/pressed/current/busy do not exist on real Chrome (radio state is value '0'/'1' and selected).
@@ -139,7 +139,7 @@ class RecordPages(unittest.TestCase):
         r = f.do('Call the contact', title='Demo', expect=None, look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': [{'line': 'contains', 'value': 'Contacts'}]}, 'expect': 'x'}])
         self.assertEqual((r['status'], r['reason'], d.executed), ('stopped', 'no_matching_record', []))
 
-    def test_cua_do_record_context_agrees_with_the_look(self):
+    def test_do_record_context_agrees_with_the_look(self):
         # The shared code (record_context, sibling_record, subtree): the first record's text for the reader and the chooser must not carry the heading or its level.
         f, d = facade_for('flat_ax');st = state_of(f, d)
         first_call = next(i for i, n in sorted(st['nodes'].items()) if n.get('label') == 'Call')
@@ -149,7 +149,7 @@ class RecordPages(unittest.TestCase):
         save = sorted(i for i, n in st2['nodes'].items() if n.get('label') == 'Save')[0]
         self.assertEqual(f2.record_context(st2, save).split('\n'), ['Notification preferences'])
 
-    def test_cua_do_record_context_of_nested_has_no_heading_level_numerals(self):
+    def test_do_record_context_of_nested_has_no_heading_level_numerals(self):
         # Shared subtree text: a heading's value is its level. Wrong patch: read a heading's `value`.
         f, d = facade_for('nested');st = state_of(f, d)
         first = next(i for i, n in sorted(st['nodes'].items()) if n.get('label') == 'Message')
