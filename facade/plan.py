@@ -125,7 +125,7 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                  'verify': {'do', 'goal', 'expect'},
                  'goto': {'do', 'goal', 'url', 'expect'},
                  'open_tab': {'do', 'goal', 'url', 'expect'},
-                 'close_tab': {'do', 'goal', 'expect'}}[kind]
+                 'close_tab': {'do', 'goal', 'expect', 'allow_foreground'}}[kind]
         extra = sorted(set(step) - takes)
         if extra:
             raise _gap('bad_request: %s (%s) does not take %s' % (at, kind, ', '.join(extra)))
@@ -467,7 +467,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                         raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
                     ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
                 if kind == 'close_tab':
-                    browser.close_tab(f, ctx['pid'], ctx['window_id'])
+                    browser.close_tab(f, ctx['pid'], ctx['window_id'], allow_foreground=step.get('allow_foreground') is True)
                     page = {'url': '', 'title': ''}
                 else:
                     page = (browser.open_tab if kind == 'open_tab' else browser.navigate)(f, ctx['pid'], ctx['window_id'], step['url'])['page']
@@ -481,8 +481,8 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                     result['page'] = {'url': page['url'][:200], 'title': page['title'][:120]}
             except Gap as gap:
                 reason = str(gap).split(':', 1)[0]
-                result = {'status': 'refused' if reason in ('permission_required', 'bad_request', 'tab_not_opened_by_facade') else 'failed', 'reason': reason, 'message': str(gap),
-                          'delivery': 'none' if reason in ('permission_required', 'tab_not_opened_by_facade') else 'unknown'}
+                result = {'status': 'refused' if reason in ('permission_required', 'bad_request', 'tab_not_opened_by_facade', 'foreground_required') else 'failed', 'reason': reason, 'message': str(gap),
+                          'delivery': 'none' if reason in ('permission_required', 'tab_not_opened_by_facade', 'foreground_required', 'bad_request') else 'unknown'}
             status = result['status']
             entry = {'n': n, 'do': kind, 'status': {'deferred': 'stopped'}.get(status, status), 'ms': round((f.clock() - began) * 1000)}
             for key in ('reason', 'page'):

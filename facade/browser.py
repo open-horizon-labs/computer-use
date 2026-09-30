@@ -141,6 +141,10 @@ def navigate(f, pid, window_id, url):
         seen.update(page=page, verdict=verdict)
         return verdict != 'unknown' and not (verdict == 'navigated_elsewhere' and page['url'] in ('', 'about:blank'))
     settle(f, check)
+    return _verdict(url, seen)
+
+
+def _verdict(url, seen):
     verdict, page = seen.get('verdict', 'unknown'), seen.get('page', {'url': '', 'title': ''})
     if verdict == 'ok':
         return {'status': 'ok', 'page': page}
@@ -151,14 +155,22 @@ def navigate(f, pid, window_id, url):
     raise _gap('landing_unknown: the Driver reported no page URL for the tab after navigating; the tab may still be loading')
 
 
-# ---- tabs (Driver 0.30.4 has no tab-create/close tool: the browser's own Cmd+T / Cmd+W, verified against the Driver's tab list) ----
+# ---- tabs (Driver 0.30.4 and 0.31.0 have no tab-create/close tool: the browser's own Cmd+T / Cmd+W, verified against the Driver's tab list) ----
+# Measured live on 0.31.0: target_id and every tab_id are RE-MINTED on each bind (no stable id), the list order is NOT the window's tab
+# order (a new tab was listed first), and after a navigation no tab is reported active. What is reliable: each tab's url and title, the tab
+# count, and the bind's native_title (the window's own title, which is the ACTIVE tab's title). So the facade's tab is recognised by its
+# landed url being unique among the tabs, the count being unchanged, and native_title being that tab's title; never by an id or position.
+
+NEW_TAB_URLS = ('chrome://newtab/', 'chrome://new-tab-page/', 'about:blank', 'edge://newtab/', 'brave://newtab/', 'chrome-search://local-ntp/local-ntp.html')
+
 
 def tab_state(f, pid, window_id):
-    """(ids of the window's tabs, the active tab id or None), from a fresh exact bind."""
+    """[{position, url, title, active, tab_id (valid for THIS bind only)}] from a fresh exact bind, plus the bind's target_id."""
     bound = _bound(f, pid, window_id)
-    tabs = _tabs(bound)
-    active = [t['tab_id'] for t in tabs if t.get('active') or t.get('selected')]
-    return [t['tab_id'] for t in tabs], (active[0] if len(active) == 1 else None)
+    f.native_title = bound.get('native_title') or ''
+    tabs = [{'position': i, 'url': t.get('url') or '', 'title': t.get('title') or '', 'active': bool(t.get('active') or t.get('selected')), 'tab_id': t['tab_id']}
+            for i, t in enumerate(_tabs(bound))]
+    return bound.get('target_id'), tabs
 
 
 def _bound(f, pid, window_id):
@@ -173,46 +185,82 @@ def _bound(f, pid, window_id):
         return _call(f, 'get_browser_state', {'pid': pid, 'window_id': window_id})
 
 
-def _hotkey(f, pid, window_id, keys):
-    f.driver.call('hotkey', {'session': f.session, 'pid': pid, 'window_id': window_id, 'keys': keys, 'delivery_mode': 'background'})
+def _hotkey(f, pid, window_id, keys, foreground=False):
+    # Measured live (0.31.0, Chrome): Cmd+T is accepted in the background; Cmd+W is not (a menu key-equivalent; the Driver documents
+    # foreground delivery for those), so close_tab fronts the window briefly and only with the caller's explicit permission.
+    f.driver.call('hotkey', {'session': f.session, 'pid': pid, 'window_id': window_id, 'keys': keys, 'delivery_mode': 'foreground' if foreground else 'background'})
+
+
+def _active(tabs):
+    on = [t for t in tabs if t['active']]
+    return on[0] if len(on) == 1 else None
 
 
 def open_tab(f, pid, window_id, url):
-    """Open one new tab in the window (Cmd+T), verified: exactly one new tab id and it is the active tab. Then navigate it (landing verified).
-    Records the tab as opened by the facade, so close_tab may close it later. A Cmd+T that shows no new tab stops tab_not_opened: it is
-    NOT retried (a delayed tab would make two)."""
+    """Open one new tab (Cmd+T), verified: exactly one more tab than before and the active tab is a fresh new-tab page. Then navigate THAT
+    tab (its id from the same bind) with the goto landing checks, and record (window, position, landed url, tab count) so close_tab can
+    recognise it later. A Cmd+T that shows no new tab stops tab_not_opened: it is NOT retried (a delayed tab would make two)."""
     url = check_url(url)
-    before, _ = tab_state(f, pid, window_id)
+    _, before = tab_state(f, pid, window_id)
     _hotkey(f, pid, window_id, ['cmd', 't'])
     seen = {}
     def check():
-        ids, active = tab_state(f, pid, window_id)
-        new = [t for t in ids if t not in before]
-        seen.update(new=new, active=active)
-        return len(new) == 1 and active == new[0]
+        target, tabs = tab_state(f, pid, window_id)
+        active = _active(tabs)
+        seen.update(target=target, tabs=tabs, active=active)
+        return len(tabs) == len(before) + 1 and active is not None and active['url'] in NEW_TAB_URLS
     settle(f, check)
-    if not (len(seen.get('new', [])) == 1 and seen.get('active') == seen['new'][0]):
-        raise _gap('tab_not_opened: after Cmd+T the window shows %d new tabs%s; it was not retried' % (
-            len(seen.get('new', [])), '' if seen.get('active') in seen.get('new', []) else ' and the active tab is not a new one'))
-    tab = seen['new'][0]
-    f.opened_tabs = getattr(f, 'opened_tabs', set()) | {tab}
-    return {**navigate(f, pid, window_id, url), 'tab': tab}
+    tabs, active = seen.get('tabs', []), seen.get('active')
+    if not (len(tabs) == len(before) + 1 and active is not None and active['url'] in NEW_TAB_URLS):
+        raise _gap('tab_not_opened: after Cmd+T the window has %d tabs (was %d) and the active tab is %s; it was not retried' % (
+            len(tabs), len(before), 'a new-tab page' if active and active['url'] in NEW_TAB_URLS else (active or {}).get('url', 'unknown')[:80] or 'unknown'))
+    landed = _navigate_tab(f, seen['target'], active['tab_id'], url)
+    f.opened_tabs = [t for t in getattr(f, 'opened_tabs', []) if t['window'] != (pid, window_id)] + [
+        {'window': (pid, window_id), 'url': landed['page']['url'], 'title': landed['page']['title'], 'count': len(tabs)}]
+    return landed
 
 
-def close_tab(f, pid, window_id):
-    """Close the window's active tab only when the facade opened it (never one of the user's own tabs), then verify it is gone."""
-    ids, active = tab_state(f, pid, window_id)
-    mine = getattr(f, 'opened_tabs', set())
-    if active is None or active not in mine:
-        raise _gap('tab_not_opened_by_facade: the active tab was not opened by cua_do (open_tab); only tabs this session opened are closed. Nothing was pressed')
-    _hotkey(f, pid, window_id, ['cmd', 'w'])
+def _navigate_tab(f, target, tab, url):
+    from core import Gap as CoreGap
+    try:
+        _call(f, 'browser_navigate', {'target_id': target, 'tab_id': tab, 'url': url})
+    except CoreGap as error:
+        raise _permission(_refusal_code(error), 'navigate this tab')
     seen = {}
     def check():
-        now, _ = tab_state(f, pid, window_id)
-        seen['gone'] = active not in now
-        return seen['gone']
+        page = page_of(f, target, tab)
+        verdict = landing(url, page['url'], page['title'])
+        seen.update(page=page, verdict=verdict)
+        return verdict != 'unknown' and not (verdict == 'navigated_elsewhere' and page['url'] in ('', 'about:blank') + NEW_TAB_URLS)
     settle(f, check)
-    if not seen.get('gone'):
-        raise _gap('tab_not_closed: the tab is still listed after Cmd+W; it was not retried')
-    f.opened_tabs = mine - {active}
-    return {'status': 'ok', 'closed': active}
+    return _verdict(url, seen)
+
+
+def _titled(native, title):
+    """The window's title shows the active tab: Chrome writes '<tab title> - Google Chrome' (or '- <profile>'), so a prefix match."""
+    return bool(title) and (native == title or native.startswith(title + ' - ') or native.startswith(title + ' \u2013 '))
+
+
+def close_tab(f, pid, window_id, allow_foreground=False):
+    """Close the active tab only when it is the one open_tab opened in this window: its landed URL appears exactly once among the tabs, the
+    tab count is unchanged since opening, and the window's own title shows that tab's title (the active one; the Driver reports no active
+    flag after a navigation). Anything else is refused before any key. After Cmd+W that URL must be gone and the count one lower, else
+    tab_not_closed (not retried)."""
+    if allow_foreground is not True:
+        raise _gap('foreground_required: Chrome ignores Cmd+W delivered in the background, so closing a tab fronts its window briefly (then restores your app). Repeat the step with allow_foreground: true to allow that. Nothing was pressed')
+    _, tabs = tab_state(f, pid, window_id)
+    mine = [t for t in getattr(f, 'opened_tabs', []) if t['window'] == (pid, window_id)]
+    same = [t for t in tabs if mine and t['url'] == mine[0]['url']]
+    if not (mine and len(same) == 1 and len(tabs) == mine[0]['count'] and _titled(getattr(f, 'native_title', ''), mine[0]['title'])):
+        raise _gap('tab_not_opened_by_facade: the active tab is not recognisably the one cua_do opened (its address must appear once, the tab count must be unchanged since open_tab, and the window must be showing it); only that tab is closed. Nothing was pressed')
+    _hotkey(f, pid, window_id, ['cmd', 'w'], foreground=True)
+    seen = {}
+    def check():
+        _, now = tab_state(f, pid, window_id)
+        seen.update(count=len(now), gone=all(t['url'] != mine[0]['url'] for t in now))
+        return seen['count'] == len(tabs) - 1 and seen['gone']
+    settle(f, check)
+    if not (seen.get('count') == len(tabs) - 1 and seen.get('gone')):
+        raise _gap('tab_not_closed: after Cmd+W the window has %s tabs (was %d) and the tab is %s; it was not retried' % (seen.get('count'), len(tabs), 'gone' if seen.get('gone') else 'still listed'))
+    f.opened_tabs = [t for t in getattr(f, 'opened_tabs', []) if t['window'] != (pid, window_id)]
+    return {'status': 'ok', 'closed': mine[0]['url']}

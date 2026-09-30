@@ -15,41 +15,61 @@ BOOKING = 'https://clinic.example/booking'
 
 
 class BrowserDriver(lv.LiveDriver):
-    """LiveDriver plus the Driver's browser tools. `landed` is what the tab reports after browser_navigate; `refuse` maps tool -> refusal code."""
+    """LiveDriver plus the Driver's browser tools, shaped like 0.31.0 measured live: EVERY bind re-mints target_id and tab ids (a remembered
+    id means nothing on the next bind); tabs carry url, title and active; Cmd+T opens an active new-tab page; browser_navigate changes the
+    url of the tab its id pointed to in the bind that minted it. `landed` overrides where a navigation ends up; `refuse` maps tool -> code."""
     def __init__(self):
         super().__init__('live_booking_ax.json')
-        self.browser_calls = [];self.refuse = {};self.landed = {'url': BOOKING, 'title': 'Booking'};self.pages = None
-        self.tabs = [{'tab_id': 'tab-1', 'active': True}];self.hotkeys = [];self.cmd_t_works = self.cmd_w_works = True;self.pending_tab = None;self.cmd_t_lag = 0;self.appear_after = 0
+        self.browser_calls = [];self.refuse = {};self.landed = None;self.pages = None
+        self.tabs = [{'url': 'https://mail.example/inbox', 'title': 'Inbox', 'active': True}]
+        self.hotkeys = [];self.cmd_t_works = self.cmd_w_works = True;self.cmd_t_lag = 0;self.pending = 0;self.minted = {};self.binds = 0;self.navigated = False;self.foreground_keys = []
     def call(self, tool, args, timeout=20):
         if tool.startswith('browser_') or tool == 'get_browser_state':
             self.browser_calls.append((tool, copy.deepcopy(args)))
             mode = 'snapshot' if 'target_id' in args and tool == 'get_browser_state' else tool
             code = self.refuse.get(mode)
             if code:
-                self.refuse.pop(mode) if mode == 'get_browser_state' and self.refuse.get('once') else None
+                if mode == 'get_browser_state' and self.refuse.get('once'):self.refuse.pop(mode)
                 return {'status': 'refused', 'refusal': {'code': code}}
-            if tool == 'get_browser_state' and 'target_id' not in args and self.pending_tab:
-                if self.appear_after <= 0:
-                    for t in self.tabs:t['active'] = False
-                    self.tabs.append({'tab_id': self.pending_tab, 'active': True});self.pending_tab = None
-                else:
-                    self.appear_after -= 1
             if tool == 'get_browser_state' and 'target_id' not in args:
-                return {'status': 'ok', 'mode': 'bind', 'target_id': 'bt-1', 'tabs': copy.deepcopy(self.tabs)}
+                if self.pending:
+                    self.pending -= 1
+                    if self.pending == 0:self._add_tab()
+                self.binds += 1;self.minted = {}
+                out = []
+                for i, t in enumerate(self.tabs):
+                    tid = 'tab-%d-%d' % (self.binds, i);self.minted[tid] = i
+                    out.append({**t, 'active': t['active'] and not self.navigated, 'tab_id': tid})
+                active = [t for t in self.tabs if t['active']]
+                return {'status': 'ok', 'mode': 'bind', 'target_id': 'bt-%d' % self.binds, 'tabs': out[::-1],
+                        'native_title': (active[0]['title'] + ' - Google Chrome') if active else ''}
+            if tool == 'browser_navigate':
+                i = self.minted[args['tab_id']]
+                dest = self.landed or {'url': args['url'], 'title': 'Booking'}
+                self.tabs[i].update(dest);self.navigated = True
+                return {'status': 'ok'}
             if tool == 'get_browser_state':
-                page = self.pages.pop(0) if self.pages else self.landed
-                return {'status': 'ok', 'mode': 'snapshot', 'page': dict(page)}
+                if self.pages:return {'status': 'ok', 'mode': 'snapshot', 'page': dict(self.pages.pop(0))}
+                t = self.tabs[self.minted[args['tab_id']]]
+                return {'status': 'ok', 'mode': 'snapshot', 'page': {'url': t['url'], 'title': t['title']}}
             return {'status': 'ok'}
         if tool == 'hotkey':
             self.hotkeys.append(list(args['keys']))
+            if args.get('delivery_mode') == 'foreground':self.foreground_keys.append(list(args['keys']))
+            if args['keys'] == ['cmd', 'w'] and args.get('delivery_mode') != 'foreground':
+                return {'effect': 'unverifiable'}  # measured live: Chrome ignores a background Cmd+W
             if args['keys'] == ['cmd', 't'] and self.cmd_t_works:
-                self.pending_tab = 'tab-new-%d' % len(self.hotkeys)
-                self.appear_after = self.cmd_t_lag
+                if self.cmd_t_lag:self.pending = self.cmd_t_lag + 1
+                else:self._add_tab()
             if args['keys'] == ['cmd', 'w'] and self.cmd_w_works:
-                self.tabs = [t for t in self.tabs if not t.get('active')]
-                if self.tabs:self.tabs[0]['active'] = True
+                self.tabs = [t for t in self.tabs if not t['active']]
+                if self.tabs:self.tabs[-1]['active'] = True
             return {'effect': 'unverifiable'}
         return super().call(tool, args, timeout)
+    def _add_tab(self):
+        self.navigated = False
+        for t in self.tabs:t['active'] = False
+        self.tabs.append({'url': 'chrome://newtab/', 'title': 'New Tab', 'active': True})
     def called(self, tool):
         return [a for t, a in self.browser_calls if t == tool]
 
@@ -149,7 +169,7 @@ class Permission(Base):
         self.assertEqual(self.driver.called('browser_prepare')[0]['strategy'], {'kind': 'existing_profile'})
 
     def test_several_tabs_with_none_active_is_ambiguous_not_a_guess(self):
-        self.driver.tabs = [{'tab_id': 'a'}, {'tab_id': 'b'}]
+        self.driver.tabs = [{'url': 'https://a.example/', 'title': 'a', 'active': False}, {'url': 'https://b.example/', 'title': 'b', 'active': False}]
         r = self.plan([{'do': 'goto', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
         self.assertEqual(r['steps'][0]['reason'], 'browser_tab_ambiguous')
         self.assertEqual(self.driver.called('browser_navigate'), [])
@@ -161,8 +181,8 @@ class Tabs(Base):
         r = self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
         self.assertEqual(r['status'], 'done', r)
         self.assertEqual(self.driver.hotkeys, [['cmd', 't']])
-        self.assertEqual(self.driver.called('browser_navigate')[-1]['tab_id'], 'tab-new-1', 'navigates the NEW tab, not the user tab')
-        self.assertEqual([t['tab_id'] for t in self.driver.tabs], ['tab-1', 'tab-new-1'])
+        self.assertEqual(self.driver.tabs[0]['url'], 'https://mail.example/inbox', 'the user tab is never navigated')
+        self.assertEqual(self.driver.tabs[1]['url'], BOOKING, 'the NEW tab was navigated')
 
     def test_a_cmd_t_that_opens_nothing_is_not_retried_and_navigates_nothing(self):
         # Wrong patch: press Cmd+T again (a slow tab would make two), or navigate the user's current tab instead.
@@ -179,33 +199,103 @@ class Tabs(Base):
         self.assertEqual(r['status'], 'done', r)
         self.assertEqual(self.driver.hotkeys, [['cmd', 't']])
 
+    def test_tab_ids_are_never_remembered_across_binds(self):
+        # Wrong patch (the one that failed live on 0.31.0): diff tab ids between binds; every id is new on every bind.
+        r = self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.assertEqual(r['status'], 'done', r)
+        self.assertGreater(self.driver.binds, 1, 'the check needs more than one bind for this test to mean anything')
+
+    def test_a_user_tab_at_the_same_url_in_another_position_is_not_closed(self):
+        # Wrong patch: recognise the tab by URL alone (two tabs at that URL: Cmd+W could close the user's).
+        self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.driver.tabs[0].update(url=BOOKING)
+        for t in self.driver.tabs:t['active'] = t is self.driver.tabs[0]
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+
+    def test_a_tab_count_change_after_open_blocks_close(self):
+        # Wrong patch: position + URL only; the user opened another tab, so positions may no longer mean the same tab.
+        self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.driver.tabs.insert(0, {'url': 'https://x.example/', 'title': 'x', 'active': False})
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+
+    def test_a_tab_added_after_ours_blocks_close_even_at_the_same_position(self):
+        # Wrong patch: URL + title without the count (a tab added after ours: the window is not the one we left).
+        self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.driver.tabs.append({'url': 'https://x.example/', 'title': 'x', 'active': False})
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+
+    def test_another_tab_appearing_is_not_our_new_tab(self):
+        # Wrong patch: 'one more tab' is enough. Cmd+T did nothing, a page opened a background tab: the active tab is still the user's.
+        self.driver.cmd_t_works = False
+        self.driver.tabs.append({'url': 'https://popup.example/', 'title': 'popup', 'active': False})
+        original = self.driver.tabs
+        self.driver.tabs = original[:1]
+        def appear(tool, args, _call=self.driver.call):
+            if tool == 'hotkey':self.driver.tabs = original
+            return _call(tool, args)
+        self.driver.call = appear
+        r = self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened')
+        self.assertEqual(self.driver.called('browser_navigate'), [], 'neither the user tab nor the popup is navigated')
+
+    def test_our_tab_in_the_background_is_not_closed(self):
+        # Wrong patch: URL unique + count, without asking which tab the WINDOW shows (Cmd+W closes that one, the user's).
+        self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        for t in self.driver.tabs:t['active'] = t['url'] == 'https://mail.example/inbox'
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+
+    def test_close_tab_without_foreground_permission_presses_nothing(self):
+        # Wrong patch: send Cmd+W in the background (Chrome ignores it) or front the window without being allowed to.
+        self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        r = self.plan([{'do': 'close_tab'}])
+        self.assertEqual(r['steps'][0]['reason'], 'foreground_required')
+        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual(self.driver.foreground_keys, [['cmd', 'w']], 'Cmd+W only, and only in the foreground')
+
+    def test_a_user_tab_with_the_same_address_and_title_blocks_close(self):
+        # Wrong patch: the URL need not be unique (the window shows one of two identical tabs: which one Cmd+W closes is unknown).
+        self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.driver.tabs[0].update(url=BOOKING, title='Booking')
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+
     def test_close_tab_never_closes_a_tab_the_user_had(self):
         # Wrong patch: Cmd+W on whatever tab is active (closes the user's own logged-in tab).
-        r = self.plan([{'do': 'close_tab'}])
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
         self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
         self.assertEqual(self.driver.hotkeys, [], 'nothing pressed')
-        self.assertEqual([t['tab_id'] for t in self.driver.tabs], ['tab-1'])
+        self.assertEqual([t['url'] for t in self.driver.tabs], ['https://mail.example/inbox'])
 
     def test_open_then_close_in_a_later_call_closes_only_that_tab(self):
         self.assertEqual(self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])['status'], 'done')
-        r = self.plan([{'do': 'close_tab'}])
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
         self.assertEqual(r['status'], 'done', r)
-        self.assertEqual([t['tab_id'] for t in self.driver.tabs], ['tab-1'])
-        again = self.plan([{'do': 'close_tab'}])
+        self.assertEqual([t['url'] for t in self.driver.tabs], ['https://mail.example/inbox'])
+        again = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
         self.assertEqual(again['steps'][0]['reason'], 'tab_not_opened_by_facade', 'the user tab is next: refused')
 
     def test_a_cmd_w_that_closes_nothing_is_not_retried(self):
         self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
         self.driver.cmd_w_works = False
-        r = self.plan([{'do': 'close_tab'}])
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
         self.assertEqual(r['steps'][0]['reason'], 'tab_not_closed')
         self.assertEqual(self.driver.hotkeys.count(['cmd', 'w']), 1)
 
     def test_switching_to_a_user_tab_before_close_is_refused(self):
         # Wrong patch: remember "we opened a tab" instead of checking that the ACTIVE tab is ours.
         self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
-        for t in self.driver.tabs:t['active'] = t['tab_id'] == 'tab-1'
-        r = self.plan([{'do': 'close_tab'}])
+        for t in self.driver.tabs:t['active'] = t['url'] == 'https://mail.example/inbox'
+        r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
         self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
         self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
 
