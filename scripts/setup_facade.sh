@@ -47,3 +47,7 @@ else
 fi
 
 echo "Done. Register the server: codex mcp add computer-use -- \"$ROOT/.venv-facade/bin/python\" \"$ROOT/computer_use/server.py\""
+
+echo
+echo "Checking the environment (python -m computer_use doctor; bootstrap fixes what it can) ..."
+.venv-facade/bin/python -m computer_use doctor || echo "doctor reported blockers: see the fix lines above (python -m computer_use bootstrap does the fixable ones)."
