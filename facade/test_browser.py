@@ -10,6 +10,7 @@ import unittest
 import browser
 import test_live_shapes as lv
 from core import OBSERVE_RETRY_DELAYS
+from test_live_shapes import add
 
 BOOKING = 'https://clinic.example/booking'
 
@@ -22,6 +23,7 @@ class BrowserDriver(lv.LiveDriver):
         super().__init__('live_booking_ax.json')
         self.browser_calls = [];self.refuse = {};self.landed = None;self.pages = None
         self.tabs = [{'url': 'https://mail.example/inbox', 'title': 'Inbox', 'active': True}]
+        self.strip = False;self.close_works = True;self.close_of = {};self.clicked_close = [];self.script = self._tab_strip
         self.hotkeys = [];self.cmd_t_works = self.cmd_w_works = True;self.cmd_t_lag = 0;self.pending = 0;self.minted = {};self.binds = 0;self.navigated = False;self.foreground_keys = []
     def call(self, tool, args, timeout=20):
         if tool.startswith('browser_') or tool == 'get_browser_state':
@@ -53,6 +55,13 @@ class BrowserDriver(lv.LiveDriver):
                 t = self.tabs[self.minted[args['tab_id']]]
                 return {'status': 'ok', 'mode': 'snapshot', 'page': {'url': t['url'], 'title': t['title']}}
             return {'status': 'ok'}
+        if tool == 'click' and self.close_of:
+            tab = self.close_of.get(int(args['element_token'].rsplit(':', 1)[1]))
+            if tab is not None:
+                self.clicked_close.append(tab['url'])
+                if self.close_works:
+                    self.tabs = [t for t in self.tabs if t is not tab]
+                    if self.tabs and not any(t['active'] for t in self.tabs):self.tabs[-1]['active'] = True
         if tool == 'hotkey':
             self.hotkeys.append(list(args['keys']))
             if args.get('delivery_mode') == 'foreground':self.foreground_keys.append(list(args['keys']))
@@ -66,6 +75,16 @@ class BrowserDriver(lv.LiveDriver):
                 if self.tabs:self.tabs[-1]['active'] = True
             return {'effect': 'unverifiable'}
         return super().call(tool, args, timeout)
+    def _tab_strip(self, driver, els):
+        """Chrome's tab strip as issue #4 measured it: an AXTabGroup of one AXRadioButton per tab (named with the tab title, in WINDOW order),
+        each with an AX child button named Close. SYNTHETIC shape (no live capture in facade/fixtures has a tab strip): roles and nesting
+        follow the #4 comment; a live capture is still to be taken with the user's consent."""
+        self.close_of = {}
+        if not self.strip:return None
+        add(els, 0, 'AXTabGroup', label='', actions=['AXShowMenu']);group = els[-1]['element_index']
+        for t in self.tabs:
+            add(els, group, 'AXRadioButton', label=t['title'], value='1' if t['active'] else '0');radio = els[-1]['element_index']
+            add(els, radio, 'AXButton', label='Close');self.close_of[els[-1]['element_index']] = t
     def _add_tab(self):
         self.navigated = False
         for t in self.tabs:t['active'] = False
@@ -251,12 +270,12 @@ class Tabs(Base):
         self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
         self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
 
-    def test_close_tab_without_foreground_permission_presses_nothing(self):
-        # Wrong patch: send Cmd+W in the background (Chrome ignores it) or front the window without being allowed to.
+    def test_close_tab_without_a_tab_strip_control_presses_nothing_and_fronts_nothing(self):
+        # Wrong patch: front the window and send Cmd+W without the step's allow_foreground (or send Cmd+W in the background: Chrome ignores it).
         self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
         r = self.plan([{'do': 'close_tab'}])
-        self.assertEqual(r['steps'][0]['reason'], 'foreground_required')
-        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+        self.assertEqual(r['steps'][0]['reason'], 'tab_close_control_not_found')
+        self.assertEqual((self.driver.hotkeys, self.driver.foreground_keys, self.driver.executed), ([['cmd', 't']], [], []))
         r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
         self.assertEqual(r['status'], 'done', r)
         self.assertEqual(self.driver.foreground_keys, [['cmd', 'w']], 'Cmd+W only, and only in the foreground')
@@ -298,6 +317,88 @@ class Tabs(Base):
         r = self.plan([{'do': 'close_tab', 'allow_foreground': True}])
         self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
         self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+
+
+class TabStrip(Base):
+    """close_tab presses the tab's own Close button (AX, background). Synthetic tab strip: see BrowserDriver._tab_strip."""
+    def setUp(self):
+        super().setUp();self.driver.strip = True
+        self.assertEqual(self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])['status'], 'done')
+        self.driver.tabs[1]['title'] = 'Booking'
+        self.f.opened_tabs[0]['title'] = 'Booking'
+    def close(self, **step):
+        return self.plan([{'do': 'close_tab', **step}])
+
+    def test_close_presses_only_that_tabs_close_in_the_background_with_no_foreground(self):
+        # Wrong patches: Cmd+W in the background (Chrome ignores it: the tab stays); front the window without allow_foreground.
+        r = self.close()
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual(self.driver.clicked_close, [BOOKING])
+        self.assertEqual([t['url'] for t in self.driver.tabs], ['https://mail.example/inbox'])
+        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+        self.assertEqual(self.driver.foreground_keys, [])
+        self.assertTrue(all(a.get('delivery_mode') != 'foreground' for a in self.driver.executed))
+
+    def test_the_press_is_a_bound_observed_element_never_a_coordinate(self):
+        self.close()
+        self.assertEqual(len(self.driver.executed), 1)
+        self.assertEqual(set(self.driver.executed[0]) - {'pid', 'window_id', 'session'}, {'element_token'})
+
+    def test_a_tab_matched_by_url_only_is_not_enough(self):
+        # Wrong patch: press the Close of whichever tab has the recorded URL, ignoring the tab strip's titles: the strip names no such tab.
+        self.driver.tabs[1]['title'] = 'Renamed by the page'
+        r = self.close()
+        self.assertEqual(r['steps'][0]['reason'], 'tab_close_control_not_found')
+        self.assertEqual((self.driver.clicked_close, len(self.driver.tabs)), ([], 2))
+
+    def test_several_tabs_with_the_same_title_press_nothing(self):
+        # Wrong patch: press the FIRST matching tab's Close (here the user's tab, listed first in the window).
+        self.driver.tabs[0]['title'] = 'Booking'
+        r = self.close()
+        self.assertEqual(r['steps'][0]['reason'], 'tab_close_control_ambiguous')
+        self.assertEqual((self.driver.clicked_close, self.driver.executed, len(self.driver.tabs)), ([], [], 2))
+
+    def test_ambiguity_is_refused_even_with_allow_foreground(self):
+        self.driver.tabs[0]['title'] = 'Booking'
+        r = self.close(allow_foreground=True)
+        self.assertEqual(r['steps'][0]['reason'], 'tab_close_control_ambiguous')
+        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
+
+    def test_a_tab_without_a_close_child_is_refused_before_pressing(self):
+        inner = self.driver._tab_strip
+        def no_close(driver, els):
+            inner(driver, els)
+            for e in [e for e in els if e.get('label') == 'Close']:els.remove(e)
+        self.driver.script = no_close
+        r = self.close()
+        self.assertEqual(r['steps'][0]['reason'], 'tab_close_control_not_found')
+        self.assertEqual(self.driver.executed, [])
+
+    def test_a_close_that_did_not_remove_the_tab_is_not_retried(self):
+        # Wrong patch: press Close again (or fall back to Cmd+W) when the tab is still listed.
+        self.driver.close_works = False
+        r = self.close(allow_foreground=True)
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_closed')
+        self.assertEqual((len(self.driver.executed), self.driver.hotkeys.count(['cmd', 'w'])), (1, 0))
+
+    def test_the_url_and_count_identity_still_gates_the_press(self):
+        # Wrong patch: trust the strip title alone: a changed tab count means it is not recognisably ours.
+        self.driver.tabs.append({'url': 'https://x.example/', 'title': 'x', 'active': False})
+        r = self.close()
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+        self.assertEqual(self.driver.executed, [])
+
+    def test_the_user_tab_is_never_pressed_after_ours_is_closed(self):
+        self.assertEqual(self.close()['status'], 'done')
+        r = self.close()
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+        self.assertEqual(len(self.driver.executed), 1)
+
+    def test_a_fallback_is_used_only_when_the_strip_has_no_such_control_and_foreground_is_allowed(self):
+        self.driver.strip = False
+        r = self.close(allow_foreground=True)
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual((self.driver.foreground_keys, self.driver.executed), ([['cmd', 'w']], []))
 
 
 if __name__ == '__main__':

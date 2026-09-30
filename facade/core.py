@@ -995,6 +995,19 @@ class Facade:
             result.update(selection=handle,selected_id=decision['action_id'])
         return result
 
+    def bind_press(self,snapshot,node_id,goal):
+        """Bind ONE press on an observed element the caller already identified by structure (not by a chooser): the same issue/act path
+        as a grounded singleton, so act() revalidates the observation before the Driver is called. Returns the selection handle."""
+        state=self.state(snapshot)
+        actions=self.actions(state,[node_id],'click',None)
+        if len(actions)!=1:raise Gap('control_not_pressable: the observed element is disabled or has no AXPress action')
+        request={'snapshot_id':state['raw']['snapshot_id'],'kind':'semantic','operation':'click','goal':goal,'actions':actions,'observation':actions[0]['description']}
+        decision={'status':'selected','action_id':node_id,'action_authorized':True,'reason':'observed_structure','judgment':'structure',
+                  'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request),'provider_outputs':[]}
+        self.event('choose',snapshot=snapshot,route='observed_structure',models=[],mode='semantic',decision_ms=0,provider_setup_ms=0,wall_ms=0,
+                   authorized=True,reason='observed_structure')
+        return self.issue(snapshot,request,decision,'semantic','click',None,{'status':'selected','route':'observed_structure','decision':decision,'snapshot':snapshot})['selection']
+
     def content_root(self,state,ids):
         """The observed content scope a selection binds to: the offered actions'
         common ancestor, widened to the enclosing AXWebArea when there is one
