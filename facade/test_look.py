@@ -461,13 +461,27 @@ class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
         d, f = self.unpressable(until=1)
         r = f.look('Demo')
         self.assertEqual((r['record_kind'], r['counts']['records']), ('flat-list', 12), r.get('notes'))
-        self.assertEqual(self.naps[0], 0.5)
+        self.assertEqual(self.naps[0], core.ACTIONS_PENDING_WAIT_S)  # one idle gap, not a quick re-poll (live: polling kept them unpressable)
+
+    def test_a_page_where_only_some_buttons_are_pressable_yet_is_looked_at_again(self):
+        # Wrong patch: wait only when ALL buttons are unpressable (live: Contacts had some pressable, the look found no records).
+        d = lv.LiveDriver('live_booking_ax.json')
+        def script(drv, els):
+            if drv.version > 1:return None
+            web = next(e['element_index'] for e in els if e.get('role') == 'AXWebArea')
+            books = [e for e in els if e.get('role') == 'AXButton' and e['element_index'] > web]
+            for e in books[len(books) // 2:]:e['actions'] = [a for a in e.get('actions', []) if a != 'AXPress']
+            return els
+        d.script = script;self.naps = []
+        f = Facade(d, reader_factory=Boom('reader'), generic_factory=Boom('chooser'), visual_factory=Boom('visual'), sleep=self.naps.append)
+        r = f.look('Demo')
+        self.assertEqual((r['record_kind'], r['counts']['records'], self.naps[0]), ('flat-list', 12, core.ACTIONS_PENDING_WAIT_S))
 
     def test_buttons_that_never_become_pressable_are_returned_after_the_bounded_retries(self):
         # Wrong patch: wait until pressable (unbounded).
         d, f = self.unpressable(until=99)
         r = f.look('Demo')
-        self.assertEqual(self.naps[:2], [0.5, 1.0])
+        self.assertEqual(self.naps[:2], [core.ACTIONS_PENDING_WAIT_S, 1.0])  # the idle gap once, then the ordinary delay
         self.assertIn(r['status'], ('ok', 'deferred'))
 
     def test_only_a_look_waits_never_an_action_observation(self):

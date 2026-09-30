@@ -37,6 +37,9 @@ LOOK_WAIT_MAX_S = 10.0
 # 2026-09-30: 457 then 472 nodes; record_kind none, then 7 records). After the first READY observation of a look, observe again after
 # SETTLE_DELAY_S; while the element count still changes, keep observing (at most SETTLE_MAX more), inside LOOK_WAIT_MAX_S by the clock.
 SETTLE_DELAY_S = 0.3
+# Chrome filled in the page buttons' AXPress only after an IDLE gap: observing every ~1 s kept them unpressable for 8 s, one 2 s gap with no
+# walk fixed it every time (live 2026-09-30). An actions_pending observation waits this long, once, instead of the short delays.
+ACTIONS_PENDING_WAIT_S = 2.0
 SETTLE_MAX = 3
 TIMEOUT_MS_SINCE = (0, 31, 0)   # older Drivers are not sent timeout_ms
 NOT_READY_DEGRADED = frozenset({'ax_app_launching'})  # degraded reasons that clear by themselves: a look waits, an action never proceeds on them
@@ -243,7 +246,7 @@ class Facade:
         phrase list. A failed Driver call is NOT retried here: _do's own bounded recovery owns it. Read-only, so a retry can never act twice. After the last try
         the result (or the original error) is returned unchanged; nothing here solves or bypasses a check."""
         delays = list(OBSERVE_RETRY_DELAYS) if wait_ready else []
-        began = self.clock()
+        began = self.clock();waited_idle = False;reason = None
         for attempt in range(len(delays) + 1):
             last = attempt == len(delays)
             try:
@@ -263,7 +266,11 @@ class Facade:
                             result = self._settled(pid, window_id, timeout, result, began)
                             self._settled_titles[key] = result.get('title')
                     return result
-            self.sleep(delays[attempt])
+            if reason == 'actions_pending' and not waited_idle and self.clock() - began + ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 <= LOOK_WAIT_MAX_S:
+                waited_idle = True
+                self.sleep(ACTIONS_PENDING_WAIT_S)
+            else:
+                self.sleep(delays[attempt])
 
     def _settled(self, pid, window_id, timeout, result, began):
         """The ready observation once the tree stops growing (see SETTLE_DELAY_S): read-only, bounded by count and by LOOK_WAIT_MAX_S."""
@@ -301,7 +308,8 @@ class Facade:
                 if i in webs:return True
                 seen.add(i);i = parent.get(i)
             return False
-        ctrls = [e for e in els if e.get('role') in Facade.CONTROL_ROLES and e.get('enabled', True) is not False and in_page(e.get('parent_id'))]
+        # Buttons only: every enabled page AXButton in every settled capture advertises AXPress; other roles (links, menu buttons) vary.
+        ctrls = [e for e in els if e.get('role') == 'AXButton' and e.get('enabled', True) is not False and in_page(e.get('parent_id'))]
         return len(ctrls), sum(1 for e in ctrls if 'AXPress' in (e.get('actions') or []))
 
     @staticmethod
@@ -311,9 +319,10 @@ class Facade:
         if not result.get('elements'):
             return 'empty_tree'
         # Measured live 2026-09-30: Chrome's first read of a fresh page listed every table button with only AXShowMenu/AXScrollToVisible;
-        # two seconds later the same buttons advertised AXPress. A page whose controls are ALL unpressable is not ready yet.
+        # two seconds later the same buttons advertised AXPress, and Chrome fills them in partway (some pressable, some not). A page with ANY
+        # enabled button that does not advertise AXPress yet is not ready.
         controls, pressable = Facade._page_press(result)
-        if controls and not pressable:
+        if pressable < controls:
             return 'actions_pending'
         if result['quality'].get('degraded_reason'):
             return 'degraded'
