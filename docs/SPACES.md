@@ -2,7 +2,7 @@
 
 `computer_use/spaces/space-mover.swift` is a single-file Swift helper (no Xcode project, no dependencies). Build it with
 `scripts/build_space_mover.sh` (output `computer_use/spaces/bin/space-mover`, gitignored); `computer_use/spaces_client.py`
-builds it on demand and wraps it. It is not wired into look/do yet.
+builds it on demand and wraps it. The server uses it through the agent display policy below.
 
 ## Mechanisms
 
@@ -41,3 +41,23 @@ Settings > Privacy & Security > Accessibility, or run `space-mover trusted --pro
   main and where windows land; stop the helper to restore the layout).
 - A Mission Control fallback move shows Mission Control for about a second and moves the pointer; the pointer is
   restored afterwards.
+
+## Agent display policy (CE-FACADE-009)
+
+`CUA_AGENT_DISPLAY` is `off`, `auto` (default) or `required`. With `auto` and `required` the server starts the agent display
+lazily at the first window it needs to park, keeps it for the server's lifetime and stops it at shutdown (not at `finish`).
+
+- **Windows the facade creates** are parked (`spaces_client.park`, verified by bounds) right after they exist and before the
+  first look or act, through `Facade.window_created(window_id)`. Today no facade path creates a window: `open_tab` and
+  `read_pages` send Cmd+T to an existing window (a new tab needs no parking) and the facade launches no app. A future path that
+  makes a window must call `window_created(window_id, title)` once the window exists and is titled; a park answering
+  `window_not_found` (a new window is briefly missing from the AX list) is retried 12 times at 0.5 s.
+- **Agent-owned apps** (`CUA_AGENT_APPS`, comma-separated app names, bundle ids or fnmatch patterns; default `qemu-system-*`,
+  `Android Emulator`, `Simulator`, Chrome Beta, Canary, Chromium, Chrome for Testing): an on-screen window of one of these that
+  the facade first observes in a window inventory is parked once. Shared apps (Chrome, Finder, ...) and the user's windows are
+  never moved. The Driver lists app names, not bundle ids, so matching is by name unless the Driver supplies a bundle id.
+- **Unavailable or untrusted helper:** `auto` continues and the response carries `agent_display_note`
+  (`agent_display: unavailable (<reason>)`); `required` refuses the step with `agent_display_unavailable` before anything is
+  opened or moved. The failure is cached for the server's lifetime.
+- A look or do response carries `agent_display: {id, parked: true}` only in the call where parking happened. Parking adds no
+  LLM-visible call. Foreground routes (`allow_foreground`, `invoke_menu`, the Cmd+W fallback) are unchanged.

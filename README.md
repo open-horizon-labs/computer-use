@@ -86,6 +86,8 @@ Register the local [computer-use MCP facade](docs/FACADE.md) to expose observati
 
 **Phones and emulators.** `look` and `do` also take `device=<id>` instead of a window title: Android (emulators, devices) and iOS (simulators, devices) through [mobile-mcp](https://github.com/mobile-next/mobile-mcp) 1.0.6, the best driver for mobile. The server starts it itself on first use (`npx`, so Node.js 18+ is the only prerequisite; without it the answer is a typed refusal naming what to install), and the same contract holds: a fresh element list before every tap, exact label binding, a verification on another fresh list, no blind coordinates. `look(device="list")` lists the devices. See [Phones and emulators](docs/FACADE.md#phones-and-emulators-mobile-mcp).
 
+**Agent display.** Windows the server creates, and windows of agent-owned apps (the Android emulator, Simulator, Chrome Beta/Canary/Chromium; `CUA_AGENT_APPS`), are parked on a headless virtual display so nothing the agent drives sits on your screen; your own apps are never moved. `CUA_AGENT_DISPLAY=off|auto|required` (default `auto`: park when the helper works, otherwise continue with a note). See [SPACES.md](docs/SPACES.md#agent-display-policy-ce-facade-009).
+
 ## Install the skill
 
 This repository is public. Clone it over HTTPS or SSH, then:
