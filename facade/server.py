@@ -72,7 +72,7 @@ class StepWhere(BaseModel):
 
 class PlanStep(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    do: str = Field(description='press | type | confirm | verify')
+    do: str = Field(description='press | type | confirm | verify | goto | open_tab | close_tab')
     goal: str|None = Field(default=None, description='Short text, criteria never element IDs or the answer; defaults to the plan goal')
     where: StepWhere|None = Field(default=None, description='press only: which record (lines or fields). Without where, control names the one unique control to press')
     control: str|None = Field(default=None, description='press: the exact button label (whole-word prefix accepted); type: the exact field label')
@@ -88,6 +88,7 @@ class PlanStep(BaseModel):
     dialog_controls: list[str]|None = Field(default=None, description='confirm step, REQUIRED: the EXACT list of the dialog\'s control labels, each with its state when it has one: "Also delete my account [checked]" (unchecked boxes carry no marker; a disabled control ends [disabled]). The dialog region is compared in full: every text of ANY kind (static text, headings, image and group labels, link text, text-area and field values shown as "field: label = value", container text) and every control with its state must be declared, else confirm_dialog_unexpected_text shows the actual lines and controls. Must include the confirm label')
     accept_hidden_text: bool|None = Field(default=None, description='press with where.lines: true acknowledges that the selected record had lines cut or omitted in the look (a line you never saw could contradict your conditions). Without it such a selection stops selected_record_has_hidden_text; prefer cua_look with larger max_lines and line_chars')
     allow_foreground: bool|None = Field(default=None, description='press on a drawn (canvas) surface: true lets the Driver briefly front the window for a real pointer event, then restore the previous app. Without it a pixel click on a canvas is refused pointer_not_deliverable_in_background (a background pixel click lands at the element centre, not at the point). Only when the user allows the window to come forward')
+    url: str|None = Field(default=None, description='goto / open_tab only (required there, http or https): the page to navigate the window\'s active tab (goto) or ONE new tab (open_tab) to. Done only when the tab reports that page; any refusal (permission_required, foreground_required, tab_close_control_not_found) is a stop: ask the user, never another browser, profile or raw Driver call')
     confirm: str|None = Field(default=None, description='confirm step: the exact label of the dialog control to press; the step must directly follow the press that opened it')
 
 

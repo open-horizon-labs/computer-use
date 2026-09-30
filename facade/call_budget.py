@@ -554,6 +554,35 @@ def measure_plan_scenarios():
                     steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': target['lines'][0]}]}, 'expect': 'Opened'}])
     d = sh.ShapeDriver(tp3.record_page(images='Cancelled'));d.script = sh.toast('Opened', buttons=())
     out['plan_image_badge_seen'] = run(d, image_badge, lv.LiveReader({}))
+
+    # CE-FACADE-007: navigation as plan steps. The Driver's browser tools are faked (test_browser.BrowserDriver, shapes from the 0.31.0 live measurements)
+    # over the REAL captured booking tree; the tab strip of the open_tab scenario is SYNTHETIC (no live capture has one). Fixture-derived, not a rate.
+    import test_browser as tb
+    def nav_driver(strip=False, press=False):
+        d = tb.BrowserDriver();d.strip = strip
+        if press:d.script = lv.booked()
+        return d
+    def goto_look_plan(call):
+        first = call('cua_do', goal='Open the booking page', expect=None, title='Demo', steps=[{'do': 'goto', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
+        if first['status'] != 'done':return first
+        return booking_look_do(call)
+    out['nav_goto_look_plan'] = run(nav_driver(press=True), goto_look_plan, lv.LiveReader(lv.BOOKING_PATTERNS))
+
+    def open_read_close(call):
+        first = call('cua_do', goal='Open the booking page in a new tab', expect=None, title='Demo', steps=[{'do': 'open_tab', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
+        if first['status'] != 'done':return first
+        look = call('cua_look', title='Demo')  # the read: the look's records are the answer, nothing is clicked
+        assert look['records'], look
+        return call('cua_do', goal='Close the tab this task opened', expect=None, title='Demo', steps=[{'do': 'close_tab'}])
+    out['nav_open_tab_read_close'] = run(nav_driver(strip=True), open_read_close, lv.LiveReader(lv.BOOKING_PATTERNS))
+
+    def permission_stop(call):
+        result = call('cua_do', goal='Open the booking page', expect=None, title='Demo', steps=[{'do': 'goto', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
+        assert result['steps'][0]['reason'] == 'permission_required', result
+        return result  # stop and ask the user: no retry, no other browser or profile
+    d = nav_driver();d.refuse = {'get_browser_state': 'browser_requires_setup', 'browser_prepare': 'existing_profile_not_granted'}
+    out['nav_permission_required_stop'] = run(d, permission_stop, lv.LiveReader({}))
+    assert d.called('browser_navigate') == [] and d.executed == [], 'a permission stop must deliver nothing'
     return out
 
 
