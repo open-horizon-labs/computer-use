@@ -424,3 +424,81 @@ class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
         d, f = self.build(thin_for=99)
         f.observe(1, 2)
         self.assertEqual((self.naps, d.version), ([], 1))
+
+
+def _launching(raw, stub=False):
+    """Driver 0.31 ax_app_launching: truncated, degraded, EMPTY tree (or, with stub, a couple of elements) and NO element tokens."""
+    raw = dict(raw, degraded_reason='ax_app_launching', truncated=True, truncation_reason='app_lookup_timeout')
+    raw['elements'] = [{k: v for k, v in e.items() if k != 'element_token'} for e in raw['elements'][:2]] if stub else []
+    return raw
+
+
+class LaunchingApp(lv.LiveBase):
+    """Driver 0.31: a launching app yields degraded_reason ax_app_launching, truncated, no tokens (#32)."""
+    def launching(self, first, last=99, stub=False):
+        real = self.driver.observe
+        def observe(*args):
+            raw = real(*args)
+            return _launching(raw, stub) if first <= self.driver.version <= last else raw
+        self.driver.observe = observe
+
+    def test_look_treats_ax_app_launching_as_not_ready_and_retries_it(self):
+        # Wrong patch: read the truncated snapshot as a page (a 0-record look of a window that is still starting).
+        for stub in (False, True):
+            self.setUp();self.launching(1, 1, stub)
+            r = self.f.look('Demo')
+            self.assertEqual((r['status'], r['counts']['records'], self.naps, self.driver.version), ('ok', 12, [0.5], 2), stub)
+            self.assertEqual([e['ready'] for e in self.f.events if e['operation'] == 'observe_retry'], [True])
+        self.setUp();self.launching(1, 1)
+        self.assertEqual(Facade._not_ready(self.f.observe(1, 2)), 'app_launching')  # its own reason, not merely "degraded" or "empty_tree"
+
+    def test_a_snapshot_without_tokens_is_never_bound_to_an_action(self):
+        # Wrong patch: bind the click to the stale first snapshot's tokens, or retry the action until the app is ready.
+        self.launching(2)  # the look/selection observation is fine; act's own revalidation observation is launching
+        r = self.do('Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM', records={'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE})
+        self.assertEqual((r['status'], r['reason']), ('refused', 'driver_snapshot_unavailable'))
+        self.assertEqual((self.driver.executed, r['delivery']), ([], 'none'))
+        self.assertEqual([c for c in self.naps if c in (0.5, 1.0)], [], 'an action path adds no look-style retry')
+
+    def test_an_action_observation_is_not_retried_by_the_look_wait(self):
+        self.launching(1)
+        r = self.f.observe(1, 2)
+        self.assertEqual((self.naps, self.driver.version, r['quality']['degraded_reason']), ([], 1, 'ax_app_launching'))
+        self.assertEqual(r['elements'], [])
+
+
+class LookWaitIsBounded(lv.LiveBase):
+    def test_total_look_wait_stays_under_the_documented_bound(self):
+        # Wrong patch: raise the Driver wait or the delays without re-deriving the sum (the Driver waits inside EVERY attempt, then walks).
+        import core
+        real = self.driver.observe
+        self.driver.observe = lambda *a: _launching(real(*a))
+        self.f.driver_version = (0, 31, 0)
+        self.f.look('Demo')
+        waits = [a[-1] / 1000 for a in self.driver.observe_args]
+        self.assertEqual(len(waits), len(core.OBSERVE_RETRY_DELAYS) + 1)
+        self.assertTrue(all(w == core.DRIVER_LAUNCH_WAIT_MS / 1000 for w in waits), waits)
+        worst = sum(self.naps) + 2 * sum(waits)  # launch wait, then the walk's own timeout_ms
+        self.assertEqual(worst, (len(core.OBSERVE_RETRY_DELAYS) + 1) * 2 * core.DRIVER_LAUNCH_WAIT_MS / 1000 + sum(core.OBSERVE_RETRY_DELAYS))
+        self.assertLessEqual(worst, core.LOOK_WAIT_MAX_S)
+
+    def test_the_wait_never_exceeds_the_calls_own_timeout(self):
+        self.f.driver_version = (0, 31, 0)
+        self.f.observe(1, 2, timeout=0.5)
+        self.assertEqual(self.driver.observe_args[0][-1], 500)
+
+    def test_a_030_driver_gets_no_timeout_ms(self):
+        # Wrong patch: send timeout_ms to every Driver (0.30 is not known to accept it).
+        for version in ((0, 30, 4), (0, 29, 1), None):
+            self.setUp();self.f.driver_version = version
+            self.f.look('Demo')
+            self.assertEqual(len(self.driver.observe_args[0]), 3, version)
+
+    def test_driver_observe_sends_timeout_ms_only_when_asked(self):
+        import core
+        from unittest import mock
+        sent = []
+        def call(self, tool, args, timeout=20):sent.append(dict(args));return {'snapshot_id': 's'}
+        with mock.patch.object(core.Driver, 'call', call):
+            core.Driver('x').observe(1, 2, 'sess');core.Driver('x').observe(1, 2, 'sess', 20, 1000)
+        self.assertEqual(['timeout_ms' in a for a in sent], [False, True]);self.assertEqual(sent[1]['timeout_ms'], 1000)

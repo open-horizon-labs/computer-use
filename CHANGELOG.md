@@ -8,6 +8,7 @@ Versions follow Cua Driver minor releases (0.31 targets Cua Driver 0.31).
 - `close_tab` presses the tab's own Close button in the tab strip (AX, background, no fronting, no `allow_foreground`); zero or several matching tabs refuse `tab_close_control_not_found` / `tab_close_control_ambiguous` before any press. Cmd+W (foreground) remains only as an explicit `allow_foreground: true` fallback when the strip shows no such control (#4).
 
 ### Added
+- Driver 0.31 support (0.30.x still works, 0.31 not required): `timeout_ms` is sent to `get_window_state` on 0.31+, `ax_app_launching` (empty, truncated, no tokens) is a not-ready reason for the look's bounded retry and never something an action clicks against, and the stacked look wait is bounded by `LOOK_WAIT_MAX_S` (#32; the live rerun stays open).
 - `goto {url, expect}` plan step: navigates the window's active tab in the user's own browser profile and is done only when the tab reports the requested page; typed stops `navigated_elsewhere`, `login_wall`, `landing_unknown`, `browser_tab_ambiguous` (CE-FACADE-007, #28).
 - `open_tab {url, expect}` and `close_tab` plan steps; `close_tab` closes only the tab this facade opened (CE-FACADE-007, #28).
 - A Driver refusal to attach to the browser profile is `permission_required` naming `--grant existing-profile`; the facade never switches to another browser or profile (#28).

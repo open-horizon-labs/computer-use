@@ -26,6 +26,15 @@ from ax_aliases import table_aliases
 
 OBSERVE_RETRY_DELAYS = (0.5, 1.0)   # seconds before the 2nd and 3rd observation of a page that is not ready
 MEMORY_READOUT = re.compile(r'(Memory usage - )[\d.,]+\s*[KMGT]?B',re.I)
+# Driver 0.31 waits INSIDE get_window_state for a macOS app that is still launching (up to timeout_ms, then the AX walk gets another timeout_ms);
+# past that the snapshot is EMPTY, truncated, degraded_reason ax_app_launching, with no element tokens. The facade pins timeout_ms to the Driver's
+# own default (1000) on 0.31+ instead of inheriting it, so the stacked look wait is a documented sum, bounded here:
+#   (len(OBSERVE_RETRY_DELAYS) + 1) * 2 * DRIVER_LAUNCH_WAIT_MS/1000 + sum(OBSERVE_RETRY_DELAYS)  =  7.5 s  <=  LOOK_WAIT_MAX_S
+# (the hard cap on one Driver call stays Driver.call's own 20 s subprocess timeout). Changing any of the three needs the bound re-derived.
+DRIVER_LAUNCH_WAIT_MS = 1000
+LOOK_WAIT_MAX_S = 10.0
+TIMEOUT_MS_SINCE = (0, 31, 0)   # older Drivers are not sent timeout_ms
+NOT_READY_DEGRADED = frozenset({'ax_app_launching'})  # degraded reasons that clear by themselves: a look waits, an action never proceeds on them
 THIN_PAGE_NODES = 10   # a web page with this few nodes or fewer is still loading or a holding page ("checking your browser"), whatever the site
 
 
@@ -119,7 +128,7 @@ class Driver:
             raise Gap('%s: the Driver refused %s (effect refused); nothing was delivered' % (code, tool))
         return value
 
-    def observe(self, pid, window_id, session, timeout=20):
+    def observe(self, pid, window_id, session, timeout=20, wait_ms=None):
         # resolve() avoids Driver rejecting /tmp's symlink as a nondirectory.
         try:
             directory_context = tempfile.TemporaryDirectory(prefix='cua-facade-')
@@ -129,7 +138,7 @@ class Driver:
             path = Path(directory).resolve()/'window.png'
             result = self.call('get_window_state', {'pid': pid, 'window_id': window_id,
                 'session': session, 'max_elements': 15000, 'max_dimension': 1280,
-                'screenshot_out_file': str(path)}, timeout=timeout)
+                'screenshot_out_file': str(path), **({'timeout_ms': int(wait_ms)} if wait_ms else {})}, timeout=timeout)
             try:
                 result['_image'] = path.read_bytes() if path.exists() else b''
             except OSError:
@@ -245,6 +254,8 @@ class Facade:
 
     @staticmethod
     def _not_ready(result):
+        if result['quality'].get('degraded_reason') in NOT_READY_DEGRADED:
+            return 'app_launching'
         if not result.get('elements'):
             return 'empty_tree'
         if result['quality'].get('degraded_reason'):
@@ -266,7 +277,10 @@ class Facade:
         if not self.started:
             self.windows()
         began = self.clock()
-        raw = self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *([timeout] if timeout is not None else [])))
+        args = [] if timeout is None else [timeout]
+        if self.driver_version is not None and self.driver_version >= TIMEOUT_MS_SINCE:
+            args = [20 if timeout is None else timeout, min(DRIVER_LAUNCH_WAIT_MS, int((20 if timeout is None else timeout) * 1000))]
+        raw = self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *args))
         if not raw.get('snapshot_id') or raw.get('pid', pid) != pid or raw.get('window_id', window_id) != window_id:
             # A vague message here just makes the agent guess three times. Say
             # whether the window is gone or the Driver degraded/refused instead.
@@ -276,7 +290,10 @@ class Facade:
             raise Gap('driver_snapshot_unavailable: ' + json.dumps(
                 {'refusal': raw.get('refusal'), 'degraded_reason': raw.get('degraded_reason')}, sort_keys=True))
         nodes = {}
-        for item in raw.get('elements', []):
+        # A launching app (or any degraded snapshot whose elements carry no tokens) yields nothing that can be acted on: keep it as evidence
+        # with no usable elements, so a look reads it as not ready and an action refuses it (act never builds a click from it).
+        tokenless = bool(raw.get('degraded_reason')) and (raw['degraded_reason'] in NOT_READY_DEGRADED or any(not e.get('element_token') for e in raw.get('elements', [])))
+        for item in ([] if tokenless else raw.get('elements', [])):
             index = item.get('element_index')
             if not isinstance(index, int) or index in nodes:
                 raise Gap('Invalid observed element indices')
@@ -291,7 +308,7 @@ class Facade:
         image = raw.pop('_image', b'')
         state = {'raw': raw, 'nodes': nodes, 'image': image, 'fingerprint': digest(content),
                  'image_digest': hashlib.sha256(image).hexdigest() if image else None,
-                 'pid': pid, 'window_id': window_id, 'created': self.clock(), 'aliases':table_aliases(nodes)}
+                 'pid': pid, 'window_id': window_id, 'created': self.clock(), 'aliases':table_aliases(nodes), 'no_tokens': tokenless}
         self.snapshots[handle] = state
         self.latest[(pid, window_id)] = handle
         # Retain bounded memory. Old handles cannot become current again.
@@ -1114,6 +1131,9 @@ class Facade:
             item['used']=False  # nothing was clicked: transient Driver failure, not an uncertain side effect
             raise
         current=self.state(fresh['snapshot'])
+        if current.get('no_tokens'):
+            item['used']=False  # nothing was clicked: the Driver gave no element tokens (an app still launching), so there is nothing to bind to
+            raise Gap('driver_snapshot_unavailable: ' + json.dumps({'refusal': current['raw'].get('refusal'), 'degraded_reason': current['raw'].get('degraded_reason')}, sort_keys=True))
         self.check_foreground(current['raw'])
         # Revalidate the content scope the selection was bound in (S4.8): any
         # change inside it refuses; a change outside it (browser chrome) does not.
