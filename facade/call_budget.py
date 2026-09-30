@@ -583,6 +583,26 @@ def measure_plan_scenarios():
     d = nav_driver();d.refuse = {'get_browser_state': 'browser_requires_setup', 'browser_prepare': 'existing_profile_not_granted'}
     out['nav_permission_required_stop'] = run(d, permission_stop, lv.LiveReader({}))
     assert d.called('browser_navigate') == [] and d.executed == [], 'a permission stop must deliver nothing'
+
+    # CE-FACADE-007 (#34): a multi-page read is ONE cua_do call (open_tab -> look -> close_tab per url, each page with its own look_id and landing verdict),
+    # where comparing N pages with goto plus cua_look costs 2N calls. Same fakes as above (REAL booking tree, SYNTHETIC tab strip); fixture-derived, not a rate.
+    import test_read_pages as trp
+    def pages_driver(dest=None):
+        d = trp.PagesDriver(trp.Clock());d.dest = dest or {}
+        return d
+    def read_three(call):
+        result = call('cua_do', goal='Compare the three booking pages', expect=None, title='Demo', steps=[{'do': 'read_pages', 'urls': [trp.A, trp.B, trp.C]}])
+        pages = result['steps'][0]['pages']
+        assert [p['status'] for p in pages] == ['ok'] * 3 and all(p['look_id'] for p in pages), result
+        return result
+    out['nav_read_pages_3'] = run(pages_driver(), read_three, lv.LiveReader({}))
+
+    def read_one_fails(call):
+        result = call('cua_do', goal='Compare the three booking pages', expect=None, title='Demo', steps=[{'do': 'read_pages', 'urls': [trp.A, trp.B, trp.C]}])
+        pages = result['steps'][0]['pages']
+        assert [p['status'] for p in pages] == ['ok', 'failed', 'ok'] and pages[1]['landing'] == 'navigated_elsewhere', result
+        return result  # the LLM has two pages and the verdict of the third: it reports, it does not retry
+    out['nav_read_pages_one_fails'] = run(pages_driver({trp.B: trp.ELSEWHERE}), read_one_fails, lv.LiveReader({}))
     return out
 
 

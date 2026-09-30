@@ -19,9 +19,9 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
-DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab')
+DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
 MAX_CONDITIONS = 6
 MAX_VALUE_CHARS = 60
@@ -125,13 +125,14 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                  'verify': {'do', 'goal', 'expect'},
                  'goto': {'do', 'goal', 'url', 'expect'},
                  'open_tab': {'do', 'goal', 'url', 'expect'},
-                 'close_tab': {'do', 'goal', 'expect', 'allow_foreground'}}[kind]
+                 'close_tab': {'do', 'goal', 'expect', 'allow_foreground'},
+                 'read_pages': {'do', 'goal', 'urls', 'fields'}}[kind]
         extra = sorted(set(step) - takes)
         if extra:
             raise _gap('bad_request: %s (%s) does not take %s' % (at, kind, ', '.join(extra)))
         if kind == 'verify' and 'expect' not in step:
             raise _gap('expect_required: %s is a verify step and needs expect (visible page text)' % at)
-        if kind not in ('verify', 'close_tab') and 'expect' not in step and not final:
+        if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and not final:
             raise _gap('expect_required: %s needs expect: the page text that will be visible once it worked (null is allowed only on the last step, which then ends delivered_unverified)' % at)
         if kind == 'press':
             if 'where' not in step and 'control' not in step:
@@ -147,6 +148,17 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 step['url'] = browser.check_url(step['url'])
             except Exception as error:
                 raise _gap(str(error).replace('bad_request: ', 'bad_request: %s ' % at, 1))
+        if kind == 'read_pages':
+            import browser
+            urls = step.get('urls')
+            if not isinstance(urls, list) or not 1 <= len(urls) <= browser.READ_PAGES_MAX:
+                raise _gap('bad_request: %s (read_pages) needs urls: 1 to %d http(s) URLs (split a longer list across calls)' % (at, browser.READ_PAGES_MAX))
+            try:
+                step['urls'] = [browser.check_url(u) for u in urls]
+            except Exception as error:
+                raise _gap(str(error).replace('bad_request: ', 'bad_request: %s ' % at, 1))
+            if 'fields' in step:
+                lk.check_look_args(step['fields'], 40, 6000, None)
         if kind == 'confirm':
             if 'confirm' not in step:
                 raise _gap('bad_request: %s (confirm) needs confirm=<the exact label of the dialog control>' % at)
@@ -330,6 +342,7 @@ HINTS = {
     'selected_record_has_hidden_text': 'The record step %(n)d selects had lines cut or omitted in the look (steps[].evidence.record, hidden_lines), so a line you never saw could contradict your conditions; nothing was clicked by this step. Call cua_look with max_lines and line_chars large enough to show the whole record and plan again, or, if you accept the risk, add accept_hidden_text=true to that step.',
     'toggle_state_unseen': 'Step %(n)d presses a checkbox, radio or switch, which flips its CURRENT state, and this plan carries no look_id of a look that saw that state; nothing was clicked by this step. Call cua_look, then cua_do with its look_id and an expect naming the resulting state.',
     'confirm_dialog_unexpected_text': 'The dialog\'s text is not exactly the dialog_text you declared (steps[].dialog.lines shows the ACTUAL lines), and the previous step\'s click is already done, so nothing further was pressed by step %(n)d. Read the lines: if this is the dialog the user\'s task calls for, call cua_do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it. Next time declare exactly those lines as dialog_text on the confirm step.',
+    'pages_incomplete': 'Some pages of step %(n)d were not read (steps[].pages says for each: landing verdict, reason, skipped or not closed); the other pages were read and are in steps[].pages with their look_id (the page is closed again: to act on one, open_tab it, then cua_look). Nothing else ran. Report which pages failed, or call cua_do with read_pages for just those urls.',
     'delivery_unverified': 'Step %(n)d\'s click was delivered but its expect was not seen. Do not click again. Call cua_do with steps=[{do:"verify", expect:<page text that should be visible now>}] to check, or report the state.',
     'not_verified': 'The expect of the verify step was not established (control labels never count). Nothing was clicked. Call cua_do with a different expect, or report what cua_look shows.',
     'unknown_competitors_unacknowledged': 'Some records could not be compared with the predicates (step %(n)d unknown_ids and evidence.extracted show their strings). Call cua_do with the same steps and treat_as_match=<ids> on that step if you judge they DO match, or accept_unknown=<ids> if they do NOT. Nothing was clicked by this step.',
@@ -402,10 +415,15 @@ def _abort_hit(f, pid, window_id, abort_if, since):
 
 def _fit(result):
     """Keep the response small: drop the most verbose optional detail first."""
-    for drop in (('steps', 'evidence'), ('steps', 'found'), ('summary', 'text'), ('summary', 'controls')):
+    for drop in (('steps', 'evidence'), ('steps', 'found'), ('pages', 'sample'), ('pages', 'text'), ('summary', 'text'), ('summary', 'controls')):
         if len(json.dumps(result)) <= RESPONSE_BYTES:
             break
-        if drop[0] == 'steps':
+        if drop[0] == 'pages':
+            for entry in result['steps']:
+                for page in entry.get('pages') or []:
+                    if isinstance(page.get('summary'), dict):
+                        page['summary'].pop(drop[1], None)
+        elif drop[0] == 'steps':
             for entry in result['steps']:
                 entry.pop(drop[1], None)
         elif result.get('summary'):
@@ -439,7 +457,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             break
         began = f.clock()
         kind = step['do']
-        spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify', 'goto': 'verify', 'open_tab': 'verify', 'close_tab': 'verify'}[kind],
+        spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify', 'goto': 'verify', 'open_tab': 'verify', 'close_tab': 'verify', 'read_pages': 'verify'}[kind],
                 'control': step.get('control'), 'text': step.get('text'), 'near': step.get('near'), 'expect': step.get('expect'),
                 'accept_unknown': step.get('accept_unknown'), 'treat_as_match': step.get('treat_as_match'), 'records': None}
         channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive'), 'look_id': look_id}
@@ -455,6 +473,34 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             channel['confirm_step'] = {'label': step['confirm'], 'identity': step.get('identity') or carry['identity'], 'before': carry['before'], 'dialog_text': step['dialog_text'], 'dialog_controls': step['dialog_controls']}
         # The window is resolved once (by the first step) and then pinned: every step acts on the same window.
         window = {'title': title} if ctx['pid'] is None else {'pid': ctx['pid'], 'window_id': ctx['window_id']}
+        if kind == 'read_pages':
+            # CE-FACADE-007 (#34): open_tab -> look -> close_tab per url, in this window; the user's own tab is never navigated and every page stands alone.
+            import browser
+            try:
+                if ctx['pid'] is None:
+                    found = f.windows(title)['windows']
+                    if len(found) != 1:
+                        raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
+                    ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+                pages = browser.read_pages(f, ctx['pid'], ctx['window_id'], step['urls'], step.get('fields'), min(browser.READ_PAGES_BUDGET_S, remaining))
+            except Gap as gap:
+                reason = str(gap).split(':', 1)[0]
+                entry = {'n': n, 'do': kind, 'status': 'refused' if reason.startswith('window_') else 'failed', 'reason': reason, 'message': lk.safe_message(reason, str(gap)), 'ms': round((f.clock() - began) * 1000)}
+                failed = {'n': n, 'reason': reason, 'status': entry['status']}
+                entries.append(entry)
+                break
+            complete = all(p['status'] == 'ok' for p in pages)
+            entry = {'n': n, 'do': kind, 'status': 'done' if complete else 'stopped', 'ms': round((f.clock() - began) * 1000), 'pages': pages}
+            if any(p['status'] == 'ok' or 'closed' in p for p in pages):  # a tab was opened
+                delivery = 'delivered'
+            if not complete:
+                entry['reason'] = 'pages_incomplete'
+                failed = {'n': n, 'reason': 'pages_incomplete', 'status': 'stopped'}
+            entries.append(entry)
+            carry['before'], carry['identity'] = None, None
+            if not complete:
+                break
+            continue
         if kind in ('goto', 'open_tab', 'close_tab'):
             # CE-FACADE-007: navigate the pinned window's active tab; done only when the tab reports the requested page and, when given,
             # expect is visible on a fresh observation. A refusal to attach is permission_required, never another browser.

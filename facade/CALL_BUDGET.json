@@ -814,6 +814,40 @@
         "changed_by": "CE-FACADE-007"
       },
       "native_reference_calls": 5
+    },
+    "nav_read_pages_3": {
+      "description": "REAL captured booking tree behind a faked Driver browser, SYNTHETIC tab strip: ONE cua_do read_pages step over 3 urls (open_tab, look, close_tab each, per-page look_id and landing verdict); 1 call where goto plus cua_look per page costs 6",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "native_reference_calls": 5
+    },
+    "nav_read_pages_one_fails": {
+      "description": "same 3 urls, the second redirects elsewhere: still ONE call; the step ends stopped pages_incomplete with the other two pages read, the redirected page's verdict, and every tab closed (no retry, no silent abort)",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "native_reference_calls": 5
     }
   },
   "live_task_budgets": {

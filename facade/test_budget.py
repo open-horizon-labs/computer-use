@@ -280,6 +280,17 @@ class DefaultPathBudget(unittest.TestCase):
         for name in ('nav_goto_look_plan', 'nav_open_tab_read_close', 'nav_permission_required_stop'):
             self.assertEqual(BUDGET['scenarios'][name]['max_llm_visible_calls']['changed_by'], 'CE-FACADE-007')
 
+    def test_a_multi_page_read_is_one_call_and_moves_no_existing_number(self):
+        # CE-FACADE-007 (#34). Wrong patches: read_pages as a fourth tool or a mandatory extra look (more calls), or a new scenario that loosens an old number.
+        m = self.measured
+        for name, status in (('nav_read_pages_3', 'done'), ('nav_read_pages_one_fails', 'stopped')):
+            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['tools'], m[name]['reader'], m[name]['chooser'], m[name]['status']), (1, ['cua_do'], 0, 0, status), name)
+            self.assertEqual(BUDGET['scenarios'][name]['max_llm_visible_calls']['changed_by'], 'CE-FACADE-007')
+            self.assertEqual(BUDGET['scenarios'][name]['final_status'], status)
+        self.assertEqual(BUDGET['default_path_tools']['value'], ['cua_do', 'cua_look'])
+        for name in ('nav_goto_look_plan', 'nav_open_tab_read_close', 'plan_booking_look_do', 'booking_list'):
+            self.assertLessEqual(BUDGET['scenarios'][name]['max_llm_visible_calls']['value'], 3)
+
     def test_a_stale_page_mid_plan_stops_at_that_step_and_is_budgeted_as_stopped(self):
         m = self.scenario('plan_stale_mid_plan');self.assertEqual((m['status'], m['calls']), ('stopped', 2))
         self.assertEqual(BUDGET['scenarios']['plan_stale_mid_plan']['final_status'], 'stopped')
