@@ -267,7 +267,7 @@ class Facade:
 
     def _settled(self, pid, window_id, timeout, result, began):
         """The ready observation once the tree stops growing (see SETTLE_DELAY_S): read-only, bounded by count and by LOOK_WAIT_MAX_S."""
-        size = len(result.get('elements') or [])
+        size = (len(result.get('elements') or []), Facade._page_press(result)[1])  # the tree, and how many page controls can be pressed
         for n in range(SETTLE_MAX):
             if self.clock() - began + SETTLE_DELAY_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 > LOOK_WAIT_MAX_S:
                 break
@@ -278,7 +278,7 @@ class Facade:
                 break
             if self._not_ready(again):
                 break
-            grown = len(again.get('elements') or [])
+            grown = (len(again.get('elements') or []), Facade._page_press(again)[1])
             result = again
             if grown == size:
                 if n:self.event('observe_settled', extra_observations=n + 1, elements=grown)
@@ -288,11 +288,33 @@ class Facade:
         return result
 
     @staticmethod
+    def _page_press(result):
+        """(controls inside the page's web area, how many of them advertise AXPress), from an observation's element list."""
+        els = result.get('elements') or []
+        webs = {e['id'] for e in els if e.get('role') == 'AXWebArea'}
+        if not webs:
+            return 0, 0
+        parent = {e['id']: e.get('parent_id') for e in els}
+        def in_page(i):
+            seen = set()
+            while i is not None and i not in seen:
+                if i in webs:return True
+                seen.add(i);i = parent.get(i)
+            return False
+        ctrls = [e for e in els if e.get('role') in Facade.CONTROL_ROLES and e.get('enabled', True) is not False and in_page(e.get('parent_id'))]
+        return len(ctrls), sum(1 for e in ctrls if 'AXPress' in (e.get('actions') or []))
+
+    @staticmethod
     def _not_ready(result):
         if result['quality'].get('degraded_reason') in NOT_READY_DEGRADED:
             return 'app_launching'
         if not result.get('elements'):
             return 'empty_tree'
+        # Measured live 2026-09-30: Chrome's first read of a fresh page listed every table button with only AXShowMenu/AXScrollToVisible;
+        # two seconds later the same buttons advertised AXPress. A page whose controls are ALL unpressable is not ready yet.
+        controls, pressable = Facade._page_press(result)
+        if controls and not pressable:
+            return 'actions_pending'
         if result['quality'].get('degraded_reason'):
             return 'degraded'
         return None

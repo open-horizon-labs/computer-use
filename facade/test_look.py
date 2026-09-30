@@ -442,6 +442,34 @@ class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
             f.look(pid=1, window_id=2)
             self.assertEqual(self.naps, [0.5, core.SETTLE_DELAY_S], title)
 
+    def unpressable(self, until):
+        """The real booking tree, but for the first `until` observations no page button advertises AXPress (Chrome's first read, live 2026-09-30)."""
+        d = lv.LiveDriver('live_booking_ax.json')
+        def script(drv, els):
+            if drv.version > until:return None
+            web = next(e['element_index'] for e in els if e.get('role') == 'AXWebArea')
+            for e in els:
+                if e.get('role') == 'AXButton' and e['element_index'] > web:e['actions'] = [a for a in e.get('actions', []) if a != 'AXPress']
+            return els
+        d.script = script
+        self.naps = []
+        return d, Facade(d, reader_factory=Boom('reader'), generic_factory=Boom('chooser'), visual_factory=Boom('visual'), sleep=self.naps.append)
+
+    def test_a_page_whose_buttons_are_not_pressable_yet_is_looked_at_again(self):
+        # Wrong patch: accept the first read (every button without AXPress: the look finds no controls, record_kind none, and a plan
+        # stops records_ambiguous on a page that is fine a moment later).
+        d, f = self.unpressable(until=1)
+        r = f.look('Demo')
+        self.assertEqual((r['record_kind'], r['counts']['records']), ('flat-list', 12), r.get('notes'))
+        self.assertEqual(self.naps[0], 0.5)
+
+    def test_buttons_that_never_become_pressable_are_returned_after_the_bounded_retries(self):
+        # Wrong patch: wait until pressable (unbounded).
+        d, f = self.unpressable(until=99)
+        r = f.look('Demo')
+        self.assertEqual(self.naps[:2], [0.5, 1.0])
+        self.assertIn(r['status'], ('ok', 'deferred'))
+
     def test_only_a_look_waits_never_an_action_observation(self):
         # Wrong patch: retry inside every observe (an action's revalidation would then see a page settle and miss the change).
         d, f = self.build(thin_for=99)
