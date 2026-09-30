@@ -305,4 +305,26 @@ class Schema(unittest.TestCase):
         self.assertEqual([t.name for t in asyncio.run(server.mcp.list_tools())], ['cua_do', 'cua_look'])  # look, then do (CE-FACADE-005)
 
 
+
+class PagePressPending(LiveBase):
+    """Live 2026-09-30: Chrome listed every page button without AXPress for up to ~2 s at random, and an AXPress then was a no-op (page log
+    empty). Wrong patches: act on (or give up at) the first read of the step; wait twice for the same symptom."""
+    def test_a_step_whose_page_buttons_are_not_pressable_yet_waits_once_then_presses(self):
+        import core
+        L = lambda op, v: {'line': op, 'value': v}
+        look = self.f.look('Demo')
+        strip = {'n': 1}
+        def script(d, els):
+            if strip['n'] <= 0:return None
+            strip['n'] -= 1
+            web = next(e['element_index'] for e in els if e.get('role') == 'AXWebArea')
+            for e in els:
+                if e.get('role') == 'AXButton' and e['element_index'] > web:e['actions'] = ['AXShowMenu', 'AXScrollToVisible']
+            return els
+        self.driver.script = script
+        r = self.f.do('Book the Follow-up slot with Dr. Priya Shah', title='Demo', expect=None, look_id=look['look_id'],
+                      steps=[{'do': 'press', 'where': {'lines': [L('eq', 'Dr. Priya Shah')]}, 'control': 'Book', 'expect': None}])
+        self.assertEqual((r['status'], len(self.driver.executed)), ('delivered_unverified', 1), r)
+        self.assertEqual(self.naps.count(core.ACTIONS_PENDING_WAIT_S), 1)
+
 if __name__ == '__main__':unittest.main()

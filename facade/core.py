@@ -33,6 +33,14 @@ MEMORY_READOUT = re.compile(r'(Memory usage - )[\d.,]+\s*[KMGT]?B',re.I)
 # (the hard cap on one Driver call stays Driver.call's own 20 s subprocess timeout). Changing any of the three needs the bound re-derived.
 DRIVER_LAUNCH_WAIT_MS = 1000
 LOOK_WAIT_MAX_S = 10.0
+# Chrome builds a fresh page's AX tree incrementally: a look taken while it grows saw a table's headers without its rows (live deep test
+# 2026-09-30: 457 then 472 nodes; record_kind none, then 7 records). After the first READY observation of a look, observe again after
+# SETTLE_DELAY_S; while the element count still changes, keep observing (at most SETTLE_MAX more), inside LOOK_WAIT_MAX_S by the clock.
+SETTLE_DELAY_S = 0.3
+# Chrome filled in the page buttons' AXPress only after an IDLE gap: observing every ~1 s kept them unpressable for 8 s, one 2 s gap with no
+# walk fixed it every time (live 2026-09-30). An actions_pending observation waits this long, once, instead of the short delays.
+ACTIONS_PENDING_WAIT_S = 2.0
+SETTLE_MAX = 3
 TIMEOUT_MS_SINCE = (0, 31, 0)   # older Drivers are not sent timeout_ms
 NOT_READY_DEGRADED = frozenset({'ax_app_launching'})  # degraded reasons that clear by themselves: a look waits, an action never proceeds on them
 THIN_PAGE_NODES = 10   # a web page with this few nodes or fewer is still loading or a holding page ("checking your browser"), whatever the site
@@ -52,7 +60,7 @@ class DriverCallFailed(Gap):
     output). Typed, so callers never match on message text. Carries no stderr.
     tool, kind (exit, timeout, unusable_output) and restarted (a session restart was tried, #31) are the sanitized diagnosis (#30)."""
     def __init__(self, message='', tool=None, kind=None):
-        super().__init__(message);self.tool, self.kind, self.restarted = tool, kind, False
+        super().__init__(message);self.tool, self.kind, self.restarted, self.code = tool, kind, False, None
 
 
 
@@ -109,7 +117,17 @@ class Driver:
                                     capture_output=True, text=True, timeout=timeout, check=True)
             value = json.loads(result.stdout)
         except subprocess.CalledProcessError as error:
-            raise DriverCallFailed('driver_call_failed: %s exited %s%s' % (tool, error.returncode, note), tool, 'exit')
+            # The Driver often prints a JSON {"code": ...} on stdout when it exits 1 (live 2026-09-30: invalid_action_target on every
+            # canvas press was invisible as driver_call_failed). Keep that code when it is a plain token; never any other Driver text.
+            code = None
+            try:
+                parsed = json.loads(error.stdout or '')
+                code = parsed.get('code') if isinstance(parsed, dict) and re.fullmatch(r'[a-z][a-z0-9_]{0,63}', str(parsed.get('code') or '')) else None
+            except (ValueError, TypeError):
+                code = None
+            failure = DriverCallFailed('driver_call_failed: %s exited %s%s%s' % (tool, error.returncode, ' (%s)' % code if code else '', note), tool, 'exit')
+            failure.code = code
+            raise failure
         except subprocess.TimeoutExpired:
             raise DriverCallFailed('driver_call_failed: %s timed out after %ss%s' % (tool, timeout, note), tool, 'timeout')
         except (OSError, ValueError):
@@ -151,6 +169,7 @@ class Facade:
                  spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep):
         self.driver = driver or Driver()
         self.sleep = sleep
+        self._settled_titles = {}  # (pid, window_id) -> window title of the last settled look (see SETTLE_DELAY_S)
         self.foreground_ok = False  # per call/step: allow_foreground; a background pixel click cannot reach a canvas (see act)
         self.factories = {'generic': generic_factory, 'reader': reader_factory,
                           'spans': spans_factory, 'visual': visual_factory}
@@ -237,6 +256,7 @@ class Facade:
         phrase list. A failed Driver call is NOT retried here: _do's own bounded recovery owns it. Read-only, so a retry can never act twice. After the last try
         the result (or the original error) is returned unchanged; nothing here solves or bypasses a check."""
         delays = list(OBSERVE_RETRY_DELAYS) if wait_ready else []
+        began = self.clock();waited_idle = False;reason = None
         for attempt in range(len(delays) + 1):
             last = attempt == len(delays)
             try:
@@ -249,8 +269,58 @@ class Facade:
                 if last or reason is None:
                     if attempt:
                         self.event('observe_retry', attempts=attempt, ready=reason is None, reason=reason)
+                    if wait_ready and reason is None:
+                        key = (pid, window_id)
+                        # a window first seen, or a new page in it (its title changed): the tree may still be growing
+                        if key not in self._settled_titles or self._settled_titles[key] != result.get('title'):
+                            result = self._settled(pid, window_id, timeout, result, began)
+                            self._settled_titles[key] = result.get('title')
                     return result
-            self.sleep(delays[attempt])
+            if reason == 'actions_pending' and self.clock() - began + ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 <= LOOK_WAIT_MAX_S:
+                waited_idle = True  # every actions_pending retry waits idle (a quick re-poll can land in a new episode)
+                self.sleep(ACTIONS_PENDING_WAIT_S)
+            else:
+                self.sleep(delays[attempt])
+
+    def _settled(self, pid, window_id, timeout, result, began):
+        """The ready observation once the tree stops growing (see SETTLE_DELAY_S): read-only, bounded by count and by LOOK_WAIT_MAX_S."""
+        size = (len(result.get('elements') or []), Facade._page_press(result)[1])  # the tree, and how many page controls can be pressed
+        for n in range(SETTLE_MAX):
+            if self.clock() - began + SETTLE_DELAY_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 > LOOK_WAIT_MAX_S:
+                break
+            self.sleep(SETTLE_DELAY_S)
+            try:
+                again = self._observe_once(pid, window_id, timeout)
+            except Gap:
+                break
+            if self._not_ready(again):
+                break
+            grown = (len(again.get('elements') or []), Facade._page_press(again)[1])
+            result = again
+            if grown == size:
+                if n:self.event('observe_settled', extra_observations=n + 1, elements=grown)
+                return result
+            size = grown
+        self.event('observe_settled', extra_observations=SETTLE_MAX, elements=size, stable=False)
+        return result
+
+    @staticmethod
+    def _page_press(result):
+        """(controls inside the page's web area, how many of them advertise AXPress), from an observation's element list."""
+        els = result.get('elements') or []
+        webs = {e['id'] for e in els if e.get('role') == 'AXWebArea'}
+        if not webs:
+            return 0, 0
+        parent = {e['id']: e.get('parent_id') for e in els}
+        def in_page(i):
+            seen = set()
+            while i is not None and i not in seen:
+                if i in webs:return True
+                seen.add(i);i = parent.get(i)
+            return False
+        # Buttons only: every enabled page AXButton in every settled capture advertises AXPress; other roles (links, menu buttons) vary.
+        ctrls = [e for e in els if e.get('role') == 'AXButton' and e.get('enabled', True) is not False and in_page(e.get('parent_id'))]
+        return len(ctrls), sum(1 for e in ctrls if 'AXPress' in (e.get('actions') or []))
 
     @staticmethod
     def _not_ready(result):
@@ -258,6 +328,12 @@ class Facade:
             return 'app_launching'
         if not result.get('elements'):
             return 'empty_tree'
+        # Measured live 2026-09-30: Chrome's first read of a fresh page listed every table button with only AXShowMenu/AXScrollToVisible;
+        # two seconds later the same buttons advertised AXPress, and Chrome fills them in partway (some pressable, some not). A page with ANY
+        # enabled button that does not advertise AXPress yet is not ready.
+        controls, pressable = Facade._page_press(result)
+        if pressable < controls:
+            return 'actions_pending'
         if result['quality'].get('degraded_reason'):
             return 'degraded'
         return None
@@ -1174,7 +1250,10 @@ class Facade:
             for action in request['actions']:
                 action['arguments']['element_token']=self.node(current,action['id'])['element_token']
             decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
-        result=execute_bound(request,decision,request['snapshot_id'],lambda tool,args:self.driver.call(tool,args))
+        # A capture-bound click names its window in `target`; Driver 0.30.4 refuses target together with top-level pid/window_id
+        # (invalid_action_target, live deep test 2026-09-30: every canvas press failed). The stored arguments keep them for the checks.
+        wire=lambda args:{k:v for k,v in args.items() if not ('target' in args and k in ('pid','window_id'))}
+        result=execute_bound(request,decision,request['snapshot_id'],lambda tool,args:self.driver.call(tool,wire(args)))
         self.latest.pop((state['pid'],state['window_id']),None)
         self.event('act',route='cua-driver',selection=selection,revalidation='unchanged_observation',
                    original_binding=item['decision']['binding_digest'],fresh_binding=decision['binding_digest'],
@@ -1364,7 +1443,7 @@ class Facade:
     @staticmethod
     def _failure_detail(gap):
         """Sanitized diagnosis of a failed Driver call (#30, #31): the tool, the exit class and whether a session restart was tried. Never stderr."""
-        return {'tool': getattr(gap, 'tool', None), 'exit_class': getattr(gap, 'kind', None), 'session_restart_tried': getattr(gap, 'restarted', False)}
+        return {'tool': getattr(gap, 'tool', None), 'exit_class': getattr(gap, 'kind', None), 'session_restart_tried': getattr(gap, 'restarted', False), **({'driver_code': gap.code} if getattr(gap, 'code', None) else {})}
 
     @staticmethod
     def _do_reason(message):
@@ -1916,8 +1995,16 @@ class Facade:
         def attempt():
             ctx['pass'] += 1
             pid_, window_ = ctx['pid'], ctx['window_id']
-            snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot)
+            seen = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))
             count('observe', 'cua-driver')
+            controls_, pressable_ = self._page_press(seen)
+            if operation == 'click' and pressable_ < controls_ and remaining() > ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000:
+                # Chrome intermittently lists a page's buttons without AXPress (an AXPress then is a no-op: measured live, page log empty);
+                # it clears within ~2 s. Before any click, wait that idle gap ONCE and observe again (read-only).
+                attempts.append({'pass': ctx['pass'], 'stage': 'observe', 'kind': 'reobserve_unpressable_control'})
+                self.sleep(ACTIONS_PENDING_WAIT_S)
+                seen = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()));count('observe', 'cua-driver')
+            snapshot = seen['snapshot'];state = self.state(snapshot)
             self.reject_answer_leak(state, goal)
             if over_all():return budget()
             webs = self._top_web_areas(state)
@@ -2014,10 +2101,10 @@ class Facade:
                 offered = [i for i in pool(state) if self._operation_compatible(state['nodes'][i], operation)]
                 if label is not None:
                     any_named, same = named(state)
-                    if any_named and not same:
-                        # Chrome can omit the press action on a fresh read: reobserve ONCE before concluding anything.
+                    if any_named and not same and not any(a['pass'] == ctx['pass'] and a['kind'] == 'reobserve_unpressable_control' for a in attempts):
+                        # Chrome can omit the press action on a fresh read: reobserve ONCE before concluding anything (at most once per pass).
                         attempts.append({'pass': ctx['pass'], 'stage': 'choose', 'kind': 'reobserve_unpressable_control'})
-                        self.sleep(self.RETRY_BACKOFF_S)
+                        self.sleep(ACTIONS_PENDING_WAIT_S if remaining() > ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 else self.RETRY_BACKOFF_S)
                         snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot);count('observe', 'cua-driver')
                         any_named, same = named(state);offered = [i for i in pool(state) if self._operation_compatible(state['nodes'][i], operation)]
                     listing = self._bounded(sorted({state['nodes'][i].get('label') or '' for i in offered}))
@@ -2074,7 +2161,9 @@ class Facade:
             if plan is not None and operation != 'verify':
                 sid_ = choice['selected_id']
                 node = state['nodes'].get(int(sid_[1:]), {}) if isinstance(sid_, str) and sid_[:1] == 'e' and sid_[1:].isdigit() else {}  # a pixel region is no AX control
-                if node.get('role') in planmod.lk.TOGGLE_ROLES or 'checked' in node or 'selected' in node:
+                # Chrome sets selected:false on every plain button (look.toggle_marker): a 'selected' KEY is noise, only a toggle role or a
+                # checked key makes a press flip state. Live deep test 2026-09-30: 'Export data' (AXButton) was refused toggle_state_unseen.
+                if node.get('role') in planmod.lk.TOGGLE_ROLES or 'checked' in node:
                     # A toggle presses to the OPPOSITE of its current state: only against a look that saw that state, and unchanged since.
                     seen = self.looks.get((ctx['pid'], ctx['window_id'], plan.get('look_id'))) if plan.get('look_id') else None
                     why = 'toggle_state_unseen' if seen is None else (None if planmod.look_matches(self, state, seen, plan['look_id'])[0] else 'page_changed_since_look')

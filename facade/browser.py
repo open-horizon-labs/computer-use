@@ -61,6 +61,19 @@ def _refusal_code(error):
     return text.split('Driver refused:', 1)[1].strip() if 'Driver refused:' in text else None
 
 
+# Driver refusal codes that mean the user has not granted or prepared the browser attachment. Any other refusal is NOT a permission problem
+# (live 2026-09-30: a goto to a 404 page was reported permission_required).
+PERMISSION_CODES = frozenset({'browser_consent_required', 'browser_requires_setup', 'existing_profile_not_granted', 'consumer_profile_endpoint_requires_grant',
+                              'permission_denied', 'browser_permission_required'})
+
+
+def _navigate_refused(code, action):
+    code = code or 'refused'
+    if code in PERMISSION_CODES:
+        return _permission(code or 'refused', action)
+    return _gap('navigate_refused: the Driver refused to %s (%s); nothing else was tried' % (action, code))
+
+
 def _permission(code, action):
     return _gap('permission_required: the Driver refused to %s (%s). Attaching to your browser profile needs the Driver started with '
                 '`serve --grant existing-profile`; nothing was opened in another browser or profile' % (action, code))
@@ -127,13 +140,17 @@ def settle(f, check):
 
 def navigate(f, pid, window_id, url):
     """Navigate the window's active tab and verify the landing. Returns {'status': 'ok', 'page': ...} or raises core.Gap with a typed reason."""
-    from core import Gap as CoreGap
+    from core import Gap as CoreGap, DriverCallFailed
     url = check_url(url)
     target, tab = bind(f, pid, window_id)
     try:
         _call(f, 'browser_navigate', {'target_id': target, 'tab_id': tab, 'url': url})
+    except DriverCallFailed as error:
+        # Live 2026-09-30: a 404 is exit 1 'navigation failed: net::ERR_HTTP_RESPONSE_CODE_FAILURE' (no refusal code): the page did not
+        # load. Not a permission, not a landing: its own reason, no Driver text.
+        raise _gap('navigate_failed: the page did not load (an HTTP error or a network failure; %s); nothing else was tried' % (getattr(error, 'kind', None) or 'error'))
     except CoreGap as error:
-        raise _permission(_refusal_code(error), 'navigate this tab')
+        raise _navigate_refused(_refusal_code(error), 'navigate this tab')
     seen = {}
     def check():
         page = page_of(f, target, tab)
@@ -235,11 +252,15 @@ def _remember_tab(f, pid, window_id, page, count):
 
 
 def _navigate_tab(f, target, tab, url):
-    from core import Gap as CoreGap
+    from core import Gap as CoreGap, DriverCallFailed
     try:
         _call(f, 'browser_navigate', {'target_id': target, 'tab_id': tab, 'url': url})
+    except DriverCallFailed as error:
+        # Live 2026-09-30: a 404 is exit 1 'navigation failed: net::ERR_HTTP_RESPONSE_CODE_FAILURE' (no refusal code): the page did not
+        # load. Not a permission, not a landing: its own reason, no Driver text.
+        raise _gap('navigate_failed: the page did not load (an HTTP error or a network failure; %s); nothing else was tried' % (getattr(error, 'kind', None) or 'error'))
     except CoreGap as error:
-        raise _permission(_refusal_code(error), 'navigate this tab')
+        raise _navigate_refused(_refusal_code(error), 'navigate this tab')
     seen = {}
     def check():
         page = page_of(f, target, tab)
@@ -317,10 +338,17 @@ def close_tab(f, pid, window_id, allow_foreground=False):
         if str(error).split(':', 1)[0] != 'tab_close_control_not_found' or allow_foreground is not True:
             raise
     if control:
-        try:
-            f.act(f.bind_press(control[0], control[1], 'Close the tab cua_do opened'))
-        except StaleUI:
-            raise _gap('tab_strip_changed: the window changed between finding the tab\'s Close button and pressing it; nothing was pressed')
+        # The press is revalidated over the whole window; a page that just loaded is still changing (its buttons gain AXPress, the tab's
+        # title settles), which refuses StaleUI with nothing pressed (live 2026-09-30: read_pages left a tab open). Re-find and retry ONCE.
+        for tries in (1, 2):
+            try:
+                f.act(f.bind_press(control[0], control[1], 'Close the tab cua_do opened'))
+                break
+            except StaleUI:
+                if tries == 2:
+                    raise _gap('tab_strip_changed: the window changed between finding the tab\'s Close button and pressing it, twice; nothing was pressed')
+                f.sleep(getattr(f, 'RETRY_BACKOFF_S', 0.3))
+                control = close_control(f, pid, window_id, mine[0]['title'])
         how = 'pressing its Close button'
     else:
         if not _titled(getattr(f, 'native_title', ''), mine[0]['title']):

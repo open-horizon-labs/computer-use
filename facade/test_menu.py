@@ -43,6 +43,11 @@ class MenuDriver(sh.ShapeDriver):
     def call(self, tool, args, timeout=20):
         if tool == 'click':
             self.clicks.append(dict(args))
+            if getattr(self, 'click_exit_code', None):
+                import subprocess
+                def exit1(*a, **k):raise subprocess.CalledProcessError(1, a[0], output=json.dumps({'code': self.click_exit_code}))
+                with mock.patch('core.subprocess.run', exit1):
+                    return self.real.call(tool, args, timeout)
             done = mock.Mock(stdout=json.dumps(self.click_answer))
             with mock.patch('core.subprocess.run', return_value=done):
                 return self.real.call(tool, args, timeout)
@@ -78,6 +83,19 @@ class Routing(Base):
         self.assertEqual(self.driver.menu_calls, [{'session': self.f.session, 'pid': 1, 'window_id': 2, 'path': ['Profiles', 'Person 1']}])
         self.assertEqual(r['steps'][0]['selected']['route'], 'invoke_menu', 'never a silent reroute: the response names the route')
         self.assertEqual(r['steps'][0]['verification']['status'], 'satisfied')
+
+    def test_the_live_exit_1_form_of_the_refusal_is_routed_too(self):
+        # Wrong patch: recognise only the refusal ANSWER. Live 2026-09-30 (Driver 0.30.4 and 0.31.0) the Driver exits 1 with
+        # {"code": "element_outside_target_window"} on stdout; the step failed driver_call_failed and invoke_menu never ran.
+        self.driver.click_exit_code = 'element_outside_target_window'
+        r = self.press(allow_foreground=True)
+        self.assertEqual(len(self.driver.menu_calls), 1, r)
+        self.assertNotEqual(r['steps'][0].get('reason'), 'driver_call_failed')
+
+    def test_another_exit_1_code_is_never_rerouted(self):
+        self.driver.click_exit_code = 'something_else'
+        r = self.press(allow_foreground=True)
+        self.assertEqual(self.driver.menu_calls, [])
 
     def test_the_refusal_is_preserved_without_allow_foreground_because_invoke_menu_fronts_the_window(self):
         # Wrong patch: reroute silently (invoke_menu temporarily activates the target window: the Driver's own doc), without the caller's permission to front it.
