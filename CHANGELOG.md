@@ -12,6 +12,9 @@ Versions follow Cua Driver minor releases (0.31 targets Cua Driver 0.31).
 - `open_tab {url, expect}` and `close_tab` plan steps; `close_tab` closes only the tab this facade opened (CE-FACADE-007, #28).
 - A Driver refusal to attach to the browser profile is `permission_required` naming `--grant existing-profile`; the facade never switches to another browser or profile (#28).
 
+### Removed
+- The unqualified Qwen chat-completion vision fallback in `workers/visual_worker.py`: without `CUA_SYSTEMONE_URL` the visual provider is unavailable, nothing is sent, verification ends unverified and visual choose defers (#8).
+
 ### Fixed
 - `cua_look` counts only the page, not the browser's menu bar, on windows without a web area (#27, pending).
 
