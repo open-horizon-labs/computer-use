@@ -39,7 +39,7 @@ MUTATIONS = {
          'test_plan.Validation.test_an_invented_look_id_is_refused']),
     'null_expect_on_a_non_final_step': (
         'allow expect=null anywhere',
-        [('plan.py', "        if kind != 'verify' and 'expect' not in step and not final:", "        if kind != 'verify' and 'expect' not in step and False:")],
+        [('plan.py', "        if kind not in ('verify', 'close_tab') and 'expect' not in step and not final:", "        if kind not in ('verify', 'close_tab') and 'expect' not in step and False:")],
         ['test_plan.Validation.test_null_expect_on_a_non_final_step_is_refused_before_any_click']),
     'steps_continue_after_a_non_done_step': (
         'keep executing the remaining steps after a failed one',

@@ -149,3 +149,70 @@ def navigate(f, pid, window_id, url):
     if verdict == 'navigated_elsewhere':
         raise _gap('navigated_elsewhere: asked for %s, the tab shows %s' % (url[:200], page['url'][:200]))
     raise _gap('landing_unknown: the Driver reported no page URL for the tab after navigating; the tab may still be loading')
+
+
+# ---- tabs (Driver 0.30.4 has no tab-create/close tool: the browser's own Cmd+T / Cmd+W, verified against the Driver's tab list) ----
+
+def tab_state(f, pid, window_id):
+    """(ids of the window's tabs, the active tab id or None), from a fresh exact bind."""
+    bound = _bound(f, pid, window_id)
+    tabs = _tabs(bound)
+    active = [t['tab_id'] for t in tabs if t.get('active') or t.get('selected')]
+    return [t['tab_id'] for t in tabs], (active[0] if len(active) == 1 else None)
+
+
+def _bound(f, pid, window_id):
+    from core import Gap as CoreGap
+    try:
+        return _call(f, 'get_browser_state', {'pid': pid, 'window_id': window_id})
+    except CoreGap as error:
+        code = _refusal_code(error)
+        if code is None:
+            raise
+        bind(f, pid, window_id)  # prepares the existing-profile endpoint or raises permission_required
+        return _call(f, 'get_browser_state', {'pid': pid, 'window_id': window_id})
+
+
+def _hotkey(f, pid, window_id, keys):
+    f.driver.call('hotkey', {'session': f.session, 'pid': pid, 'window_id': window_id, 'keys': keys, 'delivery_mode': 'background'})
+
+
+def open_tab(f, pid, window_id, url):
+    """Open one new tab in the window (Cmd+T), verified: exactly one new tab id and it is the active tab. Then navigate it (landing verified).
+    Records the tab as opened by the facade, so close_tab may close it later. A Cmd+T that shows no new tab stops tab_not_opened: it is
+    NOT retried (a delayed tab would make two)."""
+    url = check_url(url)
+    before, _ = tab_state(f, pid, window_id)
+    _hotkey(f, pid, window_id, ['cmd', 't'])
+    seen = {}
+    def check():
+        ids, active = tab_state(f, pid, window_id)
+        new = [t for t in ids if t not in before]
+        seen.update(new=new, active=active)
+        return len(new) == 1 and active == new[0]
+    settle(f, check)
+    if not (len(seen.get('new', [])) == 1 and seen.get('active') == seen['new'][0]):
+        raise _gap('tab_not_opened: after Cmd+T the window shows %d new tabs%s; it was not retried' % (
+            len(seen.get('new', [])), '' if seen.get('active') in seen.get('new', []) else ' and the active tab is not a new one'))
+    tab = seen['new'][0]
+    f.opened_tabs = getattr(f, 'opened_tabs', set()) | {tab}
+    return {**navigate(f, pid, window_id, url), 'tab': tab}
+
+
+def close_tab(f, pid, window_id):
+    """Close the window's active tab only when the facade opened it (never one of the user's own tabs), then verify it is gone."""
+    ids, active = tab_state(f, pid, window_id)
+    mine = getattr(f, 'opened_tabs', set())
+    if active is None or active not in mine:
+        raise _gap('tab_not_opened_by_facade: the active tab was not opened by cua_do (open_tab); only tabs this session opened are closed. Nothing was pressed')
+    _hotkey(f, pid, window_id, ['cmd', 'w'])
+    seen = {}
+    def check():
+        now, _ = tab_state(f, pid, window_id)
+        seen['gone'] = active not in now
+        return seen['gone']
+    settle(f, check)
+    if not seen.get('gone'):
+        raise _gap('tab_not_closed: the tab is still listed after Cmd+W; it was not retried')
+    f.opened_tabs = mine - {active}
+    return {'status': 'ok', 'closed': active}

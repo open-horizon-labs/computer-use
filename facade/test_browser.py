@@ -19,7 +19,7 @@ class BrowserDriver(lv.LiveDriver):
     def __init__(self):
         super().__init__('live_booking_ax.json')
         self.browser_calls = [];self.refuse = {};self.landed = {'url': BOOKING, 'title': 'Booking'};self.pages = None
-        self.tabs = [{'tab_id': 'tab-1', 'active': True}]
+        self.tabs = [{'tab_id': 'tab-1', 'active': True}];self.hotkeys = [];self.cmd_t_works = self.cmd_w_works = True;self.pending_tab = None;self.cmd_t_lag = 0;self.appear_after = 0
     def call(self, tool, args, timeout=20):
         if tool.startswith('browser_') or tool == 'get_browser_state':
             self.browser_calls.append((tool, copy.deepcopy(args)))
@@ -28,12 +28,27 @@ class BrowserDriver(lv.LiveDriver):
             if code:
                 self.refuse.pop(mode) if mode == 'get_browser_state' and self.refuse.get('once') else None
                 return {'status': 'refused', 'refusal': {'code': code}}
+            if tool == 'get_browser_state' and 'target_id' not in args and self.pending_tab:
+                if self.appear_after <= 0:
+                    for t in self.tabs:t['active'] = False
+                    self.tabs.append({'tab_id': self.pending_tab, 'active': True});self.pending_tab = None
+                else:
+                    self.appear_after -= 1
             if tool == 'get_browser_state' and 'target_id' not in args:
                 return {'status': 'ok', 'mode': 'bind', 'target_id': 'bt-1', 'tabs': copy.deepcopy(self.tabs)}
             if tool == 'get_browser_state':
                 page = self.pages.pop(0) if self.pages else self.landed
                 return {'status': 'ok', 'mode': 'snapshot', 'page': dict(page)}
             return {'status': 'ok'}
+        if tool == 'hotkey':
+            self.hotkeys.append(list(args['keys']))
+            if args['keys'] == ['cmd', 't'] and self.cmd_t_works:
+                self.pending_tab = 'tab-new-%d' % len(self.hotkeys)
+                self.appear_after = self.cmd_t_lag
+            if args['keys'] == ['cmd', 'w'] and self.cmd_w_works:
+                self.tabs = [t for t in self.tabs if not t.get('active')]
+                if self.tabs:self.tabs[0]['active'] = True
+            return {'effect': 'unverifiable'}
         return super().call(tool, args, timeout)
     def called(self, tool):
         return [a for t, a in self.browser_calls if t == tool]
@@ -138,6 +153,61 @@ class Permission(Base):
         r = self.plan([{'do': 'goto', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
         self.assertEqual(r['steps'][0]['reason'], 'browser_tab_ambiguous')
         self.assertEqual(self.driver.called('browser_navigate'), [])
+
+
+
+class Tabs(Base):
+    def test_open_tab_opens_one_new_active_tab_and_lands(self):
+        r = self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual(self.driver.hotkeys, [['cmd', 't']])
+        self.assertEqual(self.driver.called('browser_navigate')[-1]['tab_id'], 'tab-new-1', 'navigates the NEW tab, not the user tab')
+        self.assertEqual([t['tab_id'] for t in self.driver.tabs], ['tab-1', 'tab-new-1'])
+
+    def test_a_cmd_t_that_opens_nothing_is_not_retried_and_navigates_nothing(self):
+        # Wrong patch: press Cmd+T again (a slow tab would make two), or navigate the user's current tab instead.
+        self.driver.cmd_t_works = False
+        r = self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened')
+        self.assertEqual(self.driver.hotkeys, [['cmd', 't']])
+        self.assertEqual(self.driver.called('browser_navigate'), [])
+
+    def test_a_slow_new_tab_is_waited_for(self):
+        # Wrong patch: stop waiting at the first poll (a Cmd+T that worked a moment later reads as tab_not_opened).
+        self.driver.cmd_t_lag = 1
+        r = self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual(self.driver.hotkeys, [['cmd', 't']])
+
+    def test_close_tab_never_closes_a_tab_the_user_had(self):
+        # Wrong patch: Cmd+W on whatever tab is active (closes the user's own logged-in tab).
+        r = self.plan([{'do': 'close_tab'}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+        self.assertEqual(self.driver.hotkeys, [], 'nothing pressed')
+        self.assertEqual([t['tab_id'] for t in self.driver.tabs], ['tab-1'])
+
+    def test_open_then_close_in_a_later_call_closes_only_that_tab(self):
+        self.assertEqual(self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])['status'], 'done')
+        r = self.plan([{'do': 'close_tab'}])
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual([t['tab_id'] for t in self.driver.tabs], ['tab-1'])
+        again = self.plan([{'do': 'close_tab'}])
+        self.assertEqual(again['steps'][0]['reason'], 'tab_not_opened_by_facade', 'the user tab is next: refused')
+
+    def test_a_cmd_w_that_closes_nothing_is_not_retried(self):
+        self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.driver.cmd_w_works = False
+        r = self.plan([{'do': 'close_tab'}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_closed')
+        self.assertEqual(self.driver.hotkeys.count(['cmd', 'w']), 1)
+
+    def test_switching_to_a_user_tab_before_close_is_refused(self):
+        # Wrong patch: remember "we opened a tab" instead of checking that the ACTIVE tab is ours.
+        self.plan([{'do': 'open_tab', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        for t in self.driver.tabs:t['active'] = t['tab_id'] == 'tab-1'
+        r = self.plan([{'do': 'close_tab'}])
+        self.assertEqual(r['steps'][0]['reason'], 'tab_not_opened_by_facade')
+        self.assertNotIn(['cmd', 'w'], self.driver.hotkeys)
 
 
 if __name__ == '__main__':
