@@ -60,7 +60,7 @@
   "status": "accepted",
   "classification": "projection defect",
   "authority": "Existing user-governed sketch authorizes implementation repair; assistant conformance review, not new user policy approval.",
-  "sketch_clause": "S4.2.3\u20134",
+  "sketch_clause": "S4.2.3–4",
   "input_and_actual": "NaN confidence bypassed threshold comparisons.",
   "corrected_behavior": "Require finite probability in [0,1].",
   "sketch_change": "None: repair projection to existing clause",
@@ -75,7 +75,7 @@
   "status": "accepted",
   "classification": "projection defect",
   "authority": "Existing user-governed sketch authorizes implementation repair; assistant conformance review, not new user policy approval.",
-  "sketch_clause": "S4.2.4\u20135",
+  "sketch_clause": "S4.2.4–5",
   "input_and_actual": "Ordering-only request was rejected for lacking predicates.",
   "corrected_behavior": "Apply zero or more supplied predicates, then supplied ordering.",
   "sketch_change": "None: repair projection to existing clause",
@@ -356,5 +356,18 @@
    "scenarios.canvas_regions_unique.max_llm_visible_calls": 1,
    "scenarios.plan_canvas_look_do.max_llm_visible_calls": 2
   }
+ },
+ {
+  "id": "CE-FACADE-007",
+  "status": "proposed",
+  "authority": "Proposed; pending user approval (user selected option D, browser-first, 2026-09-30). No live evidence yet beyond the observed bypass below.",
+  "classification": "sketch change (new facade unit of work: the browser tab) plus projection (new default-path capabilities and CALL_BUDGET scenarios). One-way door: public tool surface.",
+  "sketch_clause": "S4.1 (observation scope), S4.2 section 7 (bounded recovery), S4.6 (independent verification), S4.8 (binding)",
+  "input_and_actual": "A live agent comparing Amazon listings had to leave cua_look/cua_do to open each product page (\"the dispatch tools don't currently support navigation\") and used raw Driver browser navigation, so look-before-plan, binding and verification did not apply to any page load. On the Driver's existing-profile refusal it rerouted to a separate browser without asking. Earlier eBay runs: prices visible on the page were absent from the look (AX flattening). The facade's unit is a window with an AXWebArea; most real tasks are multi-page web tasks.",
+  "corrected_behavior": "The facade treats a browser TAB as the unit of work. (1) cua_look takes {tab} or {url}: with url it opens or reuses a tab in the user's browser profile, waits for ready (existing bounded retry), and verifies the landing (same origin and path as requested, else navigated_elsewhere with the final URL; a login wall is reported, never bypassed); look still never clicks page content. (2) cua_do plans may contain goto {url, expect} and open_tab/close_tab steps, each verified by the resulting page. (3) Observation prefers the Driver's exact CDP binding (DOM text and controls, untrusted_page_text kept) and falls back to the AX tree; both produce the same look shape, and a fact present in one and absent in the other is reported, not silently chosen. (4) A multi-page read (N urls, same fields) is one call returning per-page looks, each with its own look_id. (5) Consent gates (existing-profile grant, allow_foreground) are never rerouted: a refusal returns permission_required naming the grant.",
+  "tempting_wrong_repair": "Add a lone goto step and keep window-scoped AX-only looks (closes the bypass, keeps the eBay price gap); fall back to a clean browser profile when the user's profile is refused (the reroute this CE forbids); treat 'navigate returned ok' as landing verified (a redirect or login wall is then read as the target page); let look click to dismiss cookie banners (breaks look never clicks); build a free-running browser agent inside the facade (option D of the earlier plan, rejected for per-step model cost).",
+  "regression": "TO WRITE before code: fixture tests for landing verification (match, redirect, cross-origin, login wall), permission_required on a refused profile, look never clicks with url, DOM/AX disagreement reported, multi-page read budget; CALL_BUDGET scenarios for a 5-listing comparison; check_call_budget.py and check_plan_mutations.py updated.",
+  "dissent": "(a) Scope: a tab model plus CDP observation is two large changes; ship tab+goto+landing verification first and CDP observation second, behind the same look shape. (b) CDP requires the existing-profile grant, which is now session-only (daemon restarted with --grant existing-profile, no LaunchAgent): a reboot silently returns to AX-only. (c) Using the user's logged-in profile raises the stakes of a wrong click (purchases, messages); the existing confirm step and positive-authorization rules must apply unchanged to every goto that lands on a checkout or account page. (d) Non-Chromium browsers get AX only; Safari users are second-class.",
+  "call_budget": "New scenarios get their own numbers with changed_by CE-FACADE-007; existing default-path numbers must not move."
  }
 ]
