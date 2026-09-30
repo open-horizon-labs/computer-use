@@ -1,6 +1,6 @@
 # Terminal observation and action integration
 
-The `local-mac` profile defaults to Julia-1 and GLiNER2 local workers when installed. Screenshot interpretation still requires a separately configured vision worker; the local profile intentionally has no SystemOne fallback. Choose `fleet` for the configured homelab endpoints. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
+The explicit `local-mac` profile uses Julia-1 and GLiNER2 local workers when installed. Screenshot interpretation still requires a separately configured vision worker; the local profile intentionally has no SystemOne fallback. The default `fleet` profile uses the configured homelab endpoints (page content and screenshots go to those hosted services). Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
 
 The Cua Driver binary still observes and executes locally. `terminal_observation.py` is a reusable controller helper around its `get_window_state` API. It does not replace the Driver or run terminal commands behind the UI. Configure the installed Driver executable and reuse its session/window.
 

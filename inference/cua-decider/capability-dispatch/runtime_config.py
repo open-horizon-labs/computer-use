@@ -9,23 +9,30 @@ SETTING_KEYS = {'CUA_GENERIC_PROVIDER', 'CUA_PAGE_EXTRACTION', 'CUA_EXTRACT_URL'
 KEYS = {'profile', 'profiles'} | SETTING_KEYS
 
 PROFILES = {
-    'local-mac': {
-        'CUA_GENERIC_PROVIDER': 'julia-1',
+    'fleet': {  # the default (DEFAULT_PROFILE): Jev chooser, NuExtract3 page reading, hosted services as configured
+        'CUA_GENERIC_PROVIDER': 'jev',
         'CUA_PAGE_EXTRACTION': '1',
     },
-    'fleet': {
-        'CUA_GENERIC_PROVIDER': 'jev',
+    'local-mac': {  # explicit opt-in: Julia-1 chooser, refuses every hosted route
+        'CUA_GENERIC_PROVIDER': 'julia-1',
         'CUA_PAGE_EXTRACTION': '1',
     },
 }
 
 
+DEFAULT_PROFILE = 'fleet'  # user decision 2026-09-30: "Jev is the default". A clean install sends page content to the configured hosted services.
+
+
 def legacy_profile(values):
-    if (values.get('CUA_GENERIC_PROVIDER') == 'jev'
-            or any(values.get(key) for key in
-                   ('CUA_SELECTOR_COMMAND', 'CUA_EXTRACT_URL', 'CUA_SYSTEMONE_URL'))):
+    """The profile a configuration with no `profile` key belongs to. Explicit Jev or hosted settings mean fleet. Explicit Julia settings and no hosted
+    settings stay local-mac: an operator who configured Julia-1 is never moved to a hosted profile by the default changing. Nothing either way (no
+    runtime.json, or only neutral settings) is a clean install: DEFAULT_PROFILE."""
+    hosted = any(values.get(key) for key in ('CUA_SELECTOR_COMMAND', 'CUA_EXTRACT_URL', 'CUA_SYSTEMONE_URL'))
+    if values.get('CUA_GENERIC_PROVIDER') == 'jev' or hosted:
         return 'fleet'
-    return 'local-mac'
+    if str(values.get('CUA_GENERIC_PROVIDER') or '').lower() in ('julia', 'julia-1') or values.get('CUA_JULIA_COMMAND'):
+        return 'local-mac'
+    return DEFAULT_PROFILE
 
 
 def load_runtime_config():
@@ -42,8 +49,9 @@ def load_runtime_config():
             raise ValueError('Unsupported provider setting in profile ' + name)
         if any(not isinstance(value, str) for value in settings.values()):
             raise ValueError('Provider profile values must be strings')
-    # Preserve an existing operator's explicit Jev setting as a fleet-profile
-    # migration; clean installs default to local-mac.
+    # A clean install (no runtime.json) resolves to the fleet profile (Jev chooser,
+    # hosted services). An existing operator's explicit Jev or Julia settings keep
+    # their profile (see legacy_profile); local-mac is selected explicitly.
     default_profile = legacy_profile(values)
     profile = os.environ.get('CUA_PROFILE', values.get('profile', default_profile))
     if profile not in PROFILES:

@@ -161,7 +161,9 @@ class JuliaGeneric:
 
 
 def generic_from_config():
-    """CUA_GENERIC_PROVIDER, else the active profile (local-mac: julia-1, fleet: jev), else jev; NuExtract wraps it when page extraction is on."""
+    """CUA_GENERIC_PROVIDER, else the active profile (fleet: jev, local-mac: julia-1), else jev. A clean install (no runtime.json) resolves to the fleet
+    profile, so the out-of-the-box chooser is Jev and page content goes to the configured hosted services; local-mac (Julia-1, no hosted route) is
+    selected explicitly. NuExtract wraps it when page extraction is on."""
     load_runtime_config()
     name = os.environ.get('CUA_GENERIC_PROVIDER', 'jev').lower()
     if name == 'jev':

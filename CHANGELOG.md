@@ -6,6 +6,7 @@ Versions follow Cua Driver minor releases (0.31 targets Cua Driver 0.31).
 
 ### Breaking / behavior changes
 - `close_tab` presses the tab's own Close button in the tab strip (AX, background, no fronting, no `allow_foreground`); zero or several matching tabs refuse `tab_close_control_not_found` / `tab_close_control_ambiguous` before any press. Cmd+W (foreground) remains only as an explicit `allow_foreground: true` fallback when the strip shows no such control (#4).
+- A clean install (no `runtime.json`) now resolves to the `fleet` profile: the Jev chooser with NuExtract3 page reading, which sends page content to the configured hosted services (user decision 2026-09-30, "Jev is the default"). `local-mac` (Julia-1) stays selectable by an explicit profile, and an existing `runtime.json` without a `profile` key that names Julia-1 and no hosted endpoint stays `local-mac`. README, PROVIDERS, LOCAL-MAC, SKILL, setup and SKETCH S4.7 updated.
 
 ### Added
 - Driver 0.31 support (0.30.x still works, 0.31 not required): `timeout_ms` is sent to `get_window_state` on 0.31+, `ax_app_launching` (empty, truncated, no tokens) is a not-ready reason for the look's bounded retry and never something an action clicks against, and the stacked look wait is bounded by `LOOK_WAIT_MAX_S` (#32; the live rerun stays open).
