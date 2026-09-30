@@ -114,7 +114,10 @@ def press(f, pid, window_id, path, goal, allow_destructive=None):
         raise _gap('ui_changed: the window changed between observing the menu item and pressing it; nothing was pressed')
     except Gap as gap:
         from core import DriverCallFailed
-        if isinstance(gap, DriverCallFailed) or REFUSAL not in str(gap):
+        # The Driver reports this refusal either as a refusal answer or (Driver 0.30.4 and 0.31.0, live 2026-09-30) as exit 1 with
+        # {"code": "element_outside_target_window"} on stdout: refused before dispatch either way, nothing delivered.
+        refused = getattr(gap, 'code', None) == REFUSAL if isinstance(gap, DriverCallFailed) else REFUSAL in str(gap)
+        if not refused:
             raise  # any other refusal or failure stays exactly what it is: never rerouted
         if not f.foreground_ok:
             raise _gap('%s: the Driver refused to press this application-menu item (it cannot prove the item belongs to the window); nothing was clicked. The Driver can invoke it by its menu path, but that briefly fronts the window: only if the user allows that, call cua_do again with the same step plus allow_foreground=true' % REFUSAL)
