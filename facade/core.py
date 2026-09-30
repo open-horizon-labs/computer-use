@@ -2074,7 +2074,9 @@ class Facade:
             if plan is not None and operation != 'verify':
                 sid_ = choice['selected_id']
                 node = state['nodes'].get(int(sid_[1:]), {}) if isinstance(sid_, str) and sid_[:1] == 'e' and sid_[1:].isdigit() else {}  # a pixel region is no AX control
-                if node.get('role') in planmod.lk.TOGGLE_ROLES or 'checked' in node or 'selected' in node:
+                # Chrome sets selected:false on every plain button (look.toggle_marker): a 'selected' KEY is noise, only a toggle role or a
+                # checked key makes a press flip state. Live deep test 2026-09-30: 'Export data' (AXButton) was refused toggle_state_unseen.
+                if node.get('role') in planmod.lk.TOGGLE_ROLES or 'checked' in node:
                     # A toggle presses to the OPPOSITE of its current state: only against a look that saw that state, and unchanged since.
                     seen = self.looks.get((ctx['pid'], ctx['window_id'], plan.get('look_id'))) if plan.get('look_id') else None
                     why = 'toggle_state_unseen' if seen is None else (None if planmod.look_matches(self, state, seen, plan['look_id'])[0] else 'page_changed_since_look')

@@ -248,6 +248,18 @@ class ControlState(PlanBase):
         r = self.plan([self.step()], goal='Subscribe')
         self.assertEqual((G(r, 'status'), G(r, 'reason'), self.driver.executed), ('stopped', 'toggle_state_unseen', []))
 
+    def test_a_plain_button_with_chromes_selected_false_is_not_a_toggle(self):
+        # Wrong patch: treat any node with a 'selected' key as a toggle. Chrome sets selected:false on every plain button (live deep test
+        # 2026-09-30: 'Export data' and a dialog's 'Yes, cancel order' were refused toggle_state_unseen), so no plan could press a button
+        # without a look. A real checkbox without a look is still refused (test above).
+        els, web = sh.base();btn = sh.E(els, web, 'AXButton', 'Export data')
+        def script(d, els_):
+            by(els_, btn)['selected'] = False
+            if d.executed:sh.E(els_, 1, 'AXStaticText', 'Export ready', 'Export ready')
+        self.shape(els, script)
+        r = self.plan([{'do': 'press', 'control': 'Export data', 'expect': 'Export ready'}], goal='Export my data')
+        self.assertEqual((G(r, 'status'), len(self.driver.executed)), ('done', 1), r)
+
     def test_a_control_enabled_state_or_value_change_invalidates_the_look(self):
         self.booking();look = self.look()
         def disable_other(d, els):
