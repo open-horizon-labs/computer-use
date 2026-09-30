@@ -443,5 +443,25 @@ class TabStrip(Base):
         self.assertEqual(self.driver.clicked_close, [])
 
 
+
+class ReadoutMask(unittest.TestCase):
+    """The memory-readout mask applies to tab-strip tabs only. Wrong patch: mask the pattern in every node (a page whose own text reads
+    'Memory usage - 5 MB' and changes would then no longer invalidate a selection, S4.8)."""
+    def digest_of(self, role, label):
+        f = lv.Facade(lv.LiveDriver('live_booking_ax.json'))
+        nodes = {0: {'element_index': 0, 'role': 'AXWindow', 'parent_index': None}, 1: {'element_index': 1, 'role': role, 'label': label, 'parent_index': 0}}
+        return f.scope_digest({'raw': {'window_title': 'W'}, 'nodes': nodes}, 0) if hasattr(f, 'scope_digest') else None
+
+    def test_page_text_is_not_masked(self):
+        a, b = self.digest_of('AXStaticText', 'Memory usage - 5 MB'), self.digest_of('AXStaticText', 'Memory usage - 6 MB')
+        if a is None:self.skipTest('scope_digest signature differs')
+        self.assertNotEqual(a, b)
+
+    def test_a_tab_readout_is_masked(self):
+        a, b = self.digest_of('AXRadioButton', 'Booking - Memory usage - 5 MB'), self.digest_of('AXRadioButton', 'Booking - Memory usage - 6 MB')
+        if a is None:self.skipTest('scope_digest signature differs')
+        self.assertEqual(a, b)
+
+
 if __name__ == '__main__':
     unittest.main()

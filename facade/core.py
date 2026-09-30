@@ -1064,7 +1064,8 @@ class Facade:
         # A tab strip's live memory readout ('<title> - Memory usage - 32.4 MB') changes between observations and is not page state
         # (S4.8): the number is masked, the title is not.
         def mask(node):
-            return {k:(MEMORY_READOUT.sub(r'\1#',v) if isinstance(v,str) else v) for k,v in node.items() if k!='element_token'}
+            tab=node.get('role')=='AXRadioButton'  # only a tab-strip tab carries the readout; page text is never masked
+            return {k:(MEMORY_READOUT.sub(r'\1#',v) if tab and isinstance(v,str) else v) for k,v in node.items() if k!='element_token'}
         return digest({'title':state['raw'].get('window_title'),'address':address,
                        'nodes':[mask(state['nodes'][i]) for i in sorted(members)]})
 
