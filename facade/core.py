@@ -104,7 +104,15 @@ class Driver:
         if not isinstance(value, dict):
             raise DriverCallFailed('driver_call_failed: %s returned a non-object result%s' % (tool, note))
         if value.get('refusal') or value.get('status') == 'refused':
-            raise Gap('Driver refused: ' + str(value.get('refusal', {}).get('code', 'unknown')))
+            raise Gap('Driver refused: ' + str((value.get('refusal') or {}).get('code', 'unknown')))
+        # The Driver can answer success-shaped with effect "refused" (#5, #38), at the top level or on any action of results: never delivered.
+        rows = [value] + [r for r in (value.get('results') or []) if isinstance(r, dict)]
+        refused = next((r for r in rows if r.get('effect') == 'refused'), None)
+        if refused:
+            nested = refused.get('refusal') if isinstance(refused.get('refusal'), dict) else {}
+            code = refused.get('refusal_code') or refused.get('code') or nested.get('code')
+            code = code if isinstance(code, str) and re.fullmatch(r'[a-z][a-z0-9_]{0,60}', code) else 'driver_refused'
+            raise Gap('%s: the Driver refused %s (effect refused); nothing was delivered' % (code, tool))
         return value
 
     def observe(self, pid, window_id, session, timeout=20):

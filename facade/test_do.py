@@ -730,3 +730,47 @@ class RegionsAndGuards(DoBase):
 
 
 if __name__ == '__main__':unittest.main()
+
+
+class RealCallDriver(FlatDriver):
+    """A click goes through the real core.Driver.call parsing (subprocess patched), so the Driver's own answer shape is what is tested."""
+    def __init__(self, answer):
+        super().__init__();self.answer = answer;self.real = __import__('core').Driver('cua-driver');self.clicks = 0
+    def call(self, tool, args, timeout=20):
+        if tool != 'click':return super().call(tool, args, timeout)
+        self.clicks += 1
+        from unittest import mock
+        done = mock.Mock(stdout=json.dumps(self.answer))
+        with mock.patch('core.subprocess.run', return_value=done):
+            return self.real.call(tool, args, timeout)
+
+
+class DriverEffectRefused(DoBase):
+    """#38: a Driver answer with effect "refused" is a refusal, never delivered (#5 saw status delivered with element_outside_target_window)."""
+    def run_with(self, answer):
+        self.driver = RealCallDriver(answer);self.driver.confirm_text = 'Booked Provider E 1:45 PM'
+        self.f.driver = self.driver
+        return self.do(records=rec(ONE), expect='Booked Provider E')
+
+    def assertRefused(self, r, code):
+        self.assertEqual((r['status'], r['reason']), ('refused', code))
+        self.assertNotEqual(r.get('delivery'), 'delivered');self.assertNotIn('verification', r);self.assertEqual(self.driver.clicks, 1)
+        self.assertFalse(r.get('verified'))
+
+    def test_top_level_effect_refused_is_a_refusal_with_the_driver_code(self):
+        # Wrong patch: map only the top-level status (this answer has no status) so effect refused stays delivered.
+        self.assertRefused(self.run_with({'effect': 'refused', 'refusal_code': 'element_outside_target_window'}), 'element_outside_target_window')
+
+    def test_effect_refused_on_a_per_action_result_is_a_refusal(self):
+        # Wrong patches: check only value['effect']; or take only results[0].
+        r = self.run_with({'effect': 'unverifiable', 'results': [{'effect': 'ok'}, {'effect': 'refused', 'refusal': {'code': 'element_outside_target_window'}}]})
+        self.assertRefused(r, 'element_outside_target_window')
+
+    def test_unparseable_refusal_code_is_a_generic_reason_not_echoed_text(self):
+        r = self.run_with({'effect': 'refused', 'refusal_code': 'Outside the window at /Users/me/secret'})
+        self.assertRefused(r, 'driver_refused');self.assertNotIn('secret', json.dumps(r))
+
+    def test_a_non_refused_effect_is_still_delivered(self):
+        # Guards an over-broad patch that refuses every effect.
+        r = self.run_with({'effect': 'unverifiable'})
+        self.assertEqual(r['status'], 'done')
