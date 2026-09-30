@@ -19,7 +19,7 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
 DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
@@ -119,7 +119,8 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         for key in ('treat_as_match', 'accept_unknown'):
             if key in step and (not isinstance(step[key], list) or not step[key] or not all(isinstance(x, str) and x for x in step[key])):
                 raise _gap('bad_request: %s %s must be a list of record ids' % (at, key))
-        takes = {'press': {'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'expect', 'treat_as_match', 'accept_unknown', 'allow_destructive', 'accept_hidden_text', 'allow_foreground'},
+        takes = {'press': ({'do', 'goal', 'menu', 'expect', 'allow_destructive', 'allow_foreground'} if 'menu' in step else
+                           {'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'expect', 'treat_as_match', 'accept_unknown', 'allow_destructive', 'accept_hidden_text', 'allow_foreground'}),
                  'type': {'do', 'goal', 'control', 'control_match', 'text', 'expect', 'allow_destructive'},
                  'confirm': {'do', 'goal', 'confirm', 'identity', 'expect', 'allow_destructive', 'dialog_text', 'dialog_controls'},
                  'verify': {'do', 'goal', 'expect'},
@@ -135,8 +136,15 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and not final:
             raise _gap('expect_required: %s needs expect: the page text that will be visible once it worked (null is allowed only on the last step, which then ends delivered_unverified)' % at)
         if kind == 'press':
-            if 'where' not in step and 'control' not in step:
-                raise _gap('bad_request: %s (press) needs control (the exact button label) and/or where (which record)' % at)
+            if 'menu' in step:
+                import menu
+                step['menu'] = menu.check_path(step['menu'])
+                bad = [(i, label) for i, label in enumerate(step['menu']) if destructive_verbs(label)]
+                for i, label in bad:
+                    if not (i == len(step['menu']) - 1 and allowed(step.get('allow_destructive'), label)):
+                        raise _gap('destructive_control: %s menu segment %d is destructive (%s); goal text never authorizes it. Only the step itself can, for the LAST segment: add allow_destructive=%r (its exact label)' % (at, i + 1, ', '.join(destructive_verbs(label)), label[:40]))
+            elif 'where' not in step and 'control' not in step:
+                raise _gap('bad_request: %s (press) needs control (the exact button label), where (which record) or menu (an application-menu path)' % at)
         if kind == 'type':
             if 'control' not in step or 'text' not in step:
                 raise _gap('bad_request: %s (type) needs control (the field\'s label) and text' % at)
@@ -343,6 +351,10 @@ HINTS = {
     'toggle_state_unseen': 'Step %(n)d presses a checkbox, radio or switch, which flips its CURRENT state, and this plan carries no look_id of a look that saw that state; nothing was clicked by this step. Call cua_look, then cua_do with its look_id and an expect naming the resulting state.',
     'confirm_dialog_unexpected_text': 'The dialog\'s text is not exactly the dialog_text you declared (steps[].dialog.lines shows the ACTUAL lines), and the previous step\'s click is already done, so nothing further was pressed by step %(n)d. Read the lines: if this is the dialog the user\'s task calls for, call cua_do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it. Next time declare exactly those lines as dialog_text on the confirm step.',
     'pages_incomplete': 'Some pages of step %(n)d were not read (steps[].pages says for each: landing verdict, reason, skipped or not closed); the other pages were read and are in steps[].pages with their look_id (the page is closed again: to act on one, open_tab it, then cua_look). Nothing else ran. Report which pages failed, or call cua_do with read_pages for just those urls.',
+    'element_outside_target_window': 'The Driver refused the press: it cannot prove this application-menu item belongs to the window (steps[].message). Nothing was clicked. The Driver can invoke the item by its menu path, but that briefly fronts the window: stop and ask the user; only if they allow it, call cua_do again with the same step plus allow_foreground=true. Never another window, a coordinate click or a raw Driver call.',
+    'menu_item_not_found': 'No menu item of step %(n)d\'s menu path is observed in the window (steps[].message says which segment); nothing was pressed. Call cua_look or observe the window, then give the exact labels of the menu bar item and the item.',
+    'menu_item_ambiguous': 'Several menu items carry a segment of step %(n)d\'s menu path; nothing was pressed. Give a longer path from the menu bar item down.',
+    'menu_item_disabled': 'The menu item of step %(n)d is disabled right now; nothing was pressed. Report it.',
     'delivery_unverified': 'Step %(n)d\'s click was delivered but its expect was not seen. Do not click again. Call cua_do with steps=[{do:"verify", expect:<page text that should be visible now>}] to check, or report the state.',
     'not_verified': 'The expect of the verify step was not established (control labels never count). Nothing was clicked. Call cua_do with a different expect, or report what cua_look shows.',
     'unknown_competitors_unacknowledged': 'Some records could not be compared with the predicates (step %(n)d unknown_ids and evidence.extracted show their strings). Call cua_do with the same steps and treat_as_match=<ids> on that step if you judge they DO match, or accept_unknown=<ids> if they do NOT. Nothing was clicked by this step.',
@@ -540,6 +552,55 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             ok = status in ('done', 'observed') or (status == 'delivered_unverified' and n == len(plan_steps))
             if not ok:
                 entry['message'] = lk.safe_message(result.get('reason'), result.get('message'))
+                failed = {'n': n, 'reason': result.get('reason') or status, 'status': status}
+            entries.append(entry)
+            carry['before'], carry['identity'] = None, None
+            if not ok:
+                break
+            continue
+        if kind == 'press' and step.get('menu'):
+            # #39: an application-menu item. Ordinary press of the OBSERVED item first; only a refusal element_outside_target_window of a menu item is routed
+            # through the Driver's invoke_menu (same window, observed path, needs allow_foreground). See menu.py.
+            import menu
+            from core import Gap, DriverCallFailed
+            f.foreground_ok = step.get('allow_foreground') is True  # this step only
+            result = {'status': 'failed', 'delivery': 'none'}
+            try:
+                if ctx['pid'] is None:
+                    found = f.windows(title)['windows']
+                    if len(found) != 1:
+                        raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
+                    ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+                done = menu.press(f, ctx['pid'], ctx['window_id'], step['menu'], spec['goal'], step.get('allow_destructive'))
+                result = {'status': 'delivered_unverified', 'delivery': 'delivered', 'route': done['route'], 'selected': {'description': 'menu item (%d levels)' % done['depth'], 'route': done['route']}}
+                if step.get('expect'):
+                    try:
+                        seen = menu.verify(f, ctx['pid'], ctx['window_id'], done['before'], step['expect'], max(0.5, min(budget_s, remaining / 3)))
+                    except (Gap, ValueError, RuntimeError, TimeoutError, OSError) as error:
+                        seen = {'status': 'unknown', 'route': 'verify_error', 'error_type': type(error).__name__}
+                    result['verification'] = {k: seen.get(k) for k in ('status', 'route')}
+                    result['status'] = 'done' if seen.get('status') == 'satisfied' else 'deferred'
+                    if result['status'] == 'deferred':
+                        result['reason'] = 'delivery_unverified'
+            except DriverCallFailed as gap:
+                result = {'status': 'failed', 'reason': 'driver_call_failed', 'message': 'driver_call_failed: a Driver call failed; the menu command may have been delivered', 'delivery': 'uncertain'}
+            except Gap as gap:
+                reason = str(gap).split(':', 1)[0]
+                if reason == 'Driver refused':  # a Driver refusal keeps its own code
+                    reason = str(gap).split(':', 1)[1].strip()
+                reason = reason if re.fullmatch(r'[a-z][a-z0-9_]{0,60}', reason) else 'refused'
+                result = {'status': 'refused', 'reason': reason, 'message': str(gap), 'delivery': 'none'}
+            finally:
+                f.foreground_ok = False
+            status = result['status']
+            entry = {'n': n, 'do': kind, 'status': {'deferred': 'stopped'}.get(status, status), 'ms': round((f.clock() - began) * 1000)}
+            for key in ('reason', 'selected', 'verification'):
+                if result.get(key):entry[key] = result[key]
+            if result.get('delivery') not in (None, 'none'):
+                delivery = 'delivered' if result['delivery'] == 'delivered' or delivery == 'delivered' else 'uncertain'
+            ok = status in ('done', 'observed') or (status == 'delivered_unverified' and n == len(plan_steps))
+            if not ok:
+                entry['message'] = lk.safe_message(result.get('reason'), result.get('message') or '')
                 failed = {'n': n, 'reason': result.get('reason') or status, 'status': status}
             entries.append(entry)
             carry['before'], carry['identity'] = None, None
