@@ -107,10 +107,10 @@ class Bounded(Base):
         self.assertEqual(r['look_id'], self.ax['look_id'])
 
     def test_a_refusal_is_a_typed_degradation_not_a_failure(self):
-        self.driver.refuse = {'get_browser_state': 'browser_requires_setup'}
+        self.driver.refuse = {'get_browser_state': 'browser_target_unsupported'}
         r = self.look()
         self.assertEqual((r['status'], r['degraded']), ('ok', 'semantic_refused'))
-        self.assertIn('browser_requires_setup', json.dumps(r['notes']))
+        self.assertIn('browser_target_unsupported', json.dumps(r['notes']))
         self.assertEqual(r['records'], self.ax['records'])
 
     def test_a_refusal_never_triggers_setup_from_a_read_only_look(self):
@@ -241,6 +241,29 @@ class Outline(unittest.TestCase):
     def test_garbage_yields_no_lines_not_a_guess(self):
         self.assertEqual(dom.parse_outline('<<<not an outline>>>\n???'), [])
 
+
+
+class LiveCapture(Base):
+    """The REAL semantic_v2 capture of the booking fixture (2026-09-30, Driver 0.30.4 and 0.31.0 agreed) against the real captured AX tree of the
+    same page. Wrong patch this fails: count every outline name as displayed text (the list items' aria-labels 'Slot s01'..'Slot s12' were
+    reported as 12 DOM-only texts that the page never shows)."""
+    def test_container_names_are_not_displayed_text(self):
+        from pathlib import Path
+        capture = json.loads((Path(__file__).parent / 'fixtures' / 'live_booking_semantic_v2.json').read_text())
+        self.driver.segments = [capture]
+        r = self.look()
+        self.assertEqual(r['status'], 'ok', r)
+        self.assertEqual((r.get('sources_disagree') or {}).get('dom_only'), 0, r.get('dom_unplaced'))
+        self.assertFalse([t for t in r.get('dom_unplaced') or [] if t.startswith('Slot ')])
+        self.assertTrue((r.get('sources') or {}).get('dom'), 'the capture was read')
+
+    def test_an_unprepared_endpoint_says_how_to_prepare_it_and_prepares_nothing(self):
+        # Wrong patch: call browser_prepare from the look (a read-only tool would change the user's browser); or a bare 'refused'.
+        self.driver.refuse = {'get_browser_state': 'browser_consent_required'}
+        r = self.look()
+        self.assertEqual(r.get('degraded'), 'semantic_not_prepared', r.get('notes'))
+        self.assertTrue(any('goto' in n for n in r.get('notes', [])))
+        self.assertEqual(self.driver.called('browser_prepare'), [])
 
 if __name__ == '__main__':
     unittest.main()
