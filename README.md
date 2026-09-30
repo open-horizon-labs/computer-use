@@ -1,6 +1,6 @@
 # Computer-use capability dispatch
 
-**Current default profile:** `local-mac` selects Julia-1 for local finite choices and refuses hosted fallback. The `fleet` profile retains NuExtract3/Jev/Qwen and configured screenshot services. See [provider profiles](docs/PROVIDERS.md#provider-profiles) and the [local Mac support status](docs/LOCAL-MAC.md).
+**Current default profile:** `fleet` (user decision 2026-09-30, "Jev is the default"): a clean install with no `runtime.json` uses the Jev chooser with NuExtract3 page reading and the configured screenshot services, **so page content is sent to the hosted services you configure**. `local-mac` (Julia-1 for local finite choices, refusing every hosted route) stays available: select it explicitly with `python3 scripts/set_profile.py local-mac`. An existing configuration that already names Julia-1 and no hosted service keeps `local-mac`. See [provider profiles](docs/PROVIDERS.md#provider-profiles) and the [local Mac support status](docs/LOCAL-MAC.md).
 
 A companion to stock computer-use tools and skills. The stock driver observes and executes; this repository supplies typed request guidance, capability routing, evidence matching, bounded semantic recovery, and a CESS simulation loop.
 
@@ -17,7 +17,7 @@ The stock driver supplies current controls. The driving LLM describes the reques
 | Described fields / GLiNER2 | Per-record text, field descriptions and types | Normalize, compare within the same record, apply caller ordering | Live span adapter and measured examples |
 | Structured, relational or multilingual extraction / GLiNER2.5 | Scoped text and requested schema | Preserve grouping/relations before matching | Provisional routes; structured adapters need qualification |
 | Bounded classification / Decide | Evidence and described categories | Map accepted class to a caller-authorized action | Contract tested; live adapter needs qualification |
-| Semantic choice or recovery / Julia-1 (local-mac) or Jev (fleet) | Goal, current candidate descriptions, constraints and available evidence | Select an offered ID or defer | Live adapters |
+| Semantic choice or recovery / Jev (fleet, the default) or Julia-1 (local-mac) | Goal, current candidate descriptions, constraints and available evidence | Select an offered ID or defer | Live adapters |
 | Escalation / Qwen (fleet only) | Goal and offered candidates via the bounded selector | Handle weak/failed Jev choices; verify after action | Existing selector integration |
 
 For example: the LLM requests provider name, appointment duration and start time, with explicit predicates and ordering. GLiNER2 extracts those fields; code selects the matching record. If an extracted name has an uncertain boundary, the configured generic chooser can recheck it. A selected ID never supplies arbitrary executable arguments. The driver executes the stored current binding and observes the result independently.
@@ -163,7 +163,7 @@ The Python interface is `Engine(providers).decide(request, current_snapshot)`, f
 
 The CESS strangler wrapper is `Strangler.from_config(providers)`. It retains the qualified GLiNER2 rollout in [ROLLOUT.json](inference/cua-decider/capability-dispatch/ROLLOUT.json). Supply `generic_from_config()` in the compatibility slot `incumbent_jev`; the selected generic implementation comes from the active profile. The slot name does not establish model attribution. `Strangler` never executes; continue to bind current Driver arguments with `execute_bound` and independently verify effects.
 
-Providers are injected callables `(step, request) -> grounded evidence or offered choice`. The included live adapters cover NuExtract page records, Julia finite choice, GLiNER2 spans, SystemOne screenshots, and the Jev→Qwen selector. The default local profile does not yet provide local NuExtract or visual workers. Original GLiNER, structured GLiNER2.5 and Decide routes have controlled contract coverage but require qualified live adapters for their respective roles. The span adapter's GLiNER2.5 option is not a structured-record/relationship adapter.
+Providers are injected callables `(step, request) -> grounded evidence or offered choice`. The included live adapters cover NuExtract page records, Julia finite choice, GLiNER2 spans, SystemOne screenshots, and the Jev→Qwen selector. The opt-in `local-mac` profile does not yet provide local NuExtract or visual workers. Original GLiNER, structured GLiNER2.5 and Decide routes have controlled contract coverage but require qualified live adapters for their respective roles. The span adapter's GLiNER2.5 option is not a structured-record/relationship adapter.
 
 ## Live inference configuration
 
@@ -177,4 +177,4 @@ No upstream license is inferred for third-party tools or model weights; they rem
 
 [Terminal integration](docs/TERMINALS.md) combines fresh Driver screenshots and AX observations with explicit quality metadata and a bounded visual postcondition check. An unchanged AX tree is not a stall. These are integration helpers; the stock Driver binary is unchanged.
 
-Julia-1 is the local profile's generic chooser; [Jev](docs/PROVIDERS.md#jev) and its Qwen escalation are available in the opt-in `fleet` profile. GLiNER2 extraction and current-snapshot binding are preserved. Julia is not a page reader or vision model.
+Jev and its Qwen escalation ([Jev](docs/PROVIDERS.md#jev)) are the generic chooser of the default `fleet` profile; Julia-1 is the opt-in `local-mac` profile's chooser. GLiNER2 extraction and current-snapshot binding are preserved. Julia is not a page reader or vision model.

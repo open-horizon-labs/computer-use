@@ -23,7 +23,7 @@ MUTATIONS = {
         ['test_look.LookReal.test_the_default_look_calls_no_model_and_no_reader', 'test_look.LookFields.test_without_fields_the_reader_is_never_called']),
     'silent_truncation': (
         'slice the records and say nothing about what was cut',
-        [('look.py', "'truncated': {'records': extras['records_over_cap'], 'lines': lost, 'bytes': bytes_cut}", "'truncated': {'records': 0, 'lines': 0, 'bytes': 0}")],
+        [('look.py', "trunc = {'records': extras['records_over_cap'], 'lines': lost, 'bytes': bytes_cut}", "trunc = {'records': 0, 'lines': 0, 'bytes': 0}")],
         ['test_look.LookShapes.test_a_100_row_list_is_bounded_and_every_cut_is_counted_never_silent',
          'test_look.LookShapes.test_max_bytes_bounds_the_response_and_reports_the_records_it_dropped',
          'test_look.LookShapes.test_long_and_many_lines_are_cut_visibly_and_counted']),
@@ -39,7 +39,7 @@ MUTATIONS = {
          'test_plan.Validation.test_an_invented_look_id_is_refused']),
     'null_expect_on_a_non_final_step': (
         'allow expect=null anywhere',
-        [('plan.py', "        if kind not in ('verify', 'close_tab') and 'expect' not in step and not final:", "        if kind not in ('verify', 'close_tab') and 'expect' not in step and False:")],
+        [('plan.py', "        if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and not final:", "        if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and False:")],
         ['test_plan.Validation.test_null_expect_on_a_non_final_step_is_refused_before_any_click']),
     'steps_continue_after_a_non_done_step': (
         'keep executing the remaining steps after a failed one',
@@ -460,6 +460,31 @@ MUTATIONS = {
         'the default look reads through NuExtract (measured through the real server tools)',
         [('look.py', "        f.looks[(pid, window_id, response['look_id'])] = {", "        try:f.provider('reader').extract({'snapshot_id': state['raw']['snapshot_id'], 'task': 't', 'fields': {'x': 'x'}, 'records': [{'id': 'e1', 'text': 't'}]}, state['raw']['snapshot_id'])\n        except Exception:pass  # the fake reader counts the request before it looks for a pattern\n        f.looks[(pid, window_id, response['look_id'])] = {")],
         ['test_budget.DefaultPathBudget.test_look_then_plan_is_two_calls_with_no_reader_and_no_chooser_on_the_real_trees']),
+    # CE-FACADE-007 wave 3 (#33, #34, #39)
+    'semantic_call_unbounded': (
+        'wait for the semantic snapshot with the Driver default timeout (#29 ran 120 s with no output)',
+        [('dom.py', "        value = f.driver.call('get_browser_state', {'session': f.session, **args}, timeout=timeout)", "        value = f.driver.call('get_browser_state', {'session': f.session, **args})")],
+        ['test_dom.Bounded.test_a_hanging_semantic_call_is_bounded_and_the_look_falls_back_to_ax']),
+    'dom_replaces_ax_silently': (
+        'prefer the DOM silently: its lines replace the AX lines of a record',
+        [('look.py', "            r['dom_lines'] = shown", "            r['dom_lines'] = shown;r['rec'] = dict(r['rec'], lines=lines);r['lines'] = shown")],
+        ['test_dom.Sources.test_the_dom_never_replaces_or_drops_the_ax_look']),
+    'ax_dropped_when_dom_present': (
+        'drop the AX records when a DOM snapshot is present',
+        [('look.py', "    found = dom.compare(analysis, semantic, dom.ax_text_blob(f, state, analysis))", "    found = dom.compare(analysis, semantic, dom.ax_text_blob(f, state, analysis));rows[:] = []")],
+        ['test_dom.Sources.test_the_dom_never_replaces_or_drops_the_ax_look']),
+    'read_pages_failure_skips_the_rest': (
+        'a page that does not land ends the multi-page read for the other pages',
+        [('browser.py', "            if reason in STOP_ALL:\n                stop = reason", "            stop = reason")],
+        ['test_read_pages.Reads.test_a_page_that_lands_elsewhere_does_not_abort_the_others_silently']),
+    'menu_reroute_on_any_refusal': (
+        'route every failure of the ordinary menu press through invoke_menu',
+        [('menu.py', "        if isinstance(gap, DriverCallFailed) or REFUSAL not in str(gap):", "        if isinstance(gap, DriverCallFailed):")],
+        ['test_menu.Routing.test_any_other_refusal_of_a_menu_item_is_not_rerouted']),
+    'menu_reroute_without_foreground': (
+        "invoke_menu (which activates the window) without the caller's allow_foreground",
+        [('menu.py', "        if not f.foreground_ok:\n            raise _gap('%s: the Driver refused to press", "        if False:\n            raise _gap('%s: the Driver refused to press")],
+        ['test_menu.Routing.test_the_refusal_is_preserved_without_allow_foreground_because_invoke_menu_fronts_the_window']),
 }
 
 

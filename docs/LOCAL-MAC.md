@@ -1,6 +1,6 @@
 # Local Mac provider profile
 
-The `local-mac` profile is the default provider policy. It selects Julia-1 for finite choices and refuses hosted chooser, extraction, and visual endpoints. Cua Driver and the facade remain local to the controlled Mac. Select the existing homelab-backed setup with `{"profile":"fleet"}` in `~/.config/computer-use/runtime.json`, or set `CUA_PROFILE=fleet` for one process.
+The `local-mac` profile is an explicit opt-in, not the default (the default is `fleet`, the Jev chooser, which sends page content to the configured hosted services; user decision 2026-09-30). Select it with `python3 scripts/set_profile.py local-mac`, `{"profile":"local-mac"}` in `~/.config/computer-use/runtime.json`, or `CUA_PROFILE=local-mac` for one process. It selects Julia-1 for finite choices and refuses hosted chooser, extraction, and visual endpoints. Cua Driver and the facade remain local to the controlled Mac. An existing `runtime.json` that names Julia-1 and no hosted endpoint, with no `profile` key, stays `local-mac`.
 
 ## Current support
 

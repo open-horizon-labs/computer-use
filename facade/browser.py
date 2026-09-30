@@ -149,10 +149,13 @@ def _verdict(url, seen):
     if verdict == 'ok':
         return {'status': 'ok', 'page': page}
     if verdict == 'login_wall':
-        raise _gap('login_wall: the page asks you to sign in (%s); sign in yourself in that browser, then call again. Nothing was typed' % page['url'][:200])
-    if verdict == 'navigated_elsewhere':
-        raise _gap('navigated_elsewhere: asked for %s, the tab shows %s' % (url[:200], page['url'][:200]))
-    raise _gap('landing_unknown: the Driver reported no page URL for the tab after navigating; the tab may still be loading')
+        gap = _gap('login_wall: the page asks you to sign in (%s); sign in yourself in that browser, then call again. Nothing was typed' % page['url'][:200])
+    elif verdict == 'navigated_elsewhere':
+        gap = _gap('navigated_elsewhere: asked for %s, the tab shows %s' % (url[:200], page['url'][:200]))
+    else:
+        gap = _gap('landing_unknown: the Driver reported no page URL for the tab after navigating; the tab may still be loading')
+    gap.page = page  # where the tab actually is: open_tab records it so the tab it opened can still be closed
+    raise gap
 
 
 # ---- tabs (Driver 0.30.4 and 0.31.0 have no tab-create/close tool: Cmd+T opens; the tab's own AX Close button closes; Cmd+W is an explicit foreground fallback) ----
@@ -214,10 +217,21 @@ def open_tab(f, pid, window_id, url):
     if not (len(tabs) == len(before) + 1 and active is not None and active['url'] in NEW_TAB_URLS):
         raise _gap('tab_not_opened: after Cmd+T the window has %d tabs (was %d) and the active tab is %s; it was not retried' % (
             len(tabs), len(before), 'a new-tab page' if active and active['url'] in NEW_TAB_URLS else (active or {}).get('url', 'unknown')[:80] or 'unknown'))
-    landed = _navigate_tab(f, seen['target'], active['tab_id'], url)
-    f.opened_tabs = [t for t in getattr(f, 'opened_tabs', []) if t['window'] != (pid, window_id)] + [
-        {'window': (pid, window_id), 'url': landed['page']['url'], 'title': landed['page']['title'], 'count': len(tabs)}]
+    try:
+        landed = _navigate_tab(f, seen['target'], active['tab_id'], url)
+    except _core_gap() as error:
+        # The tab IS open even though its landing failed (redirect, login wall, unknown): remember where it is so it can be closed, never left behind.
+        page = getattr(error, 'page', None) or {'url': active['url'], 'title': active['title']}
+        _remember_tab(f, pid, window_id, page, len(tabs))
+        raise
+    _remember_tab(f, pid, window_id, landed['page'], len(tabs))
     return landed
+
+
+def _remember_tab(f, pid, window_id, page, count):
+    if page.get('url'):
+        f.opened_tabs = [t for t in getattr(f, 'opened_tabs', []) if t['window'] != (pid, window_id)] + [
+            {'window': (pid, window_id), 'url': page['url'], 'title': page.get('title') or '', 'count': count}]
 
 
 def _navigate_tab(f, target, tab, url):
@@ -328,3 +342,77 @@ def close_tab(f, pid, window_id, allow_foreground=False):
 def _core_gap():
     from core import Gap
     return Gap
+
+
+# ---- multi-page read (#34): open_tab -> look -> close_tab per url, each page independent ----
+
+READ_PAGES_MAX = 5           # urls per step
+READ_PAGES_BUDGET_S = 90.0   # wall budget for the whole step: a page that has begun is finished (and its tab closed), then the budget is checked before the next
+STOP_ALL = ('permission_required', 'tab_not_opened', 'browser_tab_ambiguous', 'foreground_required')  # the window cannot open tabs at all: asking again would only repeat it
+SAMPLE_RECORDS = 3
+SAMPLE_LINES = 4
+SAMPLE_CHARS = 50
+TEXT_LINES = 4
+
+
+def _page_summary(response):
+    """A small, bounded view of one page's look (its look_id says what it showed; the full look is one cua_look away on that page)."""
+    import look as lk
+    out = {'title': (response.get('window') or {}).get('title'), 'record_kind': response.get('record_kind'), 'records': (response.get('counts') or {}).get('records', 0),
+           'text': [lk.cut(x, SAMPLE_CHARS)[0] for x in (response.get('text') or [])[:TEXT_LINES]]}
+    out['sample'] = [{'r': r['r'], 'lines': [lk.cut(x, SAMPLE_CHARS)[0] for x in r['lines'][:SAMPLE_LINES]], **({'values': r['values']} if r.get('values') else {}),
+                      **({'dom_lines': r['dom_lines'][:SAMPLE_LINES]} if r.get('dom_lines') else {})} for r in (response.get('records') or [])[:SAMPLE_RECORDS]]
+    if response.get('degraded'):
+        out['degraded'] = response['degraded']
+    if (response.get('sources_disagree') or {}).get('dom_only'):
+        out['sources_disagree'] = response['sources_disagree']
+    return out
+
+
+def read_pages(f, pid, window_id, urls, fields=None, budget_s=READ_PAGES_BUDGET_S):
+    """For each url, in order: open ONE new tab in the window (the user's own tab is never navigated), verify the landing, look (read-only), close the tab
+    this call opened. Returns [{url, status: ok|failed|skipped, landing, look_id?, summary?, close?, reason?, message?}], one per url, in order.
+
+    Every page stands alone: a page that does not land (navigated_elsewhere, login_wall, landing_unknown) is reported with its verdict and the other
+    pages are still read; nothing is skipped silently (a skipped page says why). Only a condition that would repeat for every page stops the rest
+    (no permission, Cmd+T opens nothing, a tab that could not be closed: opening more would leave more tabs behind), and every skipped url is listed."""
+    import look as lk
+    from core import Gap
+    began = f.clock()
+    pages, stop = [], None
+    for url in urls:
+        entry = {'url': url}
+        pages.append(entry)
+        if stop is None and f.clock() - began >= budget_s:
+            stop = 'budget_exceeded'
+        if stop:
+            entry.update(status='skipped', reason=stop)
+            continue
+        mine = lambda: [t for t in getattr(f, 'opened_tabs', []) if t['window'] == (pid, window_id)]
+        prior = mine()  # a tab an earlier step opened in this window: never mistaken for this page's tab, and restored afterwards
+        try:
+            landed = open_tab(f, pid, window_id, url)
+            entry.update(status='ok', landing='ok', final_url=landed['page']['url'][:200])
+        except Gap as gap:
+            reason = str(gap).split(':', 1)[0]
+            entry.update(status='failed', landing=reason, reason=reason, message=str(gap)[:200])
+            if reason in STOP_ALL:
+                stop = reason
+        opened = bool(mine()) and not (prior and mine()[0] is prior[0])
+        if entry['status'] == 'ok':
+            seen = lk.run_look(f, None, pid, window_id, fields)
+            if seen.get('status') == 'ok':
+                entry.update(look_id=seen['look_id'], summary=_page_summary(seen))
+            else:
+                entry.update(status='failed', reason='look_' + str(seen.get('status')), message=str(seen.get('message') or seen.get('reason') or seen.get('hint') or '')[:200])
+        if opened:
+            try:
+                close_tab(f, pid, window_id)
+                entry['closed'] = True
+            except Gap as gap:
+                entry['closed'] = False
+                entry['close'] = {'status': 'failed', 'reason': str(gap).split(':', 1)[0], 'message': str(gap)[:200]}
+                stop = stop or 'previous_tab_not_closed'
+            else:
+                f.opened_tabs = [t for t in getattr(f, 'opened_tabs', []) if t['window'] != (pid, window_id)] + prior
+    return pages

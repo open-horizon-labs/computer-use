@@ -75,7 +75,7 @@ class LookReal(lv.LiveBase):
         self.look()
         self.assertEqual(self.driver.executed, [])
         self.assertFalse(set(tools) & MUTATING_TOOLS, tools)
-        self.assertLessEqual(set(tools), {'start_session', 'list_windows'})
+        self.assertLessEqual(set(tools), {'start_session', 'list_windows', 'get_browser_state'})  # get_browser_state: the bounded, read-only semantic read (dom.py)
 
     def test_look_id_is_stable_for_the_same_strings_and_changes_when_a_line_changes(self):
         # Wrong patch: a random or per-call id (a plan could not prove the page is unchanged), or an id that ignores line text.

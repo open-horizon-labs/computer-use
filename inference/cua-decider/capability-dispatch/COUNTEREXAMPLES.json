@@ -378,8 +378,14 @@
    "scenarios.nav_open_tab_read_close.max_chooser_calls": 0,
    "scenarios.nav_permission_required_stop.max_llm_visible_calls": 1,
    "scenarios.nav_permission_required_stop.max_reader_calls": 0,
-   "scenarios.nav_permission_required_stop.max_chooser_calls": 0
+   "scenarios.nav_permission_required_stop.max_chooser_calls": 0,
+   "scenarios.nav_read_pages_3.max_llm_visible_calls": 1,
+   "scenarios.nav_read_pages_3.max_reader_calls": 0,
+   "scenarios.nav_read_pages_3.max_chooser_calls": 0,
+   "scenarios.nav_read_pages_one_fails.max_llm_visible_calls": 1,
+   "scenarios.nav_read_pages_one_fails.max_reader_calls": 0,
+   "scenarios.nav_read_pages_one_fails.max_chooser_calls": 0
   },
-  "status_note": "Approved by the user 2026-09-30 (option D). Slice 1 shipped: goto with landing verification, permission_required, open_tab/close_tab. Live on Driver 0.31.0 (local build, user consented): look+plan booked exactly s03; open_tab via background Cmd+T opened one tab and landed; background Cmd+W is ignored by Chrome, so close_tab needs the step's allow_foreground and fronts the window briefly; a second close_tab on the user's remaining tab was refused. Driver facts measured live: tab and target ids re-minted per bind, tab list not in window order, no active flag after navigation; the facade's tab is recognised by unique url + unchanged count + the window's native_title. Slice 2: DOM-first observation, multi-page reads."
+  "status_note": "Approved by the user 2026-09-30 (option D). Slice 1 shipped: goto with landing verification, permission_required, open_tab/close_tab. Live on Driver 0.31.0 (local build, user consented): look+plan booked exactly s03; open_tab via background Cmd+T opened one tab and landed; background Cmd+W is ignored by Chrome, so close_tab needs the step's allow_foreground and fronts the window briefly; a second close_tab on the user's remaining tab was refused. Driver facts measured live: tab and target ids re-minted per bind, tab list not in window order, no active flag after navigation; the facade's tab is recognised by unique url + unchanged count + the window's native_title. Slice 2: DOM-first observation, multi-page reads. Slice 2 (0.31 wave 3, #33 #34): cua_look reads the page text from the Driver's semantic_v2 snapshot beside AX, bounded (6 s per call, 10 s total, AX fallback with degraded semantic_*), DOM-only record lines reported as dom_lines with sources_disagree counts and never acted on; read_pages {urls<=5, fields?} is ONE cua_do step (open_tab, look, close_tab per url; per-page landing verdict and look_id; a failing page does not abort the others; the user's tab is never navigated): scenarios nav_read_pages_3 and nav_read_pages_one_fails are 1 call each, reader 0, chooser 0; no existing number moved."
  }
 ]

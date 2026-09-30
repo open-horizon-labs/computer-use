@@ -71,6 +71,8 @@ Authority: user request to execute and test extractor-first filtering instead of
 
 Authority: user explicitly instructed “switch to nuextract, Julia, and our full changes” after the implementation and live endpoint tests. This supersedes the default-provider wording in S4.3/S4.5/S4.6: the factory now defaults to NuExtract candidate preparation plus Julia-1 generic choice; Jev/Qwen remains an explicit alternative. Read persistent operator configuration automatically. Keep the qualified GLiNER2 route and all binding/unknown/coverage checks. Use SystemOne/Qwen's screenshot capability for visual terminal assessments. A finite visual assessment is not a transcription or invented visible-control list. This is user selection of the stack, not a new claim of model accuracy.
 
+Amended 2026-09-30 (user decision: "Jev is the default"): the default reverts to Jev. A clean install (no `runtime.json`) resolves to the `fleet` profile (NuExtract candidate preparation plus Jev/Qwen generic choice, which sends page content to the configured hosted services); Julia-1 is the `local-mac` profile, selected explicitly, and an existing configuration that names Julia-1 and no hosted endpoint stays `local-mac`. Nothing else in this section changes: the GLiNER2 route and every binding, unknown and coverage check stay as written.
+
 ## Explicit holes and nonclaims
 
 - Optimal checkpoint/threshold per role, calibration of classification acceptance, broad CUA coverage, and whether GLiNER beats GLiNER2 on simple labels require role-specific measurements. Defaults above are routing hypotheses.
