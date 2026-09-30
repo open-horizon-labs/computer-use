@@ -25,6 +25,7 @@ from ax_aliases import table_aliases
 
 
 OBSERVE_RETRY_DELAYS = (0.5, 1.0)   # seconds before the 2nd and 3rd observation of a page that is not ready
+MEMORY_READOUT = re.compile(r'(Memory usage - )[\d.,]+\s*[KMGT]?B',re.I)
 THIN_PAGE_NODES = 10   # a web page with this few nodes or fewer is still loading or a holding page ("checking your browser"), whatever the site
 
 
@@ -1060,8 +1061,12 @@ class Facade:
         # A page scope also binds the address field (role and value only): a
         # navigation is a different page even when its tree happens to match.
         address=[] if state['nodes'][root].get('role')!='AXWebArea' else self.address_fields(state,members)
+        # A tab strip's live memory readout ('<title> - Memory usage - 32.4 MB') changes between observations and is not page state
+        # (S4.8): the number is masked, the title is not.
+        def mask(node):
+            return {k:(MEMORY_READOUT.sub(r'\1#',v) if isinstance(v,str) else v) for k,v in node.items() if k!='element_token'}
         return digest({'title':state['raw'].get('window_title'),'address':address,
-                       'nodes':[{k:v for k,v in state['nodes'][i].items() if k!='element_token'} for i in sorted(members)]})
+                       'nodes':[mask(state['nodes'][i]) for i in sorted(members)]})
 
     def act(self, selection):
         item=self.selections.get(selection)

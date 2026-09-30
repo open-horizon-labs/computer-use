@@ -251,6 +251,13 @@ def _under_web_area(nodes, index):
     return False
 
 
+def _tab_label(label, title):
+    """Chrome names the tab-strip radio button '<title> - Memory usage - 32.4 MB' (live capture 2026-09-29): the title itself, or the title
+    followed by ' - ' and Chrome's suffix. Never a plain substring ('Three Targets' must not match 'Three Targets 2 - ...')."""
+    label = label or ''
+    return label == title or label.startswith(title + ' - ')
+
+
 def close_control(f, pid, window_id, title):
     """The Close button of the tab-strip tab titled `title`, as an observed element id ('e<n>') of a fresh observation (snapshot handle too).
 
@@ -262,7 +269,7 @@ def close_control(f, pid, window_id, title):
         raise _gap('tab_close_control_not_found: the recorded tab has no title to find in the tab strip')
     obs = f.observe(pid, window_id)
     nodes = f.state(obs['snapshot'])['nodes']
-    tabs = [i for i, n in nodes.items() if n.get('role') == 'AXRadioButton' and n.get('label') == title and not _under_web_area(nodes, i)]
+    tabs = [i for i, n in nodes.items() if n.get('role') == 'AXRadioButton' and _tab_label(n.get('label'), title) and not _under_web_area(nodes, i)]
     if not tabs:
         raise _gap('tab_close_control_not_found: no tab in the window\'s tab strip is titled %r' % title[:80])
     if len(tabs) > 1:

@@ -23,7 +23,7 @@ class BrowserDriver(lv.LiveDriver):
         super().__init__('live_booking_ax.json')
         self.browser_calls = [];self.refuse = {};self.landed = None;self.pages = None
         self.tabs = [{'url': 'https://mail.example/inbox', 'title': 'Inbox', 'active': True}]
-        self.strip = False;self.close_works = True;self.close_of = {};self.clicked_close = [];self.script = self._tab_strip
+        self.memory = '32.4';self.strip = False;self.close_works = True;self.close_of = {};self.clicked_close = [];self.script = self._tab_strip
         self.hotkeys = [];self.cmd_t_works = self.cmd_w_works = True;self.cmd_t_lag = 0;self.pending = 0;self.minted = {};self.binds = 0;self.navigated = False;self.foreground_keys = []
     def call(self, tool, args, timeout=20):
         if tool.startswith('browser_') or tool == 'get_browser_state':
@@ -78,12 +78,12 @@ class BrowserDriver(lv.LiveDriver):
     def _tab_strip(self, driver, els):
         """Chrome's tab strip as issue #4 measured it: an AXTabGroup of one AXRadioButton per tab (named with the tab title, in WINDOW order),
         each with an AX child button named Close. SYNTHETIC shape (no live capture in facade/fixtures has a tab strip): roles and nesting
-        follow the #4 comment; a live capture is still to be taken with the user's consent."""
+        follow the #4 comment and the label is modelled on the 2026-09-29 live capture ('<title> - Memory usage - 32.4 MB'); a live capture is still to be taken with the user's consent."""
         self.close_of = {}
         if not self.strip:return None
         add(els, 0, 'AXTabGroup', label='', actions=['AXShowMenu']);group = els[-1]['element_index']
         for t in self.tabs:
-            add(els, group, 'AXRadioButton', label=t['title'], value='1' if t['active'] else '0');radio = els[-1]['element_index']
+            add(els, group, 'AXRadioButton', label=t['title'] + ' - Memory usage - %s MB' % self.memory, value='1' if t['active'] else '0');radio = els[-1]['element_index']
             add(els, radio, 'AXButton', label='Close');self.close_of[els[-1]['element_index']] = t
     def _add_tab(self):
         self.navigated = False
@@ -399,6 +399,48 @@ class TabStrip(Base):
         r = self.close(allow_foreground=True)
         self.assertEqual(r['status'], 'done', r)
         self.assertEqual((self.driver.foreground_keys, self.driver.executed), ([['cmd', 'w']], []))
+
+    def test_a_title_that_only_extends_ours_is_not_our_tab(self):
+        # Wrong patch: plain substring/prefix match ('Booking' matching 'Booking 2 - Memory usage - ...'): that tab would be pressed or make ours ambiguous.
+        self.driver.tabs[0]['title'] = 'Booking 2'
+        r = self.close()
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual(self.driver.clicked_close, [BOOKING])
+
+    def test_a_tab_without_chromes_suffix_form_is_not_matched_by_a_loose_rule(self):
+        self.assertTrue(browser._tab_label('Booking - Memory usage - 32.4 MB', 'Booking'))
+        self.assertTrue(browser._tab_label('Booking', 'Booking'))
+        self.assertFalse(browser._tab_label('Booking 2 - Memory usage - 1 MB', 'Booking'))
+        self.assertFalse(browser._tab_label('My Booking - Memory usage - 1 MB', 'Booking'))
+
+    def test_the_real_label_shape_is_found_not_only_the_bare_title(self):
+        # Wrong patch: exact equality of label and title (never finds the tab live).
+        self.assertIn('Memory usage', [e for e in self.driver.observe(1, 2)['elements'] if e['role'] == 'AXRadioButton'][0]['label'])
+        self.assertEqual(self.close()['status'], 'done')
+
+    def test_a_memory_number_change_between_bind_and_press_does_not_refuse(self):
+        # Wrong patch: digest the readout number into the scope (the press then refuses on a value that changes every few seconds).
+        real = self.driver.observe
+        seen = []
+        def drift(*a):
+            seen.append(1);self.driver.memory = '%d.4' % (30 + len(seen));return real(*a)
+        self.driver.observe = drift
+        r = self.close()
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual(len(seen), 2, 'one observe to find the control, one inside act to revalidate')
+
+    def test_a_tab_title_change_between_bind_and_press_refuses(self):
+        # Wrong patch: mask the whole label instead of only the number (a retitled tab would be pressed).
+        real = self.driver.observe
+        calls = []
+        def retitle(*a):
+            calls.append(1)
+            if len(calls) >= 2:self.driver.tabs[1]['title'] = 'Booking (changed)'
+            return real(*a)
+        self.driver.observe = retitle
+        r = self.close()
+        self.assertEqual(r['steps'][0]['reason'], 'tab_strip_changed')
+        self.assertEqual(self.driver.clicked_close, [])
 
 
 if __name__ == '__main__':
