@@ -117,8 +117,8 @@ class ToolChecksTest(unittest.TestCase):
 
 class AgentBrowserTest(unittest.TestCase):
     def test_absent_module_is_neutral(self):
-        self.assertEqual(cli.check_agent_browser(fake_env(), module=None)['status'], SKIPPED)
-        self.assertIn('not present in this checkout', cli.check_agent_browser(fake_env(), module=None)['detail'])
+        self.assertEqual(cli.check_agent_browser(fake_env(), module=cli.ABSENT)['status'], SKIPPED)
+        self.assertIn('not present in this checkout', cli.check_agent_browser(fake_env(), module=cli.ABSENT)['detail'])
 
     def test_env_path(self):
         self.assertEqual(cli.check_agent_browser(fake_env(environ={'CUA_AGENT_BROWSER_PATH': '/b'}, files=['/b']))['status'], OK)

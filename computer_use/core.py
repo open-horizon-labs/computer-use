@@ -22,6 +22,7 @@ from providers import generic_from_config, RemoteSpans
 from rollout import Strangler
 from terminal_observation import VisualTerminal
 from ax_aliases import table_aliases
+from agent_display import AgentDisplay
 
 
 OBSERVE_RETRY_DELAYS = (0.5, 1.0)   # seconds before the 2nd and 3rd observation of a page that is not ready
@@ -166,7 +167,7 @@ class Driver:
 
 class Facade:
     def __init__(self, driver=None, generic_factory=generic_from_config, reader_factory=NuExtractPage,
-                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None):
+                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None):
         self.driver = driver or Driver()
         self.sleep = sleep
         self._settled_titles = {}  # (pid, window_id) -> window title of the last settled look (see SETTLE_DELAY_S)
@@ -186,6 +187,8 @@ class Facade:
         self.prefix_control = True  # plan steps set this False (exact label) unless control_match=prefix; the single-step form keeps the whole-word prefix
         self.events = []
         self.lock = threading.RLock()
+        self.agent = agent_display or AgentDisplay()  # #60, CE-FACADE-009: parks created windows and agent-owned apps' windows off the user's screen
+        self.agent_browser = agent_browser  # #60: the default target of goto/open_tab/read_pages (the server passes one; None = the user's own browser, as before)
         self._mobile = mobile  # mobile-mcp (CE-FACADE-008): created and started by the first look/do that names a device (mobile.py)
 
     def event(self, operation, **data):
@@ -246,9 +249,14 @@ class Facade:
             self.driver.call('start_session', {'session': self.session})
             self.started = True
         result = self._read('list_windows', lambda: self.driver.call('list_windows', {'session': self.session}))
-        return {'route': 'driver_inventory', 'windows': [
-            {k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w}
-            for w in result.get('windows', []) if w.get('title') and (title is None or w['title']==title)]}
+        raws = [w for w in result.get('windows', []) if w.get('title') and (title is None or w['title']==title)]
+        listed = [{k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w} for w in raws]
+        self.agent.observed([{**w, 'bundle_id': raw.get('bundle_id'), 'bounds': raw.get('bounds')} for w, raw in zip(listed, raws)])
+        return {'route': 'driver_inventory', 'windows': listed}
+
+    def window_created(self, window_id, title=None, bounds=None):
+        """Every path that makes a NEW WINDOW calls this right after it exists and before the first look or act on it (#60)."""
+        return self.agent.created(window_id, title, bounds)
 
     def observe(self, pid, window_id, timeout=None, wait_ready=False):
         """With wait_ready (a look at a page just opened, never the revalidation or recovery observations of an action): observe, waiting out a page that is not ready yet: a bounded, deterministic retry (OBSERVE_RETRY_DELAYS) when the Driver call
@@ -1869,6 +1877,9 @@ class Facade:
         """Every do response can carry page-derived strings (summary.text, dialog.lines, evidence, found, descriptions): say so, with the fixed sentence."""
         import look as lookmod
         if isinstance(result, dict):
+            report = self.agent.take_report()
+            if report.get('parked'):result['agent_display'] = {'id': self.agent.display, 'parked': True}
+            if report.get('note'):result['agent_display_note'] = report['note']
             result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)
         return result
 
@@ -2412,6 +2423,13 @@ class Facade:
         except (ValueError, RuntimeError, TimeoutError, OSError) as error:
             return finish('failed', reason='provider_failure', error_type=type(error).__name__, attempts=tries.get(ctx['stage'], 1),
                           retryable=ctx['delivery'] == 'none')
+
+    def shutdown(self):
+        """Server exit: close, and stop the agent display (finish/close keep it: parked windows must not spill onto the user's screen)."""
+        try:return self.close()
+        finally:
+            if self.agent_browser is not None:self.agent_browser.stop()
+            self.agent.stop()
 
     def close(self):
         for provider in self.providers.values():
