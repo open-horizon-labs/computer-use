@@ -331,6 +331,7 @@ def measure_plan_scenarios():
             seen['max_bytes'] = max(seen['max_bytes'], len(text))
             return json.loads(text)
         result = policy(call)
+        assert not server.facade.agent.tried, 'CE-FACADE-009: parking is server-side and adds no LLM-visible call; these fixtures hold no created or agent-owned window'
         return {'calls': seen['calls'], 'tools': seen['tools'], 'max_bytes': seen['max_bytes'], 'status': result['status'], 'reader': len(reader.requests), 'chooser': len(chooser.requests)}
 
     booking_goal = 'Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM'

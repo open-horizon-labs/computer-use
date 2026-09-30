@@ -86,6 +86,8 @@ Register the local [computer-use MCP facade](docs/FACADE.md) to expose observati
 
 **Phones and emulators.** `look` and `do` also take `device=<id>` instead of a window title: Android (emulators, devices) and iOS (simulators, devices) through [mobile-mcp](https://github.com/mobile-next/mobile-mcp) 1.0.6, the best driver for mobile. The server starts it itself on first use (`npx`, so Node.js 18+ is the only prerequisite; without it the answer is a typed refusal naming what to install), and the same contract holds: a fresh element list before every tap, exact label binding, a verification on another fresh list, no blind coordinates. `look(device="list")` lists the devices. See [Phones and emulators](docs/FACADE.md#phones-and-emulators-mobile-mcp).
 
+**Agent display.** Windows the server creates, and windows of agent-owned apps (the Android emulator, Simulator, Chrome Beta/Canary/Chromium; `CUA_AGENT_APPS`), are parked on a headless virtual display so nothing the agent drives sits on your screen; your own apps are never moved. `CUA_AGENT_DISPLAY=off|auto|required` (default `auto`: park when the helper works, otherwise continue with a note). `goto`, `open_tab` and `read_pages` use an **agent browser** by default: one Chrome for Testing window (installed on demand into `~/.cache/computer-use`, its own profile, `CUA_AGENT_BROWSER=auto|user`, `CUA_AGENT_BROWSER_PATH`) kept on that display and reused, so windows do not pile up; `profile: "user"` on a step uses your own browser. See [SPACES.md](docs/SPACES.md#agent-display-policy-ce-facade-009).
+
 ## Install the skill
 
 This repository is public. Clone it over HTTPS or SSH, then:
@@ -106,6 +108,17 @@ python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 ```
 
 The offline check needs only Python 3.10+. For real inference, choose a profile and configure its local or hosted workers in `~/.config/computer-use/runtime.json`; see the [setup reference](skills/computer-use/references/setup.md). Installing the skill does not install model environments or modify the standalone Fleet selector.
+
+## Setup: doctor and bootstrap
+
+```bash
+.venv-facade/bin/python -m computer_use doctor [--json] [--probe]   # read-only; exit 1 on any blocker
+.venv-facade/bin/python -m computer_use bootstrap [--yes]           # does the fixable items, prints the rest
+```
+
+`doctor` checks the Cua Driver (version, daemon, socket, `--grant existing-profile`, Accessibility and Screen Recording, signing), Full Disk Access (only `profile: user` needs it; it cannot be read without a prompt, so it is always a manual warning), Cua Perception, Node/npx, adb devices, booted simulators, space-mover (built, trusted; `--probe` also creates and drops a virtual display), the agent browser when that module is present, `runtime.json` and each configured provider endpoint (one bounded HEAD/GET, nothing else is sent), the MCP registration in `~/.claude.json` (server `computer-use`, args `computer_use/server.py`, no stale `cua-task`), the skill under its current name, and the venv. Each line is `ok`, `warn`, `blocker` or `skipped` with a fix hint. `scripts/setup_facade.sh` ends with it.
+
+`bootstrap` builds space-mover, prefetches mobile-mcp, installs Perception, installs Chrome for Testing when the agent browser module is present, and restarts the Driver daemon with `--grant existing-profile`. It edits `~/.claude.json` only with `--yes` (backup first: rename `cua-task` to `computer-use`, point args at this checkout). It then prints the manual System Settings steps (Accessibility, Screen Recording, Full Disk Access, Dock "Assign To"). Tests use fakes: no network, no desktop.
 
 ## Alternative Jev API and endpoint setup
 
