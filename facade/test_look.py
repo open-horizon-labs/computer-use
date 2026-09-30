@@ -481,7 +481,7 @@ class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
         # Wrong patch: wait until pressable (unbounded).
         d, f = self.unpressable(until=99)
         r = f.look('Demo')
-        self.assertEqual(self.naps[:2], [core.ACTIONS_PENDING_WAIT_S, 1.0])  # the idle gap once, then the ordinary delay
+        self.assertEqual(self.naps[:2], [core.ACTIONS_PENDING_WAIT_S] * 2)  # every actions_pending retry is an idle gap, bounded
         self.assertIn(r['status'], ('ok', 'deferred'))
 
     def test_only_a_look_waits_never_an_action_observation(self):

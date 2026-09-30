@@ -266,8 +266,8 @@ class Facade:
                             result = self._settled(pid, window_id, timeout, result, began)
                             self._settled_titles[key] = result.get('title')
                     return result
-            if reason == 'actions_pending' and not waited_idle and self.clock() - began + ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 <= LOOK_WAIT_MAX_S:
-                waited_idle = True
+            if reason == 'actions_pending' and self.clock() - began + ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 <= LOOK_WAIT_MAX_S:
+                waited_idle = True  # every actions_pending retry waits idle (a quick re-poll can land in a new episode)
                 self.sleep(ACTIONS_PENDING_WAIT_S)
             else:
                 self.sleep(delays[attempt])
@@ -1982,8 +1982,16 @@ class Facade:
         def attempt():
             ctx['pass'] += 1
             pid_, window_ = ctx['pid'], ctx['window_id']
-            snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot)
+            seen = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))
             count('observe', 'cua-driver')
+            controls_, pressable_ = self._page_press(seen)
+            if operation == 'click' and pressable_ < controls_ and remaining() > ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000:
+                # Chrome intermittently lists a page's buttons without AXPress (an AXPress then is a no-op: measured live, page log empty);
+                # it clears within ~2 s. Before any click, wait that idle gap ONCE and observe again (read-only).
+                attempts.append({'pass': ctx['pass'], 'stage': 'observe', 'kind': 'reobserve_unpressable_control'})
+                self.sleep(ACTIONS_PENDING_WAIT_S)
+                seen = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()));count('observe', 'cua-driver')
+            snapshot = seen['snapshot'];state = self.state(snapshot)
             self.reject_answer_leak(state, goal)
             if over_all():return budget()
             webs = self._top_web_areas(state)
@@ -2080,10 +2088,10 @@ class Facade:
                 offered = [i for i in pool(state) if self._operation_compatible(state['nodes'][i], operation)]
                 if label is not None:
                     any_named, same = named(state)
-                    if any_named and not same:
-                        # Chrome can omit the press action on a fresh read: reobserve ONCE before concluding anything.
+                    if any_named and not same and not any(a['pass'] == ctx['pass'] and a['kind'] == 'reobserve_unpressable_control' for a in attempts):
+                        # Chrome can omit the press action on a fresh read: reobserve ONCE before concluding anything (at most once per pass).
                         attempts.append({'pass': ctx['pass'], 'stage': 'choose', 'kind': 'reobserve_unpressable_control'})
-                        self.sleep(self.RETRY_BACKOFF_S)
+                        self.sleep(ACTIONS_PENDING_WAIT_S if remaining() > ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 else self.RETRY_BACKOFF_S)
                         snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot);count('observe', 'cua-driver')
                         any_named, same = named(state);offered = [i for i in pool(state) if self._operation_compatible(state['nodes'][i], operation)]
                     listing = self._bounded(sorted({state['nodes'][i].get('label') or '' for i in offered}))
