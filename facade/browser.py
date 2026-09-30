@@ -68,7 +68,8 @@ PERMISSION_CODES = frozenset({'browser_consent_required', 'browser_requires_setu
 
 
 def _navigate_refused(code, action):
-    if code in PERMISSION_CODES or code is None:
+    code = code or 'refused'
+    if code in PERMISSION_CODES:
         return _permission(code or 'refused', action)
     return _gap('navigate_refused: the Driver refused to %s (%s); nothing else was tried' % (action, code))
 
@@ -139,11 +140,15 @@ def settle(f, check):
 
 def navigate(f, pid, window_id, url):
     """Navigate the window's active tab and verify the landing. Returns {'status': 'ok', 'page': ...} or raises core.Gap with a typed reason."""
-    from core import Gap as CoreGap
+    from core import Gap as CoreGap, DriverCallFailed
     url = check_url(url)
     target, tab = bind(f, pid, window_id)
     try:
         _call(f, 'browser_navigate', {'target_id': target, 'tab_id': tab, 'url': url})
+    except DriverCallFailed as error:
+        # Live 2026-09-30: a 404 is exit 1 'navigation failed: net::ERR_HTTP_RESPONSE_CODE_FAILURE' (no refusal code): the page did not
+        # load. Not a permission, not a landing: its own reason, no Driver text.
+        raise _gap('navigate_failed: the page did not load (an HTTP error or a network failure; %s); nothing else was tried' % (getattr(error, 'kind', None) or 'error'))
     except CoreGap as error:
         raise _navigate_refused(_refusal_code(error), 'navigate this tab')
     seen = {}
@@ -247,9 +252,13 @@ def _remember_tab(f, pid, window_id, page, count):
 
 
 def _navigate_tab(f, target, tab, url):
-    from core import Gap as CoreGap
+    from core import Gap as CoreGap, DriverCallFailed
     try:
         _call(f, 'browser_navigate', {'target_id': target, 'tab_id': tab, 'url': url})
+    except DriverCallFailed as error:
+        # Live 2026-09-30: a 404 is exit 1 'navigation failed: net::ERR_HTTP_RESPONSE_CODE_FAILURE' (no refusal code): the page did not
+        # load. Not a permission, not a landing: its own reason, no Driver text.
+        raise _gap('navigate_failed: the page did not load (an HTTP error or a network failure; %s); nothing else was tried' % (getattr(error, 'kind', None) or 'error'))
     except CoreGap as error:
         raise _navigate_refused(_refusal_code(error), 'navigate this tab')
     seen = {}

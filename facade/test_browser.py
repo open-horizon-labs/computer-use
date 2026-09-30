@@ -177,6 +177,18 @@ class NavigateRefused(Base):
         self.assertEqual((r['steps'][0]['status'], r['steps'][0]['reason']), ('refused', 'navigate_refused'))
         self.assertIn('navigation_failed', r['steps'][0].get('message', ''))
 
+    def test_a_page_that_does_not_load_is_navigate_failed(self):
+        # Wrong patch: a failed navigate call (no refusal code) reported as permission_required (live 2026-09-30, a 404).
+        from core import DriverCallFailed
+        real = self.driver.call
+        def boom(tool, args, timeout=20):
+            if tool == 'browser_navigate':raise DriverCallFailed('driver_call_failed: browser_navigate exited 1', tool, 'exit')
+            return real(tool, args, timeout)
+        self.driver.call = boom
+        r = self.plan([{'do': 'goto', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.assertEqual(r['steps'][0]['reason'], 'navigate_failed')
+        self.assertNotIn('permission', r['steps'][0].get('message', ''))
+
     def test_a_consent_refusal_is_still_permission_required(self):
         self.driver.refuse = {'browser_navigate': 'browser_consent_required'}
         r = self.plan([{'do': 'goto', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
