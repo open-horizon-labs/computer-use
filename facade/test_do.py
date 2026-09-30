@@ -774,3 +774,99 @@ class DriverEffectRefused(DoBase):
         # Guards an over-broad patch that refuses every effect.
         r = self.run_with({'effect': 'unverifiable'})
         self.assertEqual(r['status'], 'done')
+
+
+class ForgetfulDaemon(FlatDriver):
+    """A Driver daemon that forgets its sessions when restarted: every call naming an unstarted session exits 1, like the real CLI."""
+    def __init__(self):
+        super().__init__();self.known = set();self.starts = 0;self.raw_calls = []
+        self.click_delivers_then_fails = False;self.fail_kind = 'exit';self.start_fails = False
+    def restart(self):self.known.clear()
+    def check(self, tool, session):
+        if session not in self.known:raise DriverCallFailed('driver_call_failed: %s exited 1' % tool, tool, self.fail_kind)
+    def call(self, tool, args, timeout=20):
+        self.raw_calls.append(tool)
+        if tool == 'start_session':
+            if self.start_fails:raise DriverCallFailed('driver_call_failed: start_session exited 1', tool, 'exit')
+            self.known.add(args['session']);self.starts += 1;return {}
+        if tool in ('click', 'type_text') and self.click_delivers_then_fails:
+            self.executed.append(args);raise DriverCallFailed('driver_call_failed: %s exited 1; the action may have been delivered' % tool, tool, 'exit')
+        self.check(tool, args.get('session'))
+        return super().call(tool, args, timeout)
+    def observe(self, pid, window_id, session, *rest):
+        self.raw_calls.append('get_window_state');self.check('get_window_state', session)
+        return super().observe(pid, window_id, session, *rest)
+
+
+class SessionRecovery(DoBase):
+    """#31: a Driver daemon restart drops the facade's session; a READ recovers with one start_session and one retry, an action never does."""
+    def setUp(self):
+        super().setUp();self.driver = ForgetfulDaemon();self.driver.confirm_text = 'Booked Provider E 1:45 PM';self.f.driver = self.driver
+    def restarts(self):return [e for e in self.f.events if e['operation'] == 'driver_session_restarted']
+
+    def test_look_after_a_daemon_restart_recovers_with_one_bounded_retry(self):
+        # Wrong patch: call start_session once at startup only (the second look then fails driver_call_failed).
+        self.assertEqual(self.f.look(title='Demo')['status'], 'ok')
+        self.driver.restart()
+        r = self.f.look(title='Demo')
+        self.assertEqual(r['status'], 'ok');self.assertEqual(self.driver.starts, 2)
+        self.assertEqual([(e['tool'], e['recovered']) for e in self.restarts()], [('list_windows', True)])
+
+    def test_a_click_is_never_repeated_and_no_session_restart_follows_a_failed_click(self):
+        # Wrong patch: retry every driver_call_failed (a click that failed after delivery would be sent twice).
+        self.driver.click_delivers_then_fails = True
+        r = self.do(records=rec(ONE), expect='Booked Provider E')
+        self.assertEqual((r['status'], r['reason'], r['delivery']), ('failed', 'driver_call_failed', 'uncertain'))
+        self.assertEqual(len(self.driver.executed), 1);self.assertEqual(self.driver.raw_calls.count('click'), 1)
+        self.assertEqual((self.driver.starts, self.restarts()), (1, []))
+        self.assertEqual(r['detail'], {'tool': 'click', 'exit_class': 'exit', 'session_restart_tried': False})
+
+    def test_the_read_is_retried_once_not_until_it_works(self):
+        # Wrong patch: loop the restart-and-retry. A daemon that keeps failing costs one start_session and one extra read.
+        self.f.look(title='Demo');self.driver.restart()
+        real = self.driver.call
+        def dead(tool, args, timeout=20):
+            if tool == 'start_session':return real(tool, args, timeout)
+            raise DriverCallFailed('driver_call_failed: %s exited 1' % tool, tool, 'exit')
+        self.driver.call = dead
+        r = self.f.look(title='Demo')
+        self.assertEqual((r['status'], r['reason'], r['retryable']), ('failed', 'driver_call_failed', True))
+        self.assertEqual(r['detail'], {'tool': 'list_windows', 'exit_class': 'exit', 'session_restart_tried': True})
+        self.assertEqual([e['recovered'] for e in self.restarts()], [False]);self.assertEqual(self.driver.starts, 2)
+
+    def test_failed_restart_is_reported_and_stops(self):
+        self.f.look(title='Demo');self.driver.restart();self.driver.start_fails = True
+        r = self.f.look(title='Demo')
+        self.assertEqual((r['status'], r['detail']['session_restart_tried']), ('failed', True))
+        self.assertEqual(self.driver.raw_calls.count('start_session'), 2)
+
+    def test_a_timeout_is_not_a_lost_session_and_is_not_restarted(self):
+        # Wrong patch: restart on any failure class (a timeout retry doubles the wait for a slow app, not a lost session).
+        self.f.look(title='Demo');self.driver.restart();self.driver.fail_kind = 'timeout'
+        r = self.f.look(title='Demo')
+        self.assertEqual((r['status'], r['detail']), ('failed', {'tool': 'list_windows', 'exit_class': 'timeout', 'session_restart_tried': False}))
+        self.assertEqual((self.driver.starts, self.restarts()), (1, []))
+
+    def test_only_read_only_tools_may_restart_the_session(self):
+        # Wrong patch: let _read wrap any tool. Every mutating tool stays out of READ_TOOLS.
+        import core
+        self.f.look(title='Demo');self.driver.restart()
+        for tool in sorted(core.MUTATING_TOOLS):
+            self.assertNotIn(tool, core.READ_TOOLS)
+            with self.assertRaises(DriverCallFailed):self.f._read(tool, lambda: self.driver.call('click', {'session': self.f.session}))
+        self.assertEqual(self.driver.starts, 1)
+
+    def test_a_refusal_naming_the_session_is_also_a_lost_session_for_a_read(self):
+        self.f.look(title='Demo');first = {'n': 0}
+        real = self.driver.call
+        def refuse(tool, args, timeout=20):
+            if tool == 'list_windows' and not first['n']:first['n'] = 1;raise Gap('Driver refused: unknown_session')
+            return real(tool, args, timeout)
+        self.driver.call = refuse
+        self.assertEqual(self.f.look(title='Demo')['status'], 'ok')
+        self.assertEqual([e['recovered'] for e in self.restarts()], [True])
+
+    def test_detail_carries_no_driver_output(self):
+        self.driver.click_delivers_then_fails = True
+        r = self.do(records=rec(ONE), expect='Booked Provider E')
+        self.assertEqual(set(r['detail']), {'tool', 'exit_class', 'session_restart_tried'})

@@ -350,7 +350,7 @@ MUTATIONS = {
         ['test_plan_review3.MarkerOnEveryPath.test_every_look_path_carries_the_marker']),
     'driver_failure_message_raw': (
         'the single-step driver failure echoes str(gap)',
-        [('core.py', "message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', attempts=", 'message=str(gap), attempts=')],
+        [('core.py', "message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', detail=self._failure_detail(gap), attempts=", 'message=str(gap), detail=self._failure_detail(gap), attempts=')],
         ['test_plan_review3.MarkerOnEveryPath.test_every_do_path_carries_the_marker_and_no_message_is_raw']),
     'fold_homoglyphs_dropped': (
         'SHRINK: Cyrillic/Greek look-alikes are not mapped',

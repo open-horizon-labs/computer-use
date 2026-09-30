@@ -40,7 +40,10 @@ class StaleUI(Gap):
 
 class DriverCallFailed(Gap):
     """A Cua Driver call failed at the process boundary (exit, timeout, unusable
-    output). Typed, so callers never match on message text. Carries no stderr."""
+    output). Typed, so callers never match on message text. Carries no stderr.
+    tool, kind (exit, timeout, unusable_output) and restarted (a session restart was tried, #31) are the sanitized diagnosis (#30)."""
+    def __init__(self, message='', tool=None, kind=None):
+        super().__init__(message);self.tool, self.kind, self.restarted = tool, kind, False
 
 
 
@@ -55,6 +58,7 @@ REGION_CANDIDATE_LIMIT = 18  # the generic chooser's capacity (sketch S4.5); nev
 
 MUTATING_TOOLS = frozenset({'click', 'double_click', 'right_click', 'type_text', 'drag', 'scroll', 'hotkey', 'press_key',
                               'invoke_menu', 'set_window_frame'})
+READ_TOOLS = frozenset({'get_window_state', 'list_windows', 'get_browser_state', 'parse_visual_regions'})  # the only calls a lost Driver session may re-run (#31)
 
 
 class Driver:
@@ -96,13 +100,13 @@ class Driver:
                                     capture_output=True, text=True, timeout=timeout, check=True)
             value = json.loads(result.stdout)
         except subprocess.CalledProcessError as error:
-            raise DriverCallFailed('driver_call_failed: %s exited %s%s' % (tool, error.returncode, note))
+            raise DriverCallFailed('driver_call_failed: %s exited %s%s' % (tool, error.returncode, note), tool, 'exit')
         except subprocess.TimeoutExpired:
-            raise DriverCallFailed('driver_call_failed: %s timed out after %ss%s' % (tool, timeout, note))
+            raise DriverCallFailed('driver_call_failed: %s timed out after %ss%s' % (tool, timeout, note), tool, 'timeout')
         except (OSError, ValueError):
-            raise DriverCallFailed('driver_call_failed: %s returned no usable result%s' % (tool, note))
+            raise DriverCallFailed('driver_call_failed: %s returned no usable result%s' % (tool, note), tool, 'unusable_output')
         if not isinstance(value, dict):
-            raise DriverCallFailed('driver_call_failed: %s returned a non-object result%s' % (tool, note))
+            raise DriverCallFailed('driver_call_failed: %s returned a non-object result%s' % (tool, note), tool, 'unusable_output')
         if value.get('refusal') or value.get('status') == 'refused':
             raise Gap('Driver refused: ' + str((value.get('refusal') or {}).get('code', 'unknown')))
         # The Driver can answer success-shaped with effect "refused" (#5, #38), at the top level or on any action of results: never delivered.
@@ -169,6 +173,28 @@ class Facade:
             self.event('provider_start', provider=name, setup_ms=(self.clock()-start)*1000)
         return self.providers[name]
 
+    def _read(self, tool, call):
+        """Run a READ-ONLY Driver call. If it fails the way a dropped session does (the process failed or answered unusably, or a refusal names
+        the session; a timeout is not retried, it would double the wait), re-run start_session ONCE and retry the read ONCE (#31, a Driver
+        daemon restart forgets sessions). Never for a tool outside READ_TOOLS: a failed click may have been delivered."""
+        try:return call()
+        except Gap as error:
+            lost = (isinstance(error, DriverCallFailed) and error.kind in ('exit', 'unusable_output')) or \
+                   (not isinstance(error, DriverCallFailed) and str(error).startswith('Driver refused:') and 'session' in str(error).lower())
+            if tool not in READ_TOOLS or not lost or not self.started:raise
+            try:self.driver.call('start_session', {'session': self.session})
+            except Gap:
+                self.event('driver_session_restarted', tool=tool, recovered=False)
+                if isinstance(error, DriverCallFailed):error.restarted = True
+                raise error
+            try:result = call()
+            except Gap as again:
+                self.event('driver_session_restarted', tool=tool, recovered=False)
+                if isinstance(again, DriverCallFailed):again.restarted = True
+                raise
+            self.event('driver_session_restarted', tool=tool, recovered=True)
+            return result
+
     def windows(self, title=None):
         if not self.started:
             version_probe = getattr(self.driver, 'version', None)
@@ -190,7 +216,7 @@ class Facade:
                 self.perception_state = 'not_installed'
             self.driver.call('start_session', {'session': self.session})
             self.started = True
-        result = self.driver.call('list_windows', {'session': self.session})
+        result = self._read('list_windows', lambda: self.driver.call('list_windows', {'session': self.session}))
         return {'route': 'driver_inventory', 'windows': [
             {k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w}
             for w in result.get('windows', []) if w.get('title') and (title is None or w['title']==title)]}
@@ -240,11 +266,11 @@ class Facade:
         if not self.started:
             self.windows()
         began = self.clock()
-        raw = self.driver.observe(pid, window_id, self.session, *([timeout] if timeout is not None else []))
+        raw = self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *([timeout] if timeout is not None else [])))
         if not raw.get('snapshot_id') or raw.get('pid', pid) != pid or raw.get('window_id', window_id) != window_id:
             # A vague message here just makes the agent guess three times. Say
             # whether the window is gone or the Driver degraded/refused instead.
-            windows = self.driver.call('list_windows', {'session': self.session}).get('windows', [])
+            windows = self._read('list_windows', lambda: self.driver.call('list_windows', {'session': self.session})).get('windows', [])
             if not any(w.get('pid') == pid and w.get('window_id') == window_id for w in windows):
                 raise Gap('window_closed: the target window is no longer in the Driver window list; call cua_windows again')
             raise Gap('driver_snapshot_unavailable: ' + json.dumps(
@@ -378,7 +404,7 @@ class Facade:
         # same session the Driver answers capture_not_found (verified live, 0.30.3).
         args = {'capture_id': capture_id, 'session': self.session, **({'options': options} if options else {})}
         try:
-            result = self.driver.call('parse_visual_regions', args)
+            result = self._read('parse_visual_regions', lambda: self.driver.call('parse_visual_regions', args))
         except DriverCallFailed as gap:
             message = 'perception_parse_failed: %s (cached for this capture; reobserve to retry, and if it persists the Driver session may have been lost)' % gap
             state['regions_failure'] = (capture_id, message)
@@ -1289,6 +1315,11 @@ class Facade:
     STALE = object()
 
     class _Ambiguous(Exception):pass
+
+    @staticmethod
+    def _failure_detail(gap):
+        """Sanitized diagnosis of a failed Driver call (#30, #31): the tool, the exit class and whether a session restart was tried. Never stderr."""
+        return {'tool': getattr(gap, 'tool', None), 'exit_class': getattr(gap, 'kind', None), 'session_restart_tried': getattr(gap, 'restarted', False)}
 
     @staticmethod
     def _do_reason(message):
@@ -2229,7 +2260,7 @@ class Facade:
             given_back = bool(item) and not item['used'] and ctx['delivery'] == 'none'
             if ctx['delivery'] != 'none' and ctx['selection']:self.selections.pop(ctx['selection'], None)
             if ctx['stage'] in ('act', 'confirm') and not given_back and ctx['delivery'] == 'none':ctx['delivery'] = 'uncertain'
-            return finish('failed', reason='driver_call_failed', message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', attempts=tries.get(ctx['stage'], 1),
+            return finish('failed', reason='driver_call_failed', message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', detail=self._failure_detail(gap), attempts=tries.get(ctx['stage'], 1),
                           retryable=ctx['delivery'] == 'none', **({'selection': ctx['selection']} if given_back else {}))
         except self._Ambiguous as gap:
             return finish('deferred', reason='records_ambiguous', message=str(gap))
