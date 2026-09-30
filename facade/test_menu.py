@@ -82,7 +82,7 @@ class Routing(Base):
     def test_the_refusal_is_preserved_without_allow_foreground_because_invoke_menu_fronts_the_window(self):
         # Wrong patch: reroute silently (invoke_menu temporarily activates the target window: the Driver's own doc), without the caller's permission to front it.
         r = self.press()
-        self.assertEqual((r['status'], r['reason'], r['delivery']), ('refused', 'element_outside_target_window', 'none'), r)
+        self.assertEqual((r['status'], r.get('reason'), r['delivery']), ('refused', 'element_outside_target_window', 'none'), r)
         self.assertEqual(self.driver.menu_calls, [])
         self.assertIn('allow_foreground', r['steps'][0]['message'])
         self.assertIn('allow_foreground', r['hint'])

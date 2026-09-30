@@ -34,6 +34,23 @@ async def default_mode():
    assert blind['status']=='refused' and blind['reason']=='look_required' and 'cua_look' in blind['hint'],blind
    plan=json.loads((await s.call_tool('cua_do',{'goal':'Inspect the used product','title':'Demo','expect':None,'look_id':seen['look_id'],'steps':[{'do':'press','where':{'lines':[{'line':'contains','value':'Used'}]},'expect':None}]})).content[0].text)
    assert plan['status']=='delivered_unverified' and plan['steps'][0]['selected']['description'].startswith('Inspect first') and plan['follow_up_needed'] is True,plan
+   await navigation_steps(s,do)
+async def navigation_steps(s,do):
+ # A step the REAL MCP tool schema (PlanStep, extra=forbid) must accept: a previous bug had no `url` field, so every goto/open_tab was rejected by validation before
+ # the executor ever saw it. Getting PAST validation is the check: the fake Driver binds no browser, so the step then stops with a typed reason of its own (never
+ # a schema error, never bad_request).
+ props=set(do.inputSchema['$defs']['PlanStep']['properties'])
+ assert {'url','urls','fields','menu','allow_foreground'}<=props,sorted(props)
+ for step in ({'do':'goto','url':'https://clinic.example/booking','expect':None},{'do':'open_tab','url':'https://clinic.example/booking','expect':None},
+              {'do':'read_pages','urls':['https://clinic.example/booking','https://clinic.example/booking/b']},{'do':'press','menu':['Profiles','Person 1'],'expect':None}):
+  res=await s.call_tool('cua_do',{'goal':'Open the booking page','title':'Demo','expect':None,'steps':[step]})
+  assert not res.isError,(step,res.content[0].text)
+  out=json.loads(res.content[0].text)
+  assert out['steps'] and out['steps'][0]['do']==step['do'],(step,out)
+  assert out.get('reason')!='bad_request' and out['steps'][0].get('reason')!='bad_request',(step,out)
+  assert out['steps'][0]['status']!='done' or step['do']=='read_pages',(step,out)
+ bad=await s.call_tool('cua_do',{'goal':'x','title':'Demo','expect':None,'steps':[{'do':'goto','uri':'https://clinic.example/booking','expect':None}]})
+ assert bad.isError,'an unknown step key must still be rejected by the schema'
 async def advanced_mode():
  async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT),env={'CUA_TASK_ADVANCED':'1'})) as (r,w):
   async with ClientSession(r,w) as s:
@@ -63,5 +80,5 @@ async def advanced_mode():
    assert 'perception_version' in fin and 'perception_state' in fin
 async def main():
  await default_mode();await advanced_mode()
- print('Protocol checks passed in both modes. Default: cua_do then cua_look are the only tools, expect is required, delivered_unverified/verify/leak paths, look read-only with a look_id, a where.lines plan refused without one and run with one, primitives not callable. CUA_TASK_ADVANCED=1: ten tools all Advanced but cua_do and cua_look, title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
+ print('Protocol checks passed in both modes. Default: cua_do then cua_look are the only tools, expect is required, delivered_unverified/verify/leak paths, look read-only with a look_id, a where.lines plan refused without one and run with one, primitives not callable, goto/open_tab/read_pages/menu steps accepted by the real PlanStep schema (url, urls, fields, menu) and an unknown step key rejected. CUA_TASK_ADVANCED=1: ten tools all Advanced but cua_do and cua_look, title filter, typed read schema ignored (S4.8), cached read predicates and root mapping, fresh verification observation and screenshot, regions mode schema/gap, perception status in cua_finish.')
 asyncio.run(main())
