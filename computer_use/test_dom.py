@@ -1,4 +1,4 @@
-"""CE-FACADE-007 slice 2 (#33, #29): cua_look reads the page text from the Driver's semantic_v2 snapshot beside the AX tree, bounded.
+"""CE-FACADE-007 slice 2 (#33, #29): look reads the page text from the Driver's semantic_v2 snapshot beside the AX tree, bounded.
 
 The AX tree is the REAL captured Chrome booking page; the Driver's browser tools are faked with the response shape documented in the Driver's
 browser-semantic-snapshots reference (page.url/title, outline, refs, content_refs, snapshot.complete/omitted/continuation). No desktop, browser or

@@ -20,7 +20,7 @@ Retain S, K, P, A, R/G distinctions from the sketch. Accepted CE provenance is i
 
 ## Restart kit
 
-Start with skills/cua-capability-dispatch/SKILL.md and the sketch. Run the offline gate, broaden beyond booking, then qualify through real Driver tasks. Add fine-tuning only after a measured role failure survives adapter and input-contract checks. Keep infrastructure, datasets and model deployment separate.
+Start with skills/computer-use/SKILL.md and the sketch. Run the offline gate, broaden beyond booking, then qualify through real Driver tasks. Add fine-tuning only after a measured role failure survives adapter and input-contract checks. Keep infrastructure, datasets and model deployment separate.
 
 Reusable fragments: typed dispatch/matcher, span schema adapter and worker, bounded generic recovery, full-request binding, controlled simulator, real-provider comparison harness, accepted CE archive and historical review. No stock skill or tool was overwritten. No original source was deleted.
 

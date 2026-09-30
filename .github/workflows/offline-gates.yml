@@ -26,11 +26,11 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install facade requirements
-        run: pip install -r facade/requirements.txt
+        run: pip install -r computer_use/requirements.txt
       - name: Facade unit tests (fail if any is skipped so the mcp-dependent guardrails must run)
         run: |
           set -o pipefail
-          python -m unittest discover -s facade -p 'test_*.py' 2>&1 | tee facade-tests.log
+          python -m unittest discover -s computer_use -p 'test_*.py' 2>&1 | tee facade-tests.log
           if grep -q 'skipped=' facade-tests.log; then echo 'facade tests were skipped; the guardrails did not run' >&2; exit 1; fi
       - name: Dispatcher unit tests
         run: cd inference/cua-decider/capability-dispatch && python -m unittest test_dispatch
@@ -45,7 +45,7 @@ jobs:
       - name: Skill sketch snapshot is current
         run: python scripts/sync_skill_references.py --check
       - name: MCP protocol smoke
-        run: python facade/check_protocol.py
+        run: python computer_use/check_protocol.py
       - name: Call budget (default path stays within its measured LLM-visible calls)
         run: python scripts/check_call_budget.py
       - name: Plan mutation checks (each wrong patch of look-then-plan must fail its test by assertion)

@@ -1,4 +1,4 @@
-"""cua_look: a deterministic, read-only look at the strings a page displays (option B, CE-FACADE-005).
+"""look: a deterministic, read-only look at the strings a page displays (option B, CE-FACADE-005).
 
 The blind-filter failure class (a filter written without seeing the page: `duration contains "30"` while the right slot is
 displayed as "half-hour") is closed by making the LLM SEE the page's strings once, then plan against them. This module builds
@@ -166,7 +166,7 @@ def structural_state(f, state, content):
 def analyze(f, state):
     """Structure of one observation, no model: records (root, controls, full lines), header, page text, dialogs, other controls, inputs.
 
-    Records come from the facade's own discovery so a look and a cua_do step agree on what a record is."""
+    Records come from the facade's own discovery so a look and a do step agree on what a record is."""
     nodes, aliases = state['nodes'], state['aliases']
     skip = set(aliases) | f._column_copies(state)
     content = f._content_ids(state) - skip
@@ -213,7 +213,7 @@ def analyze(f, state):
             return out | {root}
         return f.subtree(state, 'e%d' % root)[1]
 
-    # Records: the same discovery cua_do uses. With several control kinds per record (Track and Cancel) discovery needs `control`;
+    # Records: the same discovery do uses. With several control kinds per record (Track and Cancel) discovery needs `control`;
     # the union over each distinct label is the same record set (rows), so a look never asks the LLM for a control.
     roots, why = None, None
     if page_controls:
@@ -279,7 +279,7 @@ def analyze(f, state):
             header = [' '.join(texts_under(f.subtree(state, 'e%d' % c)[1])) for c in direct]
             header = [h for h in header if h]
     # Dialogs: role-tagged sheets/dialogs anywhere in the window. A confirm dialog rendered as plain page content has no role to find
-    # (cua_do sees it as new content after a click); it shows up in `text` and `controls`.
+    # (do sees it as new content after a click); it shows up in `text` and `controls`.
     dialogs, dialog_members = [], set()
     for i in sorted(nodes):
         if nodes[i].get('role') in f.MODAL_ROLES:
@@ -399,13 +399,13 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
     return response, shown
 
 
-PRIMITIVE_NAMES = re.compile(r'cua_(?:windows|observe|read|choose|act|verify|trace|finish)\b')
+PRIMITIVE_NAMES = re.compile(r'(?i)(?:\b(?:call|calls|called|use|using|run|invoke|then|via)\s+`?|__)(?:windows|observe|read|choose|act|verify|trace|finish)\b')
 
 
 def safe_message(reason, message):
-    """Refusal text a cua_look/cua_do-only caller can use: never names a primitive tool, never carries Driver stderr."""
+    """Refusal text a look/do-only caller can use: never names a primitive tool, never carries Driver stderr."""
     if reason == 'window_closed':
-        return 'window_closed: the target window is no longer open; check the exact window title and call cua_look again'
+        return 'window_closed: the target window is no longer open; check the exact window title and call look again'
     return PRIMITIVE_NAMES.sub('the page', message or '')
 
 
@@ -452,7 +452,7 @@ def attach_dom(f, pid, window_id, state, analysis, rows, extras):
     if found['unplaced']:
         extras['dom_unplaced'] = [cut(t)[0] for t in found['unplaced'][:DOM_UNPLACED_MAX]]
     if found['dom_only']:
-        extras['notes'].append('the page DOM shows %d text%s the accessibility tree does not (dom_lines on a record, dom_unplaced otherwise); they are evidence only: a cua_do where.lines filter cannot match them and look_id does not cover them' % (found['dom_only'], '' if found['dom_only'] == 1 else 's'))
+        extras['notes'].append('the page DOM shows %d text%s the accessibility tree does not (dom_lines on a record, dom_unplaced otherwise); they are evidence only: a do where.lines filter cannot match them and look_id does not cover them' % (found['dom_only'], '' if found['dom_only'] == 1 else 's'))
     if found['ax_only']:
         extras['notes'].append('%d accessibility-tree lines are not in the DOM outline; both are kept (sources_disagree)' % found['ax_only'])
     if not semantic['complete']:
@@ -494,7 +494,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         webs = f._top_web_areas(state)
         if len(webs) > 1:
             return {'status': 'deferred', 'reason': 'web_area_ambiguous', 'window': {'title': state['raw'].get('window_title')}, 'found': {'web_areas': len(webs)},
-                    'hint': 'The window holds %d separate page areas (for example a browser extension popup beside the page). Close the extra one, or give the exact title of the window that holds only the page, and call cua_look again.' % len(webs),
+                    'hint': 'The window holds %d separate page areas (for example a browser extension popup beside the page). Close the extra one, or give the exact title of the window that holds only the page, and call look again.' % len(webs),
                     'ms_by_stage': ms}
         began = f.clock()
         analysis = analyze(f, state)
@@ -575,7 +575,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         return response
     except DriverCallFailed as gap:
         return {'status': 'failed', 'reason': 'driver_call_failed', 'retryable': True, 'ms_by_stage': ms,
-                'detail': f._failure_detail(gap), 'hint': 'The Driver call failed before anything was clicked; call cua_look again.'}
+                'detail': f._failure_detail(gap), 'hint': 'The Driver call failed before anything was clicked; call look again.'}
     except Gap as gap:
         reason = f._do_reason(str(gap))
         return {'status': 'refused', 'reason': reason, 'message': safe_message(reason, str(gap)), 'ms_by_stage': ms}

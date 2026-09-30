@@ -1,4 +1,4 @@
-"""Mutation checks for option B (look, then plan; CE-FACADE-005): apply each tempting WRONG patch to a temporary copy of facade/ and prove that
+"""Mutation checks for option B (look, then plan; CE-FACADE-005): apply each tempting WRONG patch to a temporary copy of computer_use/ and prove that
 the named tests FAIL BY ASSERTION (a test that errors for an unrelated reason does not count as catching it). Exit nonzero if any wrong patch
 survives or is only caught by an error.
 
@@ -35,7 +35,7 @@ MUTATIONS = {
          ('core.py', "                if lines_where['look'] is None:\n                    raise Gap(", "                if False:\n                    raise Gap("),
          ('plan.py', "    look = spec['look']\n    opts = look.get('opts', lk.DEFAULT_OPTS)", "    look = spec['look'] or {'terms': [], 'n': 10 ** 6}\n    opts = look.get('opts', lk.DEFAULT_OPTS)"),
          ('plan.py', "    if not same:\n        return {'defer': {'reason': 'page_changed_since_look'", "    if spec['look'] and not same:\n        return {'defer': {'reason': 'page_changed_since_look'")],
-        ['test_plan.Validation.test_where_lines_without_a_look_id_is_refused_before_any_click_and_points_at_cua_look',
+        ['test_plan.Validation.test_where_lines_without_a_look_id_is_refused_before_any_click_and_points_at_look',
          'test_plan.Validation.test_an_invented_look_id_is_refused']),
     'null_expect_on_a_non_final_step': (
         'allow expect=null anywhere',
@@ -105,17 +105,17 @@ MUTATIONS = {
         [('look.py', "        stage('observe', began)\n        handle = fresh['snapshot']", "        stage('observe', began)\n        f.driver.call('scroll', {'pid': pid, 'window_id': window_id})\n        handle = fresh['snapshot']")],
         ['test_look.LookReal.test_look_is_read_only_no_click_no_window_move']),
     'look_hidden_in_advanced_mode': (
-        'register cua_look only inside register_advanced',
-        [('server.py', "@mcp.tool(annotations=READ)\ndef cua_look(", "def cua_look(")],
+        'register look only inside register_advanced',
+        [('server.py', "@mcp.tool(annotations=READ)\ndef look(", "def look(")],
         ['test_budget.ToolSurface.test_surface_is_clean']),
     'primitive_named_in_a_plan_hint': (
         'a hint that sends the LLM to a primitive',
-        [('plan.py', "Call cua_do with steps=[{do:\"verify\", expect:<page text that should be visible now>}] to check, or report the state.", "Call cua_verify to check, or report the state.")],
+        [('plan.py', "Call do with steps=[{do:\"verify\", expect:<page text that should be visible now>}] to check, or report the state.", "Call verify to check, or report the state.")],
         ['test_plan.BookingPlans.test_an_expect_that_never_appears_is_never_done_and_the_click_is_not_repeated']),
     'primitives_visible_by_default': (
         'drop the CUA_TASK_ADVANCED guard',
         [('server.py', "if ADVANCED:register_advanced()", "register_advanced()")],
-        ['test_budget.ToolSurface.test_primitives_registered_by_default_fail', 'test_plan.ServerSurface.test_the_default_surface_is_exactly_cua_do_then_cua_look_and_the_primitives_are_absent']),
+        ['test_budget.ToolSurface.test_primitives_registered_by_default_fail', 'test_plan.ServerSurface.test_the_default_surface_is_exactly_do_then_look_and_the_primitives_are_absent']),
     'hash_only_the_displayed_lines': (
         'the look_id covers what was displayed, not the full lines (review P1-1)',
         [('look.py', "return look_id_of([r['rec']['lines'] for r in rows], title, analysis['headings'], analysis['control_state'])", "return look_id_of([r['lines'] for r in rows], title, analysis['headings'], analysis['control_state'])")],
@@ -293,12 +293,12 @@ MUTATIONS = {
         [('core.py', "why = 'toggle_state_unseen' if seen is None else", 'why = None if seen is None else')],
         ['test_plan_review2.ControlState.test_an_unchanged_checkbox_presses_and_a_toggle_without_a_look_is_not_pressed_blind']),
     'responses_unmarked': (
-        'cua_do responses carry page text without the untrusted marker (second review P2-C)',
+        'do responses carry page text without the untrusted marker (second review P2-C)',
         [('core.py', "            result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)", '            pass')],
         ['test_plan_review2.UntrustedEverywhere.test_plan_responses_carry_the_marker_in_every_page_text_field', 'test_plan_review2.UntrustedEverywhere.test_single_step_responses_carry_the_marker_and_no_page_text_in_hints']),
     'page_text_in_a_hint': (
         'a control label is put into a hint (second review P2-C)',
-        [('core.py', "'control_needed': 'Each record has several controls (found.repeated_controls lists their labels). Call cua_do again with control=<the exact label of the one to press>.',", "'control_needed': 'Each record has several controls (%s). Call cua_do again with control=<the exact label of the one to press>.' % ', '.join(c['label'] for c in found['repeated_controls']),")],
+        [('core.py', "'control_needed': 'Each record has several controls (found.repeated_controls lists their labels). Call do again with control=<the exact label of the one to press>.',", "'control_needed': 'Each record has several controls (%s). Call do again with control=<the exact label of the one to press>.' % ', '.join(c['label'] for c in found['repeated_controls']),")],
         ['test_plan_review2.UntrustedEverywhere.test_single_step_responses_carry_the_marker_and_no_page_text_in_hints']),
     'region_compares_static_text_only': (
         'the dialog whitelist compares only static texts and headings (third review P1-1)',
@@ -421,17 +421,17 @@ MUTATIONS = {
         [('look.py', "    for key in (('label',) if node.get('role') == 'AXHeading' else ('value', 'label')):", "    for key in ('value', 'label'):")],
         ['test_real_pages.RecordPages.test_the_page_text_has_no_heading_level_numerals', 'test_real_pages.RecordPages.test_nested_records_have_no_level_numerals_and_keep_the_section_headings']),
     'subtree_reads_heading_level': (
-        'the shared subtree text reads a heading value (cua_do/D record text)',
+        'the shared subtree text reads a heading value (do/D record text)',
         [('core.py', "                for key in (('label',) if n.get('role') == 'AXHeading' else ('label','value')):", "                for key in ('label','value'):")],
-        ['test_real_pages.RecordPages.test_cua_do_record_context_of_nested_has_no_heading_level_numerals']),
+        ['test_real_pages.RecordPages.test_do_record_context_of_nested_has_no_heading_level_numerals']),
     'title_heading_glued_to_the_first_record': (
         'SHRINK: the page title is never recognized as page text',
         [('core.py', '        if not title or not n:return False', '        return False')],
-        ['test_real_pages.RecordPages.test_flat_ax_first_record_carries_neither_the_heading_nor_its_level', 'test_real_pages.RecordPages.test_cua_do_record_context_agrees_with_the_look', 'test_real_pages.RecordPages.test_a_where_lines_plan_cannot_select_the_first_flat_record_by_the_page_title']),
+        ['test_real_pages.RecordPages.test_flat_ax_first_record_carries_neither_the_heading_nor_its_level', 'test_real_pages.RecordPages.test_do_record_context_agrees_with_the_look', 'test_real_pages.RecordPages.test_a_where_lines_plan_cannot_select_the_first_flat_record_by_the_page_title']),
     'sibling_record_keeps_the_title': (
         'sibling_record no longer skips the title heading',
         [('core.py', "        members = [i for i in members if not self._title_member(state, i)]  # the page's own title heading is page text, not the first record's", '        members = members')],
-        ['test_real_pages.RecordPages.test_cua_do_record_context_agrees_with_the_look']),
+        ['test_real_pages.RecordPages.test_do_record_context_agrees_with_the_look']),
     'selected_false_is_a_state': (
         'selected:false on a plain button is emitted as [unselected] noise (live capture D2)',
         [('look.py', "    return 'selected' if n.get('selected') is True else None", "    return 'selected' if n.get('selected') is True else ('unselected' if 'selected' in n else None)")],
@@ -489,14 +489,14 @@ MUTATIONS = {
 
 
 def stage(tmp):
-    shutil.copytree(ROOT / 'facade', tmp / 'facade', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+    shutil.copytree(ROOT / 'computer_use', tmp / 'computer_use', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     shutil.copytree(ROOT / 'scripts', tmp / 'scripts', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))  # a copy: a patch must never reach the real file through a symlink
     for name in ('inference', 'skills', 'docs'):
         (tmp / name).symlink_to(ROOT / name)
 
 
 def run_tests(tmp, names):
-    done = subprocess.run([sys.executable, '-m', 'unittest', *names], cwd=str(tmp / 'facade'), capture_output=True, text=True, timeout=600)
+    done = subprocess.run([sys.executable, '-m', 'unittest', *names], cwd=str(tmp / 'computer_use'), capture_output=True, text=True, timeout=600)
     text = done.stdout + done.stderr
     failed = set(re.findall(r'^FAIL: (\w+) \(([\w\.]+)\)', text, re.M))
     errored = set(re.findall(r'^ERROR: (\w+) \(([\w\.]+)\)', text, re.M))
@@ -513,7 +513,7 @@ def main():
         with tempfile.TemporaryDirectory(prefix='cua-mutation-') as raw:
             tmp = Path(raw);stage(tmp)
             for filename, old, new in patches:
-                path = tmp / 'facade' / filename;text = path.read_text()
+                path = tmp / 'computer_use' / filename;text = path.read_text()
                 if text.count(old) != 1:
                     print('%s: patch target not found exactly once in %s: %r' % (name, filename, old[:60]));bad += 1;break
                 path.write_text(text.replace(old, new))

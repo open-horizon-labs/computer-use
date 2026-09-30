@@ -4,7 +4,7 @@
    the predicate excluded it and the chooser picked among the leftovers. S4.2 s4: an incomparable value is UNKNOWN, never excluded.
 2. A canvas page with two drawn "Export" buttons ended dead_end although Perception was healthy: pixel-only labels resolve against text regions.
 
-Real booking tree (facade/fixtures/live_booking_ax.json) for 1; synthetic Perception parse results shaped like the canvas page for 2.
+Real booking tree (computer_use/fixtures/live_booking_ax.json) for 1; synthetic Perception parse results shaped like the canvas page for 2.
 """
 import json
 import re
@@ -16,7 +16,7 @@ from page_candidates import filter_records
 from test_core import FakeChooser, FakeVision
 from test_live_shapes import BOOKING_FIELDS, BOOKING_PATTERNS, LiveBase, LiveReader, UnknownVision, booked
 
-PRIMITIVES = re.compile(r'cua_(?:windows|observe|read|choose|act|verify|trace|finish)\b')
+PRIMITIVES = re.compile(r'(?i)(?:\b(?:call|calls|called|use|using|run|invoke|then|via)\s+`?|__)(?:windows|observe|read|choose|act|verify|trace|finish)\b')
 BLIND = [{'field': 'provider', 'op': 'contains', 'value': 'Morgan Reyes'}, {'field': 'duration', 'op': 'contains', 'value': '30'}]
 TELEHEALTH = 'e70'  # the correct slot: Dr. Morgan Reyes, Telehealth, half-hour, 3:00 PM
 
@@ -288,13 +288,13 @@ class CanvasForeground(CanvasRegions):
         self.assertEqual((first['status'], second['status'], second['reason'], len(driver.executed)), ('delivered_unverified', 'refused', 'pointer_not_deliverable_in_background', 1))
 
     def test_permission_does_not_leak_into_the_primitive_path(self):
-        # Wrong patch: set the flag for the call and never clear it (a later cua_choose/cua_act on a canvas would front the window unasked).
+        # Wrong patch: set the flag for the call and never clear it (a later choose/act on a canvas would front the window unasked).
         driver = sh.ShapeDriver(sh.canvas());driver.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};driver.capture_id = 'cap'
         driver.parse_result = regions(('Toolbar', 10, 10), ('Export', 10, 40))
         f = Facade(driver, generic_factory=FakeChooser, reader_factory=lambda: LiveReader({}), visual_factory=UnknownVision, sleep=lambda s: None)
         f.do('Press the Export button', title='Demo', expect=None, control='Export', allow_foreground=True)
         obs = f.observe(1, 2)['snapshot']
-        selection = f.region_exact(obs, 'Export', 'Press the Export button')['selection']  # the same exact-label path cua_do took
+        selection = f.region_exact(obs, 'Export', 'Press the Export button')['selection']  # the same exact-label path do took
         with self.assertRaisesRegex(Gap, 'pointer_not_deliverable_in_background'):f.act(selection)
         self.assertEqual(len(driver.executed), 1)
 

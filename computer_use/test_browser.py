@@ -1,4 +1,4 @@
-"""CE-FACADE-007 slice 1: navigation as a cua_do step, verified by where the tab landed.
+"""CE-FACADE-007 slice 1: navigation as a do step, verified by where the tab landed.
 
 Real captured Chrome tree (live_booking_ax.json) for the page after landing; the Driver's browser tools are faked with the shapes documented
 in the Driver's browser-semantic-snapshots reference (page.url, page.title). No desktop, browser or network. Each test names the tempting
@@ -77,7 +77,7 @@ class BrowserDriver(lv.LiveDriver):
         return super().call(tool, args, timeout)
     def _tab_strip(self, driver, els):
         """Chrome's tab strip as issue #4 measured it: an AXTabGroup of one AXRadioButton per tab (named with the tab title, in WINDOW order),
-        each with an AX child button named Close. SYNTHETIC shape (no live capture in facade/fixtures has a tab strip): roles and nesting
+        each with an AX child button named Close. SYNTHETIC shape (no live capture in computer_use/fixtures has a tab strip): roles and nesting
         follow the #4 comment and the label is modelled on the 2026-09-29 live capture ('<title> - Memory usage - 32.4 MB'); a live capture is still to be taken with the user's consent."""
         self.close_of = {}
         if not self.strip:return None

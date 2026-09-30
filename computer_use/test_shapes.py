@@ -1,5 +1,5 @@
-"""cua_do on the shapes a review found the two captured trees did not cover. Each test names the tempting wrong patch it fails.
-Synthetic shapes (facade/shapes.py) plus the real orders tree; no tree from an unrelated real site exists yet."""
+"""do on the shapes a review found the two captured trees did not cover. Each test names the tempting wrong patch it fails.
+Synthetic shapes (computer_use/shapes.py) plus the real orders tree; no tree from an unrelated real site exists yet."""
 import json
 import re
 import unittest
@@ -8,7 +8,7 @@ import shapes as sh
 from shapes import E, base
 from test_live_shapes import (LiveBase, LiveOrders, LiveReader, ORDER_FIELDS, ORDER_ONE, ORDER_PATTERNS, UnknownVision, add, load, orders_flow)
 
-PRIMITIVES = re.compile(r'cua_(?:windows|observe|read|choose|act|verify|trace|finish)\b')
+PRIMITIVES = re.compile(r'(?i)(?:\b(?:call|calls|called|use|using|run|invoke|then|via)\s+`?|__)(?:windows|observe|read|choose|act|verify|trace|finish)\b')
 
 
 def button_of(els, name):
@@ -115,8 +115,8 @@ class Discovery(unittest.TestCase):
         self.assertEqual((r['status'], clicked(d)), ('delivered_unverified', [button_of(els, 'B')]))
         self.assertIn('Dr. B', reader.requests[0]['records'][0]['text'])
 
-    def test_records_ambiguous_hint_uses_only_cua_do_parameters(self):
-        # P1-B. Wrong patch: a hint that says to pass records.record_ids (a cua_do-only LLM cannot obtain them) or a primitive.
+    def test_records_ambiguous_hint_uses_only_do_parameters(self):
+        # P1-B. Wrong patch: a hint that says to pass records.record_ids (a do-only LLM cannot obtain them) or a primitive.
         r, d, _ = sh.run(sh.toolbar())
         self.assertEqual((r['status'], r['reason'], d.executed), ('deferred', 'records_ambiguous', []))
         self.assertNotIn('record_ids', r['hint']);self.assertFalse(PRIMITIVES.search(json.dumps(r)))

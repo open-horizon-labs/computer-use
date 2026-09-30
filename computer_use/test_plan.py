@@ -1,7 +1,7 @@
-"""cua_do plans (option B, CE-FACADE-005): LOOK, then PLAN ONCE, then a deterministic executor.
+"""do plans (option B, CE-FACADE-005): LOOK, then PLAN ONCE, then a deterministic executor.
 
-Each test names the tempting wrong patch it fails. Fakes and the REAL captured Chrome trees (facade/fixtures) plus the synthetic shapes of
-facade/shapes.py: no Driver, model, desktop or network. The plan is validated whole before any Driver action; each step is the existing
+Each test names the tempting wrong patch it fails. Fakes and the REAL captured Chrome trees (computer_use/fixtures) plus the synthetic shapes of
+computer_use/shapes.py: no Driver, model, desktop or network. The plan is validated whole before any Driver action; each step is the existing
 single-step machinery on a fresh observation; the first step that is not done stops the plan.
 """
 import importlib.util
@@ -15,7 +15,7 @@ from core import Facade, DriverCallFailed
 from test_core import FakeChooser
 from test_do import Clock, NamedChooser
 
-PRIMITIVES = re.compile(r'cua_(?:windows|observe|read|choose|act|verify|trace|finish)\b')
+PRIMITIVES = re.compile(r'(?i)(?:\b(?:call|calls|called|use|using|run|invoke|then|via)\s+`?|__)(?:windows|observe|read|choose|act|verify|trace|finish)\b')
 BOOKING_GOAL = 'Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM'
 ORDERS_GOAL = 'Cancel the Walnut desk lamp order that is still Processing'
 BOOK_1_45 = [{'line': 'eq', 'value': 'Dr. Morgan Reyes'}, {'line': 'eq', 'value': 'Follow-up'}, {'line': 'contains', 'value': '1:45 PM'}]
@@ -141,15 +141,15 @@ class Validation(PlanBase):
             self.refused([{'do': 'press', 'where': {'lines': [cond]}, 'expect': 'x'}], 'bad_request')
         self.refused([{'do': 'press', 'where': {'lines': [{'line': 'contains', 'value': str(i)} for i in range(7)]}, 'expect': 'x'}], 'bad_request')
 
-    def test_where_lines_without_a_look_id_is_refused_before_any_click_and_points_at_cua_look(self):
+    def test_where_lines_without_a_look_id_is_refused_before_any_click_and_points_at_look(self):
         # Wrong patch: allow a filter over lines with no look (the live failure: a filter written blind; here the LLM could not even have seen the strings).
         r = self.refused([self.lines_press()], 'look_required')
-        self.assertIn('cua_look', S(r, 'hint'));self.assertIn('look_id', S(r, 'hint'));self.assertIn('filter written without seeing the page', S(r, 'message'))
+        self.assertIn('look', S(r, 'hint'));self.assertIn('look_id', S(r, 'hint'));self.assertIn('filter written without seeing the page', S(r, 'message'))
 
     def test_an_invented_look_id_is_refused(self):
         # Wrong patch: accept any string as a look_id (the LLM could then filter blind and merely say it had looked).
         r = self.refused([self.lines_press()], 'unknown_look_id', look_id='lk_0123456789')
-        self.assertIn('cua_look', S(r, 'hint'))
+        self.assertIn('look', S(r, 'hint'))
 
     def test_a_look_id_alone_does_not_make_a_plan_and_a_plan_cannot_mix_single_step_arguments(self):
         r = self.f.do(BOOKING_GOAL, title='Demo', expect=None, look_id='lk_1');self.assertEqual((G(r, 'status'), G(r, 'reason')), ('refused', 'bad_request'))
@@ -264,7 +264,7 @@ class BookingPlans(PlanBase):
         r = self.plan([self.lines_press()], look_id=look['look_id'])
         self.assertEqual((G(r, 'status'), G(r, 'failed_step'), G(r, 'reason'), G(r, 'delivery'), self.driver.executed), ('stopped', 1, 'page_changed_since_look', 'none', []))
         self.assertEqual(G(r, 'steps', 0, 'found'), {'records': 12, 'record_kind': 'flat-list'})
-        self.assertIn('cua_look', S(r, 'hint'));self.assertNotIn('lk_', json.dumps(r))  # never a fresh id the LLM has not seen the lines of
+        self.assertIn('look', S(r, 'hint'));self.assertNotIn('lk_', json.dumps(r))  # never a fresh id the LLM has not seen the lines of
         self.assertEqual(self.reader.requests, [])
 
     def test_a_look_of_another_window_does_not_authorize_a_filter_here(self):
@@ -398,7 +398,7 @@ class OrdersPlans(PlanBase):
 
 
 class WizardPlans(PlanBase):
-    """A 3-step wizard-shaped synthetic page: three deterministic steps in one cua_do."""
+    """A 3-step wizard-shaped synthetic page: three deterministic steps in one do."""
     def setUp(self):self.shape(sh.wizard_els(1), sh.wizard_script)
 
     def steps(self, last='Finish'):
@@ -624,35 +624,35 @@ class ServerSurface(PlanBase):
         from call_budget import result_text
         return json.loads(result_text(asyncio.run(self.server.mcp.call_tool(name, kw))))
 
-    def test_the_default_surface_is_exactly_cua_do_then_cua_look_and_the_primitives_are_absent(self):
+    def test_the_default_surface_is_exactly_do_then_look_and_the_primitives_are_absent(self):
         # Wrong patch: leave the primitives (or a third tool) visible beside the look.
         import asyncio
         tools = asyncio.run(self.server.mcp.list_tools())
-        self.assertEqual([t.name for t in tools], ['cua_do', 'cua_look'])
+        self.assertEqual([t.name for t in tools], ['do', 'look'])
         look = tools[1]
         self.assertTrue(look.description.startswith('Look at the page before you plan.'))
-        self.assertIn('Call cua_look first when the page has lists or you do not know the strings it displays; then cua_do.', look.description)
-        self.assertTrue(tools[0].description.startswith('Default path. Call cua_look first when the page has lists or you do not know the strings; then cua_do.'))
+        self.assertIn('Call `look` first when the page has lists or you do not know the strings it displays; then `do`.', look.description)
+        self.assertTrue(tools[0].description.startswith('Default path. Call `look` first when the page has lists or you do not know the strings; then `do`.'))
         for name in ('max_records', 'max_bytes', 'focus', 'fields', 'title', 'pid', 'window_id'):self.assertIn(name, look.inputSchema['properties'])
         self.assertEqual(look.inputSchema.get('required', []), [])
         self.assertTrue(look.annotations.readOnlyHint)
         for name in ('steps', 'look_id', 'abort_if'):self.assertIn(name, tools[0].inputSchema['properties'])
         self.assertIn('expect', tools[0].inputSchema['required'])
-        self.assertIn('cua_look', self.server.mcp.instructions);self.assertFalse(PRIMITIVES.search(self.server.mcp.instructions))
-        self.assertLess(self.server.mcp.instructions.index('cua_look'), self.server.mcp.instructions.index('cua_do'))
+        self.assertIn('look', self.server.mcp.instructions);self.assertFalse(PRIMITIVES.search(self.server.mcp.instructions))
+        self.assertLess(self.server.mcp.instructions.index('`look`'), self.server.mcp.instructions.index('`do`'))
 
     def test_look_then_do_over_the_real_tools(self):
-        look = self.call('cua_look', title='Demo')
+        look = self.call('look', title='Demo')
         self.assertEqual((look['status'], look['record_kind']), ('ok', 'flat-list'))
-        r = self.call('cua_do', goal=BOOKING_GOAL, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': BOOK_1_45}, 'expect': 'Booked:'}])
+        r = self.call('do', goal=BOOKING_GOAL, expect=None, title='Demo', look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': BOOK_1_45}, 'expect': 'Booked:'}])
         self.assertEqual((G(r, 'status'), self.clicked(), self.reader.requests), ('done', ['44'], []))
 
     def test_an_unknown_do_over_the_tool_is_a_structured_refusal_not_a_schema_error(self):
-        r = self.call('cua_do', goal='x', expect=None, title='Demo', steps=[{'do': 'drag', 'control': 'Book', 'expect': 'x'}])
+        r = self.call('do', goal='x', expect=None, title='Demo', steps=[{'do': 'drag', 'control': 'Book', 'expect': 'x'}])
         self.assertEqual((G(r, 'status'), G(r, 'reason')), ('refused', 'bad_request'))
 
     def test_the_single_step_form_is_unchanged_over_the_tool(self):
-        r = self.call('cua_do', goal=BOOKING_GOAL, expect='Booked:', title='Demo', records={'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE})
+        r = self.call('do', goal=BOOKING_GOAL, expect='Booked:', title='Demo', records={'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE})
         self.assertEqual((G(r, 'status'), r['judgment'], self.clicked(), len(self.reader.requests)), ('done', 'filter', ['44'], 1))
         self.assertNotIn('steps', r)
 

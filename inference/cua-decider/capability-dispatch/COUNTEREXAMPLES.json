@@ -178,7 +178,7 @@
   "adjacent_holes": "Live A/B against the native arm is pending; the budgets are fake-fixture ceilings, not measured live accuracy. Regions mode inside cua_do relies on Perception being healthy and on quoted-label corroboration. A dialog after a non-record click cannot be identity-checked and defers, and any dialog is only pressed with an explicit confirm label. Post-click verification observes again (one extra Driver observation) rather than reusing the act revalidation snapshot. The sketch text is unchanged; proposed wording for S4.2 section 7 (the recovery table) is in the branch report. Expect text present before the click is never proof, even if the click did change the page; an outcome that reuses pre-existing text needs a different expect or the primitives. Confirm-dialog detection is a content diff bounded to 1-4 new controls in the web area: a dialog with more controls, or one rendered outside the web area, is not detected as a dialog. AX action advertisement varies between snapshots; one bounded reobserve is the only mitigation. The live A/B against the native arm must be rerun with the primitives hidden before the one-call claim is measured rather than modeled. Still unproven: no captured tree from an unrelated real site (needs the user's consent), so the shape corpus is synthetic and every budget is fixture-derived. Structural discovery treats same-shaped siblings as records; two same-shaped unrelated regions would be read as records (fails closed on missing control or identity). A dialog that is not a sibling run of new nodes (an overlay re-parenting existing nodes) is not detected. The live findings are n=1 per cell: they show the failures occur, not their rate, and the fixes are validated offline against a real booking tree and SYNTHETIC canvas parse results, not a live canvas. The shape guard is deliberately conservative (a digit-free predicate against digit-bearing strings, such as contains \"AM\" against clock times, makes every record unknown and defers). Region resolution is exact-text over OCR; a label OCR reads wrongly (and has no near-edit twin) is simply not found.",
   "call_budget": {
    "default_path_tools": [
-    "cua_do"
+    "do"
    ],
    "max_tool_count": 9,
    "max_response_bytes": 6144,
@@ -241,7 +241,8 @@
    "scenarios.canvas_dead_end.max_chooser_calls": 0,
    "live_task_budgets.booking.max_llm_visible_calls": 1,
    "live_task_budgets.orders.max_llm_visible_calls": 3
-  }
+  },
+  "rename_note": "2026-09-30 (#53): the MCP tools lost their cua_ prefix (cua_look -> look, cua_do -> do; advanced cua_windows, cua_observe, cua_read, cua_choose, cua_act, cua_verify, cua_trace, cua_finish -> windows, observe, read, choose, act, verify, trace, finish) and the MCP server cua-task became computer-use. The text of this CE is left as written: it records what was measured and decided under the old names. Its call_budget record names the CURRENT tool names so the machine check (facade/call_budget.py) stays valid; test methods named test_cua_do_* / test_*_cua_look_* in the regression text are now test_do_* / test_*_look_*. No budget number changed."
  },
  {
   "id": "CE-FACADE-005",
@@ -257,8 +258,8 @@
   "invalidation": "Withdraw or rework this CE if, measured live on the eval suite, more than a third of the suite tasks cannot be expressed as plans (the LLM cannot write a valid plan from a look, or the grammar cannot state the task), or the wrong-click rate of look-then-plan is above the native arm on the same tasks. n=1 per cell is not a rate: the decision needs the suite run, not the fixture budget.",
   "call_budget": {
    "default_path_tools": [
-    "cua_do",
-    "cua_look"
+    "do",
+    "look"
    ],
    "max_tool_count": 10,
    "scenarios.plan_booking_look_do.max_llm_visible_calls": 2,
@@ -337,7 +338,8 @@
    "scenarios.plan_image_badge_seen.max_reader_calls": 0,
    "scenarios.plan_image_badge_seen.max_chooser_calls": 0,
    "live_task_budgets.booking.max_llm_visible_calls": 2
-  }
+  },
+  "rename_note": "2026-09-30 (#53): the MCP tools lost their cua_ prefix (cua_look -> look, cua_do -> do; advanced cua_windows, cua_observe, cua_read, cua_choose, cua_act, cua_verify, cua_trace, cua_finish -> windows, observe, read, choose, act, verify, trace, finish) and the MCP server cua-task became computer-use. The text of this CE is left as written: it records what was measured and decided under the old names. Its call_budget record names the CURRENT tool names so the machine check (facade/call_budget.py) stays valid; test methods named test_cua_do_* / test_*_cua_look_* in the regression text are now test_do_* / test_*_look_*. No budget number changed."
  },
  {
   "id": "CE-FACADE-006",
@@ -355,7 +357,8 @@
    "scenarios.canvas_regions.max_llm_visible_calls": 2,
    "scenarios.canvas_regions_unique.max_llm_visible_calls": 1,
    "scenarios.plan_canvas_look_do.max_llm_visible_calls": 2
-  }
+  },
+  "rename_note": "2026-09-30 (#53): the MCP tools lost their cua_ prefix (cua_look -> look, cua_do -> do; advanced cua_windows, cua_observe, cua_read, cua_choose, cua_act, cua_verify, cua_trace, cua_finish -> windows, observe, read, choose, act, verify, trace, finish) and the MCP server cua-task became computer-use. The text of this CE is left as written: it records what was measured and decided under the old names. Its call_budget record names the CURRENT tool names so the machine check (facade/call_budget.py) stays valid; test methods named test_cua_do_* / test_*_cua_look_* in the regression text are now test_do_* / test_*_look_*. No budget number changed."
  },
  {
   "id": "CE-FACADE-007",
@@ -386,6 +389,7 @@
    "scenarios.nav_read_pages_one_fails.max_reader_calls": 0,
    "scenarios.nav_read_pages_one_fails.max_chooser_calls": 0
   },
-  "status_note": "Approved by the user 2026-09-30 (option D). Slice 1 shipped: goto with landing verification, permission_required, open_tab/close_tab. Live on Driver 0.31.0 (local build, user consented): look+plan booked exactly s03; open_tab via background Cmd+T opened one tab and landed; background Cmd+W is ignored by Chrome, so close_tab needs the step's allow_foreground and fronts the window briefly; a second close_tab on the user's remaining tab was refused. Driver facts measured live: tab and target ids re-minted per bind, tab list not in window order, no active flag after navigation; the facade's tab is recognised by unique url + unchanged count + the window's native_title. Slice 2: DOM-first observation, multi-page reads. Slice 2 (0.31 wave 3, #33 #34): cua_look reads the page text from the Driver's semantic_v2 snapshot beside AX, bounded (6 s per call, 10 s total, AX fallback with degraded semantic_*), DOM-only record lines reported as dom_lines with sources_disagree counts and never acted on; read_pages {urls<=5, fields?} is ONE cua_do step (open_tab, look, close_tab per url; per-page landing verdict and look_id; a failing page does not abort the others; the user's tab is never navigated): scenarios nav_read_pages_3 and nav_read_pages_one_fails are 1 call each, reader 0, chooser 0; no existing number moved."
+  "status_note": "Approved by the user 2026-09-30 (option D). Slice 1 shipped: goto with landing verification, permission_required, open_tab/close_tab. Live on Driver 0.31.0 (local build, user consented): look+plan booked exactly s03; open_tab via background Cmd+T opened one tab and landed; background Cmd+W is ignored by Chrome, so close_tab needs the step's allow_foreground and fronts the window briefly; a second close_tab on the user's remaining tab was refused. Driver facts measured live: tab and target ids re-minted per bind, tab list not in window order, no active flag after navigation; the facade's tab is recognised by unique url + unchanged count + the window's native_title. Slice 2: DOM-first observation, multi-page reads. Slice 2 (0.31 wave 3, #33 #34): cua_look reads the page text from the Driver's semantic_v2 snapshot beside AX, bounded (6 s per call, 10 s total, AX fallback with degraded semantic_*), DOM-only record lines reported as dom_lines with sources_disagree counts and never acted on; read_pages {urls<=5, fields?} is ONE cua_do step (open_tab, look, close_tab per url; per-page landing verdict and look_id; a failing page does not abort the others; the user's tab is never navigated): scenarios nav_read_pages_3 and nav_read_pages_one_fails are 1 call each, reader 0, chooser 0; no existing number moved.",
+  "rename_note": "2026-09-30 (#53): the MCP tools lost their cua_ prefix (cua_look -> look, cua_do -> do; advanced cua_windows, cua_observe, cua_read, cua_choose, cua_act, cua_verify, cua_trace, cua_finish -> windows, observe, read, choose, act, verify, trace, finish) and the MCP server cua-task became computer-use. The text of this CE is left as written: it records what was measured and decided under the old names. Its call_budget record names the CURRENT tool names so the machine check (facade/call_budget.py) stays valid; test methods named test_cua_do_* / test_*_cua_look_* in the regression text are now test_do_* / test_*_look_*. No budget number changed."
  }
 ]

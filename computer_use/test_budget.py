@@ -1,4 +1,4 @@
-"""Architectural guardrails: the default path is cua_look then cua_do, two tools and a measured number of LLM-visible calls (CALL_BUDGET.json, CE-FACADE-003/005).
+"""Architectural guardrails: the default path is look then do, two tools and a measured number of LLM-visible calls (CALL_BUDGET.json, CE-FACADE-003/005).
 
 The facade once drifted into eight tools the driving LLM mediated hop by hop (9 calls for a clean booking, native
 about 5) and nothing noticed. These tests drive the REAL server tool functions through a counting harness and lint
@@ -38,35 +38,35 @@ class ToolSurface(unittest.TestCase):
     def test_surface_is_clean(self):
         self.assertEqual(cb.surface_violations(SERVER_SOURCE), [])
 
-    def test_cua_do_then_cua_look_first_and_every_other_tool_is_opt_in_and_advanced(self):
+    def test_do_then_look_first_and_every_other_tool_is_opt_in_and_advanced(self):
         tools = cb.tool_surface(SERVER_SOURCE)
-        self.assertEqual([t[0] for t in tools[:2]], ['cua_do', 'cua_look']);self.assertEqual(BUDGET['default_path_tools']['value'], ['cua_do', 'cua_look'])
+        self.assertEqual([t[0] for t in tools[:2]], ['do', 'look']);self.assertEqual(BUDGET['default_path_tools']['value'], ['do', 'look'])
         self.assertEqual(BUDGET['default_path_tools']['changed_by'], 'CE-FACADE-005')
         self.assertFalse(tools[0][2] or tools[1][2]);self.assertFalse(tools[1][1].startswith('Advanced'))
         self.assertTrue(all(doc.startswith('Advanced') and nested for _, doc, nested in tools[2:]))
         self.assertLessEqual(len(tools), BUDGET['max_tool_count']['value'])
 
     def test_a_third_default_tool_or_a_look_hidden_behind_advanced_fails(self):
-        # Wrong patch: nest cua_look inside register_advanced (the default path would lose its sight), or add a third visible tool.
-        hidden = SERVER_SOURCE.replace('@mcp.tool(annotations=READ)\ndef cua_look(', 'def cua_look_gone(', 1)
+        # Wrong patch: nest look inside register_advanced (the default path would lose its sight), or add a third visible tool.
+        hidden = SERVER_SOURCE.replace('@mcp.tool(annotations=READ)\ndef look(', 'def look_gone(', 1)
         self.assertTrue(cb.surface_violations(hidden))
         third = SERVER_SOURCE.replace('def register_advanced():', '@mcp.tool(annotations=READ)\ndef cua_extra() -> dict:\n    """Peek."""\n    return {}\n\ndef register_advanced():', 1)
         self.assertTrue(any('registered by default' in v for v in cb.surface_violations(third)), cb.surface_violations(third))
         swapped = SERVER_SOURCE
-        i, j = swapped.index('@mcp.tool(annotations=ACT)\ndef cua_do'), swapped.index('@mcp.tool(annotations=READ)\ndef cua_look')
+        i, j = swapped.index('@mcp.tool(annotations=ACT)\ndef do'), swapped.index('@mcp.tool(annotations=READ)\ndef look')
         look_first = swapped[:i] + swapped[j:swapped.index('def register_advanced')] + swapped[i:j] + swapped[swapped.index('def register_advanced'):]
         self.assertTrue(any('registered first' in v for v in cb.surface_violations(look_first)), cb.surface_violations(look_first))
 
     def test_a_new_unmarked_tool_fails(self):
         # Wrong patch: add a mandatory read/choose/verify tool to the default path.
-        added = SERVER_SOURCE.replace('    @mcp.tool(annotations=READ)\n    def cua_trace', '    @mcp.tool(annotations=READ)\n    def cua_confirm() -> dict:\n        """Confirm the last action."""\n        return {}\n\n    @mcp.tool(annotations=READ)\n    def cua_trace')
+        added = SERVER_SOURCE.replace('    @mcp.tool(annotations=READ)\n    def trace', '    @mcp.tool(annotations=READ)\n    def cua_confirm() -> dict:\n        """Confirm the last action."""\n        return {}\n\n    @mcp.tool(annotations=READ)\n    def trace')
         self.assertNotEqual(added, SERVER_SOURCE)
         found = cb.surface_violations(added)
         self.assertTrue(any('cua_confirm' in v and 'Advanced' in v for v in found), found)
 
     def test_a_top_level_tool_is_visible_by_default_and_fails(self):
-        # Wrong patch: a mandatory extra tool beside cua_do (the live run: eight visible tools made the LLM mediate every hop).
-        top = SERVER_SOURCE.replace('def register_advanced():', '@mcp.tool(annotations=READ)\ndef cua_verify_now() -> dict:\n    """Advanced: check the window."""\n    return {}\n\ndef register_advanced():', 1)
+        # Wrong patch: a mandatory extra tool beside do (the live run: eight visible tools made the LLM mediate every hop).
+        top = SERVER_SOURCE.replace('def register_advanced():', '@mcp.tool(annotations=READ)\ndef verify_now() -> dict:\n    """Advanced: check the window."""\n    return {}\n\ndef register_advanced():', 1)
         self.assertTrue(any('registered by default' in v for v in cb.surface_violations(top)), cb.surface_violations(top))
 
     def test_primitives_registered_by_default_fail(self):
@@ -76,8 +76,8 @@ class ToolSurface(unittest.TestCase):
             self.assertNotEqual(unguarded, SERVER_SOURCE)
             self.assertTrue(any('CUA_TASK_ADVANCED' in v for v in cb.surface_violations(unguarded)))
 
-    def test_registering_another_tool_before_cua_do_fails(self):
-        moved = SERVER_SOURCE.replace('@mcp.tool(annotations=ACT)\ndef cua_do', '@mcp.tool(annotations=READ)\ndef cua_pre() -> dict:\n    """Advanced: x."""\n    return {}\n\n@mcp.tool(annotations=ACT)\ndef cua_do', 1)
+    def test_registering_another_tool_before_do_fails(self):
+        moved = SERVER_SOURCE.replace('@mcp.tool(annotations=ACT)\ndef do', '@mcp.tool(annotations=READ)\ndef cua_pre() -> dict:\n    """Advanced: x."""\n    return {}\n\n@mcp.tool(annotations=ACT)\ndef do', 1)
         self.assertTrue(any('registered first' in v for v in cb.surface_violations(moved)))
 
     def test_too_many_tools_fails(self):
@@ -90,43 +90,43 @@ class ToolSurface(unittest.TestCase):
         self.assertTrue(any('marked Advanced' in v for v in cb.surface_violations(marked)))
 
     @unittest.skipUnless(HAVE_SERVER, 'needs mcp')
-    def test_default_surface_is_exactly_cua_do_and_advanced_mode_adds_the_documented_primitives(self):
+    def test_default_surface_is_exactly_do_and_advanced_mode_adds_the_documented_primitives(self):
         import asyncio
         default = [t.name for t in asyncio.run(server.mcp.list_tools())]
-        self.assertEqual(default, ['cua_do', 'cua_look'])
+        self.assertEqual(default, ['do', 'look'])
         advanced = cb.advanced_tool_names()
         self.assertEqual(advanced, [name for name, _, _ in cb.tool_surface(SERVER_SOURCE)])
-        self.assertEqual(advanced[:2], ['cua_do', 'cua_look']);self.assertEqual(len(advanced), 10)
+        self.assertEqual(advanced[:2], ['do', 'look']);self.assertEqual(len(advanced), 10)
         docs = dict((n, d) for n, d, _ in cb.tool_surface(SERVER_SOURCE))
         self.assertTrue(all(docs[n].startswith('Advanced') for n in advanced[2:]))
 
     @unittest.skipUnless(HAVE_SERVER, 'needs mcp')
     def test_the_mcp_instructions_describe_only_look_then_do(self):
-        # Wrong patch: instructions that still walk the LLM through cua_windows -> cua_observe -> cua_read, or that never mention the look.
+        # Wrong patch: instructions that still walk the LLM through windows -> observe -> read, or that never mention the look.
         instructions = server.mcp.instructions
-        self.assertIn('cua_do', instructions);self.assertIn('cua_look', instructions);self.assertLess(instructions.index('cua_look'), instructions.index('cua_do'))
-        self.assertFalse(__import__('re').search(r'cua_(?:windows|observe|read|choose|act|verify|trace|finish)', instructions), instructions)
+        self.assertIn('do', instructions);self.assertIn('look', instructions);self.assertLess(instructions.index('`look`'), instructions.index('`do`'))
+        self.assertFalse(__import__('re').search(r'(?:call|use|then)\s+`?(?:windows|observe|read|choose|act|verify|trace|finish)\b', instructions), instructions)
 
 
 class SkillLint(unittest.TestCase):
     TEXT = cb.SKILL.read_text()
 
-    def test_default_workflow_names_cua_look_then_cua_do_and_nothing_else(self):
+    def test_default_workflow_names_look_then_do_and_nothing_else(self):
         self.assertEqual(cb.skill_violations(self.TEXT), [])
         section = cb.default_workflow_section(self.TEXT)
-        names = __import__('re').findall(r'cua_[a-z_]+', section)
-        self.assertEqual(names[0], 'cua_look');self.assertEqual(set(names), {'cua_look', 'cua_do'})
+        names = __import__('re').findall(cb.TOOL_NAME_IN_TEXT, section)
+        self.assertEqual(names[0], 'look');self.assertEqual(set(names), {'look', 'do'})
 
     def test_reintroducing_the_chain_in_prose_fails(self):
         # Wrong patch: instruct observe -> read -> choose -> act -> verify as the normal path.
-        chain = self.TEXT.replace('## Advanced primitives', 'Then call `cua_observe`, `cua_read`, `cua_choose`, `cua_act` and `cua_verify` in turn.\n\n## Advanced primitives', 1)
+        chain = self.TEXT.replace('## Advanced primitives', 'Then call `observe`, `read`, `choose`, `act` and `verify` in turn.\n\n## Advanced primitives', 1)
         self.assertTrue(any('chain' in v or 'names' in v for v in cb.skill_violations(chain)))
 
     def test_leading_with_a_primitive_fails(self):
-        led = self.TEXT.replace('Call `cua_look` first when', 'Call `cua_windows`, then `cua_do`, and `cua_look` when', 1)
+        led = self.TEXT.replace('Call `look` first when', 'Call `windows`, then `do`, and `look` when', 1)
         self.assertTrue(any('first' in v or 'other than' in v for v in cb.skill_violations(led)))
-        do_first = self.TEXT.replace('## Default workflow\n\nCall `cua_look` first', '## Default workflow\n\nCall `cua_do`, or call `cua_look` first', 1)
-        self.assertTrue(any('cua_look first' in v for v in cb.skill_violations(do_first)))
+        do_first = self.TEXT.replace('## Default workflow\n\nCall `look` first', '## Default workflow\n\nCall `do`, or call `look` first', 1)
+        self.assertTrue(any('look first' in v for v in cb.skill_violations(do_first)))
 
     def test_missing_section_fails(self):
         self.assertTrue(cb.skill_violations(self.TEXT.replace('## Default workflow', '## Something else')))
@@ -134,27 +134,27 @@ class SkillLint(unittest.TestCase):
 
 class Measure(unittest.TestCase):
     def test_measure_of_a_failing_run_is_reported(self):
-        good = {'calls': 1, 'reader': 1, 'chooser': 0, 'max_bytes': 900, 'status': 'done', 'tools': ['cua_do']}
-        plan = {'calls': 2, 'reader': 0, 'chooser': 0, 'max_bytes': 900, 'status': 'done', 'tools': ['cua_look', 'cua_do']}
+        good = {'calls': 1, 'reader': 1, 'chooser': 0, 'max_bytes': 900, 'status': 'done', 'tools': ['do']}
+        plan = {'calls': 2, 'reader': 0, 'chooser': 0, 'max_bytes': 900, 'status': 'done', 'tools': ['look', 'do']}
         self.assertEqual(cb.over_budget(plan, BUDGET['scenarios']['plan_booking_look_do']), [])
         self.assertTrue(cb.over_budget({**plan, 'calls': 3}, BUDGET['scenarios']['plan_booking_look_do']))  # a look that needs a second look
         self.assertTrue(cb.over_budget({**plan, 'reader': 1}, BUDGET['scenarios']['plan_booking_look_do']))  # NuExtract in the default look
         limits = BUDGET['scenarios']['booking_list']
         self.assertEqual(cb.over_budget(good, limits), [])
-        self.assertTrue(cb.over_budget({**good, 'calls': 9}, limits))  # the measured pre-cua_do behavior
+        self.assertTrue(cb.over_budget({**good, 'calls': 9}, limits))  # the measured pre-do behavior
         self.assertTrue(cb.over_budget({**good, 'reader': 2}, limits))  # a second reader call
         self.assertTrue(cb.over_budget({**good, 'chooser': 1}, limits))  # the chooser for a grounded singleton
 
     def test_table_flags_oversized_responses_and_primitive_use(self):
-        base = {n: {'calls': 1, 'reader': 0, 'chooser': 0, 'max_bytes': 100, 'status': BUDGET['scenarios'][n].get('final_status', 'done'), 'tools': ['cua_do']} for n in BUDGET['scenarios']}
+        base = {n: {'calls': 1, 'reader': 0, 'chooser': 0, 'max_bytes': 100, 'status': BUDGET['scenarios'][n].get('final_status', 'done'), 'tools': ['do']} for n in BUDGET['scenarios']}
         rows, problems = cb.table(BUDGET, base)
         self.assertTrue(all(r[3] == 'PASS' for r in rows), problems)
-        for name, patch in (('booking_list', {'max_bytes': 99999}), ('booking_list', {'tools': ['cua_do', 'cua_read']}), ('booking_list', {'status': 'deferred'})):
+        for name, patch in (('booking_list', {'max_bytes': 99999}), ('booking_list', {'tools': ['do', 'read']}), ('booking_list', {'status': 'deferred'})):
             broken = {**base, name: {**base[name], **patch}}
             self.assertTrue(cb.table(BUDGET, broken)[1], patch)
 
 
-@unittest.skipUnless(HAVE_SERVER, 'needs mcp: run with .venv-facade or after pip install -r facade/requirements.txt')
+@unittest.skipUnless(HAVE_SERVER, 'needs mcp: run with .venv-facade or after pip install -r computer_use/requirements.txt')
 class DefaultPathBudget(unittest.TestCase):
     """The real server tools, fake fixtures. Wrong patches: a mandatory read/choose/verify hop on the default path,
     the chooser for a grounded singleton, a second reader call per cycle, a response that dumps the observation."""
@@ -191,7 +191,7 @@ class DefaultPathBudget(unittest.TestCase):
 
     @unittest.skipUnless(HAVE_SERVER, 'needs mcp')
     def test_the_same_measurement_holds_with_the_primitives_registered(self):
-        # Advanced mode must not change the default path: cua_do alone still does the work in the same number of calls.
+        # Advanced mode must not change the default path: do alone still does the work in the same number of calls.
         ran = cb.advanced_run("import json, call_budget as cb; print(json.dumps(cb.measure_scenarios()))")
         for name, m in self.measured.items():
             self.assertEqual((ran[name]['calls'], ran[name]['tools'], ran[name]['reader'], ran[name]['chooser']), (m['calls'], m['tools'], m['reader'], m['chooser']), name)
@@ -202,7 +202,7 @@ class DefaultPathBudget(unittest.TestCase):
             self.scenario(name);self.assertEqual(self.measured[name]['calls'], calls, name)
         self.assertEqual(self.measured['stale_recovery']['reader'], 2)  # one read per pass, not a hidden re-read loop
 
-    def test_a_cua_do_that_secretly_needs_a_second_call_fails_the_stale_recovery_budget(self):
+    def test_a_do_that_secretly_needs_a_second_call_fails_the_stale_recovery_budget(self):
         # P2-5 mutation: a recovery that hands the work back to the LLM on a stale pass must blow the 1-call budget.
         from unittest import mock
         from core import Facade
@@ -217,7 +217,7 @@ class DefaultPathBudget(unittest.TestCase):
 
     def test_the_shape_corpus_is_budgeted_from_an_llm_that_learns_only_from_deferrals(self):
         # Wrong patch: budgets tuned to fixtures whose first call always succeeds. Orders with nothing known up front costs three calls:
-        # control_needed, the dialog deferral, then a second cua_do quoting a dialog label.
+        # control_needed, the dialog deferral, then a second do quoting a dialog label.
         m = self.measured
         self.assertEqual((m['orders_cold']['calls'], m['orders_confirm']['calls']), (3, 1))
         for name, calls in (('per_record_labels', 1), ('single_record', 1), ('toast_after_click', 1), ('five_button_dialog', 2), ('toolbar_records_ambiguous', 2), ('disabled_record', 1), ('canvas_dead_end', 1)):
@@ -240,7 +240,7 @@ class DefaultPathBudget(unittest.TestCase):
         # Option B (CE-FACADE-005). Wrong patch: a look that runs NuExtract by default, a filter that needs the chooser, or a plan that needs a second do.
         m = self.measured
         for name in ('plan_booking_look_do', 'plan_booking_half_hour_look_do', 'plan_orders_declared_dialog'):
-            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['reader'], m[name]['chooser'], m[name]['tools']), (2, 0, 0, ['cua_look', 'cua_do']), name)
+            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['reader'], m[name]['chooser'], m[name]['tools']), (2, 0, 0, ['look', 'do']), name)
 
     def test_a_confirm_flow_costs_a_third_call_because_the_dialog_text_must_be_declared(self):
         # Second review: positive authorization. Wrong patch: a confirm without a declared dialog text (2 calls, judged by a word list).
@@ -268,14 +268,14 @@ class DefaultPathBudget(unittest.TestCase):
         # A blind lines plan is refused (one wasted call); a wrong dialog guess or wrong last label costs one more call; a blind fields filter still defers.
         m = self.measured
         self.assertEqual([self.scenario(n) and m[n]['calls'] for n in ('plan_booking_no_look', 'plan_orders_identity_default', 'plan_orders_wrong_dialog_guess', 'plan_wizard_wrong_final_label')], [3, 3, 3, 3])
-        self.assertEqual(m['plan_booking_no_look']['tools'], ['cua_do', 'cua_look', 'cua_do'])
+        self.assertEqual(m['plan_booking_no_look']['tools'], ['do', 'look', 'do'])
         self.assertEqual((m['plan_booking_blind_fields']['calls'], m['plan_booking_blind_fields']['reader'], m['plan_booking_blind_fields']['chooser']), (2, 3, 1))
 
     def test_navigation_scenarios_are_three_calls_and_a_permission_stop_is_one(self):
         # CE-FACADE-007 (#35). Wrong patches: navigation as a fourth tool or a mandatory extra look; a permission refusal that retries or reroutes.
         m = self.measured
         for name in ('nav_goto_look_plan', 'nav_open_tab_read_close'):
-            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['tools'], m[name]['reader'], m[name]['chooser']), (3, ['cua_do', 'cua_look', 'cua_do'], 0, 0), name)
+            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['tools'], m[name]['reader'], m[name]['chooser']), (3, ['do', 'look', 'do'], 0, 0), name)
         stop = self.scenario('nav_permission_required_stop');self.assertEqual((stop['calls'], stop['status']), (1, 'refused'))
         for name in ('nav_goto_look_plan', 'nav_open_tab_read_close', 'nav_permission_required_stop'):
             self.assertEqual(BUDGET['scenarios'][name]['max_llm_visible_calls']['changed_by'], 'CE-FACADE-007')
@@ -284,10 +284,10 @@ class DefaultPathBudget(unittest.TestCase):
         # CE-FACADE-007 (#34). Wrong patches: read_pages as a fourth tool or a mandatory extra look (more calls), or a new scenario that loosens an old number.
         m = self.measured
         for name, status in (('nav_read_pages_3', 'done'), ('nav_read_pages_one_fails', 'stopped')):
-            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['tools'], m[name]['reader'], m[name]['chooser'], m[name]['status']), (1, ['cua_do'], 0, 0, status), name)
+            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['tools'], m[name]['reader'], m[name]['chooser'], m[name]['status']), (1, ['do'], 0, 0, status), name)
             self.assertEqual(BUDGET['scenarios'][name]['max_llm_visible_calls']['changed_by'], 'CE-FACADE-007')
             self.assertEqual(BUDGET['scenarios'][name]['final_status'], status)
-        self.assertEqual(BUDGET['default_path_tools']['value'], ['cua_do', 'cua_look'])
+        self.assertEqual(BUDGET['default_path_tools']['value'], ['do', 'look'])
         for name in ('nav_goto_look_plan', 'nav_open_tab_read_close', 'plan_booking_look_do', 'booking_list'):
             self.assertLessEqual(BUDGET['scenarios'][name]['max_llm_visible_calls']['value'], 3)
 
@@ -364,7 +364,7 @@ class DefaultPathBudget(unittest.TestCase):
         self.assertTrue(any('chooser 1' in v for v in cb.over_budget(m, BUDGET['scenarios']['booking_list'])), m)
 
     def test_the_counting_harness_sees_every_tool_call(self):
-        # Wrong patch: a harness that counts only cua_do would hide a hand-driven chain. Run in advanced mode, where the chain exists.
+        # Wrong patch: a harness that counts only do would hide a hand-driven chain. Run in advanced mode, where the chain exists.
         names = cb.advanced_run("""
 import asyncio, json, server, call_budget as cb
 from core import Facade
@@ -374,11 +374,11 @@ server.facade = Facade(fx.FlatDriver(), reader_factory=fx.LineReader, generic_fa
 names = []
 def call(name, **kw):
     names.append(name);return json.loads(cb.result_text(asyncio.run(server.mcp.call_tool(name, kw))))
-obs = call('cua_observe', pid=1, window_id=2)
-call('cua_read', snapshot=obs['snapshot'], task='t', fields={'provider': {'description': 'p'}}, record_ids=['e5'])
+obs = call('observe', pid=1, window_id=2)
+call('read', snapshot=obs['snapshot'], task='t', fields={'provider': {'description': 'p'}}, record_ids=['e5'])
 print(json.dumps(names))
 """)
-        self.assertEqual(names, ['cua_observe', 'cua_read'])
+        self.assertEqual(names, ['observe', 'read'])
         self.assertEqual(cb.over_budget({'calls': 5, 'reader': 1, 'chooser': 1}, BUDGET['scenarios']['booking_list'])[0][:7], 'calls 5')
 
 

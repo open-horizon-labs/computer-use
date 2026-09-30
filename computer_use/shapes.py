@@ -1,4 +1,4 @@
-"""Synthetic page shapes for cua_do tests and budget scenarios: the shapes a review found the two captured trees did not cover
+"""Synthetic page shapes for do tests and budget scenarios: the shapes a review found the two captured trees did not cover
 (per-record labels, one record, toasts, big dialogs, list growth, disabled records, several web areas, canvas pages).
 
 Helpers only, no tests. They build raw Driver-style element lists; ShapeDriver serves them through the same fakes as the live fixtures.

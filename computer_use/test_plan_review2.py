@@ -176,7 +176,7 @@ class HiddenTextAcknowledgement(PlanBase):
 
     def look(self, **kw):
         try:return self.f.look('Demo', **kw)
-        except TypeError:self.fail('cua_look does not accept %s' % sorted(kw))
+        except TypeError:self.fail('look does not accept %s' % sorted(kw))
 
     def test_selecting_a_record_with_hidden_lines_defers_unless_acknowledged(self):
         # Wrong patch: docs that say a cut "can only hide MORE text" (it can hide "Status: Cancelled" on line 8).

@@ -1,6 +1,6 @@
-"""DOM-first page text for cua_look, bounded, beside the AX tree (CE-FACADE-007 slice 2, #33, #29).
+"""DOM-first page text for look, bounded, beside the AX tree (CE-FACADE-007 slice 2, #33, #29).
 
-A window bound to a browser tab has two readable sources: the native AX tree (what cua_do acts on) and the Driver's CDP semantic snapshot
+A window bound to a browser tab has two readable sources: the native AX tree (what do acts on) and the Driver's CDP semantic snapshot
 (get_browser_state, snapshot_format semantic_v2: page.url/title, outline, refs, content_refs, snapshot.complete, omitted counts, continuation;
 trycua/cua docs reference/cua-driver/browser-semantic-snapshots). The look reads both and never silently prefers one:
 
@@ -33,7 +33,7 @@ UNPLACED_MAX = 10
 # and the document's own name are not displayed lines; measured live 2026-09-30 on the booking fixture (semantic_v2): counting them
 # reported 12 'DOM-only' texts that the page never shows.
 # Measured live 2026-09-30: with the daemon's --grant existing-profile the bind still refuses browser_consent_required until browser_prepare
-# has run once for the window; only a cua_do navigation step prepares it.
+# has run once for the window; only a do navigation step prepares it.
 NOT_PREPARED = frozenset({'browser_consent_required', 'browser_requires_setup', 'consumer_profile_endpoint_requires_grant'})
 DISPLAY_ROLES = frozenset({'statictext', 'text', 'heading', 'paragraph', 'cell', 'gridcell', 'columnheader', 'rowheader', 'label', 'caption',
                            'listitemmarker', 'definition', 'term', 'mark', 'strong', 'emphasis', 'code', 'time'})
@@ -46,7 +46,7 @@ def _failure(code, note):
 
 def _refused(code):
     if code in NOT_PREPARED:
-        return _failure('semantic_not_prepared', 'the page text was read from the accessibility tree only: the browser endpoint is not prepared yet (%s); a cua_do goto or open_tab step prepares it (the look itself never changes your browser)' % code[:60])
+        return _failure('semantic_not_prepared', 'the page text was read from the accessibility tree only: the browser endpoint is not prepared yet (%s); a do goto or open_tab step prepares it (the look itself never changes your browser)' % code[:60])
     return _failure('semantic_refused', 'the page text was read from the accessibility tree only: the Driver refused the browser semantic snapshot (%s)' % code[:60])
 
 

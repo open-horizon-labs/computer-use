@@ -1,6 +1,6 @@
 """Cua Perception route: probe, capture-bound parsing, layout fallback grouping,
 fuzzy OCR verification, and the regions chooser/act path. OCR text must never
-feed cua_read/NuExtract or exact verification (docs/FACADE.md evidence table:
+feed read/NuExtract or exact verification (docs/FACADE.md evidence table:
 "60 min"->"600 min", "Starts 1:30 PM"->"Starts 130 PM", "Follow-up"->"Follwupe").
 """
 import copy
@@ -128,7 +128,7 @@ class PerceptionRouteTests(unittest.TestCase):
 
     def test_unique_control_never_triggers_a_perception_parse(self):
         # Live CE 2026-09-28: the confirm dialog's unique "Yes, cancel order" button
-        # triggered a live parse that failed and killed cua_choose. Tempting wrong
+        # triggered a live parse that failed and killed choose. Tempting wrong
         # patch: keep parsing first and only then check whether the control repeats.
         self.driver.capture_id = 'cap_1'; self.driver.parse_result = BOOK_REGIONS
         self.driver.observe = lambda *a: flat_two_book_window()
@@ -261,7 +261,7 @@ class PerceptionRouteTests(unittest.TestCase):
         self.assertEqual(result['status'], 'unknown')
         self.assertEqual(result.get('perception_hint', {}).get('evidence'), 'ocr_candidate')
 
-    # --- cua_choose(mode='regions') and cua_act -------------------------
+    # --- choose(mode='regions') and act -------------------------
     def test_choose_regions_uncorroborated_defers_no_handle(self):
         self.driver.capture_id = 'cap_1'; self.driver.parse_result = BOOK_REGIONS
         obs = self.f.observe(1, 2)['snapshot']

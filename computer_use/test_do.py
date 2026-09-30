@@ -1,4 +1,4 @@
-"""cua_do: the dispatcher runs the evidence chain (S4.1-S4.2, S4.6-S4.8) and recovers in code.
+"""do: the dispatcher runs the evidence chain (S4.1-S4.2, S4.6-S4.8) and recovers in code.
 Each test names the tempting wrong patch it fails. Fakes only: no Driver, model, desktop or network."""
 import copy
 import json
@@ -246,7 +246,7 @@ class Discovery(DoBase):
         self.assertEqual(r['reason'], 'records_ambiguous');self.assertEqual(self.driver.executed, [])
 
     def test_a_single_record_is_the_record(self):
-        # Wrong patch: a page with one card (nothing repeats) cannot form records, a dead end for a cua_do-only caller.
+        # Wrong patch: a page with one card (nothing repeats) cannot form records, a dead end for a do-only caller.
         self.driver.rows = booking_rows()[:1]
         self.assertEqual(self.do(records=rec(ONE))['reason'], 'no_eligible_record')
         r = self.do(records=rec([{'field': 'provider', 'value': 'Provider A'}]))
@@ -719,7 +719,7 @@ class RegionsAndGuards(DoBase):
         self.assertEqual(r['delivery'], 'delivered');self.assertEqual(self.driver.executed[0]['capture_id'], 'cap')
 
     def test_primitives_still_bind_only_current_snapshots(self):
-        # Wrong patch: let cua_do's handles or snapshots leak into the primitives' guarantees.
+        # Wrong patch: let do's handles or snapshots leak into the primitives' guarantees.
         first = self.f.observe(1, 2)['snapshot'];self.f.observe(1, 2)
         with self.assertRaises(Gap):self.f.choose(first, 'Reserve', mode='exact', exact_name='Book')
 
