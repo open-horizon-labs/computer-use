@@ -2,17 +2,17 @@
 
 Default mode: cua_do then cua_look are the ONLY visible tools (look, then do; CE-FACADE-005). CUA_TASK_ADVANCED=1 mode: the eight primitives appear too, all documented Advanced.
 """
-import asyncio,sys,json
+import asyncio,os,sys,json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 from mcp import ClientSession,StdioServerParameters
 from mcp.client.stdio import stdio_client
-CODE=("import sys;sys.path.insert(0,'facade');import server;from test_core import FakeDriver,FakeReader,FakeChooser,FakeVision;"
+CODE=("import os,sys;sys.path.insert(0,'facade');import server;from test_core import FakeDriver,FakeReader,FakeChooser,FakeVision;"
       "from core import Facade;d=FakeDriver();d.capture_id='cap_test';"
       "server.facade=Facade(d,reader_factory=FakeReader,generic_factory=FakeChooser,visual_factory=FakeVision);server.mcp.run()")
 SPEC={'fields':{'condition':{'description':'Condition'}},'predicates':[{'field':'condition','value':'Used'}],'record_ids':['e1','e4'],'coverage_complete':True}
 async def default_mode():
- async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT))) as (r,w):
+ async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT),env=dict(os.environ))) as (r,w):
   async with ClientSession(r,w) as s:
    await s.initialize();ts=(await s.list_tools()).tools
    assert [t.name for t in ts]==['cua_do','cua_look'],[t.name for t in ts]
@@ -52,7 +52,7 @@ async def navigation_steps(s,do):
  bad=await s.call_tool('cua_do',{'goal':'x','title':'Demo','expect':None,'steps':[{'do':'goto','uri':'https://clinic.example/booking','expect':None}]})
  assert bad.isError,'an unknown step key must still be rejected by the schema'
 async def advanced_mode():
- async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT),env={'CUA_TASK_ADVANCED':'1'})) as (r,w):
+ async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT),env={**os.environ,'CUA_TASK_ADVANCED':'1'})) as (r,w):
   async with ClientSession(r,w) as s:
    await s.initialize();ts=(await s.list_tools()).tools
    assert [t.name for t in ts[:2]]==['cua_do','cua_look'] and ts[0].description.startswith('Default path.'),[t.name for t in ts]
