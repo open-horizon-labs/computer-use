@@ -479,8 +479,8 @@ MUTATIONS = {
         ['test_read_pages.Reads.test_a_page_that_lands_elsewhere_does_not_abort_the_others_silently']),
     'menu_reroute_on_any_refusal': (
         'route every failure of the ordinary menu press through invoke_menu',
-        [('menu.py', "        if isinstance(gap, DriverCallFailed) or REFUSAL not in str(gap):", "        if isinstance(gap, DriverCallFailed):")],
-        ['test_menu.Routing.test_any_other_refusal_of_a_menu_item_is_not_rerouted']),
+        [('menu.py', "        refused = getattr(gap, 'code', None) == REFUSAL if isinstance(gap, DriverCallFailed) else REFUSAL in str(gap)", "        refused = True")],
+        ['test_menu.Routing.test_any_other_refusal_of_a_menu_item_is_not_rerouted', 'test_menu.Routing.test_another_exit_1_code_is_never_rerouted']),
     'menu_reroute_without_foreground': (
         "invoke_menu (which activates the window) without the caller's allow_foreground",
         [('menu.py', "        if not f.foreground_ok:\n            raise _gap('%s: the Driver refused to press", "        if False:\n            raise _gap('%s: the Driver refused to press")],
