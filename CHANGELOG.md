@@ -1,8 +1,8 @@
 # Changelog
 
-Versions follow Cua Driver minor releases (0.31 targets Cua Driver 0.31).
+Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may still change in minor releases.
 
-## 0.31.0 (unreleased, integration/0.31)
+## 0.1.0 (unreleased, integration/0.1)
 
 ### Breaking / behavior changes
 - Public names lose the `cua_` prefix (#53): the MCP tools are `look` and `do` (advanced, with `CUA_TASK_ADVANCED=1`: `windows`, `observe`, `read`, `choose`, `act`, `verify`, `trace`, `finish`), no aliases, so the default path still shows exactly two tools; the MCP server is `computer-use` (was `cua-task`, `CUA task tools`), so clients see `mcp__computer-use__look` and `mcp__computer-use__do`. The `facade/` directory is now `computer_use/` and the skill directory `skills/cua-capability-dispatch/` is now `skills/computer-use/` (skill name `computer-use`). Migration: rename the client's MCP server key `cua-task` to `computer-use` and point its args at `computer_use/server.py` (was `facade/server.py`); change any allow-list or prompt that names `mcp__cua-task__cua_*` to `mcp__computer-use__*`; reinstall the skill under its new name and remove the old `cua-capability-dispatch` copy. Call-budget numbers are unchanged. Historical run logs, traces, manifests and recorded CE text keep the old names (they record what was measured); `CUA_TASK_ADVANCED`, `.venv-facade`, `experiments/facade-vs-native` and the `inference/` paths are not renamed.
