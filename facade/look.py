@@ -529,7 +529,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         return response
     except DriverCallFailed as gap:
         return {'status': 'failed', 'reason': 'driver_call_failed', 'retryable': True, 'ms_by_stage': ms,
-                'hint': 'The Driver call failed before anything was clicked; call cua_look again.'}
+                'detail': f._failure_detail(gap), 'hint': 'The Driver call failed before anything was clicked; call cua_look again.'}
     except Gap as gap:
         reason = f._do_reason(str(gap))
         return {'status': 'refused', 'reason': reason, 'message': safe_message(reason, str(gap)), 'ms_by_stage': ms}

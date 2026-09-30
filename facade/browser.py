@@ -74,7 +74,7 @@ def _tabs(bound):
 def _call(f, tool, args):
     """A Driver call whose refusal is a Gap whether the Driver raised it or returned it as data."""
     from core import Gap as CoreGap
-    value = f.driver.call(tool, {'session': f.session, **args})
+    value = f._read(tool, lambda: f.driver.call(tool, {'session': f.session, **args}))
     if isinstance(value, dict) and (value.get('refusal') or value.get('status') == 'refused'):
         raise CoreGap('Driver refused: ' + str((value.get('refusal') or {}).get('code', 'unknown')))
     return value

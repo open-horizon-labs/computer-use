@@ -232,6 +232,63 @@ class LookShapes(unittest.TestCase):
         r = self.look(els)[2]
         self.assertEqual(r['dialogs'], [{'controls': ['Yes', 'No'], 'lines': ['Confirm', 'Book Dr. B?']}])  # the sheet's own title, then its text
 
+    def _canvas_look(self, els):
+        regions = {'regions': [{'id': 't0', 'kind': 'text', 'text': 'Sign in', 'bounds': {'x': 10, 'y': 40, 'width': 80, 'height': 24}}]}
+        d = sh.ShapeDriver(els);d.perception_payload = {'installed': True, 'healthy': True};d.capture_id = 'cap';d.parse_result = regions
+        f = facade_for(d);return f, f.look('Demo')
+
+    def test_native_window_menu_bar_and_window_buttons_are_not_page_controls_so_canvas_is_offered(self):
+        # Wrong patches: drop only the AXMenuBar (window buttons keep page_controls at 3 and the canvas route never runs).
+        f, r = self._canvas_look(sh.emulator())
+        self.assertEqual([t['text'] for t in r['canvas']['text_regions']], ['Sign in'])
+        handle = next(iter(f.snapshots));state = f.snapshots[handle]
+        self.assertEqual(len(f._content_ids(state)), 2)  # the window and the drawn surface
+        self.assertEqual(r.get('controls', []), [])
+        self.assertEqual((r['counts']['page_controls'], r['counts']['non_page_controls']), (0, 80))  # 77 menu items + 3 title-bar buttons, none of them page content
+
+    def test_native_toolbar_buttons_stay_page_controls(self):
+        # Wrong patch: drop every non-content role including toolbars.
+        f, r = self._canvas_look(sh.emulator(toolbar=True))
+        self.assertNotIn('canvas', r)
+        state = next(iter(f.snapshots.values()))
+        labels = {state['nodes'][i].get('label') for i in f._content_ids(state)}
+        self.assertTrue({'Back', 'Home'} <= labels);self.assertNotIn('Item 0', labels);self.assertNotIn('Close', labels)
+
+    def test_native_frames_are_checked_against_the_window_not_the_screen(self):
+        # Wrong patch: compare frames with the screen. The item at y=10 is on screen but above the window (y=200); the one inside is kept.
+        els = sh.emulator(menu_items=0, toolbar=False)
+        above = sh.E(els, 0, 'AXMenuItem', 'Above window');els[above]['frame'] = sh.frame(150, 10, 40, 20)
+        inside = sh.E(els, 0, 'AXButton', 'Inside window');els[inside]['frame'] = sh.frame(150, 300, 40, 20)
+        noframe = sh.E(els, 0, 'AXButton', 'No frame')
+        straddle = sh.E(els, 0, 'AXButton', 'Straddles edge');els[straddle]['frame'] = sh.frame(90, 300, 40, 20)  # partly outside: not ENTIRELY outside
+        f, _ = self._canvas_look(els)
+        state = next(iter(f.snapshots.values()))
+        labels = {state['nodes'][i].get('label') for i in f._content_ids(state)}
+        # Wrong patch: drop anything not fully inside the window (the straddling control would vanish).
+        self.assertEqual(labels & {'Above window', 'Inside window', 'No frame', 'Straddles edge'}, {'Inside window', 'No frame', 'Straddles edge'})
+
+    def test_pages_with_a_web_area_are_not_filtered_by_the_native_rule(self):
+        # Wrong patch: apply the native filter to web-area pages too (a web area with a close-button subrole or off-window frame would vanish).
+        els, web = sh.base();els[0]['frame'] = sh.frame(100, 200, 400, 800)
+        b = sh.E(els, web, 'AXButton', 'Close');els[b].update(subrole='AXCloseButton', frame=sh.frame(0, 0, 10, 10))
+        m = sh.E(els, web, 'AXMenuBar', actions=[]);sh.E(els, m, 'AXMenuItem', 'Item')
+        f = facade_for(sh.ShapeDriver(els));f.look('Demo')
+        state = next(iter(f.snapshots.values()))
+        self.assertEqual(f._content_ids(state), {1, b, m, m + 1})
+
+    def test_every_real_chrome_fixture_keeps_the_web_area_subtree_as_content(self):
+        # Wrong patch: apply the native-window filter to web pages too (their content is the web area subtree, unchanged).
+        from pathlib import Path
+        names = sorted(str(p.relative_to(lv.FIX)) for p in lv.FIX.rglob('*ax.json'))
+        checked = 0
+        for name in names:
+            d = lv.LiveDriver(name);f = facade_for(d);f.look('Demo');state = next(iter(f.snapshots.values()))
+            web = Facade._top_web_areas(state)
+            if not web:continue
+            checked += 1
+            self.assertEqual(f._content_ids(state), f.subtree(state, 'e'+str(web[0]))[1], name)
+        self.assertGreaterEqual(checked, 10)
+
     def test_canvas_lists_drawn_text_only_when_ax_has_no_pressable_controls_and_perception_is_healthy(self):
         # Wrong patch: OCR text on every look (it never feeds typed values and costs a parse), or on a page with real controls.
         regions = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 10, 'y': y, 'width': 80, 'height': 24}}
@@ -367,3 +424,81 @@ class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
         d, f = self.build(thin_for=99)
         f.observe(1, 2)
         self.assertEqual((self.naps, d.version), ([], 1))
+
+
+def _launching(raw, stub=False):
+    """Driver 0.31 ax_app_launching: truncated, degraded, EMPTY tree (or, with stub, a couple of elements) and NO element tokens."""
+    raw = dict(raw, degraded_reason='ax_app_launching', truncated=True, truncation_reason='app_lookup_timeout')
+    raw['elements'] = [{k: v for k, v in e.items() if k != 'element_token'} for e in raw['elements'][:2]] if stub else []
+    return raw
+
+
+class LaunchingApp(lv.LiveBase):
+    """Driver 0.31: a launching app yields degraded_reason ax_app_launching, truncated, no tokens (#32)."""
+    def launching(self, first, last=99, stub=False):
+        real = self.driver.observe
+        def observe(*args):
+            raw = real(*args)
+            return _launching(raw, stub) if first <= self.driver.version <= last else raw
+        self.driver.observe = observe
+
+    def test_look_treats_ax_app_launching_as_not_ready_and_retries_it(self):
+        # Wrong patch: read the truncated snapshot as a page (a 0-record look of a window that is still starting).
+        for stub in (False, True):
+            self.setUp();self.launching(1, 1, stub)
+            r = self.f.look('Demo')
+            self.assertEqual((r['status'], r['counts']['records'], self.naps, self.driver.version), ('ok', 12, [0.5], 2), stub)
+            self.assertEqual([e['ready'] for e in self.f.events if e['operation'] == 'observe_retry'], [True])
+        self.setUp();self.launching(1, 1)
+        self.assertEqual(Facade._not_ready(self.f.observe(1, 2)), 'app_launching')  # its own reason, not merely "degraded" or "empty_tree"
+
+    def test_a_snapshot_without_tokens_is_never_bound_to_an_action(self):
+        # Wrong patch: bind the click to the stale first snapshot's tokens, or retry the action until the app is ready.
+        self.launching(2)  # the look/selection observation is fine; act's own revalidation observation is launching
+        r = self.do('Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM', records={'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE})
+        self.assertEqual((r['status'], r['reason']), ('refused', 'driver_snapshot_unavailable'))
+        self.assertEqual((self.driver.executed, r['delivery']), ([], 'none'))
+        self.assertEqual([c for c in self.naps if c in (0.5, 1.0)], [], 'an action path adds no look-style retry')
+
+    def test_an_action_observation_is_not_retried_by_the_look_wait(self):
+        self.launching(1)
+        r = self.f.observe(1, 2)
+        self.assertEqual((self.naps, self.driver.version, r['quality']['degraded_reason']), ([], 1, 'ax_app_launching'))
+        self.assertEqual(r['elements'], [])
+
+
+class LookWaitIsBounded(lv.LiveBase):
+    def test_total_look_wait_stays_under_the_documented_bound(self):
+        # Wrong patch: raise the Driver wait or the delays without re-deriving the sum (the Driver waits inside EVERY attempt, then walks).
+        import core
+        real = self.driver.observe
+        self.driver.observe = lambda *a: _launching(real(*a))
+        self.f.driver_version = (0, 31, 0)
+        self.f.look('Demo')
+        waits = [a[-1] / 1000 for a in self.driver.observe_args]
+        self.assertEqual(len(waits), len(core.OBSERVE_RETRY_DELAYS) + 1)
+        self.assertTrue(all(w == core.DRIVER_LAUNCH_WAIT_MS / 1000 for w in waits), waits)
+        worst = sum(self.naps) + 2 * sum(waits)  # launch wait, then the walk's own timeout_ms
+        self.assertEqual(worst, (len(core.OBSERVE_RETRY_DELAYS) + 1) * 2 * core.DRIVER_LAUNCH_WAIT_MS / 1000 + sum(core.OBSERVE_RETRY_DELAYS))
+        self.assertLessEqual(worst, core.LOOK_WAIT_MAX_S)
+
+    def test_the_wait_never_exceeds_the_calls_own_timeout(self):
+        self.f.driver_version = (0, 31, 0)
+        self.f.observe(1, 2, timeout=0.5)
+        self.assertEqual(self.driver.observe_args[0][-1], 500)
+
+    def test_a_030_driver_gets_no_timeout_ms(self):
+        # Wrong patch: send timeout_ms to every Driver (0.30 is not known to accept it).
+        for version in ((0, 30, 4), (0, 29, 1), None):
+            self.setUp();self.f.driver_version = version
+            self.f.look('Demo')
+            self.assertEqual(len(self.driver.observe_args[0]), 3, version)
+
+    def test_driver_observe_sends_timeout_ms_only_when_asked(self):
+        import core
+        from unittest import mock
+        sent = []
+        def call(self, tool, args, timeout=20):sent.append(dict(args));return {'snapshot_id': 's'}
+        with mock.patch.object(core.Driver, 'call', call):
+            core.Driver('x').observe(1, 2, 'sess');core.Driver('x').observe(1, 2, 'sess', 20, 1000)
+        self.assertEqual(['timeout_ms' in a for a in sent], [False, True]);self.assertEqual(sent[1]['timeout_ms'], 1000)
