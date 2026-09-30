@@ -232,6 +232,63 @@ class LookShapes(unittest.TestCase):
         r = self.look(els)[2]
         self.assertEqual(r['dialogs'], [{'controls': ['Yes', 'No'], 'lines': ['Confirm', 'Book Dr. B?']}])  # the sheet's own title, then its text
 
+    def _canvas_look(self, els):
+        regions = {'regions': [{'id': 't0', 'kind': 'text', 'text': 'Sign in', 'bounds': {'x': 10, 'y': 40, 'width': 80, 'height': 24}}]}
+        d = sh.ShapeDriver(els);d.perception_payload = {'installed': True, 'healthy': True};d.capture_id = 'cap';d.parse_result = regions
+        f = facade_for(d);return f, f.look('Demo')
+
+    def test_native_window_menu_bar_and_window_buttons_are_not_page_controls_so_canvas_is_offered(self):
+        # Wrong patches: drop only the AXMenuBar (window buttons keep page_controls at 3 and the canvas route never runs).
+        f, r = self._canvas_look(sh.emulator())
+        self.assertEqual([t['text'] for t in r['canvas']['text_regions']], ['Sign in'])
+        handle = next(iter(f.snapshots));state = f.snapshots[handle]
+        self.assertEqual(len(f._content_ids(state)), 2)  # the window and the drawn surface
+        self.assertEqual(r.get('controls', []), [])
+        self.assertEqual((r['counts']['page_controls'], r['counts']['non_page_controls']), (0, 80))  # 77 menu items + 3 title-bar buttons, none of them page content
+
+    def test_native_toolbar_buttons_stay_page_controls(self):
+        # Wrong patch: drop every non-content role including toolbars.
+        f, r = self._canvas_look(sh.emulator(toolbar=True))
+        self.assertNotIn('canvas', r)
+        state = next(iter(f.snapshots.values()))
+        labels = {state['nodes'][i].get('label') for i in f._content_ids(state)}
+        self.assertTrue({'Back', 'Home'} <= labels);self.assertNotIn('Item 0', labels);self.assertNotIn('Close', labels)
+
+    def test_native_frames_are_checked_against_the_window_not_the_screen(self):
+        # Wrong patch: compare frames with the screen. The item at y=10 is on screen but above the window (y=200); the one inside is kept.
+        els = sh.emulator(menu_items=0, toolbar=False)
+        above = sh.E(els, 0, 'AXMenuItem', 'Above window');els[above]['frame'] = sh.frame(150, 10, 40, 20)
+        inside = sh.E(els, 0, 'AXButton', 'Inside window');els[inside]['frame'] = sh.frame(150, 300, 40, 20)
+        noframe = sh.E(els, 0, 'AXButton', 'No frame')
+        straddle = sh.E(els, 0, 'AXButton', 'Straddles edge');els[straddle]['frame'] = sh.frame(90, 300, 40, 20)  # partly outside: not ENTIRELY outside
+        f, _ = self._canvas_look(els)
+        state = next(iter(f.snapshots.values()))
+        labels = {state['nodes'][i].get('label') for i in f._content_ids(state)}
+        # Wrong patch: drop anything not fully inside the window (the straddling control would vanish).
+        self.assertEqual(labels & {'Above window', 'Inside window', 'No frame', 'Straddles edge'}, {'Inside window', 'No frame', 'Straddles edge'})
+
+    def test_pages_with_a_web_area_are_not_filtered_by_the_native_rule(self):
+        # Wrong patch: apply the native filter to web-area pages too (a web area with a close-button subrole or off-window frame would vanish).
+        els, web = sh.base();els[0]['frame'] = sh.frame(100, 200, 400, 800)
+        b = sh.E(els, web, 'AXButton', 'Close');els[b].update(subrole='AXCloseButton', frame=sh.frame(0, 0, 10, 10))
+        m = sh.E(els, web, 'AXMenuBar', actions=[]);sh.E(els, m, 'AXMenuItem', 'Item')
+        f = facade_for(sh.ShapeDriver(els));f.look('Demo')
+        state = next(iter(f.snapshots.values()))
+        self.assertEqual(f._content_ids(state), {1, b, m, m + 1})
+
+    def test_every_real_chrome_fixture_keeps_the_web_area_subtree_as_content(self):
+        # Wrong patch: apply the native-window filter to web pages too (their content is the web area subtree, unchanged).
+        from pathlib import Path
+        names = sorted(str(p.relative_to(lv.FIX)) for p in lv.FIX.rglob('*ax.json'))
+        checked = 0
+        for name in names:
+            d = lv.LiveDriver(name);f = facade_for(d);f.look('Demo');state = next(iter(f.snapshots.values()))
+            web = Facade._top_web_areas(state)
+            if not web:continue
+            checked += 1
+            self.assertEqual(f._content_ids(state), f.subtree(state, 'e'+str(web[0]))[1], name)
+        self.assertGreaterEqual(checked, 10)
+
     def test_canvas_lists_drawn_text_only_when_ax_has_no_pressable_controls_and_perception_is_healthy(self):
         # Wrong patch: OCR text on every look (it never feeds typed values and costs a parse), or on a page with real controls.
         regions = {'regions': [{'id': 't%d' % i, 'kind': 'text', 'text': t, 'bounds': {'x': 10, 'y': y, 'width': 80, 'height': 24}}

@@ -1278,7 +1278,32 @@ class Facade:
         """Node indices of the page content (the first top-level AXWebArea subtree), else every node. The browser's own menu bar
         (hundreds of AXMenuItems) and toolbar are chrome, never the records or candidates of a page goal."""
         web = self._top_web_areas(state)
-        return set(state['nodes']) if not web else self.subtree(state, 'e'+str(web[0]))[1]
+        if web:return self.subtree(state, 'e'+str(web[0]))[1]
+        return self._native_content_ids(state)
+
+    WINDOW_BUTTON_SUBROLES = ('AXCloseButton', 'AXZoomButton', 'AXMinimizeButton', 'AXFullScreenButton')
+
+    def _native_content_ids(self, state):
+        """Content of a window with no web area (a native app, an emulator's drawn surface): the first AXWindow subtree (every node if
+        there is none) minus chrome: the AXMenuBar subtree, the window's own title-bar buttons, and any element whose frame lies
+        entirely outside the window bounds (application menus that hang above the window). AXToolbar stays: native controls live there."""
+        nodes = state['nodes']
+        windows = sorted(i for i, n in nodes.items() if n.get('role') == 'AXWindow')
+        keep = set(nodes) if not windows else self.subtree(state, 'e'+str(windows[0]))[1]
+        drop = set()
+        for i, n in nodes.items():
+            if n.get('role') == 'AXMenuBar':drop |= self.subtree(state, 'e'+str(i))[1]
+            elif n.get('subrole') in self.WINDOW_BUTTON_SUBROLES:drop.add(i)
+        win = (state['raw'].get('window_bounds') or (nodes[windows[0]].get('frame') if windows else None) or {})
+        wx, wy = win.get('x'), win.get('y')
+        ww, wh = win.get('w', win.get('width')), win.get('h', win.get('height'))
+        if None not in (wx, wy, ww, wh):
+            for i in keep:
+                f = nodes[i].get('frame') or {}
+                fx, fy, fw, fh = f.get('x'), f.get('y'), f.get('w', f.get('width')), f.get('h', f.get('height'))
+                if None in (fx, fy, fw, fh):continue
+                if fx+fw <= wx or fx >= wx+ww or fy+fh <= wy or fy >= wy+wh:drop.add(i)
+        return keep - drop
 
     def _escalate(self, state, expect, remaining_s):
         """Perception exact-presence (never satisfies on a digit-bearing quote), then the screenshot model. Deliberately NOT cua_verify's

@@ -74,6 +74,25 @@ def canvas():
     els, web = base();E(els, web, 'AXGroup', 'canvas');return els
 
 
+def frame(x, y, w, h):
+    return {'x': x, 'y': y, 'w': w, 'h': h}
+
+
+def emulator(menu_items=77, toolbar=False):
+    """Android Emulator shape (#27): no web area; AXWindow at (100, 200) 400x800, the macOS menu bar (hangs above the window), the three
+    title-bar buttons and one drawn surface with no controls."""
+    els = [];win = E(els, None, 'AXWindow', 'Android Emulator', actions=[]);els[win]['frame'] = frame(100, 200, 400, 800)
+    bar = E(els, win, 'AXMenuBar', actions=[]);els[bar]['frame'] = frame(0, 0, 1440, 24)
+    for i in range(menu_items):els[E(els, bar, 'AXMenuItem', 'Item %d' % i)]['frame'] = frame(10 + i, 2, 40, 20)
+    for sub in ('AXCloseButton', 'AXMinimizeButton', 'AXZoomButton'):
+        b = E(els, win, 'AXButton', sub[2:-6]);els[b].update(subrole=sub, frame=frame(110, 205, 14, 14))
+    if toolbar:
+        t = E(els, win, 'AXToolbar', actions=[]);els[t]['frame'] = frame(100, 230, 400, 40)
+        for label in ('Back', 'Home'):els[E(els, t, 'AXButton', label)]['frame'] = frame(120, 235, 30, 30)
+    els[E(els, win, 'AXGroup', 'android surface', actions=[])]['frame'] = frame(100, 270, 400, 730)
+    return els
+
+
 def two_web_areas(nested_frame=False):
     els = [];E(els, None, 'AXWindow', actions=[]);popup = E(els, 0, 'AXWebArea', 'extension popup');E(els, popup, 'AXStaticText', 'hi', 'hi')
     web = E(els, 0, 'AXWebArea', 'Page');ul = E(els, web, 'AXList')
