@@ -9,9 +9,16 @@ on:
 permissions:
   contents: read
 
+# Runs on the homelab runner fleet (homelab-infra broker) when the repository variable LOCAL_LINUX_CI_ENABLED is 'true'; fork PRs
+# always stay on GitHub-hosted runners (same-repository guard), as in unified-hifi-control. The repo must also be in the broker's
+# FLEET_GITHUB_REPOSITORIES_JSON allowlist, or a self-hosted job waits with no runner.
+concurrency:
+  group: offline-gates-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   offline-gates:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.LOCAL_LINUX_CI_ENABLED == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON('["self-hosted","linux","x64","cpu"]') || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
