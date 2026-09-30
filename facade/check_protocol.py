@@ -2,7 +2,7 @@
 
 Default mode: cua_do then cua_look are the ONLY visible tools (look, then do; CE-FACADE-005). CUA_TASK_ADVANCED=1 mode: the eight primitives appear too, all documented Advanced.
 """
-import asyncio,sys,json
+import asyncio,os,sys,json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 from mcp import ClientSession,StdioServerParameters
