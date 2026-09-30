@@ -612,17 +612,30 @@ func cmdMoveToDisplay(_ args: [String], wid: CGWindowID) -> Never {
     if setResult != .success {
         finishMove(false, code: "not_verified", reason: "AXPosition set failed (AXError \(setResult.rawValue)); window was at (\(Int(pos.x)), \(Int(pos.y)))")
     }
-    let by = Date().addingTimeInterval(2)
+    // Verified only when the WHOLE window lies on the target display (live 2026-09-30: a 2067-wide window on a 1920-wide display was
+    // 'verified' by its midpoint while 147 px of it straddled the user's screen). A window still too large after the first size set
+    // (Chrome can ignore a size set before the move) is shrunk again after the move.
+    let by = Date().addingTimeInterval(3)
     var bounds: CGRect?
+    let fits: (CGRect) -> Bool = { b in target.insetBy(dx: -1, dy: -1).contains(b) }
+    var shrinkTries = 0
     repeat {
         bounds = windowInfo(wid)?.bounds
-        if let b = bounds, target.contains(CGPoint(x: b.midX, y: b.midY)) { break }
+        if let b = bounds, fits(b) { break }
+        if let b = bounds, target.contains(CGPoint(x: b.midX, y: b.midY)), shrinkTries < 3,
+           (b.width > target.width || b.height > target.height || b.maxX > target.maxX || b.maxY > target.maxY) {
+            shrinkTries += 1
+            var fitSize = CGSize(width: min(b.width, target.width - 2 * inset), height: min(b.height, target.height - 2 * inset))
+            if let v = AXValueCreate(.cgSize, &fitSize) { AXUIElementSetAttributeValue(win, kAXSizeAttribute as CFString, v) }
+            var fitPoint = CGPoint(x: target.minX + inset, y: target.minY + inset)
+            if let v = AXValueCreate(.cgPoint, &fitPoint) { AXUIElementSetAttributeValue(win, kAXPositionAttribute as CFString, v) }
+        }
         sleepSeconds(0.1)
     } while Date() < by
     var extra: [String: Any] = ["display_id": Int(did)]
     if let b = bounds { extra["bounds"] = ["x": b.origin.x, "y": b.origin.y, "width": b.width, "height": b.height] }
-    guard let b = bounds, target.contains(CGPoint(x: b.midX, y: b.midY)) else {
-        finishMove(false, code: "not_verified", reason: "window bounds are not on display \(did) after the move", extra: extra)
+    guard let b = bounds, fits(b) else {
+        finishMove(false, code: "not_verified", reason: "window bounds are not entirely on display \(did) after the move", extra: extra)
     }
     finishMove(true, code: "moved", reason: "window \(wid) verified on display \(did)", extra: extra)
 }
