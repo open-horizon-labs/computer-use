@@ -28,7 +28,7 @@ The live booking harness also requires the installed stock Cua Driver/jev-use ch
 
 ## Julia-1 generic chooser
 
-`generic_from_config()` loads the active profile. `local-mac` selects Julia-1; `fleet` selects Jev with the configured Qwen escalation. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev, but the local profile rejects that provider. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
+`generic_from_config()` loads the active profile (an explicit `CUA_GENERIC_PROVIDER` wins; with neither, the factory falls back to Jev). A clean install has no `runtime.json`, which resolves to `local-mac`, so the out-of-the-box chooser is Julia-1; a `runtime.json` that selects Jev or hosted endpoints resolves to `fleet`. `local-mac` selects Julia-1; `fleet` selects Jev with the configured Qwen escalation. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev, but the local profile rejects that provider. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
 
 ```sh
 export CUA_GENERIC_PROVIDER=julia-1
