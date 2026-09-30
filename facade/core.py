@@ -25,6 +25,7 @@ from ax_aliases import table_aliases
 
 
 OBSERVE_RETRY_DELAYS = (0.5, 1.0)   # seconds before the 2nd and 3rd observation of a page that is not ready
+MEMORY_READOUT = re.compile(r'(Memory usage - )[\d.,]+\s*[KMGT]?B',re.I)
 THIN_PAGE_NODES = 10   # a web page with this few nodes or fewer is still loading or a holding page ("checking your browser"), whatever the site
 
 
@@ -995,6 +996,19 @@ class Facade:
             result.update(selection=handle,selected_id=decision['action_id'])
         return result
 
+    def bind_press(self,snapshot,node_id,goal):
+        """Bind ONE press on an observed element the caller already identified by structure (not by a chooser): the same issue/act path
+        as a grounded singleton, so act() revalidates the observation before the Driver is called. Returns the selection handle."""
+        state=self.state(snapshot)
+        actions=self.actions(state,[node_id],'click',None)
+        if len(actions)!=1:raise Gap('control_not_pressable: the observed element is disabled or has no AXPress action')
+        request={'snapshot_id':state['raw']['snapshot_id'],'kind':'semantic','operation':'click','goal':goal,'actions':actions,'observation':actions[0]['description']}
+        decision={'status':'selected','action_id':node_id,'action_authorized':True,'reason':'observed_structure','judgment':'structure',
+                  'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request),'provider_outputs':[]}
+        self.event('choose',snapshot=snapshot,route='observed_structure',models=[],mode='semantic',decision_ms=0,provider_setup_ms=0,wall_ms=0,
+                   authorized=True,reason='observed_structure')
+        return self.issue(snapshot,request,decision,'semantic','click',None,{'status':'selected','route':'observed_structure','decision':decision,'snapshot':snapshot})['selection']
+
     def content_root(self,state,ids):
         """The observed content scope a selection binds to: the offered actions'
         common ancestor, widened to the enclosing AXWebArea when there is one
@@ -1047,8 +1061,13 @@ class Facade:
         # A page scope also binds the address field (role and value only): a
         # navigation is a different page even when its tree happens to match.
         address=[] if state['nodes'][root].get('role')!='AXWebArea' else self.address_fields(state,members)
+        # A tab strip's live memory readout ('<title> - Memory usage - 32.4 MB') changes between observations and is not page state
+        # (S4.8): the number is masked, the title is not.
+        def mask(node):
+            tab=node.get('role')=='AXRadioButton'  # only a tab-strip tab carries the readout; page text is never masked
+            return {k:(MEMORY_READOUT.sub(r'\1#',v) if tab and isinstance(v,str) else v) for k,v in node.items() if k!='element_token'}
         return digest({'title':state['raw'].get('window_title'),'address':address,
-                       'nodes':[{k:v for k,v in state['nodes'][i].items() if k!='element_token'} for i in sorted(members)]})
+                       'nodes':[mask(state['nodes'][i]) for i in sorted(members)]})
 
     def act(self, selection):
         item=self.selections.get(selection)

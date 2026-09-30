@@ -5,7 +5,7 @@ Versions follow Cua Driver minor releases (0.31 targets Cua Driver 0.31).
 ## 0.31.0 (unreleased, integration/0.31)
 
 ### Breaking / behavior changes
-- `close_tab` requires the step's `allow_foreground: true` while it closes with Cmd+W (Chrome ignores a background Cmd+W). #4 replaces this with a background close.
+- `close_tab` presses the tab's own Close button in the tab strip (AX, background, no fronting, no `allow_foreground`); zero or several matching tabs refuse `tab_close_control_not_found` / `tab_close_control_ambiguous` before any press. Cmd+W (foreground) remains only as an explicit `allow_foreground: true` fallback when the strip shows no such control (#4).
 
 ### Added
 - `goto {url, expect}` plan step: navigates the window's active tab in the user's own browser profile and is done only when the tab reports the requested page; typed stops `navigated_elsewhere`, `login_wall`, `landing_unknown`, `browser_tab_ambiguous` (CE-FACADE-007, #28).

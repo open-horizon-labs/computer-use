@@ -481,8 +481,8 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                     result['page'] = {'url': page['url'][:200], 'title': page['title'][:120]}
             except Gap as gap:
                 reason = str(gap).split(':', 1)[0]
-                result = {'status': 'refused' if reason in ('permission_required', 'bad_request', 'tab_not_opened_by_facade', 'foreground_required') else 'failed', 'reason': reason, 'message': str(gap),
-                          'delivery': 'none' if reason in ('permission_required', 'tab_not_opened_by_facade', 'foreground_required', 'bad_request') else 'unknown'}
+                result = {'status': 'refused' if reason in ('permission_required', 'bad_request', 'tab_not_opened_by_facade', 'foreground_required', 'tab_close_control_not_found', 'tab_close_control_ambiguous') else 'failed', 'reason': reason, 'message': str(gap),
+                          'delivery': 'none' if reason in ('permission_required', 'tab_not_opened_by_facade', 'foreground_required', 'bad_request', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'tab_strip_changed') else 'unknown'}
             status = result['status']
             entry = {'n': n, 'do': kind, 'status': {'deferred': 'stopped'}.get(status, status), 'ms': round((f.clock() - began) * 1000)}
             for key in ('reason', 'page'):
