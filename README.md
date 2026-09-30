@@ -107,6 +107,17 @@ python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 
 The offline check needs only Python 3.10+. For real inference, choose a profile and configure its local or hosted workers in `~/.config/computer-use/runtime.json`; see the [setup reference](skills/computer-use/references/setup.md). Installing the skill does not install model environments or modify the standalone Fleet selector.
 
+## Setup: doctor and bootstrap
+
+```bash
+.venv-facade/bin/python -m computer_use doctor [--json] [--probe]   # read-only; exit 1 on any blocker
+.venv-facade/bin/python -m computer_use bootstrap [--yes]           # does the fixable items, prints the rest
+```
+
+`doctor` checks the Cua Driver (version, daemon, socket, `--grant existing-profile`, Accessibility and Screen Recording, signing), Full Disk Access (only `profile: user` needs it; it cannot be read without a prompt, so it is always a manual warning), Cua Perception, Node/npx, adb devices, booted simulators, space-mover (built, trusted; `--probe` also creates and drops a virtual display), the agent browser when that module is present, `runtime.json` and each configured provider endpoint (one bounded HEAD/GET, nothing else is sent), the MCP registration in `~/.claude.json` (server `computer-use`, args `computer_use/server.py`, no stale `cua-task`), the skill under its current name, and the venv. Each line is `ok`, `warn`, `blocker` or `skipped` with a fix hint. `scripts/setup_facade.sh` ends with it.
+
+`bootstrap` builds space-mover, prefetches mobile-mcp, installs Perception, installs Chrome for Testing when the agent browser module is present, and restarts the Driver daemon with `--grant existing-profile`. It edits `~/.claude.json` only with `--yes` (backup first: rename `cua-task` to `computer-use`, point args at this checkout). It then prints the manual System Settings steps (Accessibility, Screen Recording, Full Disk Access, Dock "Assign To"). Tests use fakes: no network, no desktop.
+
 ## Alternative Jev API and endpoint setup
 
 Get a TypeSafe API key through your [TypeSafe account](https://console.typesafe.ai) or administrator. Configure it separately from the Qwen fallback:
