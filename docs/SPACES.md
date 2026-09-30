@@ -61,3 +61,26 @@ lazily at the first window it needs to park, keeps it for the server's lifetime 
   opened or moved. The failure is cached for the server's lifetime.
 - A look or do response carries `agent_display: {id, parked: true}` only in the call where parking happened. Parking adds no
   LLM-visible call. Foreground routes (`allow_foreground`, `invoke_menu`, the Cmd+W fallback) are unchanged.
+
+### Agent browser (CE-FACADE-009)
+
+`goto`, `open_tab` and `read_pages` default to the **agent browser**: one Chrome for Testing process with a profile folder the
+server owns (`~/.cache/computer-use/agent-profile`), started only when no agent browser window exists and then kept and reused for
+the server's lifetime (new tabs or navigation in that window, never a new window per task). Its window is launched inside the agent
+display (`--window-position` from the display's bounds), so nothing shows on your screen; bounds are verified and a window outside
+the display is parked. With the display unavailable it launches normally and is parked (`auto`), or the step is refused before
+launching (`CUA_AGENT_DISPLAY=required`).
+
+- `CUA_AGENT_BROWSER=auto` (default) or `user` (the old default: the window named by `title`). `CUA_AGENT_BROWSER_PATH` names an
+  installed Chromium-family executable instead of Chrome for Testing.
+- Chrome for Testing is installed on demand into `~/.cache/computer-use/browsers` with
+  `npx -y @puppeteer/browsers install chrome@stable --path <dir>` (bounded at 10 minutes). Without npx or on a failed download the
+  step is refused `agent_browser_unavailable`, naming that command.
+- A step says `profile: "user"` to use your own browser window instead (it still needs existing-profile access, else
+  `permission_required`); `profile: "agent"` forces the agent browser under `CUA_AGENT_BROWSER=user`. `look` by title works on either.
+  Later steps of a plan act on the window the `goto` chose.
+- The Driver binds the agent browser with `browser_prepare` (`existing_profile`), which the running Driver must be allowed
+  (`serve --grant existing-profile`); the profile folder is ours, so no Full Disk Access is needed. Measured live 2026-09-30 (Driver
+  0.31.0, Chrome for Testing 154, `--remote-debugging-port=0`): the window opened on the virtual display, `DevToolsActivePort` was
+  written in our profile, the bind was exact and `browser_navigate` worked.
+- The server stops the browser and the display at shutdown. The agent browser is a fresh profile (no logins), by design.

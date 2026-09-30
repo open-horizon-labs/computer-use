@@ -17,6 +17,8 @@ class FakeSpaces:
         self.ensured += 1
         if self.fail:raise self.fail
         return 6
+    def displays(self):
+        return [{'id': 1, 'x': 0, 'y': 0, 'width': 2087, 'height': 1355}, {'id': 6, 'x': -1920, 'y': 0, 'width': 1920, 'height': 1080}]
     def park(self, window_id):
         self.ensure_agent_display()
         self.log.append(('park', window_id));self.parked.append(window_id);return {'moved': True}

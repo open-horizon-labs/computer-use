@@ -42,12 +42,17 @@ class AgentDisplay:
         self.client = client  # a spaces_client.SpaceMover (or a fake); created on first need
         self.display = None
         self.failure = None   # why the display is unavailable (cached: the helper is not respawned on every call)
+        self._rect = None     # {x, y, width, height} of the agent display, once known
         self.tried = set()    # window ids already handled (parked or refused): a window is parked at most once
         self.pending = {}     # what this call did, for the response summary (take_report)
 
     def owned(self, window):
         names = [str(window.get(k)) for k in ('app_name', 'bundle_id') if window.get(k)]
         return any(fnmatch.fnmatchcase(n.lower(), p.lower()) for n in names for p in self.apps)
+
+    @staticmethod
+    def _reason(error):
+        return str(error) if isinstance(error, RuntimeError) else '%s: %s' % (getattr(error, 'code', type(error).__name__), str(error)[:80])
 
     def _ensure(self):
         if self.failure:
@@ -58,8 +63,36 @@ class AgentDisplay:
                 self.client = spaces_client.SpaceMover()
             self.display = self.client.ensure_agent_display()
         except Exception as error:
-            self.failure = '%s: %s' % (getattr(error, 'code', type(error).__name__), str(error)[:80])
+            self.failure = self._reason(error)
             raise RuntimeError(self.failure)
+
+    def rect(self):
+        """Bounds {x, y, width, height} of the agent display, starting it if needed; None when off or unavailable (auto notes it). required refuses."""
+        if self.mode == 'off':
+            return None
+        try:
+            self._ensure()
+            if self._rect is None:
+                for d in self.client.displays():
+                    if int(d.get('id', -1)) == int(self.display):
+                        self._rect = {k: int(d[k]) for k in ('x', 'y', 'width', 'height')}
+        except Exception as error:
+            if self.mode == 'required':
+                raise _refused(self._reason(error))
+            self.pending.setdefault('note', 'agent_display: unavailable (%s)' % self._reason(error))
+            return None
+        return self._rect
+
+    def on_display(self, bounds):
+        """True when a window's bounds (Driver shape {x, y, width, height}) have their centre inside the agent display."""
+        r = self._rect
+        if not r or not isinstance(bounds, dict):
+            return False
+        try:
+            cx, cy = bounds['x'] + bounds['width'] / 2, bounds['y'] + bounds['height'] / 2
+        except (KeyError, TypeError):
+            return False
+        return r['x'] <= cx < r['x'] + r['width'] and r['y'] <= cy < r['y'] + r['height']
 
     def _park(self, window_id):
         """Park one window. True when parked; False when skipped (auto, with the reason noted). required raises a refusal."""
@@ -70,7 +103,7 @@ class AgentDisplay:
             self._ensure()
             self._park_retrying(window_id)
         except Exception as error:
-            reason = str(error) if isinstance(error, RuntimeError) else '%s: %s' % (getattr(error, 'code', type(error).__name__), str(error)[:80])
+            reason = self._reason(error)
             if self.mode == 'required':
                 self.tried.discard(window_id)
                 raise _refused(reason)
@@ -90,11 +123,14 @@ class AgentDisplay:
                     raise
                 self.sleep(self.RETRY_DELAY_S)
 
-    def created(self, window_id, title=None):
+    def created(self, window_id, title=None, bounds=None):
         """A window this facade just created: call once it exists and its title is known (no title: not parked, never guessed at), before any
         look or act on it. Only windows the facade created are passed here; the user's windows never are."""
         if not title:
             return False
+        if self.on_display(bounds):  # opened on the agent display already (launch position): nothing to move
+            self.tried.add(window_id)
+            return True
         return self._park(window_id)
 
     def observed(self, windows):
@@ -103,7 +139,10 @@ class AgentDisplay:
             return
         for w in windows:
             if w.get('window_id') is not None and w.get('is_on_screen') is not False and self.owned(w):
-                self._park(w['window_id'])
+                if self.on_display(w.get('bounds')):
+                    self.tried.add(w['window_id'])
+                else:
+                    self._park(w['window_id'])
 
     def take_report(self):
         report, self.pending = self.pending, {}

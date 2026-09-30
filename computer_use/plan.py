@@ -19,7 +19,7 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu', 'profile'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
 DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
@@ -124,10 +124,12 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                  'type': {'do', 'goal', 'control', 'control_match', 'text', 'expect', 'allow_destructive'},
                  'confirm': {'do', 'goal', 'confirm', 'identity', 'expect', 'allow_destructive', 'dialog_text', 'dialog_controls'},
                  'verify': {'do', 'goal', 'expect'},
-                 'goto': {'do', 'goal', 'url', 'expect'},
-                 'open_tab': {'do', 'goal', 'url', 'expect'},
+                 'goto': {'do', 'goal', 'url', 'expect', 'profile'},
+                 'open_tab': {'do', 'goal', 'url', 'expect', 'profile'},
                  'close_tab': {'do', 'goal', 'expect', 'allow_foreground'},
-                 'read_pages': {'do', 'goal', 'urls', 'fields'}}[kind]
+                 'read_pages': {'do', 'goal', 'urls', 'fields', 'profile'}}[kind]
+        if 'profile' in step and step['profile'] not in ('agent', 'user'):
+            raise _gap('bad_request: %s profile is "agent" (the default: the agent browser) or "user" (your own browser profile)' % at)
         extra = sorted(set(step) - takes)
         if extra:
             raise _gap('bad_request: %s (%s) does not take %s' % (at, kind, ', '.join(extra)))
@@ -443,6 +445,26 @@ def _fit(result):
     return result
 
 
+AGENT_REFUSALS = ('agent_browser_unavailable', 'agent_display_unavailable')  # refused before anything was opened or navigated
+
+
+def resolve_browser_window(f, step, ctx, title):
+    """goto/open_tab/read_pages default to the AGENT browser (one window, reused, parked on the agent display); profile "user" (or no agent
+    browser configured) uses the window the caller named, as before. Later steps act on the window this one chose. Raises core.Gap."""
+    from core import Gap
+    use_agent = f.agent_browser is not None and (step.get('profile') == 'agent' or (step.get('profile') is None and f.agent_browser.mode == 'auto'))
+    if use_agent:
+        ctx['pid'], ctx['window_id'] = f.agent_browser.window(f)
+        ctx['agent'] = True
+        return
+    if ctx.get('agent') or ctx['pid'] is None:  # a user-profile step after an agent step goes back to the window the caller named
+        ctx['agent'] = False
+        found = f.windows(title)['windows']
+        if len(found) != 1:
+            raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
+        ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+
+
 def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect, single):
     from core import Gap
     def refuse(gap):
@@ -489,15 +511,11 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             # CE-FACADE-007 (#34): open_tab -> look -> close_tab per url, in this window; the user's own tab is never navigated and every page stands alone.
             import browser
             try:
-                if ctx['pid'] is None:
-                    found = f.windows(title)['windows']
-                    if len(found) != 1:
-                        raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
-                    ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+                resolve_browser_window(f, step, ctx, title)
                 pages = browser.read_pages(f, ctx['pid'], ctx['window_id'], step['urls'], step.get('fields'), min(browser.READ_PAGES_BUDGET_S, remaining))
             except Gap as gap:
                 reason = str(gap).split(':', 1)[0]
-                entry = {'n': n, 'do': kind, 'status': 'refused' if reason.startswith('window_') else 'failed', 'reason': reason, 'message': lk.safe_message(reason, str(gap)), 'ms': round((f.clock() - began) * 1000)}
+                entry = {'n': n, 'do': kind, 'status': 'refused' if reason.startswith('window_') or reason in AGENT_REFUSALS else 'failed', 'reason': reason, 'message': lk.safe_message(reason, str(gap)), 'ms': round((f.clock() - began) * 1000)}
                 failed = {'n': n, 'reason': reason, 'status': entry['status']}
                 entries.append(entry)
                 break
@@ -519,11 +537,11 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             import browser
             from core import Gap
             try:
-                if ctx['pid'] is None:
-                    found = f.windows(title)['windows']
-                    if len(found) != 1:
-                        raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
-                    ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+                if kind == 'close_tab':
+                    if ctx['pid'] is None:
+                        resolve_browser_window(f, {'profile': 'user'}, ctx, title)
+                else:
+                    resolve_browser_window(f, step, ctx, title)
                 if kind == 'close_tab':
                     browser.close_tab(f, ctx['pid'], ctx['window_id'], allow_foreground=step.get('allow_foreground') is True)
                     page = {'url': '', 'title': ''}
@@ -539,8 +557,8 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                     result['page'] = {'url': page['url'][:200], 'title': page['title'][:120]}
             except Gap as gap:
                 reason = str(gap).split(':', 1)[0]
-                result = {'status': 'refused' if reason in ('permission_required', 'bad_request', 'tab_not_opened_by_facade', 'foreground_required', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'navigate_refused', 'navigate_failed') else 'failed', 'reason': reason, 'message': str(gap),
-                          'delivery': 'none' if reason in ('permission_required', 'tab_not_opened_by_facade', 'foreground_required', 'bad_request', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'tab_strip_changed') else 'unknown'}
+                result = {'status': 'refused' if reason in AGENT_REFUSALS + ('permission_required', 'bad_request', 'tab_not_opened_by_facade', 'foreground_required', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'navigate_refused', 'navigate_failed') else 'failed', 'reason': reason, 'message': str(gap),
+                          'delivery': 'none' if reason in AGENT_REFUSALS + ('permission_required', 'tab_not_opened_by_facade', 'foreground_required', 'bad_request', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'tab_strip_changed') else 'unknown'}
             status = result['status']
             entry = {'n': n, 'do': kind, 'status': {'deferred': 'stopped'}.get(status, status), 'ms': round((f.clock() - began) * 1000)}
             for key in ('reason', 'page'):

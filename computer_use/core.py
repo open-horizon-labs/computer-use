@@ -167,7 +167,7 @@ class Driver:
 
 class Facade:
     def __init__(self, driver=None, generic_factory=generic_from_config, reader_factory=NuExtractPage,
-                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None):
+                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None):
         self.driver = driver or Driver()
         self.sleep = sleep
         self._settled_titles = {}  # (pid, window_id) -> window title of the last settled look (see SETTLE_DELAY_S)
@@ -188,6 +188,7 @@ class Facade:
         self.events = []
         self.lock = threading.RLock()
         self.agent = agent_display or AgentDisplay()  # #60, CE-FACADE-009: parks created windows and agent-owned apps' windows off the user's screen
+        self.agent_browser = agent_browser  # #60: the default target of goto/open_tab/read_pages (the server passes one; None = the user's own browser, as before)
         self._mobile = mobile  # mobile-mcp (CE-FACADE-008): created and started by the first look/do that names a device (mobile.py)
 
     def event(self, operation, **data):
@@ -250,12 +251,12 @@ class Facade:
         result = self._read('list_windows', lambda: self.driver.call('list_windows', {'session': self.session}))
         raws = [w for w in result.get('windows', []) if w.get('title') and (title is None or w['title']==title)]
         listed = [{k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w} for w in raws]
-        self.agent.observed([{**w, 'bundle_id': raw.get('bundle_id')} for w, raw in zip(listed, raws)])
+        self.agent.observed([{**w, 'bundle_id': raw.get('bundle_id'), 'bounds': raw.get('bounds')} for w, raw in zip(listed, raws)])
         return {'route': 'driver_inventory', 'windows': listed}
 
-    def window_created(self, window_id, title=None):
+    def window_created(self, window_id, title=None, bounds=None):
         """Every path that makes a NEW WINDOW calls this right after it exists and before the first look or act on it (#60)."""
-        return self.agent.created(window_id, title)
+        return self.agent.created(window_id, title, bounds)
 
     def observe(self, pid, window_id, timeout=None, wait_ready=False):
         """With wait_ready (a look at a page just opened, never the revalidation or recovery observations of an action): observe, waiting out a page that is not ready yet: a bounded, deterministic retry (OBSERVE_RETRY_DELAYS) when the Driver call
@@ -2426,7 +2427,9 @@ class Facade:
     def shutdown(self):
         """Server exit: close, and stop the agent display (finish/close keep it: parked windows must not spill onto the user's screen)."""
         try:return self.close()
-        finally:self.agent.stop()
+        finally:
+            if self.agent_browser is not None:self.agent_browser.stop()
+            self.agent.stop()
 
     def close(self):
         for provider in self.providers.values():
