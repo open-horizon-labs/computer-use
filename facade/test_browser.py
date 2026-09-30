@@ -169,6 +169,20 @@ class Goto(Base):
         self.assertEqual(r['status'], 'refused')
 
 
+class NavigateRefused(Base):
+    def test_a_refusal_that_is_not_about_permission_is_not_reported_as_one(self):
+        # Wrong patch: map every browser_navigate refusal to permission_required (live 2026-09-30: a goto to a 404 page said so).
+        self.driver.refuse = {'browser_navigate': 'navigation_failed'}
+        r = self.plan([{'do': 'goto', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.assertEqual((r['steps'][0]['status'], r['steps'][0]['reason']), ('refused', 'navigate_refused'))
+        self.assertIn('navigation_failed', r['steps'][0].get('message', ''))
+
+    def test_a_consent_refusal_is_still_permission_required(self):
+        self.driver.refuse = {'browser_navigate': 'browser_consent_required'}
+        r = self.plan([{'do': 'goto', 'url': BOOKING, 'expect': 'Dr. Priya Shah'}])
+        self.assertEqual(r['steps'][0]['reason'], 'permission_required')
+
+
 class Permission(Base):
     """Wrong patch: when the user's profile is refused, prepare an isolated profile (allow_launch) and carry on in another browser."""
     def test_a_refused_attach_is_permission_required_and_never_another_browser(self):
@@ -429,6 +443,23 @@ class TabStrip(Base):
         self.assertEqual(r['status'], 'done', r)
         self.assertEqual(len(seen), 2, 'one observe to find the control, one inside act to revalidate')
 
+    def test_a_page_still_settling_during_the_close_is_retried_once(self):
+        # Wrong patch: give up on the first StaleUI (live 2026-09-30: read_pages left its third tab open, tab_strip_changed, nothing pressed).
+        real = self.driver.observe
+        calls = []
+        def settle(*a):
+            calls.append(1)
+            if len(calls) == 2:self.driver.memory = '77.7'  # something else in the window changes once, then holds
+            out = real(*a)
+            if len(calls) == 2:
+                for e in out.get('elements', []):
+                    if e.get('role') == 'AXStaticText':e['label'] = e['value'] = (e.get('label') or '') + ' '
+            return out
+        self.driver.observe = settle
+        r = self.close()
+        self.assertEqual(r['status'], 'done', r)
+        self.assertEqual(len(self.driver.clicked_close), 1)
+
     def test_a_tab_title_change_between_bind_and_press_refuses(self):
         # Wrong patch: mask the whole label instead of only the number (a retitled tab would be pressed).
         real = self.driver.observe
@@ -439,7 +470,8 @@ class TabStrip(Base):
             return real(*a)
         self.driver.observe = retitle
         r = self.close()
-        self.assertEqual(r['steps'][0]['reason'], 'tab_strip_changed')
+        # After one re-find (the close retries once on a stale strip) the retitled tab no longer matches: refused either way, never pressed.
+        self.assertIn(r['steps'][0]['reason'], ('tab_strip_changed', 'tab_close_control_not_found'))
         self.assertEqual(self.driver.clicked_close, [])
 
 
