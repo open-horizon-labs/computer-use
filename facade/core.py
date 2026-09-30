@@ -1240,7 +1240,10 @@ class Facade:
             for action in request['actions']:
                 action['arguments']['element_token']=self.node(current,action['id'])['element_token']
             decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
-        result=execute_bound(request,decision,request['snapshot_id'],lambda tool,args:self.driver.call(tool,args))
+        # A capture-bound click names its window in `target`; Driver 0.30.4 refuses target together with top-level pid/window_id
+        # (invalid_action_target, live deep test 2026-09-30: every canvas press failed). The stored arguments keep them for the checks.
+        wire=lambda args:{k:v for k,v in args.items() if not ('target' in args and k in ('pid','window_id'))}
+        result=execute_bound(request,decision,request['snapshot_id'],lambda tool,args:self.driver.call(tool,wire(args)))
         self.latest.pop((state['pid'],state['window_id']),None)
         self.event('act',route='cua-driver',selection=selection,revalidation='unchanged_observation',
                    original_binding=item['decision']['binding_digest'],fresh_binding=decision['binding_digest'],

@@ -405,5 +405,6 @@ def window_stub(sid='swin0001'):
     return {'snapshot_id': sid, 'pid': 1, 'window_id': 2, 'window_title': 'Clinic', 'elements': nodes, '_image': b'pixels'}
 
 
+
 if __name__ == '__main__':
     unittest.main()

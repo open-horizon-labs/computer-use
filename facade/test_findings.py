@@ -274,6 +274,9 @@ class CanvasForeground(CanvasRegions):
         # Wrong patch: accept the flag but keep delivery_mode background (the Driver would still press the centre).
         r, d = self.go(regions(*self.ONE), control='Export', allow_foreground=True)
         self.assertEqual((r['status'], len(d.executed), d.executed[0]['delivery_mode'], d.executed[0]['capture_id']), ('delivered_unverified', 1, 'foreground', 'cap'))
+        # Wrong patch: send the window in `target` AND as top-level pid/window_id (Driver 0.30.4: invalid_action_target, live 2026-09-30).
+        self.assertEqual(d.executed[0].get('target', {}).get('kind'), 'window')
+        self.assertNotIn('pid', d.executed[0]);self.assertNotIn('window_id', d.executed[0])
 
     def test_permission_does_not_outlive_the_call(self):
         # Wrong patch: a facade-level flag that stays set (the next caller's canvas click would front the window unasked).
