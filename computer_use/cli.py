@@ -326,20 +326,23 @@ def _optional(name):
         return None
 
 
+ABSENT = object()  # pass module=ABSENT to mean 'the module is not present in this checkout' (tests); None means 'try to import it'
+
+
 def check_agent_browser(env, module=None):
     path = env.environ.get('CUA_AGENT_BROWSER_PATH')
-    mod = module if module is not None else _optional('agent_browser')
+    mod = None if module is ABSENT else (module if module is not None else _optional('agent_browser'))
     if path:
         if env.exists(path):
             return result('agent_browser', OK, 'CUA_AGENT_BROWSER_PATH: %s' % path)
         return result('agent_browser', BLOCKER, 'CUA_AGENT_BROWSER_PATH points at a missing file: %s' % path, 'fix or unset CUA_AGENT_BROWSER_PATH')
     if mod is None:
         return result('agent_browser', SKIPPED, 'agent browser: %s' % NOT_PRESENT)
-    for attr in ('installed_path', 'find_browser', 'browser_path'):
+    for attr in ('find_installed', 'installed_path', 'find_browser', 'browser_path'):
         finder = getattr(mod, attr, None)
         if callable(finder):
             try:
-                found = finder()
+                found = finder(getattr(mod, 'CACHE', Path.home() / '.cache' / 'computer-use') / 'browsers') if attr == 'find_installed' else finder()
             except Exception:
                 found = None
             if found and env.exists(found):
