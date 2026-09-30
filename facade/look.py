@@ -19,6 +19,8 @@ LINE_MAX_CHARS = 60
 TEXT_MAX_LINES = 20
 CONTROL_LIST_MAX = 20
 INPUT_LIST_MAX = 12
+DOM_LINES_MAX = 6          # dom_lines shown per record
+DOM_UNPLACED_MAX = 10     # DOM-only texts shown that no record could be attributed to
 DIALOG_MAX = 3
 CANVAS_MAX = 30
 EXTRACT_CHUNK = 10        # records per reader call for look(fields=...): the extractor has a whole-call deadline, so 100 rows are never one call
@@ -351,6 +353,7 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
         disabled = [clean(nodes[i].get('label'))[:30] for i in r['rec']['controls'] if nodes[i].get('label') and nodes[i].get('enabled') is False]
         if disabled:item['disabled'] = disabled
         if r.get('values') is not None:item['values'] = r['values']
+        if r.get('dom_lines'):item['dom_lines'] = r['dom_lines']
         return item
     text_lost = max(0, len(analysis['text']) - TEXT_MAX_LINES)
     text = []
@@ -365,10 +368,12 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
                 **({'repeated_text': [cut(t)[0] for t in analysis['repeated_text'][:10]]} if analysis['repeated_text'] else {})}
     if extras.get('canvas') is not None:response['canvas'] = extras['canvas']
     if extras.get('focus') is not None:response['focus'] = extras['focus']
+    for key in ('sources', 'sources_disagree', 'degraded', 'dom_unplaced'):
+        if extras.get(key) is not None:response[key] = extras[key]
     response['counts'] = {'records': len(analysis['records']), 'controls': analysis['all_controls'], 'page_controls': analysis['page_controls'],
                           'non_page_controls': analysis['all_controls'] - analysis['page_controls']}
     encoded = [row(r) for r in rows]
-    worst_ms = {'window': 99999, 'observe': 99999, 'structure': 99999, 'perception': 99999, 'extract': 99999, 'total': 999999}
+    worst_ms = {'window': 99999, 'observe': 99999, 'structure': 99999, 'perception': 99999, 'dom': 99999, 'extract': 99999, 'total': 999999}
     def full(k):
         """The COMPLETE response for k records (every section, the counts, the notes it would add, the worst-case timings and extraction block): max_bytes bounds THIS."""
         shown_k = rows[:k]
@@ -378,7 +383,9 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
         if extras['records_over_cap']:notes_k.append('%d more records matched but only max_records=%d are shown; pass focus=<words from the record you want> or raise max_records' % (extras['records_over_cap'], extras['max_records']))
         if bytes_cut:notes_k.append('%d records did not fit max_bytes=%d and are not shown; pass focus=<words> to narrow the list or raise max_bytes' % (bytes_cut, max_bytes))
         if lost:notes_k.append('lines were cut or omitted: at most %d lines of %d characters are shown per record (pass max_lines and line_chars to see more). A plan that selects such a record needs accept_hidden_text, and negative conditions over it are refused' % extras['opts'])
-        out = {**response, 'records': encoded[:k], 'look_id': view_id(shown_k, extras['title'], analysis), 'truncated': {'records': extras['records_over_cap'], 'lines': lost, 'bytes': bytes_cut}, 'notes': notes_k}
+        trunc = {'records': extras['records_over_cap'], 'lines': lost, 'bytes': bytes_cut}
+        if extras.get('sources') is not None:trunc['dom_lines'] = extras.get('dom_cut', 0)
+        out = {**response, 'records': encoded[:k], 'look_id': view_id(shown_k, extras['title'], analysis), 'truncated': trunc, 'notes': notes_k}
         return out, shown_k
     def measured(k):
         out, _ = full(k)
@@ -417,6 +424,41 @@ def check_look_args(fields, max_records, max_bytes, focus, max_lines=6, line_cha
     if fields is not None:
         if not isinstance(fields, dict) or not 1 <= len(fields) <= 12 or not all(isinstance(v, dict) and isinstance(v.get('description'), str) and v['description'].strip() for v in fields.values()):
             raise Gap('bad_request: fields maps 1 to 12 names to {description}')
+
+
+def attach_dom(f, pid, window_id, state, analysis, rows, extras):
+    """Read the page text from the browser's semantic snapshot beside the AX tree (bounded, see dom.py) and report, never silently prefer one. On a
+    timeout, refusal or failure the look stays AX-only with a note and `degraded`. The AX records, lines and look_id are never changed by it."""
+    import dom
+    semantic = dom.read(f, pid, window_id)
+    if not semantic['ok']:
+        if semantic.get('degraded'):
+            extras['degraded'] = semantic['degraded']
+            extras['notes'].append(semantic['note'])
+            extras['sources'] = {'ax': True, 'dom': False}
+        return
+    found = dom.compare(analysis, semantic, dom.ax_text_blob(f, state, analysis))
+    cut_count = 0
+    for r in rows:
+        lines = found['by_root'].get(r['rec']['root'])
+        if lines:
+            shown, lost = display_lines(lines, (DOM_LINES_MAX, extras['opts'][1]))
+            r['dom_lines'] = shown
+            cut_count += lost
+    extras['dom_cut'] = cut_count
+    extras['sources'] = {'ax': True, 'dom': True, 'page': semantic['page'], 'dom_complete': semantic['complete'], 'segments': semantic['segments'],
+                         **({'dom_omitted': semantic['omitted']} if semantic['omitted'] else {})}
+    extras['sources_disagree'] = {'dom_only': found['dom_only'], 'in_records': found['placed'], 'ax_only': found['ax_only'], 'compared_ax_lines': found['compared']}
+    if found['unplaced']:
+        extras['dom_unplaced'] = [cut(t)[0] for t in found['unplaced'][:DOM_UNPLACED_MAX]]
+    if found['dom_only']:
+        extras['notes'].append('the page DOM shows %d text%s the accessibility tree does not (dom_lines on a record, dom_unplaced otherwise); they are evidence only: a cua_do where.lines filter cannot match them and look_id does not cover them' % (found['dom_only'], '' if found['dom_only'] == 1 else 's'))
+    if found['ax_only']:
+        extras['notes'].append('%d accessibility-tree lines are not in the DOM outline; both are kept (sources_disagree)' % found['ax_only'])
+    if not semantic['complete']:
+        extras['notes'].append('the DOM snapshot is partial (dom_complete false%s); the AX look is unchanged' % (', omitted %s' % semantic['omitted'] if semantic['omitted'] else ''))
+    if found['unparsed']:
+        extras['notes'].append('the DOM outline could not be parsed into lines; only the AX look is shown')
 
 
 def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60):
@@ -462,6 +504,10 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         notes, extras = [], {'title': state['raw'].get('window_title'), 'notes': [], 'records_over_cap': matched - len(rows), 'max_records': max_records, 'opts': opts, 'fields': fields is not None}
         if terms:
             extras['focus'] = {'terms': terms[:8], 'matched': matched, 'filtered_out': filtered_out}
+        if webs:
+            began = f.clock()
+            attach_dom(f, pid, window_id, state, analysis, rows, extras)
+            stage('dom', began)
         if analysis['page_controls'] == 0:
             if f.perception_state == 'healthy' and state['raw'].get('capture_id'):
                 began = f.clock()

@@ -14,6 +14,7 @@ Versions follow Cua Driver minor releases (0.31 targets Cua Driver 0.31).
 - A Driver refusal to attach to the browser profile is `permission_required` naming `--grant existing-profile`; the facade never switches to another browser or profile (#28).
 - Call-budget scenarios `nav_goto_look_plan` (3 calls), `nav_open_tab_read_close` (3) and `nav_permission_required_stop` (1, nothing delivered), CE-FACADE-007 (#35). The `cua_do` step schema now accepts `url` for goto/open_tab (it was rejected as an extra field).
 - SKILL.md and the MCP instructions: a short web workflow (goto/open_tab, look, plan, close_tab) and any refusal (`permission_required`, `foreground_required`, `pointer_not_deliverable_in_background`, `tab_close_control_not_found`) is stop-and-ask, never a reroute; the default-chooser text now matches the code (`CUA_GENERIC_PROVIDER`, else profile: `local-mac` Julia-1 / `fleet` Jev, else Jev) (#36).
+- `cua_look` in a browser window also reads the page text from the Driver's `semantic_v2` snapshot, bounded (6 s per call, 10 s total, AX-only fallback with `degraded: semantic_timeout|semantic_refused|semantic_failed|semantic_empty`); DOM lines the AX tree omits appear as `dom_lines` with `sources_disagree` counts, never preferred silently and never acted on (CE-FACADE-007, #33, #29).
 
 ### Removed
 - The unqualified Qwen chat-completion vision fallback in `workers/visual_worker.py`: without `CUA_SYSTEMONE_URL` the visual provider is unavailable, nothing is sent, verification ends unverified and visual choose defers (#8).
