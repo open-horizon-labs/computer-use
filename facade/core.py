@@ -33,6 +33,11 @@ MEMORY_READOUT = re.compile(r'(Memory usage - )[\d.,]+\s*[KMGT]?B',re.I)
 # (the hard cap on one Driver call stays Driver.call's own 20 s subprocess timeout). Changing any of the three needs the bound re-derived.
 DRIVER_LAUNCH_WAIT_MS = 1000
 LOOK_WAIT_MAX_S = 10.0
+# Chrome builds a fresh page's AX tree incrementally: a look taken while it grows saw a table's headers without its rows (live deep test
+# 2026-09-30: 457 then 472 nodes; record_kind none, then 7 records). After the first READY observation of a look, observe again after
+# SETTLE_DELAY_S; while the element count still changes, keep observing (at most SETTLE_MAX more), inside LOOK_WAIT_MAX_S by the clock.
+SETTLE_DELAY_S = 0.3
+SETTLE_MAX = 3
 TIMEOUT_MS_SINCE = (0, 31, 0)   # older Drivers are not sent timeout_ms
 NOT_READY_DEGRADED = frozenset({'ax_app_launching'})  # degraded reasons that clear by themselves: a look waits, an action never proceeds on them
 THIN_PAGE_NODES = 10   # a web page with this few nodes or fewer is still loading or a holding page ("checking your browser"), whatever the site
@@ -151,6 +156,7 @@ class Facade:
                  spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep):
         self.driver = driver or Driver()
         self.sleep = sleep
+        self._settled_titles = {}  # (pid, window_id) -> window title of the last settled look (see SETTLE_DELAY_S)
         self.foreground_ok = False  # per call/step: allow_foreground; a background pixel click cannot reach a canvas (see act)
         self.factories = {'generic': generic_factory, 'reader': reader_factory,
                           'spans': spans_factory, 'visual': visual_factory}
@@ -237,6 +243,7 @@ class Facade:
         phrase list. A failed Driver call is NOT retried here: _do's own bounded recovery owns it. Read-only, so a retry can never act twice. After the last try
         the result (or the original error) is returned unchanged; nothing here solves or bypasses a check."""
         delays = list(OBSERVE_RETRY_DELAYS) if wait_ready else []
+        began = self.clock()
         for attempt in range(len(delays) + 1):
             last = attempt == len(delays)
             try:
@@ -249,8 +256,36 @@ class Facade:
                 if last or reason is None:
                     if attempt:
                         self.event('observe_retry', attempts=attempt, ready=reason is None, reason=reason)
+                    if wait_ready and reason is None:
+                        key = (pid, window_id)
+                        # a window first seen, or a new page in it (its title changed): the tree may still be growing
+                        if key not in self._settled_titles or self._settled_titles[key] != result.get('title'):
+                            result = self._settled(pid, window_id, timeout, result, began)
+                            self._settled_titles[key] = result.get('title')
                     return result
             self.sleep(delays[attempt])
+
+    def _settled(self, pid, window_id, timeout, result, began):
+        """The ready observation once the tree stops growing (see SETTLE_DELAY_S): read-only, bounded by count and by LOOK_WAIT_MAX_S."""
+        size = len(result.get('elements') or [])
+        for n in range(SETTLE_MAX):
+            if self.clock() - began + SETTLE_DELAY_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 > LOOK_WAIT_MAX_S:
+                break
+            self.sleep(SETTLE_DELAY_S)
+            try:
+                again = self._observe_once(pid, window_id, timeout)
+            except Gap:
+                break
+            if self._not_ready(again):
+                break
+            grown = len(again.get('elements') or [])
+            result = again
+            if grown == size:
+                if n:self.event('observe_settled', extra_observations=n + 1, elements=grown)
+                return result
+            size = grown
+        self.event('observe_settled', extra_observations=SETTLE_MAX, elements=size, stable=False)
+        return result
 
     @staticmethod
     def _not_ready(result):

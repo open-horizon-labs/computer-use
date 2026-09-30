@@ -6,6 +6,8 @@ Each test names the tempting wrong patch it fails. Fakes and captured fixtures o
 import json
 import unittest
 
+import core
+
 import shapes as sh
 import test_live_shapes as lv
 from core import Facade, MUTATING_TOOLS, DriverCallFailed
@@ -396,7 +398,7 @@ class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
         # Wrong patch: report the thin first observation (the agent then sees a holding page and gives up).
         d, f = self.build(thin_for=1)
         r = f.look('Demo')
-        self.assertEqual((r['status'], r['counts']['records'], self.naps, d.version), ('ok', 12, [0.5], 2))
+        self.assertEqual((r['status'], r['counts']['records'], self.naps, d.version), ('ok', 12, [0.5, core.SETTLE_DELAY_S], 3))  # + one settle check
 
     def test_a_page_that_stays_thin_is_retried_twice_then_returned_as_is(self):
         # Wrong patch: loop until ready (unbounded), or return nothing after the retries.
@@ -405,11 +407,32 @@ class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
         self.assertEqual((self.naps, d.version), ([0.5, 1.0], 3))
         self.assertIn(r['status'], ('ok', 'deferred'))
 
-    def test_a_full_page_is_observed_once_with_no_wait(self):
-        # Wrong patch: always sleep before looking (every look pays 1.5 s).
+    def test_a_full_page_is_confirmed_once_then_observed_once_with_no_wait(self):
+        # Wrong patch: always sleep before looking (every look pays 1.5 s), or settle on every look (every look pays a second walk).
+        # The FIRST look of a window confirms the tree stopped growing (one extra observation after SETTLE_DELAY_S); a later look of the
+        # same page is one observation with no wait.
         d, f = self.build(thin_for=0)
         f.look('Demo')
-        self.assertEqual((self.naps, d.version), ([], 1))
+        self.assertEqual((self.naps, d.version), ([core.SETTLE_DELAY_S], 2))
+        f.look('Demo')
+        self.assertEqual((self.naps, d.version), ([core.SETTLE_DELAY_S], 3))
+
+    def test_a_growing_tree_is_observed_until_it_stops_growing(self):
+        # Wrong patch: return the first ready observation (live 2026-09-30: a table's headers without its rows, record_kind none).
+        d, f = self.build(thin_for=0)
+        full = d.script
+        d.script = lambda drv, els: _thin(els, keep=30) if drv.version == 1 else (_thin(els, keep=60) if drv.version == 2 else None)
+        r = f.look('Demo')
+        self.assertEqual((r['counts']['records'], d.version), (12, 4))  # 30 -> 60 -> full -> full (stable)
+        self.assertEqual(self.naps, [core.SETTLE_DELAY_S] * 3)
+
+    def test_a_new_page_in_the_same_window_settles_again(self):
+        # Wrong patch: settle once per window (a goto in that window then looks at a still-growing new page unchecked).
+        d, f = self.build(thin_for=0)
+        f.look(pid=1, window_id=2);n = d.version
+        d.fix = dict(d.fix, window_title='Another page')
+        f.look(pid=1, window_id=2)
+        self.assertEqual(d.version - n, 2)
 
     def test_a_different_title_makes_no_difference(self):
         # Wrong patch: a title/phrase list (eBay's wording, then the next site's). The rule is the page's structure.
@@ -417,7 +440,7 @@ class LookWaitsForAPageThatIsNotReady(lv.LiveBase):
             d, f = self.build(thin_for=1)
             d.fix = dict(d.fix, window_title=title)
             f.look(pid=1, window_id=2)
-            self.assertEqual(self.naps, [0.5], title)
+            self.assertEqual(self.naps, [0.5, core.SETTLE_DELAY_S], title)
 
     def test_only_a_look_waits_never_an_action_observation(self):
         # Wrong patch: retry inside every observe (an action's revalidation would then see a page settle and miss the change).
@@ -447,7 +470,7 @@ class LaunchingApp(lv.LiveBase):
         for stub in (False, True):
             self.setUp();self.launching(1, 1, stub)
             r = self.f.look('Demo')
-            self.assertEqual((r['status'], r['counts']['records'], self.naps, self.driver.version), ('ok', 12, [0.5], 2), stub)
+            self.assertEqual((r['status'], r['counts']['records'], self.naps, self.driver.version), ('ok', 12, [0.5, core.SETTLE_DELAY_S], 3), stub)
             self.assertEqual([e['ready'] for e in self.f.events if e['operation'] == 'observe_retry'], [True])
         self.setUp();self.launching(1, 1)
         self.assertEqual(Facade._not_ready(self.f.observe(1, 2)), 'app_launching')  # its own reason, not merely "degraded" or "empty_tree"
