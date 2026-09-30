@@ -1,6 +1,6 @@
 # Setup
 
-The default profile is `local-mac`: Julia-1 finite choice without a hosted fallback. Select `fleet` in `~/.config/computer-use/runtime.json` to opt into the homelab NuExtract3/Jev/Qwen/SystemOne setup. The local profile currently supports Julia CPU and GLiNER CPU workers when installed; local NuExtract3 extraction and screenshot interpretation remain unavailable. See [profile status](../../../docs/LOCAL-MAC.md). Runtime helpers load configuration automatically; use `generic_from_config()`.
+The default profile for a clean install is `local-mac`: Julia-1 finite choice without a hosted fallback (an existing `runtime.json` with Jev or hosted settings is treated as `fleet`). Select `fleet` in `~/.config/computer-use/runtime.json` to opt into the homelab NuExtract3/Jev/Qwen/SystemOne setup. The local profile currently supports Julia CPU and GLiNER CPU workers when installed; local NuExtract3 extraction and screenshot interpretation remain unavailable. See [profile status](../../../docs/LOCAL-MAC.md). Runtime helpers load configuration automatically; use `generic_from_config()`.
 
 The skill installs guidance and references. Running the dispatcher also requires a checkout of the public `open-horizon-labs/computer-use` repository. It does not install models or replace stock computer-use tools.
 
@@ -114,7 +114,7 @@ The controller must bind and verify: installing this skill alone does not cause 
 
 ## 5. Julia and terminal screenshots
 
-For the optional Julia chooser, configure `CUA_GENERIC_PROVIDER=julia-1` and `CUA_JULIA_COMMAND` to a JSON argv array launching `workers/julia_worker.py` with the cached checkpoint directory. Construct the generic provider with `generic_from_config()`, and keep the same Strangler/GLiNER2 bindings. Default is NuExtract/Jev; set `CUA_GENERIC_PROVIDER=julia-1` to explicitly choose Julia. Read `docs/PROVIDERS.md` in the runtime checkout for checkpoint digest, runtime dependencies, strict input limits and cleanup. This skill does not install Julia or start a worker.
+For the optional Julia chooser, configure `CUA_GENERIC_PROVIDER=julia-1` and `CUA_JULIA_COMMAND` to a JSON argv array launching `workers/julia_worker.py` with the cached checkpoint directory. Construct the generic provider with `generic_from_config()`, and keep the same Strangler/GLiNER2 bindings. The chooser is `CUA_GENERIC_PROVIDER` if set, else the profile's value (`local-mac` is Julia-1, `fleet` is Jev; checked in `runtime_config.py` and `providers.py` `generic_from_config`), else Jev. Read `docs/PROVIDERS.md` in the runtime checkout for checkpoint digest, runtime dependencies, strict input limits and cleanup. This skill does not install Julia or start a worker.
 
 For terminal observations, read `docs/TERMINALS.md` in the runtime checkout and use `terminal_observation.py`. Configure `CUA_VISUAL_COMMAND` for `workers/visual_worker.py` with `CUA_SYSTEMONE_URL` (the SystemOne screenshot scorer; unset means unavailable, no chat fallback), or use the controlling LLM to inspect Driver screenshots. Julia and text-only Jev cannot supply visual evidence. Missing vision returns unknown; it must never become an app-stalled diagnosis.
 

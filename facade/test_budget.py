@@ -271,6 +271,15 @@ class DefaultPathBudget(unittest.TestCase):
         self.assertEqual(m['plan_booking_no_look']['tools'], ['cua_do', 'cua_look', 'cua_do'])
         self.assertEqual((m['plan_booking_blind_fields']['calls'], m['plan_booking_blind_fields']['reader'], m['plan_booking_blind_fields']['chooser']), (2, 3, 1))
 
+    def test_navigation_scenarios_are_three_calls_and_a_permission_stop_is_one(self):
+        # CE-FACADE-007 (#35). Wrong patches: navigation as a fourth tool or a mandatory extra look; a permission refusal that retries or reroutes.
+        m = self.measured
+        for name in ('nav_goto_look_plan', 'nav_open_tab_read_close'):
+            self.scenario(name);self.assertEqual((m[name]['calls'], m[name]['tools'], m[name]['reader'], m[name]['chooser']), (3, ['cua_do', 'cua_look', 'cua_do'], 0, 0), name)
+        stop = self.scenario('nav_permission_required_stop');self.assertEqual((stop['calls'], stop['status']), (1, 'refused'))
+        for name in ('nav_goto_look_plan', 'nav_open_tab_read_close', 'nav_permission_required_stop'):
+            self.assertEqual(BUDGET['scenarios'][name]['max_llm_visible_calls']['changed_by'], 'CE-FACADE-007')
+
     def test_a_stale_page_mid_plan_stops_at_that_step_and_is_budgeted_as_stopped(self):
         m = self.scenario('plan_stale_mid_plan');self.assertEqual((m['status'], m['calls']), ('stopped', 2))
         self.assertEqual(BUDGET['scenarios']['plan_stale_mid_plan']['final_status'], 'stopped')

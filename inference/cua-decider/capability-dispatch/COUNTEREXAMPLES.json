@@ -368,7 +368,18 @@
   "tempting_wrong_repair": "Add a lone goto step and keep window-scoped AX-only looks (closes the bypass, keeps the eBay price gap); fall back to a clean browser profile when the user's profile is refused (the reroute this CE forbids); treat 'navigate returned ok' as landing verified (a redirect or login wall is then read as the target page); let look click to dismiss cookie banners (breaks look never clicks); build a free-running browser agent inside the facade (option D of the earlier plan, rejected for per-step model cost).",
   "regression": "TO WRITE before code: fixture tests for landing verification (match, redirect, cross-origin, login wall), permission_required on a refused profile, look never clicks with url, DOM/AX disagreement reported, multi-page read budget; CALL_BUDGET scenarios for a 5-listing comparison; check_call_budget.py and check_plan_mutations.py updated.",
   "dissent": "(a) Scope: a tab model plus CDP observation is two large changes; ship tab+goto+landing verification first and CDP observation second, behind the same look shape. (b) CDP requires the existing-profile grant, which is now session-only (daemon restarted with --grant existing-profile, no LaunchAgent): a reboot silently returns to AX-only. (c) Using the user's logged-in profile raises the stakes of a wrong click (purchases, messages); the existing confirm step and positive-authorization rules must apply unchanged to every goto that lands on a checkout or account page. (d) Non-Chromium browsers get AX only; Safari users are second-class.",
-  "call_budget": "New scenarios get their own numbers with changed_by CE-FACADE-007; existing default-path numbers must not move.",
+  "call_budget": {
+   "note": "New scenarios get their own numbers with changed_by CE-FACADE-007; existing default-path numbers must not move.",
+   "scenarios.nav_goto_look_plan.max_llm_visible_calls": 3,
+   "scenarios.nav_goto_look_plan.max_reader_calls": 0,
+   "scenarios.nav_goto_look_plan.max_chooser_calls": 0,
+   "scenarios.nav_open_tab_read_close.max_llm_visible_calls": 3,
+   "scenarios.nav_open_tab_read_close.max_reader_calls": 0,
+   "scenarios.nav_open_tab_read_close.max_chooser_calls": 0,
+   "scenarios.nav_permission_required_stop.max_llm_visible_calls": 1,
+   "scenarios.nav_permission_required_stop.max_reader_calls": 0,
+   "scenarios.nav_permission_required_stop.max_chooser_calls": 0
+  },
   "status_note": "Approved by the user 2026-09-30 (option D). Slice 1 shipped: goto with landing verification, permission_required, open_tab/close_tab. Live on Driver 0.31.0 (local build, user consented): look+plan booked exactly s03; open_tab via background Cmd+T opened one tab and landed; background Cmd+W is ignored by Chrome, so close_tab needs the step's allow_foreground and fronts the window briefly; a second close_tab on the user's remaining tab was refused. Driver facts measured live: tab and target ids re-minted per bind, tab list not in window order, no active flag after navigation; the facade's tab is recognised by unique url + unchanged count + the window's native_title. Slice 2: DOM-first observation, multi-page reads."
  }
 ]

@@ -161,7 +161,7 @@ class JuliaGeneric:
 
 
 def generic_from_config():
-    """NuExtract plus Jev by default; explicit Julia preference remains available."""
+    """CUA_GENERIC_PROVIDER, else the active profile (local-mac: julia-1, fleet: jev), else jev; NuExtract wraps it when page extraction is on."""
     load_runtime_config()
     name = os.environ.get('CUA_GENERIC_PROVIDER', 'jev').lower()
     if name == 'jev':
