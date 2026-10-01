@@ -4,6 +4,7 @@ The Driver, the process launcher, the installer and the spaces client are fakes;
 (shapes measured live on 0.31.0). Each test names the wrong patch it fails.
 """
 import json
+import signal
 import subprocess
 import tempfile
 import unittest
@@ -43,13 +44,44 @@ class World:
     def __init__(self):
         self.commands, self.procs, self.bounds, self.appears = [], [], ON_DISPLAY, True
         self.profile, self.prefs_at_launch, self.on_exit, self.hangs = None, [], None, False
+        self.table, self.signals, self.order, self.popen_kw, self.helpers, self.deaf = [], [], [], [], 0, set()  # table: [pid, command, group, FakeProc|None]
+    def add_process(self, pid, command, group=None, proc=None):
+        self.table.append([pid, command, group, proc])
+    def live(self):
+        return [row for row in self.table if row[3] is None or not row[3].dead]
+    def _drop(self, rows):
+        for row in rows:
+            if row[3] is not None and not row[3].dead:row[3].exit()
+            if row in self.table:self.table.remove(row)
+    def killpg(self, pgid, sig):
+        rows = [r for r in self.live() if r[2] == pgid]
+        if not rows:raise ProcessLookupError(pgid)
+        if sig == 0:return
+        self.signals.append(('killpg', pgid, sig))
+        for r in rows:
+            if r[3] is not None and sig == signal.SIGTERM:r[3].terminated = True
+        if sig == signal.SIGKILL or (sig == signal.SIGTERM and not self.hangs and pgid not in self.deaf):
+            for r in rows:
+                if r[3] is not None and sig == signal.SIGKILL and not r[3].dead:r[3].killed = True
+            self._drop(rows)
+    def kill(self, pid, sig):
+        rows = [r for r in self.live() if r[0] == pid]
+        if not rows:raise ProcessLookupError(pid)
+        self.signals.append(('kill', pid, sig))
+        self.order.append(('kill', pid))
+        if sig == signal.SIGKILL or pid not in self.deaf:self._drop(rows)
+    def scan(self):
+        return [(r[0], r[1]) for r in self.live()]
     def popen(self, argv, **kw):
-        self.commands.append(argv)
+        self.commands.append(argv);self.popen_kw.append(kw);self.order.append(('popen',))
         prefs = Path(self.profile) / 'Default' / 'Preferences' if self.profile else None
         self.prefs_at_launch.append(json.loads(prefs.read_text()) if prefs and prefs.exists() else None)  # what Chrome would read as it starts
         if any(not p.dead for p in self.procs):self.appears = True  # a second launch on a live profile forwards to it: a new window appears
         proc = FakeProc(AGENT_PID if not self.procs else AGENT_PID + len(self.procs), self.on_exit, self.hangs)
         self.procs.append(proc)
+        self.add_process(proc.pid, ' '.join(str(a) for a in argv), proc.pid, proc)
+        for i in range(self.helpers):  # Chrome's renderer/GPU helpers: same group, same user-data-dir on their command line
+            self.add_process(proc.pid + 1000 + i, 'chrome --type=renderer --user-data-dir=%s' % self.profile, proc.pid)
         return proc
     def agent_windows(self):
         live = [p for p in self.procs if not p.dead]
@@ -82,12 +114,15 @@ class Base(unittest.TestCase):
                 exe = self.cache / 'browsers' / 'chrome' / 'mac_arm-1' / 'chrome-mac-arm64' / 'Google Chrome for Testing.app' / 'Contents' / 'MacOS' / 'Google Chrome for Testing'
                 exe.parent.mkdir(parents=True, exist_ok=True);exe.write_text('')
             return type('R', (), {'returncode': 0 if install_ok else 1, 'stdout': '', 'stderr': ''})()
+        self.now = 0.0
         self.log = [];self.spaces = FakeSpaces(self.log, display_fail)
         self.agent = AgentDisplay(mode=display_mode, apps=[], client=self.spaces, sleep=lambda s: None)
-        self.ab = AgentBrowser(mode=mode, cache=self.cache, popen=self.world.popen, run=run, sleep=lambda s: None, which=(lambda n: '/bin/npx') if npx else (lambda n: None))
+        self.ab = AgentBrowser(mode=mode, cache=self.cache, popen=self.world.popen, run=run, sleep=self._sleep, clock=lambda: self.now, killpg=self.world.killpg, kill=self.world.kill, scan=self.world.scan, which=(lambda n: '/bin/npx') if npx else (lambda n: None))
         self.driver = AgentDriver(self.world)
         self.f = Facade(self.driver, sleep=lambda s: None, agent_display=self.agent, agent_browser=self.ab)
         return self.f
+    def _sleep(self, seconds):
+        self.now += seconds
     def go(self, *steps):
         return self.f.do('Open the page', title='Demo', expect=None, steps=list(steps))
     def bound_pids(self):
@@ -158,7 +193,7 @@ class Launch(Base):
         r = self.go(GOTO)
         self.assertEqual(r['status'], 'delivered_unverified', r)
         self.assertFalse([a for a in self.world.commands[0] if a.startswith('--window-position')])
-        self.assertFalse((self.cache / 'agent-profile' / 'Default' / 'Preferences').exists())
+        self.assertNotIn('browser', json.loads((self.cache / 'agent-profile' / 'Default' / 'Preferences').read_text()), 'no placement is seeded without a display')
 
     def test_required_refuses_before_launching_anything(self):
         # Wrong patch: launch first, then find out the display is missing (a window on the user's screen).
@@ -348,6 +383,166 @@ class Reuse(Base):
         self.f.shutdown()
         self.assertTrue(self.world.procs[0].terminated)
         self.assertIn(('stop',), self.log)
+
+
+STALE_CMD = 'Google Chrome for Testing --user-data-dir=%s --remote-debugging-port=0'
+
+
+class Lifecycle(Base):
+    def test_stop_kills_the_whole_group_and_helpers_outside_it(self):
+        # Wrong patches: kill only the launched pid (helpers stay: 23 processes survived live); skip the survivor scan (a helper outside the group stays).
+        self.make()
+        self.world.helpers = 3
+        self.go(GOTO)
+        profile = str(self.cache / 'agent-profile')
+        self.world.add_process(777, 'chrome --type=gpu --user-data-dir=%s' % profile)  # a helper that left the group
+        self.world.add_process(778, 'chrome --user-data-dir=/somewhere/else')  # someone else's Chrome
+        self.assertEqual(len(self.world.live()), 6)
+        self.f.shutdown()
+        self.assertEqual([r[0] for r in self.world.live()], [778], 'only the unrelated Chrome is left')
+        self.assertIn(('killpg', AGENT_PID, signal.SIGTERM), self.world.signals)
+        self.assertNotIn(('kill', 778, signal.SIGKILL), self.world.signals)
+        self.assertIn(('kill', 777, signal.SIGKILL), self.world.signals)
+
+    def test_stop_escalates_to_sigkill_on_the_group_after_three_seconds(self):
+        # Wrong patch: SIGTERM only, or SIGKILL at once (no chance to flush), or wait without a bound.
+        self.make()
+        self.world.helpers = 2
+        self.go(GOTO)
+        self.world.hangs = True
+        before = self.now
+        self.ab.stop()
+        self.assertEqual(self.world.live(), [])
+        kinds = [sig for kind, pgid, sig in self.world.signals if kind == 'killpg' and pgid == AGENT_PID]
+        self.assertEqual(kinds, [signal.SIGTERM, signal.SIGKILL])
+        self.assertGreaterEqual(self.now - before, 3)
+        self.assertLess(self.now - before, 4)
+
+    def test_the_browser_is_launched_in_its_own_process_group_and_stop_runs_at_exit(self):
+        # Wrong patch: share the server's group (killpg would take the server down), or no last-resort stop.
+        import atexit
+        registered = []
+        original = atexit.register
+        atexit.register = lambda fn, *a, **k: registered.append(fn)
+        try:
+            self.make()
+            self.go(GOTO)
+        finally:
+            atexit.register = original
+        self.assertIs(self.world.popen_kw[0].get('start_new_session'), True)
+        self.assertEqual(self.ab.pgid, AGENT_PID)
+        self.assertEqual(registered, [self.ab.stop])
+
+    def test_a_stale_instance_is_killed_before_the_launch_and_logged(self):
+        # Wrong patches: launch without looking (Chrome forwards into the stale instance and exits); kill it after the launch; kill silently.
+        self.make()
+        profile = str(self.cache / 'agent-profile')
+        self.world.add_process(9001, STALE_CMD % profile)
+        self.world.add_process(9002, 'chrome --type=renderer --user-data-dir=%s' % profile)
+        self.go(GOTO)
+        self.assertEqual(self.world.order[:3], [('kill', 9001), ('kill', 9002), ('popen',)])
+        self.assertEqual([r[0] for r in self.world.live() if r[3] is None], [])
+        events = [e for e in self.f.events if e['operation'] == 'agent_browser_recovered_stale']
+        self.assertEqual(events[0]['pids'], [9001, 9002])
+
+    def test_a_stale_instance_that_ignores_sigterm_is_killed_by_pid(self):
+        # Wrong patch: SIGTERM and trust it.
+        self.make()
+        self.world.add_process(9001, STALE_CMD % (self.cache / 'agent-profile'))
+        self.world.deaf.add(9001)
+        self.go(GOTO)
+        self.assertIn(('kill', 9001, signal.SIGKILL), self.world.signals)
+        self.assertEqual(self.world.live()[0][0], AGENT_PID)
+
+    def test_no_stale_instance_means_nothing_is_killed_and_nothing_logged(self):
+        # Wrong patch: kill every Chrome, or log on every launch.
+        self.make()
+        self.world.add_process(500, 'chrome --user-data-dir=/not/ours')
+        self.go(GOTO)
+        self.assertEqual(self.world.signals, [])
+        self.assertEqual([e for e in self.f.events if e['operation'] == 'agent_browser_recovered_stale'], [])
+
+
+class NoRestore(Base):
+    def test_preferences_are_seeded_so_no_session_is_restored(self):
+        # Wrong patches: leave restore_on_startup unset (Chrome reopened the 6 tabs of the last run); drop other keys; seed after popen.
+        self.make()
+        prof = self.cache / 'agent-profile' / 'Default';prof.mkdir(parents=True)
+        (prof / 'Preferences').write_text(json.dumps({'keep': 1, 'session': {'restore_on_startup': 1, 'other': 2}, 'profile': {'exit_type': 'Crashed', 'exited_cleanly': False, 'name': 'x'}}))
+        self.go(GOTO)
+        seen = self.world.prefs_at_launch[0]
+        self.assertEqual(seen['session'], {'restore_on_startup': 5, 'other': 2})
+        self.assertEqual(seen['profile'], {'exit_type': 'Normal', 'exited_cleanly': True, 'name': 'x'})
+        self.assertEqual(seen['keep'], 1)
+
+    def test_a_fresh_profile_gets_the_keys_too_and_the_flags_are_passed(self):
+        # Wrong patch: seed only an existing file; omit the bubble flags.
+        self.make()
+        self.go(GOTO)
+        seen = self.world.prefs_at_launch[0]
+        self.assertEqual((seen['session']['restore_on_startup'], seen['profile']['exit_type'], seen['profile']['exited_cleanly']), (5, 'Normal', True))
+        self.assertIn('--disable-session-crashed-bubble', self.world.commands[0])
+        self.assertIn('--hide-crash-restore-bubble', self.world.commands[0])
+
+    def test_session_files_are_deleted_and_cookies_and_storage_kept(self):
+        # Wrong patches: keep the session files; delete the whole profile (logins lost); delete Session Storage.
+        self.make()
+        prof = self.cache / 'agent-profile' / 'Default';prof.mkdir(parents=True)
+        (prof / 'Sessions').mkdir();(prof / 'Sessions' / 'Session_1').write_text('x')
+        for name in ('Current Session', 'Last Session', 'Current Tabs', 'Last Tabs', 'Cookies', 'Login Data'):(prof / name).write_text('x')
+        (prof / 'Local Storage').mkdir();(prof / 'Session Storage').mkdir()
+        self.go(GOTO)
+        for gone in ('Sessions', 'Current Session', 'Last Session', 'Current Tabs', 'Last Tabs'):
+            self.assertFalse((prof / gone).exists(), gone)
+        for kept in ('Cookies', 'Login Data', 'Local Storage', 'Session Storage'):
+            self.assertTrue((prof / kept).exists(), kept)
+
+    def test_a_running_browser_keeps_its_session_files(self):
+        # Wrong patch: delete session files while our Chrome is running.
+        self.make()
+        self.go(GOTO)
+        prof = self.cache / 'agent-profile' / 'Default'
+        (prof / 'Current Session').write_text('live')
+        self.go(GOTO)
+        self.assertEqual((prof / 'Current Session').read_text(), 'live')
+
+
+class NavigatedTab(Base):
+    def three_tabs(self):
+        self.driver.tabs = [{'url': 'https://a.example/', 'title': 'A', 'active': False},
+                            {'url': 'https://b.example/', 'title': 'B', 'active': True},
+                            {'url': 'https://c.example/', 'title': 'C', 'active': False}]
+
+    def test_after_a_navigation_the_navigated_tab_is_the_tab_when_none_is_active(self):
+        # Wrong patches: take the first (or last) tab; refuse browser_tab_ambiguous on every second goto; trust the remembered id (re-minted each bind).
+        self.make()
+        self.three_tabs()
+        self.go(GOTO)
+        self.assertEqual(self.driver.tabs[1]['title'], 'Booking')
+        r = self.go({'do': 'goto', 'url': tb.BOOKING + '?again=1'})
+        self.assertNotIn('browser_tab_ambiguous', json.dumps(r), r)
+        last = [a for t, a in self.driver.browser_calls if t == 'browser_navigate'][-1]
+        self.assertEqual(self.driver.minted[last['tab_id']], 1, 'the tab we navigated, not the first or last')
+
+    def test_a_remembered_tab_that_cannot_be_told_apart_is_still_refused(self):
+        # Wrong patch: guess when two tabs match the remembered url and title.
+        self.make()
+        self.three_tabs()
+        self.go(GOTO)
+        self.driver.tabs[0].update(url=self.driver.tabs[1]['url'], title=self.driver.tabs[1]['title'])
+        r = self.go(GOTO)
+        self.assertIn('browser_tab_ambiguous', json.dumps(r), r)
+        self.assertEqual(len(self.driver.tabs), 3, 'no tab was closed')
+
+    def test_the_memory_does_not_apply_to_other_browsers(self):
+        # Wrong patch: apply the remembered tab to the user's own browser window (pid 1).
+        from browser import remembered_tab
+        self.make()
+        self.three_tabs()
+        self.go(GOTO)
+        tabs = [{'tab_id': 'x', 'url': self.f.navigated_tab['url'], 'title': self.f.navigated_tab['title']}]
+        self.assertIsNotNone(remembered_tab(self.f, AGENT_PID, tabs))
+        self.assertIsNone(remembered_tab(self.f, 1, tabs))
 
 
 class Install(Base):

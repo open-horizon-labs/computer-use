@@ -66,7 +66,7 @@ def _call(f, args, timeout):
     return {'value': value if isinstance(value, dict) else {}}
 
 
-def _tab_of(bound):
+def _tab_of(bound, f=None, pid=None):
     """The window's tab, exact-or-none: the active one, the only one, or the one whose title the window's own title shows. Never a guess."""
     tabs = browser._tabs(bound)
     active = [t for t in tabs if t.get('active') or t.get('selected')]
@@ -76,7 +76,9 @@ def _tab_of(bound):
         return tabs[0]
     native = bound.get('native_title') or ''
     titled = [t for t in tabs if browser._titled(native, t.get('title') or '')]
-    return titled[0] if len(titled) == 1 and not active else None
+    if len(titled) == 1 and not active:
+        return titled[0]
+    return browser.remembered_tab(f, pid, tabs) if f is not None and not active else None  # the tab the facade last navigated in its own browser
 
 
 def read(f, pid, window_id):
@@ -92,7 +94,7 @@ def read(f, pid, window_id):
     bound = bound['value']
     if not bound.get('target_id'):
         return {'ok': False, 'degraded': None, 'note': None}
-    tab = _tab_of(bound)
+    tab = _tab_of(bound, f, pid)
     if tab is None:
         return _failure('semantic_refused', 'the page text was read from the accessibility tree only: the window is bound to %d tabs and none is exactly the window\'s own' % len(browser._tabs(bound)))
     outline, names, refs, page, omitted, complete, segments = [], [], 0, {}, {}, False, 0
