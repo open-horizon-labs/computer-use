@@ -30,6 +30,7 @@ WINDOW_WAIT_S = 20
 WINDOW_POLL_S = 0.5
 INSET = 40
 MIN_SIZE, MAX_SIZE = 200, 8000
+RESIZE_MARGIN = 40.0  # points kept free on every side of the display: Chrome settles an oversize window at this inset (live 2026-10-01: asked 1920x1080, got 1880x1040), and the Driver then answers unverifiable
 RESIZE_TOLERANCE = 2.0  # points: the Driver's readback (and the independent re-check) must agree with the target this closely
 KILL_AFTER_S = 3  # SIGTERM to the process group, then this long before SIGKILL
 SESSION_FILES = ('Current Session', 'Last Session', 'Current Tabs', 'Last Tabs')  # cookies and storage stay; only what restores tabs goes
@@ -339,9 +340,10 @@ class AgentBrowser:
         rect = f.agent.launch_rect()
         if rect is None or before is None:
             raise Gap('resize_unverified: the agent display or the window bounds are unknown, so the window cannot be kept inside the display; nothing was resized.')
-        w, h = min(width, rect['width']), min(height, rect['height'])
-        x = min(max(before['x'], rect['x']), rect['x'] + rect['width'] - w)
-        y = min(max(before['y'], rect['y']), rect['y'] + rect['height'] - h)
+        area = {'x': rect['x'] + RESIZE_MARGIN, 'y': rect['y'] + RESIZE_MARGIN, 'width': rect['width'] - 2 * RESIZE_MARGIN, 'height': rect['height'] - 2 * RESIZE_MARGIN}
+        w, h = min(width, area['width']), min(height, area['height'])
+        x = min(max(before['x'], area['x']), area['x'] + area['width'] - w)
+        y = min(max(before['y'], area['y']), area['y'] + area['height'] - h)
         target = {'x': x, 'y': y, 'width': w, 'height': h}
         try:
             value = self._set_frame(f, self.proc.pid, window_id, target)
