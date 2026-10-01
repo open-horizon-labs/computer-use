@@ -367,6 +367,8 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
                 **({'header': analysis['header'][:8]} if analysis['header'] else {}),
                 **({'repeated_text': [cut(t)[0] for t in analysis['repeated_text'][:10]]} if analysis['repeated_text'] else {})}
     if extras.get('canvas') is not None:response['canvas'] = extras['canvas']
+    for key in ('surface', 'refusal'):
+        if extras.get(key) is not None:response[key] = extras[key]
     if extras.get('focus') is not None:response['focus'] = extras['focus']
     for key in ('sources', 'sources_disagree', 'degraded', 'dom_unplaced'):
         if extras.get(key) is not None:response[key] = extras[key]
@@ -437,6 +439,7 @@ def attach_dom(f, pid, window_id, state, analysis, rows, extras):
             extras['notes'].append(semantic['note'])
             extras['sources'] = {'ax': True, 'dom': False}
         return
+    extras['_semantic'] = semantic
     found = dom.compare(analysis, semantic, dom.ax_text_blob(f, state, analysis))
     cut_count = 0
     for r in rows:
@@ -513,6 +516,19 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                 began = f.clock()
                 try:
                     regions = f._text_regions(handle)
+                    import novnc
+                    semantic = extras.pop('_semantic', None)
+                    if novnc.detect(semantic):
+                        # noVNC in a tab (#56): the drawn labels are pressed through the bound tab's viewport; refuse here when they could not be placed or a password is asked for.
+                        extras['surface'] = 'novnc'
+                        if novnc.password_prompt(semantic, [r['text'] for r in regions]):
+                            extras['refusal'] = {'reason': 'credentials_required', 'hint': novnc.CREDENTIALS_HINT}
+                            regions = []
+                        else:
+                            try:novnc.mapping(f, state)
+                            except Gap as gap:
+                                extras['refusal'] = {'reason': 'viewport_mapping_unavailable', 'hint': str(gap)}
+                                regions = []
                     counts, order = {}, []
                     for r in regions:
                         text = clean(r['text'])[:40]
@@ -525,7 +541,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                             item['near'] = [clean(f._region_neighbor(r, regions) or '')[:40] for r in regions if clean(r['text'])[:40] == text][:4]
                         items.append(item)
                     extras['canvas'] = {'text_regions': items}
-                    if not items:
+                    if not items and 'refusal' not in extras:
                         extras['notes'].append('Perception found no drawn text on this page')
                     if len(order) > CANVAS_MAX:
                         extras['notes'].append('%d more drawn texts are not listed (the first %d are shown)' % (len(order) - CANVAS_MAX, CANVAS_MAX))
