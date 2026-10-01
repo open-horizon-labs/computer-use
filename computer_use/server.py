@@ -5,7 +5,7 @@ import base64
 import os
 import json
 from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations, CallToolResult, TextContent, ImageContent

@@ -17,7 +17,6 @@ So a press step names the path it wants (`menu: ["Profiles", "Person 1"]`) and t
 """
 from __future__ import annotations
 
-import re
 
 import look as lk
 
