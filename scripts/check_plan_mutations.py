@@ -676,6 +676,31 @@ MUTATIONS = {
         'copy a plan step field description into the do docstring as well',
         [('server.py', "    \"\"\"Default path. Call `look` first", "    \"\"\"Default path. press only: which record (lines or fields). Without where, control names the one unique control to press. Call `look` first")],
         ['test_response_budget.ToolListIsBounded.test_each_parameter_is_documented_once_and_the_docstring_does_not_repeat_the_schema']),
+    'upload_with_a_stale_ref': (
+        'upload step (#5): another snapshot of the tab between the fresh default one and the set (refs die with any newer snapshot)',
+        [('browser.py', "    chosen = pick_input(file_inputs(snapshot), control)\n", "    chosen = pick_input(file_inputs(snapshot), control)\n    page_of(f, target, tab)\n")],
+        ['test_upload.Sends.test_the_only_file_input_is_used_and_the_expect_makes_it_done', 'test_upload.Sends.test_the_ref_comes_from_a_fresh_default_snapshot_taken_right_before_the_set']),
+    'upload_picks_the_first_of_several_inputs': (
+        'upload step (#5): with several file inputs and no control, take the first',
+        [('browser.py', "    if control is None and len(inputs) == 1:\n        return inputs[0]", "    if control is None:\n        return inputs[0]")],
+        ['test_upload.Choosing.test_several_inputs_without_control_is_refused_listing_ids_not_picking_the_first']),
+    'upload_follows_a_symlink': (
+        'upload step (#5): stat the path instead of lstat, so a symlink to a real file passes',
+        [('browser.py', "            mode = os.lstat(path).st_mode", "            mode = os.stat(path).st_mode")],
+        ['test_upload.FilesAreChecked.test_a_symlink_is_refused_even_to_a_real_file']),
+    'upload_accepts_a_relative_path': (
+        'upload step (#5): let a relative path through (the Driver would resolve it against its own directory)',
+        [('browser.py', "        if not os.path.isabs(path):", "        if False:")],
+        ['test_upload.FilesAreChecked.test_a_relative_path_is_refused']),
+    'upload_done_without_the_expect': (
+        'upload step (#5): done because the Driver said ok, the expect never read',
+        [('plan.py', "                result = {'status': 'done' if kind == 'close_tab' else 'delivered_unverified', 'delivery': 'delivered'}\n                if step.get('expect'):",
+          "                result = {'status': 'done' if kind in ('close_tab', 'upload') else 'delivered_unverified', 'delivery': 'delivered'}\n                if step.get('expect') and kind != 'upload':")],
+        ['test_upload.Proof.test_done_needs_the_expect_to_be_seen_not_just_delivery']),
+    'upload_echoes_the_path': (
+        'upload step (#5): name the offending file by its full path in the refusal',
+        [('browser.py', "        name = os.path.basename(path)[:80] or 'file %d' % index", "        name = path if isinstance(path, str) and path else 'file %d' % index")],
+        ['test_upload.FilesAreChecked.test_a_symlink_is_refused_even_to_a_real_file', 'test_upload.FilesAreChecked.test_the_message_names_the_basename_only']),
 }
 
 

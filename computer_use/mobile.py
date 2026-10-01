@@ -720,7 +720,7 @@ def unsupported(steps):
             raise Gap('where_not_supported_on_device: step %d where.fields reads record values with the extraction model, which a device screen does not have; use where.lines over the strings `look`(device=...) showed, or press by the exact label of the control' % n)
         if kind != 'press' and raw.get('where') is not None:
             raise Gap('bad_request: step %d (%s) does not take where on a device; where picks the record a press acts in' % (n, kind))
-        if kind in ('confirm', 'open_tab', 'close_tab', 'read_pages') or (kind == 'press' and raw.get('menu') is not None):
+        if kind in ('confirm', 'open_tab', 'close_tab', 'read_pages', 'upload') or (kind == 'press' and raw.get('menu') is not None):
             raise Gap('not_supported_on_device: step %d (%s) is for a Mac window; on a device use press, type, verify and goto' % (n, kind if raw.get('menu') is None else 'press menu'))
         extra = sorted(k for k, v in raw.items() if v is not None and k not in DEVICE_STEP_KEYS)
         if extra:
