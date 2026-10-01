@@ -167,7 +167,7 @@ class Driver:
 
 class Facade:
     def __init__(self, driver=None, generic_factory=generic_from_config, reader_factory=NuExtractPage,
-                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None):
+                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None, setup_env=None):
         self.driver = driver or Driver()
         self.sleep = sleep
         self._settled_titles = {}  # (pid, window_id) -> window title of the last settled look (see SETTLE_DELAY_S)
@@ -189,6 +189,11 @@ class Facade:
         self.lock = threading.RLock()
         self.agent = agent_display or AgentDisplay()  # #60, CE-FACADE-009: parks created windows and agent-owned apps' windows off the user's screen
         self.agent_browser = agent_browser  # #60: the default target of goto/open_tab/read_pages (the server passes one; None = the user's own browser, as before)
+        self.setup_env = setup_env  # #64: a callable returning a cli.Env; None (the default) never attaches a `setup` block. The server passes the real one.
+        self.setup_seen = set()  # the sets of blockers a `setup` block was already shown for (once per server process unless the set changes)
+        self.started_at = clock()
+        self.tool_calls = 0  # LLM-visible look/do calls since the server started
+        self.first_do = None  # {calls, seconds}: the first done do with a verified action (time_to_first_verified_do)
         self._mobile = mobile  # mobile-mcp (CE-FACADE-008): created and started by the first look/do that names a device (mobile.py)
 
     def event(self, operation, **data):
@@ -1857,9 +1862,9 @@ class Facade:
         import look as lookmod
         if device is not None:
             import mobile as mobilemod
-            if title is not None or pid is not None or window_id is not None:return self.mark({'status': 'refused', 'reason': 'bad_request', 'message': 'bad_request: give device, or title or pid+window_id, not both'})
-            with self.lock:return self.mark(mobilemod.look(self, device, fields, max_records, max_bytes, focus, max_lines, line_chars))
-        with self.lock:return self.mark(lookmod.run_look(self, title, pid, window_id, fields, max_records, max_bytes, focus, max_lines, line_chars))
+            if title is not None or pid is not None or window_id is not None:return self.mark({'status': 'refused', 'reason': 'bad_request', 'message': 'bad_request: give device, or title or pid+window_id, not both'}, 'look')
+            with self.lock:return self.mark(mobilemod.look(self, device, fields, max_records, max_bytes, focus, max_lines, line_chars), 'look')
+        with self.lock:return self.mark(lookmod.run_look(self, title, pid, window_id, fields, max_records, max_bytes, focus, max_lines, line_chars), 'look')
 
     def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
            expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None,
@@ -1870,13 +1875,20 @@ class Facade:
         With `steps` it runs a validated PLAN instead (plan.py): each step is this same pipeline on a fresh observation."""
         if device is not None:  # a phone or emulator through mobile-mcp: same plan contract, its own observation and delivery (mobile.py, CE-FACADE-008)
             import mobile as mobilemod
-            with self.lock:return self.mark(mobilemod.do(self, goal, device, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if))
-        return self.mark(self._do_entry(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground))
+            with self.lock:return self.mark(mobilemod.do(self, goal, device, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if), 'do')
+        return self.mark(self._do_entry(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground), 'do')
 
-    def mark(self, result):
-        """Every do response can carry page-derived strings (summary.text, dialog.lines, evidence, found, descriptions): say so, with the fixed sentence."""
+    def mark(self, result, tool=None):
+        """Every do response can carry page-derived strings (summary.text, dialog.lines, evidence, found, descriptions): say so, with the fixed sentence.
+        tool ('look' or 'do') counts the LLM-visible call, traces time_to_first_verified_do and lets a refusal carry its `setup` block (#64)."""
         import look as lookmod
+        import onboarding
+        if tool:self.tool_calls += 1
         if isinstance(result, dict):
+            if tool == 'do' and self.first_do is None and onboarding.is_verified_do(result):
+                self.first_do = {'calls': self.tool_calls, 'seconds': round(self.clock() - self.started_at, 1)}
+                self.event('time_to_first_verified_do', **self.first_do)
+            if tool:onboarding.setup_for(self, result)
             report = self.agent.take_report()
             if report.get('parked'):result['agent_display'] = {'id': self.agent.display, 'parked': True}
             if report.get('note'):result['agent_display_note'] = report['note']
@@ -2439,4 +2451,4 @@ class Facade:
         if self._mobile is not None:self._mobile.close()  # stops the mobile-mcp child process; the next device call starts a fresh one
         self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear();self.looks.clear()
         return {'status':'closed','trace':self.events,'driver_version':self.driver_version,'driver_version_state':self.driver_version_state,
-                'perception_version':self.perception_version,'perception_state':self.perception_state}
+                'perception_version':self.perception_version,'perception_state':self.perception_state,'time_to_first_verified_do':self.first_do}

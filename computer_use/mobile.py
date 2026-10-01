@@ -423,6 +423,16 @@ def bridge(f):
     return f._mobile
 
 
+DISCOVERY_HINTS = {  # #64: an empty or unavailable list says what would appear, why it matters and the one call to get it
+    'listed': 'Pass device=<an id from devices> to `look` and `do` to work on a phone or emulator, or title=<a window title> for a Mac window.',
+    'empty': 'No phone or emulator is attached, so devices is empty; each one would appear as {id, platform, name}, and its id is the device for `look` and `do`. '
+             'Start an Android emulator (emulator -avd <name>) or attach a phone with USB debugging, or boot an iOS simulator (open the Simulator app, or '
+             'xcrun simctl boot <udid>); then call `look` with device="list" again. For a Mac window pass title=<a window title> instead.',
+    'backend': 'The device backend did not start (devices_unavailable.message says what to install or fix): only the user can install it, so tell the user and do not '
+               'retry until they have. Mac windows are unaffected: pass title=<a window title> to `look` and `do`.',
+}
+
+
 def discovery(f):
     """`look`(device="list"): the devices mobile-mcp sees beside the Mac windows the Driver sees. Read-only."""
     out = {'status': 'ok', 'untrusted_page_text': True, 'notice': lk.NOTICE, 'devices': [], 'windows': []}
@@ -434,7 +444,11 @@ def discovery(f):
         out['windows'] = [{k: w[k] for k in ('app_name', 'title') if k in w} for w in f.windows()['windows']][:30]
     except Exception as error:  # noqa: BLE001 - the Mac side being down must not hide the devices
         out['windows_unavailable'] = {'reason': f._do_reason(str(error)) if isinstance(error, Gap) else type(error).__name__}
-    out['hint'] = 'Pass device=<an id from devices> to `look` and `do` to work on a phone or emulator, or title=<a window title> for a Mac window.'
+    out['hint'] = DISCOVERY_HINTS['listed']
+    if 'devices_unavailable' in out:
+        out['hint'] = DISCOVERY_HINTS['backend']
+    elif not out['devices']:
+        out['hint'] = DISCOVERY_HINTS['empty']
     return out
 
 
@@ -517,9 +531,9 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
 DEVICE_STEP_KEYS = frozenset({'do', 'goal', 'control', 'control_match', 'text', 'expect', 'allow_destructive', 'url'})
 DEVICE_KINDS = ('press', 'type', 'verify', 'goto')
 DEVICE_HINTS = {
-    'mobile_backend_unavailable': 'The device backend (mobile-mcp) could not run; nothing was done. Tell the user what the message says to install or fix; do not retry.',
+    'mobile_backend_unavailable': 'The device backend (mobile-mcp) could not run; nothing was done. Tell the user what the setup block or the message says to install or fix; do not retry until they have.',
     'device_not_found': 'No such device; nothing was done. Call `look` with device="list", then `do` with an id from it.',
-    'mobile_device_agent_missing': 'The device needs mobile-mcp\'s on-device agent before its screen can be read; nothing was done. Tell the user; do not retry.',
+    'mobile_device_agent_missing': 'The device needs mobile-mcp\'s on-device agent before its screen can be read; nothing was done. Tell the user (the on-device agent is installed on the device, not by this server); do not retry until they have.',
     'mobile_observation_failed': 'The device screen could not be read, nothing was tapped by this step. Check the device is unlocked and reachable, then call `do` again.',
     'mobile_action_failed': 'The device action was not confirmed and may have reached the device (see delivery). Call `look` to read the screen before acting again.',
     'mobile_backend_timeout': 'The device backend did not answer in time (see delivery). Call `look` to read the screen before acting again.',

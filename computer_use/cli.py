@@ -6,7 +6,8 @@
 doctor is read-only: every check is a small function `check_x(env) -> {name, status, detail, fix}` with status ok | warn | blocker | skipped, driven by
 an `Env` whose command runner, filesystem, environment and HTTP probe are injectable, so tests use fakes (no network, no desktop). Every external call is
 bounded by a timeout and a missing or hung tool is a result, never a crash or a hang. doctor never launches a GUI app and sends nothing except one HEAD/GET to
-a configured provider endpoint. `--probe` additionally builds space-mover if missing and runs `display serve` briefly.
+a configured provider endpoint. `--probe` additionally builds space-mover if missing and runs `display serve` briefly, then (#64) serves the bundled booking page on loopback and runs the aha moment
+for real: goto on the agent browser, one look, one verified do, reporting ready with time_to_first_verified_do (it opens the agent browser window).
 
 bootstrap does what can be done from a shell and prints the rest (System Settings paths). It edits ~/.claude.json only with --yes, after a backup.
 """
@@ -317,6 +318,59 @@ def check_space_mover_probe(env, timeout=10):
             pass
 
 
+PROBE_CHECK = 'probe.first_verified_do'
+
+
+def _probe_failure(step, response):
+    """One BLOCKER result from a refused or unfinished probe call: the setup block's fixes when the Facade attached one, else the response's own hint."""
+    fixes = '; '.join('%s (%s)' % (e['fix'], e['who']) for e in response.get('setup') or [])
+    reason = response.get('reason') or (response.get('steps') or [{}])[-1].get('reason') or response.get('status')
+    return result(PROBE_CHECK, BLOCKER, '%s did not finish (%s)' % (step, reason), fixes or str(response.get('hint') or 'run doctor without --probe and fix its blockers')[:240])
+
+
+def check_first_do_probe(env, facade=None, serve=None, clock=time.monotonic):
+    """--probe: serve the bundled booking page on loopback and run the aha moment for real: goto on the agent browser (on the agent display), one look, one
+    verified do through the real Facade. Reports ready with time_to_first_verified_do. `facade` and `serve` are injectable so tests use fakes; the live run
+    opens the agent browser window (on the agent display), so the user asks for it."""
+    import probe_fixture
+    httpd, url = (serve or probe_fixture.serve)()
+    own = facade is None
+    try:
+        if own:
+            from core import Facade
+            from agent_browser import AgentBrowser
+            facade = Facade(agent_browser=AgentBrowser(), setup_env=lambda: env)
+        first = facade.do('Open the bundled booking page', expect=None, steps=[{'do': 'goto', 'url': url, 'expect': probe_fixture.FIRST_PROVIDER}])
+        if first.get('status') != 'done':
+            return _probe_failure('goto the bundled booking page', first)
+        title = (first.get('summary') or {}).get('title')
+        seen = facade.look(title=title)
+        records = seen.get('records') or []
+        if seen.get('status') != 'ok' or not records:
+            return _probe_failure('look at the bundled booking page', seen)
+        conds = [{'line': 'eq', 'value': line} for line in records[0]['lines']]
+        if sum(1 for r in records if all(any(line == c['value'] for line in r['lines']) for c in conds)) != 1:
+            return result(PROBE_CHECK, BLOCKER, 'the first record of the bundled page is not unique by its displayed lines', 'report this: the probe fixture changed')
+        done = facade.do('Book the first slot', title=title, look_id=seen['look_id'], expect=None,
+                         steps=[{'do': 'press', 'where': {'lines': conds}, 'expect': probe_fixture.BOOKED}])
+        if done.get('status') != 'done' or not facade.first_do:
+            return _probe_failure('the first verified do', done)
+        return result(PROBE_CHECK, OK, 'ready: first verified do after %d calls (goto, look, do) in %.1fs (time_to_first_verified_do)' % (facade.first_do['calls'], facade.first_do['seconds']))
+    except Exception as e:  # the probe is a check: a crash is a result, never a traceback
+        return result(PROBE_CHECK, BLOCKER, 'probe failed: %s' % type(e).__name__, 'run doctor without --probe and fix its blockers; then rerun')
+    finally:
+        try:
+            httpd.shutdown()
+            httpd.server_close()
+        except Exception:
+            pass
+        if own and facade is not None:
+            try:
+                facade.shutdown()
+            except Exception:
+                pass
+
+
 # ---- optional modules from sibling PRs ----------------------------------------------------------------------------------------------------------
 
 def _optional(name):
@@ -447,7 +501,7 @@ STATIC_CHECKS = (check_driver_installed, check_driver_daemon, check_driver_grant
                  check_mcp_registration, check_skill, check_python)
 
 
-def run_checks(env, probe=False):
+def run_checks(env, probe=False, probes=None):
     results = []
     for check in STATIC_CHECKS:
         try:
@@ -456,7 +510,8 @@ def run_checks(env, probe=False):
             out = result(check.__name__.replace('check_', ''), WARN, 'check failed: %s' % type(e).__name__)
         results.extend(out if isinstance(out, list) else [out])
     if probe:
-        results.append(check_space_mover_probe(env))
+        for run in probes or (check_space_mover_probe, check_first_do_probe):  # the display first: the first-do probe parks its browser on it
+            results.append(run(env))
     return results
 
 
@@ -476,9 +531,9 @@ def render(results):
     return '\n'.join(lines)
 
 
-def doctor(env, as_json=False, probe=False, out=None):
+def doctor(env, as_json=False, probe=False, out=None, probes=None):
     out = out or sys.stdout
-    results = run_checks(env, probe)
+    results = run_checks(env, probe, probes)
     code = exit_code(results)
     if as_json:
         out.write(json.dumps({'ok': code == 0, 'checks': results}, indent=2) + '\n')
@@ -563,7 +618,7 @@ def main(argv=None, env=None, out=None):
     sub = parser.add_subparsers(dest='command', required=True)
     d = sub.add_parser('doctor', help='check every dependency and grant (read-only); exit 1 on a blocker')
     d.add_argument('--json', action='store_true')
-    d.add_argument('--probe', action='store_true', help='also create and drop a virtual display (builds space-mover if missing)')
+    d.add_argument('--probe', action='store_true', help='also create and drop a virtual display (builds space-mover if missing), then serve the bundled booking page and run one look and one verified do through the agent browser (opens its window on the agent display)')
     b = sub.add_parser('bootstrap', help='do the fixable setup and print the manual steps')
     b.add_argument('--yes', action='store_true', help='allow editing ~/.claude.json (a backup is kept)')
     args = parser.parse_args(argv)
