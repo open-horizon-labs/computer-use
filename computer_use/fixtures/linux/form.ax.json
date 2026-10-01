@@ -1,0 +1,1521 @@
+{
+  "_note": "Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Use `max_elements` / `max_depth` to bound the AT-SPI walk on apps with very large trees.",
+  "app_name": "Chromium-browser",
+  "bounds_complete": true,
+  "capture_id": "capture_df9d09dfea9f4f33aeb7a7a52f00c447_0000000000000002",
+  "coordinate_frame": "window",
+  "element_count": 61,
+  "elements": [
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 0,
+      "element_index": 0,
+      "element_token": "s00000003:0",
+      "enabled": true,
+      "frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "Volunteer Form default - Google Chrome for Testing",
+      "role": "frame",
+      "screenshot_frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 1,
+      "element_index": 1,
+      "element_token": "s00000003:1",
+      "enabled": true,
+      "frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc",
+      "parent_index": 0,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 2,
+      "element_index": 2,
+      "element_token": "s00000003:2",
+      "enabled": true,
+      "frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 1,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 3,
+      "element_index": 3,
+      "element_token": "s00000003:3",
+      "enabled": true,
+      "frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 2,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 4,
+      "element_token": "s00000003:4",
+      "enabled": true,
+      "frame": {
+        "h": 47,
+        "w": 1100,
+        "x": 20,
+        "y": 60
+      },
+      "label": "\ufffc\ufffc\ufffc",
+      "parent_index": 3,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 47,
+        "w": 1100,
+        "x": 0,
+        "y": 40
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 5,
+      "element_token": "s00000003:5",
+      "enabled": true,
+      "frame": {
+        "h": 46,
+        "w": 1100,
+        "x": 20,
+        "y": 60
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 4,
+      "role": "tool bar",
+      "screenshot_frame": {
+        "h": 46,
+        "w": 1100,
+        "x": 0,
+        "y": 40
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 6,
+      "element_token": "s00000003:6",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 5,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 7,
+      "element_token": "s00000003:7",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 6,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 8,
+      "element_token": "s00000003:8",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 7,
+      "role": "tool bar",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 9,
+      "element_token": "s00000003:9",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 8,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 10,
+      "description": "Reload this page",
+      "element_index": 10,
+      "element_token": "s00000003:10",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "Reload",
+      "parent_index": 9,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 11,
+      "element_index": 11,
+      "element_token": "s00000003:11",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 10,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 12,
+      "element_index": 12,
+      "element_token": "s00000003:12",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 101,
+        "y": 73
+      },
+      "parent_index": 11,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 20,
+        "w": 20,
+        "x": 81,
+        "y": 53
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 13,
+      "element_token": "s00000003:13",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 898,
+        "x": 137,
+        "y": 66
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 5,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 898,
+        "x": 117,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 14,
+      "element_token": "s00000003:14",
+      "enabled": true,
+      "frame": {
+        "h": 24,
+        "w": 24,
+        "x": 142,
+        "y": 71
+      },
+      "label": "View site information",
+      "parent_index": 13,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 24,
+        "w": 24,
+        "x": 122,
+        "y": 51
+      }
+    },
+    {
+      "actions": [
+        "activate",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 15,
+      "element_token": "s00000003:15",
+      "enabled": true,
+      "frame": {
+        "h": 24,
+        "w": 817,
+        "x": 174,
+        "y": 71
+      },
+      "label": "Address and search bar",
+      "parent_index": 13,
+      "role": "entry",
+      "screenshot_frame": {
+        "h": 24,
+        "w": 817,
+        "x": 154,
+        "y": 51
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 16,
+      "element_token": "s00000003:16",
+      "enabled": true,
+      "frame": {
+        "h": 24,
+        "w": 24,
+        "x": 999,
+        "y": 71
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 13,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 24,
+        "w": 24,
+        "x": 979,
+        "y": 51
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 17,
+      "element_token": "s00000003:17",
+      "enabled": true,
+      "frame": {
+        "h": 24,
+        "w": 24,
+        "x": 999,
+        "y": 71
+      },
+      "label": "Bookmark this tab",
+      "parent_index": 16,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 24,
+        "w": 24,
+        "x": 979,
+        "y": 51
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 18,
+      "element_token": "s00000003:18",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 1044,
+        "y": 66
+      },
+      "label": "You",
+      "parent_index": 5,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 1024,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "open",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "description": "Customize and control Chromium",
+      "element_index": 19,
+      "element_token": "s00000003:19",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 1080,
+        "y": 66
+      },
+      "label": "Chromium",
+      "parent_index": 5,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 1060,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 21,
+      "element_token": "s00000003:21",
+      "enabled": true,
+      "frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 3,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 22,
+      "element_token": "s00000003:22",
+      "enabled": true,
+      "frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 21,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 24,
+      "element_token": "s00000003:24",
+      "enabled": true,
+      "frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "label": "Volunteer Form default",
+      "parent_index": 22,
+      "role": "document web",
+      "screenshot_frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 25,
+      "element_token": "s00000003:25",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 640,
+        "x": 250,
+        "y": 195
+      },
+      "in_web_content": true,
+      "label": "Volunteer Form default",
+      "parent_index": 24,
+      "role": "heading",
+      "screenshot_frame": {
+        "h": 37,
+        "w": 640,
+        "x": 230,
+        "y": 175
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 26,
+      "element_token": "s00000003:26",
+      "enabled": true,
+      "frame": {
+        "h": 133,
+        "w": 640,
+        "x": 250,
+        "y": 253
+      },
+      "in_web_content": true,
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 24,
+      "role": "form",
+      "screenshot_frame": {
+        "h": 133,
+        "w": 640,
+        "x": 230,
+        "y": 233
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 27,
+      "element_token": "s00000003:27",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 640,
+        "x": 250,
+        "y": 253
+      },
+      "in_web_content": true,
+      "label": "\ufffc",
+      "parent_index": 26,
+      "role": "paragraph",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 640,
+        "x": 230,
+        "y": 233
+      }
+    },
+    {
+      "actions": [
+        "activate",
+        "showContextMenu"
+      ],
+      "depth": 10,
+      "element_index": 28,
+      "element_token": "s00000003:28",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 186,
+        "x": 324,
+        "y": 253
+      },
+      "in_web_content": true,
+      "label": "Full name",
+      "parent_index": 27,
+      "role": "entry",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 186,
+        "x": 304,
+        "y": 233
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 29,
+      "element_token": "s00000003:29",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 640,
+        "x": 250,
+        "y": 290
+      },
+      "in_web_content": true,
+      "label": "\ufffc",
+      "parent_index": 26,
+      "role": "paragraph",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 640,
+        "x": 230,
+        "y": 270
+      }
+    },
+    {
+      "actions": [
+        "activate",
+        "showContextMenu"
+      ],
+      "depth": 10,
+      "element_index": 30,
+      "element_token": "s00000003:30",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 186,
+        "x": 355,
+        "y": 290
+      },
+      "in_web_content": true,
+      "label": "Email address",
+      "parent_index": 29,
+      "role": "entry",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 186,
+        "x": 335,
+        "y": 270
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 31,
+      "element_token": "s00000003:31",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 640,
+        "x": 250,
+        "y": 327
+      },
+      "in_web_content": true,
+      "label": "\ufffc",
+      "parent_index": 26,
+      "role": "paragraph",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 640,
+        "x": 230,
+        "y": 307
+      }
+    },
+    {
+      "actions": [
+        "activate",
+        "showContextMenu"
+      ],
+      "depth": 10,
+      "element_index": 32,
+      "element_token": "s00000003:32",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 186,
+        "x": 338,
+        "y": 327
+      },
+      "in_web_content": true,
+      "label": "Postal code",
+      "parent_index": 31,
+      "role": "entry",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 186,
+        "x": 318,
+        "y": 307
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 33,
+      "element_token": "s00000003:33",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 125,
+        "x": 258,
+        "y": 364
+      },
+      "in_web_content": true,
+      "label": "Submit application",
+      "parent_index": 26,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 125,
+        "x": 238,
+        "y": 344
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 34,
+      "element_token": "s00000003:34",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 52,
+        "x": 395,
+        "y": 364
+      },
+      "in_web_content": true,
+      "label": "Reset",
+      "parent_index": 26,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 52,
+        "x": 375,
+        "y": 344
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 35,
+      "element_token": "s00000003:35",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 59,
+        "x": 458,
+        "y": 364
+      },
+      "in_web_content": true,
+      "label": "Cancel",
+      "parent_index": 26,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 59,
+        "x": 438,
+        "y": 344
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 37,
+      "element_token": "s00000003:37",
+      "enabled": true,
+      "frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "parent_index": 22,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 38,
+      "element_token": "s00000003:38",
+      "enabled": true,
+      "frame": {
+        "h": 56,
+        "w": 1100,
+        "x": 20,
+        "y": 107
+      },
+      "label": "Infobar Container",
+      "parent_index": 3,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 56,
+        "w": 1100,
+        "x": 0,
+        "y": 87
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 39,
+      "element_token": "s00000003:39",
+      "enabled": true,
+      "frame": {
+        "h": 56,
+        "w": 1100,
+        "x": 20,
+        "y": 107
+      },
+      "label": "Infobar",
+      "parent_index": 38,
+      "role": "alert",
+      "screenshot_frame": {
+        "h": 56,
+        "w": 1100,
+        "x": 0,
+        "y": 87
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 40,
+      "element_token": "s00000003:40",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 937,
+        "x": 36,
+        "y": 125
+      },
+      "label": "Chrome for Testing v154.0.8037.92 is only for automated testing. For regular browsing, use a standard version of Chrome that updates automatically.",
+      "parent_index": 39,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 20,
+        "w": 937,
+        "x": 16,
+        "y": 105
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 41,
+      "element_token": "s00000003:41",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 131,
+        "x": 973,
+        "y": 125
+      },
+      "label": "\ufffc",
+      "parent_index": 39,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 20,
+        "w": 131,
+        "x": 953,
+        "y": 105
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 42,
+      "element_token": "s00000003:42",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 131,
+        "x": 973,
+        "y": 125
+      },
+      "label": "Download Chrome",
+      "parent_index": 41,
+      "role": "link",
+      "screenshot_frame": {
+        "h": 20,
+        "w": 131,
+        "x": 953,
+        "y": 105
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 43,
+      "element_token": "s00000003:43",
+      "enabled": true,
+      "frame": {
+        "h": 14,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "parent_index": 38,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 14,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 44,
+      "element_token": "s00000003:44",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 3,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 45,
+      "element_token": "s00000003:45",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 28,
+        "x": 26,
+        "y": 20
+      },
+      "label": "\ufffc",
+      "parent_index": 44,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 28,
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "open",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 46,
+      "element_token": "s00000003:46",
+      "enabled": true,
+      "frame": {
+        "h": 28,
+        "w": 28,
+        "x": 26,
+        "y": 26
+      },
+      "label": "Tab search",
+      "parent_index": 45,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 28,
+        "w": 28,
+        "x": 6,
+        "y": 6
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 47,
+      "element_token": "s00000003:47",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 970,
+        "x": 48,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc",
+      "parent_index": 44,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 970,
+        "x": 28,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 48,
+      "element_token": "s00000003:48",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 970,
+        "x": 48,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc\ufffc",
+      "parent_index": 47,
+      "role": "page tab list",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 970,
+        "x": 28,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 49,
+      "element_token": "s00000003:49",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 256,
+        "x": 48,
+        "y": 20
+      },
+      "label": "Clinic Slots default",
+      "parent_index": 48,
+      "role": "page tab",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 256,
+        "x": 28,
+        "y": 0
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 50,
+      "element_token": "s00000003:50",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 26,
+        "x": 264,
+        "y": 27
+      },
+      "label": "Close",
+      "parent_index": 49,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 26,
+        "w": 26,
+        "x": 244,
+        "y": 7
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 51,
+      "element_token": "s00000003:51",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 256,
+        "x": 286,
+        "y": 20
+      },
+      "label": "Clinic Slots default",
+      "parent_index": 48,
+      "role": "page tab",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 256,
+        "x": 266,
+        "y": 0
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 52,
+      "element_token": "s00000003:52",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 26,
+        "x": 502,
+        "y": 27
+      },
+      "label": "Close",
+      "parent_index": 51,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 26,
+        "w": 26,
+        "x": 482,
+        "y": 7
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 53,
+      "element_token": "s00000003:53",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 256,
+        "x": 524,
+        "y": 20
+      },
+      "label": "Orders default",
+      "parent_index": 48,
+      "role": "page tab",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 256,
+        "x": 504,
+        "y": 0
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 54,
+      "element_token": "s00000003:54",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 26,
+        "x": 740,
+        "y": 27
+      },
+      "label": "Close",
+      "parent_index": 53,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 26,
+        "w": 26,
+        "x": 720,
+        "y": 7
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 55,
+      "element_token": "s00000003:55",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 256,
+        "x": 762,
+        "y": 20
+      },
+      "label": "Volunteer Form default",
+      "parent_index": 48,
+      "role": "page tab",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 256,
+        "x": 742,
+        "y": 0
+      },
+      "selected": true
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 56,
+      "element_token": "s00000003:56",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 26,
+        "x": 978,
+        "y": 27
+      },
+      "label": "Close",
+      "parent_index": 55,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 26,
+        "w": 26,
+        "x": 958,
+        "y": 7
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 57,
+      "element_token": "s00000003:57",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 970,
+        "x": 48,
+        "y": 20
+      },
+      "parent_index": 47,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 970,
+        "x": 28,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "description": "New tab",
+      "element_index": 58,
+      "element_token": "s00000003:58",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 28,
+        "x": 1012,
+        "y": 20
+      },
+      "label": "New Tab",
+      "parent_index": 44,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 28,
+        "x": 992,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 59,
+      "element_token": "s00000003:59",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 68,
+        "x": 1052,
+        "y": 20
+      },
+      "parent_index": 44,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 68,
+        "x": 1032,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 20,
+      "element_token": "s00000003:20",
+      "enabled": true,
+      "parent_index": 4,
+      "role": "panel"
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 23,
+      "element_token": "s00000003:23",
+      "enabled": true,
+      "parent_index": 22,
+      "role": "panel"
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 36,
+      "element_token": "s00000003:36",
+      "enabled": true,
+      "in_web_content": true,
+      "parent_index": 24,
+      "role": "statusbar"
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 60,
+      "element_token": "s00000003:60",
+      "enabled": true,
+      "parent_index": 3,
+      "role": "panel"
+    }
+  ],
+  "elements_complete": true,
+  "frame_note": "x/y for click / double_click / right_click / drag / scroll on this window are pixels of THIS screenshot (window-local, 0..screenshot_width x 0..screenshot_height), as are the element frames; the screenshot is kept at or below 1.15 megapixels so the image you read is the image these pixels index (frame_scale < 1 says the window was downsized to it). window_bounds is where it sits on the screen. Pass scope:\"desktop\" only for get_desktop_state pixels.",
+  "nodes_pending": 0,
+  "nodes_visited": 61,
+  "pid": 9258,
+  "returned_element_count": 61,
+  "screenshot_frame_valid": true,
+  "screenshot_height": 700,
+  "screenshot_mime_type": "image/png",
+  "screenshot_png_b64": "<removed: base64 PNG screenshot, 102160 chars>",
+  "screenshot_width": 1100,
+  "snapshot_id": "s00000003",
+  "timeout_ms": 5000,
+  "total_element_count": 61,
+  "tree_markdown": "- [0] frame \"Volunteer Form default - Google Chrome for Testing\" [actions=[doDefault,showContextMenu]]\n  - [1] panel \"\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n    - [2] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n      - [3] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n        - [4] panel \"\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n          - [5] tool bar \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n            - push button = \"Back\" (disabled)\n            - push button = \"Forward\" (disabled)\n            - [6] panel \"\ufffc\" [actions=[doDefault,showContextMenu]]\n              - [7] section \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                - [8] tool bar \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                  - [9] section \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                    - [10] push button \"Reload\" (description \"Reload this page\") [actions=[press,showContextMenu]]\n                      - [11] section \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                        - [12] section \"\" [actions=[doDefault,showContextMenu]]\n            - [13] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n              - [14] push button \"View site information\" [actions=[press,showContextMenu]]\n              - [15] entry \"Address and search bar\" [actions=[activate,showContextMenu]]\n              - [16] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n                - [17] push button \"Bookmark this tab\" [actions=[press,showContextMenu]]\n            - [18] push button \"You\" [actions=[press,showContextMenu]]\n            - [19] push button \"Chromium\" (description \"Customize and control Chromium\") [actions=[open,showContextMenu]]\n          - [20] panel \"\" [actions=[doDefault,showContextMenu]]\n        - [21] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n          - [22] panel \"\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n            - [23] panel \"\" [actions=[doDefault,showContextMenu]]\n            - [24] document web \"Volunteer Form default\" [actions=[doDefault,showContextMenu]]\n              - [25] heading \"Volunteer Form default\" [actions=[doDefault,showContextMenu]]\n                - static = \"Volunteer Form default\"\n              - [26] form \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n                - [27] paragraph \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                  - label = \"Full name \ufffc\"\n                    - static = \"Full name \"\n                    - [28] entry \"Full name\" [actions=[activate,showContextMenu]]\n                - [29] paragraph \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                  - label = \"Email address \ufffc\"\n                    - static = \"Email address \"\n                    - [30] entry \"Email address\" [actions=[activate,showContextMenu]]\n                - [31] paragraph \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                  - label = \"Postal code \ufffc\"\n                    - static = \"Postal code \"\n                    - [32] entry \"Postal code\" [actions=[activate,showContextMenu]]\n                - [33] push button \"Submit application\" [actions=[press,showContextMenu]]\n                - [34] push button \"Reset\" [actions=[press,showContextMenu]]\n                - [35] push button \"Cancel\" [actions=[press,showContextMenu]]\n              - [36] statusbar \"\" [actions=[doDefault,showContextMenu]]\n            - [37] panel \"\" [actions=[doDefault,showContextMenu]]\n        - [38] panel \"Infobar Container\" [actions=[doDefault,showContextMenu]]\n          - [39] alert \"Infobar\" [actions=[doDefault,showContextMenu]]\n            - [40] panel \"Chrome for Testing v154.0.8037.92 is only for automated testing. For regular browsing, use a standard version of Chrome that updates automatically.\" [actions=[doDefault,showContextMenu]]\n              - static = \"Chrome for Testing v154.0.8037.92 is only for automated testing. For regular browsing, use a standard version of Chrome that updates automatically.\"\n            - [41] panel \"\ufffc\" [actions=[doDefault,showContextMenu]]\n              - [42] link \"Download Chrome\" [actions=[doDefault,showContextMenu]]\n          - [43] panel \"\" [actions=[doDefault,showContextMenu]]\n        - [44] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n          - [45] panel \"\ufffc\" [actions=[doDefault,showContextMenu]]\n            - [46] push button \"Tab search\" [actions=[open,showContextMenu]]\n          - [47] panel \"\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n            - [48] page tab list \"\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n              - [49] page tab \"Clinic Slots default\" [actions=[doDefault,showContextMenu]]\n                - [50] push button \"Close\" [actions=[press,showContextMenu]]\n              - [51] page tab \"Clinic Slots default\" [actions=[doDefault,showContextMenu]]\n                - [52] push button \"Close\" [actions=[press,showContextMenu]]\n              - [53] page tab \"Orders default\" [actions=[doDefault,showContextMenu]]\n                - [54] push button \"Close\" [actions=[press,showContextMenu]]\n              - [55] page tab \"Volunteer Form default\" [actions=[doDefault,showContextMenu]]\n                - [56] push button \"Close\" [actions=[press,showContextMenu]]\n            - [57] panel \"\" [actions=[doDefault,showContextMenu]]\n          - [58] push button \"New Tab\" (description \"New tab\") [actions=[press,showContextMenu]]\n          - [59] panel \"\" [actions=[doDefault,showContextMenu]]\n        - [60] panel \"\" [actions=[doDefault,showContextMenu]]\n",
+  "truncated": false,
+  "walk_elapsed_ms": 222,
+  "window_bounds": {
+    "height": 700,
+    "width": 1100,
+    "x": 20,
+    "y": 20
+  },
+  "window_id": 2097155,
+  "window_title": "Volunteer Form default - Google Chrome for Testing"
+}
