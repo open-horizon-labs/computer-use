@@ -93,6 +93,31 @@ def _call(f, tool, args):
     return value
 
 
+def remember_tab(f, pid, window_id, tab_id, page=None):
+    """The tab the facade last navigated in OUR agent browser (the Driver flags no tab active after a navigation: measured live 2026-09-30)."""
+    prior = getattr(f, 'navigated_tab', None) or {}
+    same = prior.get('window') == (pid, window_id) and prior.get('tab_id') == tab_id
+    f.navigated_tab = {'window': (pid, window_id), 'tab_id': tab_id, 'url': (page or {}).get('url') or (prior.get('url') if same else None),
+                       'title': (page or {}).get('title') or (prior.get('title') if same else None)}
+
+
+def remembered_tab(f, pid, tabs):
+    """Of `tabs`, the one the facade last navigated, when pid is the agent browser's own process: by tab id, else (ids re-minted) by exactly one
+    url+title match with the previous bind. Never a guess: None when it cannot be told."""
+    mine = getattr(f, 'navigated_tab', None)
+    agent = getattr(getattr(f, 'agent_browser', None), 'proc', None)
+    if not mine or agent is None or getattr(agent, 'pid', None) != pid:
+        return None
+    by_id = [t for t in tabs if t.get('tab_id') == mine['tab_id']]
+    if len(by_id) == 1:
+        return by_id[0]
+    if mine.get('url') and mine.get('title'):
+        same = [t for t in tabs if t.get('url') == mine['url'] and t.get('title') == mine['title']]
+        if len(same) == 1:
+            return same[0]
+    return None
+
+
 def bind(f, pid, window_id):
     """Exact CDP binding for one native browser window: (target_id, tab_id of its active tab). Prepares the existing-profile endpoint once."""
     from core import Gap as CoreGap
@@ -115,6 +140,9 @@ def bind(f, pid, window_id):
     tabs = _tabs(bound)
     active = [t for t in tabs if t.get('active') or t.get('selected')]
     tab = (active or (tabs if len(tabs) == 1 else []))
+    if not tab and tabs:
+        mine = remembered_tab(f, pid, tabs)
+        tab = [mine] if mine else []
     if not target or len(tab) != 1:
         raise _gap('browser_tab_ambiguous: the window is bound to %d tabs and none is reported active; bring the tab to the front of its window' % len(tabs))
     return target, tab[0]['tab_id']
@@ -145,6 +173,7 @@ def navigate(f, pid, window_id, url):
     target, tab = bind(f, pid, window_id)
     try:
         _call(f, 'browser_navigate', {'target_id': target, 'tab_id': tab, 'url': url})
+        remember_tab(f, pid, window_id, tab)
     except DriverCallFailed as error:
         # Live 2026-09-30: a 404 is exit 1 'navigation failed: net::ERR_HTTP_RESPONSE_CODE_FAILURE' (no refusal code): the page did not
         # load. Not a permission, not a landing: its own reason, no Driver text.
@@ -158,6 +187,8 @@ def navigate(f, pid, window_id, url):
         seen.update(page=page, verdict=verdict)
         return verdict != 'unknown' and not (verdict == 'navigated_elsewhere' and page['url'] in ('', 'about:blank'))
     settle(f, check)
+    if seen.get('page'):
+        remember_tab(f, pid, window_id, tab, seen['page'])
     return _verdict(url, seen)
 
 

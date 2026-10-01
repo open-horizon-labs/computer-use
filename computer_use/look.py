@@ -367,6 +367,8 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
                 **({'header': analysis['header'][:8]} if analysis['header'] else {}),
                 **({'repeated_text': [cut(t)[0] for t in analysis['repeated_text'][:10]]} if analysis['repeated_text'] else {})}
     if extras.get('canvas') is not None:response['canvas'] = extras['canvas']
+    for key in ('surface', 'refusal'):
+        if extras.get(key) is not None:response[key] = extras[key]
     if extras.get('focus') is not None:response['focus'] = extras['focus']
     for key in ('sources', 'sources_disagree', 'degraded', 'dom_unplaced'):
         if extras.get(key) is not None:response[key] = extras[key]
@@ -437,6 +439,7 @@ def attach_dom(f, pid, window_id, state, analysis, rows, extras):
             extras['notes'].append(semantic['note'])
             extras['sources'] = {'ax': True, 'dom': False}
         return
+    extras['_semantic'] = semantic
     found = dom.compare(analysis, semantic, dom.ax_text_blob(f, state, analysis))
     cut_count = 0
     for r in rows:
@@ -494,7 +497,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         webs = f._top_web_areas(state)
         if len(webs) > 1:
             return {'status': 'deferred', 'reason': 'web_area_ambiguous', 'window': {'title': state['raw'].get('window_title')}, 'found': {'web_areas': len(webs)},
-                    'hint': 'The window holds %d separate page areas (for example a browser extension popup beside the page). Close the extra one, or give the exact title of the window that holds only the page, and call look again.' % len(webs),
+                    'hint': 'The window holds %d separate page areas (an extension popup beside the page?). Close the extra one or give the exact title of the page window, then call look.' % len(webs),
                     'ms_by_stage': ms}
         began = f.clock()
         analysis = analyze(f, state)
@@ -513,6 +516,19 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                 began = f.clock()
                 try:
                     regions = f._text_regions(handle)
+                    import novnc
+                    semantic = extras.pop('_semantic', None)
+                    if novnc.detect(semantic):
+                        # noVNC in a tab (#56): the drawn labels are pressed through the bound tab's viewport; refuse here when they could not be placed or a password is asked for.
+                        extras['surface'] = 'novnc'
+                        if novnc.password_prompt(semantic, [r['text'] for r in regions]):
+                            extras['refusal'] = {'reason': 'credentials_required', 'hint': novnc.CREDENTIALS_HINT}
+                            regions = []
+                        else:
+                            try:novnc.mapping(f, state)
+                            except Gap as gap:
+                                extras['refusal'] = {'reason': 'viewport_mapping_unavailable', 'hint': str(gap)}
+                                regions = []
                     counts, order = {}, []
                     for r in regions:
                         text = clean(r['text'])[:40]
@@ -525,7 +541,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                             item['near'] = [clean(f._region_neighbor(r, regions) or '')[:40] for r in regions if clean(r['text'])[:40] == text][:4]
                         items.append(item)
                     extras['canvas'] = {'text_regions': items}
-                    if not items:
+                    if not items and 'refusal' not in extras:
                         extras['notes'].append('Perception found no drawn text on this page')
                     if len(order) > CANVAS_MAX:
                         extras['notes'].append('%d more drawn texts are not listed (the first %d are shown)' % (len(order) - CANVAS_MAX, CANVAS_MAX))
@@ -569,6 +585,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         f.looks[(pid, window_id, response['look_id'])] = {'pid': pid, 'window_id': window_id, 'terms': terms, 'n': len(shown), 'opts': opts, 'created': f.clock()}
         while len(f.looks) > 8:
             f.looks.pop(next(iter(f.looks)))
+        f.reported[(pid, window_id, extras['title'])] = {'text': set(response['text']), 'controls': set(response['controls']) | {c for r in response['records'] for c in r['controls']}}  # what the next do summary need not repeat (CE-FACADE-011)
         ms['total'] = round((f.clock() - t0) * 1000)
         response['ms_by_stage'] = ms
         f.event('look', route='deterministic' if fields is None else 'nuextract3', records=len(shown), look_id=response['look_id'], ms=ms['total'])

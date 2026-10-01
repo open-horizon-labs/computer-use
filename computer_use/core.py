@@ -75,7 +75,7 @@ REGION_CANDIDATE_LIMIT = 18  # the generic chooser's capacity (sketch S4.5); nev
 
 
 MUTATING_TOOLS = frozenset({'click', 'double_click', 'right_click', 'type_text', 'drag', 'scroll', 'hotkey', 'press_key',
-                              'invoke_menu', 'set_window_frame'})
+                              'invoke_menu', 'set_window_frame', 'browser_click', 'browser_type'})
 READ_TOOLS = frozenset({'get_window_state', 'list_windows', 'get_browser_state', 'parse_visual_regions'})  # the only calls a lost Driver session may re-run (#31)
 
 
@@ -170,6 +170,8 @@ class Facade:
                  spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None, setup_env=None):
         self.driver = driver or Driver()
         self.sleep = sleep
+        self.reported = {}  # (pid, window_id, title) -> {text, controls} the LLM was last shown for that page (look or do summary): a do summary carries only what is new
+        self._notice_sent = False;self._notice_windows = set()  # see _notice_needed
         self._settled_titles = {}  # (pid, window_id) -> window title of the last settled look (see SETTLE_DELAY_S)
         self.foreground_ok = False  # per call/step: allow_foreground; a background pixel click cannot reach a canvas (see act)
         self.factories = {'generic': generic_factory, 'reader': reader_factory,
@@ -270,7 +272,7 @@ class Facade:
         phrase list. A failed Driver call is NOT retried here: _do's own bounded recovery owns it. Read-only, so a retry can never act twice. After the last try
         the result (or the original error) is returned unchanged; nothing here solves or bypasses a check."""
         delays = list(OBSERVE_RETRY_DELAYS) if wait_ready else []
-        began = self.clock();waited_idle = False;reason = None
+        began = self.clock();waited_idle = False;reason = None;pending_count = None
         for attempt in range(len(delays) + 1):
             last = attempt == len(delays)
             try:
@@ -287,9 +289,15 @@ class Facade:
                         key = (pid, window_id)
                         # a window first seen, or a new page in it (its title changed): the tree may still be growing
                         if key not in self._settled_titles or self._settled_titles[key] != result.get('title'):
-                            result = self._settled(pid, window_id, timeout, result, began)
+                            # CE-FACADE-011: an actions_pending wait ACTIONS_PENDING_WAIT_S of idle already showed the same tree twice (same element count
+                            # before and after the idle gap) and now every page button is pressable: that is the settle proof, so the look does not pay
+                            # SETTLE_DELAY_S and a third walk on top of the 2 s wait. A count that moved still settles.
+                            if pending_count is None or pending_count != len(result.get('elements') or []):
+                                result = self._settled(pid, window_id, timeout, result, began)
+                            else:self.event('observe_settled', extra_observations=0, elements=pending_count, proof='actions_pending_wait')
                             self._settled_titles[key] = result.get('title')
                     return result
+            pending_count = len(result.get('elements') or []) if reason == 'actions_pending' else None
             if reason == 'actions_pending' and self.clock() - began + ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 <= LOOK_WAIT_MAX_S:
                 waited_idle = True  # every actions_pending retry waits idle (a quick re-poll can land in a new episode)
                 self.sleep(ACTIONS_PENDING_WAIT_S)
@@ -820,9 +828,7 @@ class Facade:
                 'eligible_ids': filt['eligible_ids'],
                 'missing_fields': {aid: filt['checks'][aid]['gaps'] for aid in filt['unknown_ids']},
                 'extracted': extracted,
-                'hint': 'Do not re-read. A record whose strings are shown above is yours to judge: pass the records '
-                        'you find eligible as candidate_ids or record_actions with this reading. Only a record with '
-                        'no extracted value for a listed field justifies one re-read; otherwise the scope stays incomplete.'}
+                'hint': 'Do not re-read: judge the strings shown above and pass the eligible records as candidate_ids or record_actions. Only a record with no extracted value for a listed field justifies one re-read.'}
 
     def actions(self, state, ids, operation, text):
         if operation not in ('click','type_text'):
@@ -1025,9 +1031,7 @@ class Facade:
                            reason='unknown_competitors_unacknowledged',unknown_competitors=len(unacknowledged))
                 return {'status':'defer','route':'scope_guard','reason':'unknown_competitors_unacknowledged',
                         'unknown_ids':unacknowledged,'extracted':extracted,'judged_ids':retained,
-                        'hint':'Your verdict skips records the reading left unknown. If their strings above show they are '
-                               'ineligible, repeat this call with accept_unknown listing exactly those IDs; otherwise include '
-                               'them in your verdict or narrow the scope. Do not re-read just to fill a format.'}
+                        'hint':'Your verdict skips records the reading left unknown. If their strings above show they are ineligible, repeat with accept_unknown=<exactly those IDs>; otherwise include them or narrow the scope.'}
             mapped=[]
             for root in retained:
                 _,members=self.subtree(state,root)
@@ -1251,10 +1255,13 @@ class Facade:
             # corner button, the centre button was pressed, reported as success). So it is a wrong click, not a no-op, and it is
             # never sent. A real pointer event needs the Driver's foreground delivery, which fronts the window briefly: only the
             # caller's explicit allow_foreground (this call or this step) permits that.
-            if not item.get('allow_foreground'):
+            if item.get('novnc'):
+                self._novnc_recheck(item, fresh['snapshot'], current)  # background through browser_click: no foreground needed; the label must still be drawn at that point
+            elif not item.get('allow_foreground'):
                 item['used']=False  # nothing was clicked
                 raise Gap("pointer_not_deliverable_in_background: a background pixel click on a drawn surface lands at the element's centre, not at %r; nothing was clicked. Pass allow_foreground=true (this call or step) to let the Driver briefly front the window for a real pointer event, only if the user allows that" % (item['request']['actions'][0].get('name') or '')[:40])
-            for action in request['actions']:action['arguments']['delivery_mode']='foreground'
+            if not item.get('novnc'):
+                for action in request['actions']:action['arguments']['delivery_mode']='foreground'
             request['snapshot_id']=current['raw']['snapshot_id']
             decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
         else:
@@ -1274,6 +1281,18 @@ class Facade:
                    verification='pending')
         return {'status':'delivered','driver_result':result,'requires_verification':True,
                 'pid':state['pid'],'window_id':state['window_id']}
+
+    def _novnc_recheck(self, item, handle, current):
+        """The label is drawn at the same viewport point on a FRESH capture (exact normalized text, mapping recomputed from this observation); else StaleUI."""
+        import novnc as nv
+        want = item['novnc']
+        view = nv.mapping(self, current)
+        for r in self._text_regions(handle):
+            if self._ocr_normalize(r['text']) != want['want']:continue
+            try:x, y = nv.css_point(view, r['bounds'])
+            except Gap:continue
+            if abs(x-want['x']) <= 2 and abs(y-want['y']) <= 2:return
+        raise StaleUI('the drawn label is no longer at that point on a fresh capture; nothing was clicked; reobserve and choose again')
 
     @staticmethod
     def _ocr_normalize(text):
@@ -1788,6 +1807,23 @@ class Facade:
 
     REGION_NEAR_PX = 300
 
+    def _novnc_gate(self, pid, window_id, snapshot, state):
+        """(refusal, surface): refusal is a typed deferred payload (credentials_required, viewport_mapping_unavailable) or None; surface is the bound noVNC tab or None."""
+        import novnc as nv
+        try:
+            surface = nv.surface(self, pid, window_id, state)
+        except Gap as gap:
+            text = str(gap)
+            if text.startswith('viewport_mapping_unavailable'):return {'reason': 'viewport_mapping_unavailable', 'hint': text}, None
+            if text.startswith(('permission_required', 'browser_tab_ambiguous')):return {'reason': text.split(':', 1)[0], 'hint': text}, None
+            raise
+        if surface is None:return None, None
+        try:texts = [r['text'] for r in self._text_regions(snapshot)]
+        except Gap:texts = []
+        if nv.password_prompt(surface['semantic'], texts):
+            return {'reason': 'credentials_required', 'dead_end': True, 'report_to_user': nv.CREDENTIALS_HINT, 'hint': nv.CREDENTIALS_HINT}, None
+        return None, surface
+
     def _text_regions(self, snapshot):
         return [r for r in self.regions(snapshot).get('regions', []) if r.get('kind') == 'text' and (r.get('text') or '').strip() and r.get('bounds')]
 
@@ -1810,7 +1846,7 @@ class Facade:
         if not best or (len(best) > 1 and best[0][0] == best[1][0]):return None
         return best[0][2]['text']
 
-    def region_exact(self, snapshot, label, goal, near=None):
+    def region_exact(self, snapshot, label, goal, near=None, novnc=None):
         """Pixel-only pages: resolve `label` against TEXT regions exactly (normalized) and UNIQUELY, with the near-edit veto of region_corroborated
         (an OCR twin such as 'Sove' for 'Save' vetoes). Several exact matches defer unless `near` (the text of the nearest region above or left)
         picks exactly one. Capture-bound click at the region centre, as choose_regions. Returns {'status': selected|defer|none, ...}."""
@@ -1822,7 +1858,7 @@ class Facade:
         twins = [r for r in regions if norm(r['text']) != want and len(want) >= 3 and self._within_one_edit(norm(r['text']), want)]
         if twins:
             return {'status': 'defer', 'reason': 'region_uncorroborated', 'region_texts': texts, 'twin_count': len(twins),
-                    'hint': 'Another text on the screen reads almost the same as %r (an OCR-style twin), so the label cannot be trusted; nothing was clicked. Call do again with near=<the text just above or left of the control> and the exact label, or stop and report it.' % label}
+                    'hint': 'Another text reads almost the same as %r, so the label cannot be trusted; nothing was clicked. Call do again with near=<the text above or left of the control>, or report it.' % label}
         neighbors = {r['id']: self._region_neighbor(r, regions) for r in exact}
         if near is not None:exact = [r for r in exact if neighbors[r['id']] is not None and norm(neighbors[r['id']]) == norm(near)]
         if len(exact) != 1:
@@ -1832,17 +1868,24 @@ class Facade:
                     'hint': '%d text regions read %r%s; nothing was clicked. Call do again with the same control and near=<the text just above or left of the one you mean> (see matches[].near).'
                             % (len(everyone), label, '' if near is None else ' and none is right beside %r' % near)}
         target = exact[0];bounds = target['bounds']
-        action = {'id': target['id'], 'name': target['text'], 'role': 'perception_region:text', 'operation': 'click', 'enabled': True, 'evidence_text': target['text'],
-                  'description': target['text'], 'record_basis': 'perception_layout',
-                  'arguments': {'pid': state['pid'], 'window_id': state['window_id'], 'session': self.session, 'capture_id': capture_id, 'delivery_mode': 'background',
-                                'target': {'kind': 'window', 'pid': state['pid'], 'window_id': state['window_id']},
-                                'x': bounds.get('x', 0) + bounds.get('width', 0) / 2, 'y': bounds.get('y', 0) + bounds.get('height', 0) / 2}}
-        request = {'snapshot_id': state['raw']['snapshot_id'], 'kind': 'semantic', 'operation': 'click', 'goal': goal, 'actions': [action], 'observation': target['text']}
+        operation = 'click'
+        arguments = {'pid': state['pid'], 'window_id': state['window_id'], 'session': self.session, 'capture_id': capture_id, 'delivery_mode': 'background',
+                     'target': {'kind': 'window', 'pid': state['pid'], 'window_id': state['window_id']},
+                     'x': bounds.get('x', 0) + bounds.get('width', 0) / 2, 'y': bounds.get('y', 0) + bounds.get('height', 0) / 2}
+        if novnc:
+            # noVNC in a tab (#56): the point is the drawn label's centre in the bound tab's viewport CSS px, delivered by browser_click (background, exact point).
+            import novnc as nv
+            x, y = nv.css_point(novnc['view'], bounds);operation = 'browser_click'
+            arguments = {'session': self.session, 'target_id': novnc['target_id'], 'tab_id': novnc['tab_id'], 'x': x, 'y': y}
+        action = {'id': target['id'], 'name': target['text'], 'role': 'perception_region:text', 'operation': operation, 'enabled': True, 'evidence_text': target['text'],
+                  'description': target['text'], 'record_basis': 'perception_layout', 'arguments': arguments}
+        request = {'snapshot_id': state['raw']['snapshot_id'], 'kind': 'semantic', 'operation': operation, 'goal': goal, 'actions': [action], 'observation': target['text']}
         decision = {'status': 'selected', 'action_id': target['id'], 'action_authorized': True, 'reason': 'exact_region_label', 'snapshot_id': request['snapshot_id'],
                     'binding_digest': request_digest(request), 'provider_outputs': []}
         handle = 'sel_' + uuid.uuid4().hex
         self.selections[handle] = {'snapshot': snapshot, 'request': copy.deepcopy(request), 'decision': copy.deepcopy(decision), 'mode': 'regions', 'operation': 'click',
-                                   'text': None, 'used': False, 'allow_foreground': self.foreground_ok, 'capture_id': capture_id}
+                                   'text': None, 'used': False, 'allow_foreground': self.foreground_ok, 'capture_id': capture_id,
+                                   **({'novnc': {'want': want, 'x': arguments['x'], 'y': arguments['y']}} if novnc else {})}
         while len(self.selections) > 32:self.selections.pop(next(iter(self.selections)))
         self.event('choose', snapshot=snapshot, route='exact_region_label', mode='regions', authorized=True, reason='exact_region_label', near_used=near is not None)
         return {'status': 'selected', 'route': 'exact_region_label', 'selection': handle, 'selected_id': target['id'], 'decision': decision}
@@ -1854,8 +1897,16 @@ class Facade:
         for n in state['nodes'].values():roles[n.get('role')] = roles.get(n.get('role'), 0) + 1
         return {'snapshot': handle, 'title': state['raw'].get('window_title'), 'element_count': len(state['nodes']),
                 'top_roles': dict(sorted(roles.items(), key=lambda kv: (-kv[1], str(kv[0])))[:6]),
-                'controls': [{'id': 'e'+str(i), 'name': (n.get('label') or '')[:40]} for i, n in state['nodes'].items()
-                             if i not in state['aliases'] and self._is_control(n)][:12]}
+                'controls': self._distinct_controls([(i, (n.get('label') or '')[:40]) for i, n in state['nodes'].items() if i not in state['aliases'] and self._is_control(n)])}
+
+    @staticmethod
+    def _distinct_controls(found, cap=12):
+        """[(index, label)] -> [{id, name[, count]}]: a label shown by many controls (12 Book buttons) is listed once with its count and the first id (CE-FACADE-011)."""
+        order, counts = [], {}
+        for i, name in found:
+            if name not in counts:order.append((i, name))
+            counts[name] = counts.get(name, 0) + 1
+        return [{'id': 'e' + str(i), 'name': name, **({'count': counts[name]} if counts[name] > 1 else {})} for i, name in order[:cap]]
 
     def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60, device=None):
         """Read-only, deterministic look at the strings the page displays (no click, no window move, no model unless `fields`)."""
@@ -1892,8 +1943,37 @@ class Facade:
             report = self.agent.take_report()
             if report.get('parked'):result['agent_display'] = {'id': self.agent.display, 'parked': True}
             if report.get('note'):result['agent_display_note'] = report['note']
-            result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)
+            result['untrusted_page_text'] = True  # the flag is on every response; the fixed sentence only where it is news (CE-FACADE-011)
+            if self._notice_needed(result):result['notice'] = lookmod.NOTICE
+            else:result.pop('notice', None)
         return result
+
+    @staticmethod
+    def _page_windows(result):
+        """Identities of the windows whose text a response carries: look/do window and observation titles, device ids, the pages read_pages opened."""
+        keys = set()
+        def add(value):
+            if isinstance(value, str) and value:keys.add(value)
+        window = result.get('window')
+        if isinstance(window, dict):add(window.get('device'));add(window.get('title'))
+        for part in ('summary', 'observation'):
+            if isinstance(result.get(part), dict):add(result[part].get('title'))
+        for step in result.get('steps') or ():
+            for page in (step.get('pages') or ()) if isinstance(step, dict) else ():
+                add(page.get('url'));add(((page.get('summary') or {}).get('title')))
+        return keys
+
+    def _notice_needed(self, result):
+        """The untrusted-text sentence is sent in the first response of the session and in any response whose text came from a window (or page title)
+        the session has not been told about yet; the same window again gets only the untrusted_page_text flag. The sentence stays in the instructions
+        and the tool descriptions, so an agent that never saw a response still has it."""
+        keys = self._page_windows(result)
+        new = keys - self._notice_windows
+        self._notice_windows |= keys
+        if not self._notice_sent or new:
+            self._notice_sent = True
+            return True
+        return False
 
     def _do_entry(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground=None):
         if steps is not None or look_id is not None or abort_if is not None:
@@ -1918,7 +1998,7 @@ class Facade:
         def finish(status, **extra):
             result = {'status': status, 'stage': ctx['stage'], **extra, 'delivery': ctx['delivery'],
                       'trace_summary': {'calls_by_route': dict(calls), 'ms_by_stage': dict(ms), 'passes': ctx['pass'],
-                                        'attempts': attempts[:10], 'follow_up_needed': status not in ('done', 'observed')}}
+                                        'attempts': attempts[:4], 'follow_up_needed': status not in ('done', 'observed')}}
             if ctx['pid'] is not None:
                 observation = self._do_observation(ctx['pid'], ctx['window_id'])
                 if observation:result['observation'] = observation
@@ -1936,7 +2016,7 @@ class Facade:
         def remaining():return max(1.0, min(20.0, budget_s - (self.clock()-t0-ms.get('act', 0)/1000-ms.get('confirm', 0)/1000)))
         def budget(**more):
             return finish('deferred', reason='budget_exceeded', budget_exceeded=True, budget_s=budget_s, **more,
-                          hint='The wall budget ran out before the next step (a hard cap of 3x budget_s counts click time too); no further step ran and nothing was clicked after it. If a click had landed, call do with operation="verify" and an expect to check it; otherwise call do again.')
+                          hint='The wall budget ran out; no further step ran. If a click had landed, call do with operation="verify" and an expect to check it; otherwise call do again.')
         def transient(error):
             return isinstance(error, DriverCallFailed) or (isinstance(error, (ValueError, RuntimeError, TimeoutError, OSError)) and not isinstance(error, Gap))
         def guarded(stage, fn):
@@ -1972,9 +2052,7 @@ class Facade:
             if payload.get('extracted'):more['evidence'] = {**more.get('evidence', {}), 'extracted': self._bounded(payload['extracted'])}
             if keep_keys['reason'] in ('unknown_competitors_unacknowledged', 'unknown_or_incomplete_scope') and payload.get('unknown_ids'):
                 more['retry_with'] = 'do again with the same arguments plus accept_unknown=[ids] (they do NOT match) or treat_as_match=[ids] (they DO match)'
-                keep_keys['hint'] = ('Some records could not be compared with your predicates (unknown_ids; their strings are in evidence.extracted, and evidence.excluded_values shows what the predicates threw away). '
-                                     'Call do again with the same arguments plus ONE of: accept_unknown=<ids> if the strings show those records do NOT match; '
-                                     'treat_as_match=<ids> if you judge they DO match (for example "half-hour" means 30 minutes). Nothing was clicked.')
+                keep_keys['hint'] = ('Some records could not be compared (unknown_ids; strings in evidence.extracted). Nothing was clicked. Call do again with the same arguments plus accept_unknown=<ids> if they do NOT match, or treat_as_match=<ids> if they DO.')
             return finish('deferred', **keep_keys, **more)
         def identity_of(reading, state, roots, selected):
             """What the selected record IS: its extracted strings (records mode) or its description."""
@@ -2041,7 +2119,7 @@ class Facade:
             webs = self._top_web_areas(state)
             if len(webs) > 1:
                 return finish('deferred', reason='web_area_ambiguous', found={'web_areas': len(webs)},
-                              hint='The window holds %d separate page areas (for example a browser extension popup beside the page); nothing was clicked. Close the extra one, or give the exact title of the window that holds only the page, and call do again.' % len(webs))
+                              hint='The window holds %d separate page areas (an extension popup beside the page?); nothing was clicked. Close the extra one or give the exact title of the page window, then call do.' % len(webs))
             if operation == 'verify':return verify_only(state)
             reading, pick, roots = None, {}, []
             if plan and plan.get('confirm_step'):
@@ -2141,7 +2219,9 @@ class Facade:
                     listing = self._bounded(sorted({state['nodes'][i].get('label') or '' for i in offered}))
                     fallback = None
                     if not any_named and operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
-                        try:fallback = self.region_exact(snapshot, label, goal, near)
+                        refused, nv = self._novnc_gate(pid_, window_, snapshot, state)
+                        if refused:return finish('deferred', **refused)
+                        try:fallback = self.region_exact(snapshot, label, goal, near, nv)
                         except Gap:fallback = None
                         if fallback and fallback['status'] == 'selected':region_choice = fallback;mode = 'region_exact'
                         elif fallback and fallback['status'] == 'defer':
@@ -2161,13 +2241,19 @@ class Facade:
                 if mode == 'semantic':
                     if offered:choose_args.update(candidate_ids=['e'+str(i) for i in offered])
                     else:
+                        if self.perception_state == 'healthy' and state['raw'].get('capture_id') and state['raw'].get('capture_id'):
+                            refused, nv = self._novnc_gate(pid_, window_, snapshot, state)
+                            if refused:return finish('deferred', **refused)
+                            if nv and operation != 'click':
+                                return finish('deferred', reason='novnc_typing_unavailable', dead_end=True,
+                                              hint='This is a noVNC page: its canvas has no editable element, and the Driver types only into one (browser_type needs a ref), so nothing was typed. Ask the user to type, or use a computer-use server on the remote machine.')
                         seen_texts = []
                         if operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
                             try:seen_texts = self._region_texts(self._text_regions(snapshot))
                             except Gap:seen_texts = []
                         if seen_texts:
                             return finish('deferred', reason='region_label_needed', found={'region_texts': seen_texts},
-                                          hint='This page has no pressable controls, but text is drawn on it (found.region_texts). Call do again with control=<the exact text of the button as drawn>; if that text appears more than once (count above 1), also pass near=<the text just above or left of the one you mean>.')
+                                          hint='No pressable controls, but text is drawn on the page (found.region_texts). Call do with control=<the exact drawn text>, plus near=<the text above or left of it> when the count is above 1.')
                         return finish('deferred', reason='no_actionable_controls', dead_end=True, report_to_user=DEAD_END,
                                        hint='No enabled, press-capable control was found in the page content, so no do parameter can move forward; nothing was clicked. Stop and report this to the user; do not retry.')
             def choose_once():
@@ -2307,7 +2393,7 @@ class Facade:
                               hint='The click was delivered but no expect was given, so nothing was checked. Do not click again. To check, call do with operation="verify" and expect=<text that should now be visible>.')
             # (A) a click that may have been delivered and could not be verified: the caller decides; never a re-click.
             return finish('deferred', reason='delivery_unverified', verified=False, **extra,
-                          hint='The click was delivered but the outcome could not be verified. Do not click again blindly. To re-check without clicking, call do with operation="verify" and an expect that is visible page text (never a button label; see observation.controls for the buttons).')
+                          hint='The click was delivered but not verified. Do not click again blindly. To re-check, call do with operation="verify" and an expect that is visible page text (never a button label).')
         def confirm(current, before, new_controls, dialog_text, ambiguous, reading, fields_spec, picked):
             """A dialog after the first click. The goal never authorized pressing anything in it, so confirming is OPT-IN:
             only with `confirm` (an exact control label), a COMPLETE displayed-identity match with the selected record (S4.2 s7),
@@ -2345,15 +2431,12 @@ class Facade:
             if not confirm_label:
                 return finish('deferred', reason='confirm_dialog_present', **held,
                               next_call={'goal': 'Click "<one of dialog.controls, exact label>"', 'expect': '<text that will appear once it is done>'},
-                              hint='The first click is done: do not repeat this goal. A dialog is showing and nothing in it was pressed. To press one of dialog.controls, call do again '
-                                   'with a goal that quotes its exact label (that call does not re-click the first control) and an expect. To have this goal press it on its own, '
-                                   'pass confirm=<exact control label>.'), None
+                              hint='The first click is done: do not repeat this goal. A dialog is showing; nothing in it was pressed. Call do with a goal quoting one dialog.controls label and an expect, or pass confirm=<exact label>.'), None
             if not reading:return finish('deferred', reason='confirm_dialog_needs_identity', **held), None
             if state == 'partial':
                 return finish('deferred', reason='confirm_identity_partial', **held, identity_shown=shown, identity_not_shown=not_shown,
-                              hint='The dialog shows only part of the record identity (shown: %s; not shown: %s); nothing further was clicked. The first click is done: do not repeat this goal. If you judge it is the right dialog, '
-                                   'call do again with a goal that quotes one of dialog.controls and an expect. Next time pass records.identity=%s so that confirm=<label> can press it on its own.'
-                                   % (', '.join(shown), ', '.join(not_shown), json.dumps(shown))), None
+                              hint='The dialog shows part of the identity (shown: %s; not shown: %s). The first click is done: do not repeat it. If it is the right dialog, call do with a goal quoting a dialog.controls label and an expect. Next time pass records.identity=%s.'
+                                   % (', '.join(shown)[:30], ', '.join(not_shown)[:30], json.dumps(shown)[:30])), None
             if state != 'matched':
                 return finish('deferred', reason='confirm_identity_mismatch' if state == 'mismatch' else 'confirm_identity_unknown', **held,
                               hint='The dialog does not display the identity of the selected record (fields %s); nothing further was clicked. Press it deliberately with a fresh do that quotes its label.' % ', '.join(ident_fields)), None
