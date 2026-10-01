@@ -338,49 +338,49 @@ def identity_state(dialog_text, wanted):
 # --- hints: only look / do parameters, never a primitive ----------------------------------------------------------------
 
 HINTS = {
-    'page_changed_since_look': 'The page no longer reads the way the look showed it, so a filter over its lines is not safe; nothing was clicked by step %(n)d. Call look again, then do with the new look_id and steps from step %(n)d on.',
-    'no_matching_record': 'No record shown by the look satisfies step %(n)d where.lines (see steps[].evidence.match_count and the lines in look). Nothing was clicked by this step. Correct the conditions against the strings look showed (a duration may read "half-hour"), then call do with the steps from step %(n)d on.',
-    'where_matches_several': 'Several records satisfy step %(n)d where.lines (evidence.matches shows their lines); nothing was guessed or clicked by this step. Add a condition that only the one you mean satisfies, then call do with the steps from step %(n)d on.',
+    'page_changed_since_look': 'The page no longer reads as the look showed it; nothing was clicked by step %(n)d. Call look again, then do with the new look_id and steps from step %(n)d on.',
+    'no_matching_record': 'No record in the look satisfies step %(n)d where.lines (evidence.match_count). Nothing was clicked. Correct the conditions against the strings look showed, then call do from step %(n)d on.',
+    'where_matches_several': 'Several records satisfy step %(n)d where.lines (evidence.matches); nothing was clicked. Add a condition only the one you mean satisfies, then call do from step %(n)d on.',
     'control_needed': 'Each record has several controls (see found.repeated_controls). Set control on step %(n)d to the exact label of the one to press, then call do with the steps from step %(n)d on.',
     'control_not_found': 'No control matches step %(n)d (found.controls lists what is pressable). Nothing was clicked by this step. Call look, then do with a corrected control from step %(n)d on.',
     'control_ambiguous': 'Several controls match step %(n)d; nothing was guessed. Set control to the exact full label, then call do with the steps from step %(n)d on.',
     'control_not_pressable': 'The control of step %(n)d is present but not pressable right now; nothing was clicked by this step. Call look, then do with the steps from step %(n)d on.',
     'records_ambiguous': 'The records on this page cannot be told apart without guessing; nothing was clicked by step %(n)d. Call look for the controls on the page, then give step %(n)d control=<the exact button label>.',
     'record_disabled': 'The record step %(n)d selects is disabled, so its control cannot be pressed; nothing was clicked by this step. Report that it is unavailable, or call look and choose another record.',
-    'confirm_dialog_present': 'The step\'s click is done and a dialog is showing (see steps[].dialog.controls); nothing in it was pressed and the dialog was not an expected outcome. Do not repeat the click. To press a dialog control call do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}].',
+    'confirm_dialog_present': 'The click is done and a dialog is showing; nothing in it was pressed. Do not repeat the click: call do with a press step, control=<a dialog.controls label>, with expect.',
     'confirm_dialog_not_found': 'Step %(n)d found no new dialog after the previous step; nothing was clicked by this step. Call look to see what the page shows now.',
     'confirm_dialog_ambiguous': 'A dialog was already open, was replaced, or several appeared, or several controls carry that label; nothing was clicked by step %(n)d. Call look to see what the page shows now.',
-    'confirm_needs_identity': 'Step %(n)d has no complete identity to check the dialog against, and the previous step\'s click is already done, so nothing further was pressed. Read dialog.lines: if it is the right record\'s dialog, call do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it. Next time give the press step identity=[<texts the dialog displays>].',
-    'confirm_identity_partial': 'The dialog shows only part of the record identity (identity_shown and identity_not_shown count the strings), and the previous step\'s click is already done, so nothing further was pressed by step %(n)d. Read dialog.lines: if it is the right record\'s dialog, call do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it. Next time give the press step identity=[<texts the dialog displays, e.g. the order number>].',
-    'confirm_identity_unknown': 'The dialog does not display the identity of the selected record, and the previous step\'s click is already done, so nothing further was pressed by step %(n)d. Read dialog.lines: if it is the right record\'s dialog, call do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it. Next time give the press step identity=[<texts the dialog displays>].',
+    'confirm_needs_identity': 'Step %(n)d has no identity to check the dialog; the earlier click is done. If dialog.lines is the right record, press a dialog.controls label with expect; else stop. Next time give identity.',
+    'confirm_identity_partial': 'The dialog shows only part of the identity; the earlier click is done. If dialog.lines is the right record, press a dialog.controls label with expect; else stop. Next time give identity.',
+    'confirm_identity_unknown': "The dialog does not show the record's identity; the earlier click is done. If dialog.lines is the right record, press a dialog.controls label with expect; else stop. Next time give identity.",
     'confirm_control_not_found': 'The dialog has no control labelled exactly as step %(n)d confirm (dialog.controls lists them); nothing was clicked by this step. Call do with the exact label.',
-    'destructive_control': 'The control step %(n)d names or resolved to is destructive; goal text never authorizes it and nothing was clicked by this step. If the user asked for it, call do again with allow_destructive=<the exact control label> on that step.',
-    'negative_condition_over_cut_lines': 'Step %(n)d uses not_contains or neq over records whose lines were cut or omitted in the look (steps[].evidence.records_with_cut_or_omitted_lines): absence cannot be shown over text nobody saw. Nothing was clicked by this step. Use positive conditions (eq, contains) that single the record out, or call look with focus so the record fits, then call do with the steps from step %(n)d on.',
-    'selected_record_has_hidden_text': 'The record step %(n)d selects had lines cut or omitted in the look (steps[].evidence.record, hidden_lines), so a line you never saw could contradict your conditions; nothing was clicked by this step. Call look with max_lines and line_chars large enough to show the whole record and plan again, or, if you accept the risk, add accept_hidden_text=true to that step.',
-    'toggle_state_unseen': 'Step %(n)d presses a checkbox, radio or switch, which flips its CURRENT state, and this plan carries no look_id of a look that saw that state; nothing was clicked by this step. Call look, then do with its look_id and an expect naming the resulting state.',
-    'confirm_dialog_unexpected_text': 'The dialog\'s text is not exactly the dialog_text you declared (steps[].dialog.lines shows the ACTUAL lines), and the previous step\'s click is already done, so nothing further was pressed by step %(n)d. Read the lines: if this is the dialog the user\'s task calls for, call do with steps=[{do:"press", control:<one of dialog.controls, exact>, expect:<text that will be visible once it is done>}]; otherwise stop and report it. Next time declare exactly those lines as dialog_text on the confirm step.',
-    'pages_incomplete': 'Some pages of step %(n)d were not read (steps[].pages says for each: landing verdict, reason, skipped or not closed); the other pages were read and are in steps[].pages with their look_id (the page is closed again: to act on one, open_tab it, then look). Nothing else ran. Report which pages failed, or call do with read_pages for just those urls.',
-    'element_outside_target_window': 'The Driver refused the press: it cannot prove this application-menu item belongs to the window (steps[].message). Nothing was clicked. The Driver can invoke the item by its menu path, but that briefly fronts the window: stop and ask the user; only if they allow it, call do again with the same step plus allow_foreground=true. Never another window, a coordinate click or a raw Driver call.',
-    'menu_item_not_found': 'No menu item of step %(n)d\'s menu path is observed in the window (steps[].message says which segment); nothing was pressed. Call look or observe the window, then give the exact labels of the menu bar item and the item.',
+    'destructive_control': 'The control of step %(n)d is destructive and goal text never authorizes it; nothing was clicked. If the user asked for it, call do with allow_destructive=<the exact control label> on that step.',
+    'negative_condition_over_cut_lines': 'Step %(n)d uses not_contains/neq over records with cut lines; absence cannot be shown. Use eq/contains, or look with focus or larger max_lines, then do.',
+    'selected_record_has_hidden_text': 'The record of step %(n)d had lines cut in the look (evidence.hidden_lines); nothing was clicked. Look with larger max_lines and line_chars, or add accept_hidden_text=true to that step.',
+    'toggle_state_unseen': 'Step %(n)d flips a checkbox, radio or switch and the plan has no look_id that saw its state; nothing was clicked. Call look, then do with its look_id and an expect naming the new state.',
+    'confirm_dialog_unexpected_text': 'The dialog text differs from your dialog_text (dialog.lines is the ACTUAL text); the earlier click is done. If it is the right dialog, press a dialog.controls label with expect; else stop.',
+    'pages_incomplete': 'Some pages of step %(n)d were not read (steps[].pages gives each verdict); the others are there with their look_id, closed. Report the failures, or call do with read_pages for just those urls.',
+    'element_outside_target_window': 'The Driver refused: it cannot prove this menu item belongs to the window. Stop and ask the user; only if they allow it, call do again with allow_foreground=true on that step.',
+    'menu_item_not_found': "No menu item of step %(n)d's menu path is observed (steps[].message names the segment); nothing was pressed. Call look, then give the exact labels from the menu bar item down.",
     'look_required': 'A where.lines filter needs the look_id of a look of this window; nothing was done. Call `look` first, then call `do` with the look_id it returns.',
     'unknown_look_id': 'That look_id is not one `look` returned for this window; nothing was done. Call `look` first, then call `do` with the look_id it returns.',
     'menu_item_disabled': 'The menu item of step %(n)d is disabled right now; nothing was pressed. Call `look` and press another control, or tell the user the command is unavailable.',
     'menu_item_ambiguous': 'Several menu items carry a segment of step %(n)d\'s menu path; nothing was pressed. Call `do` again with menu=[...] on step %(n)d giving a longer path from the menu bar item down.',
     'delivery_unverified': 'Step %(n)d\'s click was delivered but its expect was not seen. Do not click again. Call do with steps=[{do:"verify", expect:<page text that should be visible now>}] to check, or report the state.',
     'not_verified': 'The expect of the verify step was not established (control labels never count). Nothing was clicked. Call do with a different expect, or report what look shows.',
-    'unknown_competitors_unacknowledged': 'Some records could not be compared with the predicates (step %(n)d unknown_ids and evidence.extracted show their strings). Call do with the same steps and treat_as_match=<ids> on that step if you judge they DO match, or accept_unknown=<ids> if they do NOT. Nothing was clicked by this step.',
-    'unknown_or_incomplete_scope': 'Some records could not be compared with the predicates (step %(n)d unknown_ids and evidence.extracted show their strings). Call do with the same steps and treat_as_match=<ids> on that step if you judge they DO match, or accept_unknown=<ids> if they do NOT. Nothing was clicked by this step.',
+    'unknown_competitors_unacknowledged': 'Some records could not be compared (step %(n)d unknown_ids, evidence.extracted). Call do with the same steps plus treat_as_match=<ids> if they DO match, or accept_unknown=<ids> if not.',
+    'unknown_or_incomplete_scope': 'Some records could not be compared (step %(n)d unknown_ids, evidence.extracted). Call do with the same steps plus treat_as_match=<ids> if they DO match, or accept_unknown=<ids> if not.',
     'no_eligible_record': 'No record satisfies step %(n)d where.predicates (evidence.extracted shows the strings read); nothing was clicked by this step. Call look and correct the predicates.',
-    'budget_exceeded': 'The plan ran out of time before step %(n)d finished; nothing further ran. If a click had landed, call do with steps=[{do:"verify", expect:<text>}] to check; otherwise call do with the remaining steps.',
+    'budget_exceeded': 'The plan ran out of time before step %(n)d finished. If a click had landed, call do with steps=[{do:"verify", expect:<text>}]; otherwise call do with the remaining steps.',
     'record_changed': 'After a stale-UI refusal the fresh page selects a different record for step %(n)d; nothing was clicked by this step. Call look, then do again.',
     'record_changed_unverifiable': 'The page changed before step %(n)d\'s click and its record cannot be re-identified by its lines; nothing was clicked by this step. Call look, then do again.',
     'ui_changed_repeatedly': 'The page kept changing during step %(n)d; nothing was clicked by this step. Call look, then do again.',
     'web_area_ambiguous': 'The window holds several separate page areas; nothing was clicked. Close the extra one or give the exact title of the page window, then call look.',
     'no_actionable_controls': 'Nothing pressable was found in the page content; nothing was clicked. Stop and report this to the user; do not retry.',
-    'region_label_needed': 'This page has no pressable controls but text is drawn on it (found.region_texts). Give step %(n)d control=<the exact drawn text>, and near=<the text just above or left of it> when it is drawn more than once.',
+    'region_label_needed': 'This page has no pressable controls but text is drawn on it (found.region_texts). Give step %(n)d control=<the exact drawn text>, plus near=<the text above or left of it> when drawn twice.',
     'region_ambiguous': 'Several drawn texts read the same; nothing was clicked by step %(n)d. Give step %(n)d near=<the text just above or left of the one you mean> (see the matches).',
     'region_uncorroborated': 'Another drawn text reads almost the same, so the label cannot be trusted; nothing was clicked by step %(n)d. Give near=<the text just above or left of the control> or report it.',
-    'driver_call_failed': 'A Driver call failed (see delivery: none means nothing was clicked). If delivery is none call do again once; otherwise call do with a verify step first. If it fails again the daemon is probably down: a setup block says how to start it, otherwise tell the user; do not loop.',
+    'driver_call_failed': 'A Driver call failed. With delivery none call do again once; otherwise do a verify step first. If it fails again the daemon is down: follow the setup block or tell the user; do not loop.',
     'provider_failure': 'A specialist failed while running step %(n)d (see delivery). If delivery is none call do again; otherwise call do with a verify step first.',
     # #64: every refusal that reaches a response leads to one concrete next call, or says who to ask and when a retry is allowed.
     'bad_request': 'The call is malformed in the way its message says; nothing was done. Correct that field and call `do` again.',
@@ -389,27 +389,27 @@ HINTS = {
     'window_not_found': 'No window has exactly the title you gave; nothing was done. Pass the exact title of one open window (or pid and window_id) to `look` and `do`; to open a web page start with a goto step.',
     'window_ambiguous': 'Several windows carry that title; nothing was done. Pass pid and window_id to `look` and `do` for the one you mean.',
     'window_closed': 'The target window is gone; nothing was done. If it is open again call `look` with its exact title; for a web page start a new one with a goto step in `do`.',
-    'driver_snapshot_unavailable': 'The Driver could not read the window (see message); nothing was clicked. Call `look` once more; if it fails again tell the user (a setup block, if present, says what is down) instead of retrying.',
+    'driver_snapshot_unavailable': 'The Driver could not read the window (see message); nothing was clicked. Call `look` once more; if it fails again tell the user (the setup block says what is down).',
     'capture_expired': 'The drawn-text capture expired; nothing was clicked. Call `look` for a fresh one, then `do` with control=<the exact drawn text>.',
     'capture_unavailable': 'This observation carries no drawn-text capture; nothing was clicked. Call `look` again, then `do` with control=<the exact drawn text>.',
     'read_budget': 'These records were already read twice for this observation; nothing was clicked. Judge the strings you have, or call `look` for a fresh observation if the page changed.',
-    'needs_foreground': 'The window is on another Space or its controls cannot be resolved in the background; nothing was done. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
-    'pointer_not_deliverable_in_background': 'A background click on a drawn surface would land at its centre, not on the control; nothing was clicked by step %(n)d. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
+    'needs_foreground': 'The window is on another Space or its controls cannot be resolved in the background. Stop and ask the user; only if they allow it call do with allow_foreground=true on that step.',
+    'pointer_not_deliverable_in_background': 'A background click on a drawn surface lands at its centre, not on the control; nothing was clicked by step %(n)d. Stop and ask the user; only if they allow it, call do with allow_foreground=true.',
     'foreground_required': 'This window cannot open a tab without being fronted briefly; nothing was opened. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
-    'agent_browser_unavailable': 'The server\'s own browser could not start; nothing was opened. If the setup block lists a fix with who=agent, run it; otherwise tell the user what it says. Then call `do` with the same steps once; until then do not switch to profile="user" or another browser yourself.',
-    'agent_display_unavailable': 'The agent display cannot start, so nothing was opened (the agent browser never opens on the user\'s screen). Tell the user (the setup block names the fix and who); only they can set CUA_AGENT_DISPLAY=off. Do not retry `do` until it is fixed.',
+    'agent_browser_unavailable': 'The server\'s own browser could not start; nothing was opened. Run the setup block\'s fix if who=agent, else tell the user; then call do once more. Never use profile="user" or another browser.',
+    'agent_display_unavailable': 'The agent display cannot start, so nothing was opened. Tell the user (the setup block names the fix); only they can set CUA_AGENT_DISPLAY=off. Do not retry `do` until it is fixed.',
     'agent_browser_misplaced': 'The agent browser opened outside the agent display, so it was quit at once and nothing was navigated. Tell the user what the message says; do not switch to profile="user" or retry in a loop.',
-    'permission_required': 'The Driver has not been granted access to that browser profile; nothing was opened in another browser or profile. Stop and ask the user to grant it (the setup block names the step and who); once they have, call `do` with the same steps once. Never reroute to another browser, profile or raw Driver call.',
-    'perception_not_available': 'This page is drawn pixels and Cua Perception is not installed or healthy; nothing was clicked. If the setup block lists a fix with who=agent run it, otherwise tell the user; then call `look` again. Until then use a page with real controls.',
+    'permission_required': 'The Driver has no access to that browser profile; Stop and ask the user to grant it (see setup), then call do once more. Never reroute to another browser or profile.',
+    'perception_not_available': "This page is drawn pixels and Cua Perception is not healthy; nothing was clicked. Run the setup block's fix if who=agent, else tell the user; then call look again.",
     'navigate_refused': 'The Driver refused to navigate (see message); nothing else was tried. Do not retry the same goto: call `do` with a different url, or tell the user what the message says.',
     'navigate_failed': 'The page did not load (an HTTP error or a network failure); nothing else was tried. Check the url, then call `do` with the goto step once more or tell the user.',
     'navigated_elsewhere': 'The tab shows a different page than the url of step %(n)d (the message gives both); nothing was clicked. Call `look` to read where it is, or call `do` with the goto step for the url you mean.',
     'login_wall': 'The page asks to sign in; nothing was typed. Stop and ask the user to sign in themselves in that browser, then call `do` with the goto step again.',
-    'landing_unknown': 'The tab reported no page url after navigating, so the landing is unproven; it may still be loading. Call `look` in a moment, or call `do` with steps=[{do:"verify", expect:<text that page shows>}].',
+    'landing_unknown': 'The tab reported no page url after navigating, it may still be loading. Call `look` in a moment, or call `do` with steps=[{do:"verify", expect:<text that page shows>}].',
     'browser_tab_ambiguous': 'The window reports several tabs and none active; nothing was done. Ask the user to bring the tab you mean to the front of its window, then call `look`.',
     'tab_not_opened': 'The new tab did not appear as exactly one new active tab; it was not retried. Call `look` to see the window, then call `do` with a goto step (it navigates the active tab) instead of open_tab.',
     'tab_not_opened_by_facade': 'Only a tab `do` opened itself can be closed, and this one is not recognisably it; nothing was pressed. Leave the tab open and tell the user, or ask them to close it.',
-    'tab_close_control_not_found': 'The tab strip shows no Close button for that tab; nothing was pressed. Stop and ask the user; only if they allow the window to be fronted briefly call `do` with close_tab and allow_foreground=true.',
+    'tab_close_control_not_found': 'The tab strip shows no Close button for that tab; nothing was pressed. Stop and ask the user; only if they allow it call `do` with close_tab and allow_foreground=true.',
     'tab_close_control_ambiguous': 'Several tabs carry that title, so no Close button was pressed. Stop and ask the user to close the extra tab, or tell them which tab to close; then call `look`.',
     'tab_strip_changed': 'The tab strip changed while its Close button was pressed, twice; nothing was pressed. Call `look`, then call `do` with close_tab once more.',
     'tab_not_closed': 'After pressing Close the tab is still listed; it was not retried. Call `look` to read the window, or tell the user the tab is still open.',
@@ -423,7 +423,7 @@ GENERIC_HINT = 'Step %(n)d stopped and nothing further ran. Call look to see the
 def hint_for(reason, n, delivered):
     text = HINTS.get(reason, GENERIC_HINT) % {'n': n}
     if n > 1 and 'already done' not in text:
-        text += ' Steps 1 to %d are already done; do not repeat them.' % (n - 1)
+        text += ' Steps 1-%d are already done; do not repeat them.' % (n - 1)
     return text
 
 
@@ -456,7 +456,22 @@ def _summary(f, pid, window_id):
             line = lk.cut(lk.text_of(node))[0]
             if line not in texts:
                 texts.append(line)
-    return {'title': state['raw'].get('window_title'), 'text': texts[:6], 'controls': controls[:12]}
+    title = state['raw'].get('window_title')
+    key = (pid, window_id, title)
+    before = f.reported.get(key)
+    texts = [t for t in texts if t != title]  # the title is already its own field
+    skipped = {'text': 0, 'controls': 0}
+    shown = {'text': texts[:6], 'controls': controls[:12]}
+    if before:  # CE-FACADE-011: only what is new since the look (or the previous summary) of this page; unchanged counts the rest, never silently
+        skipped = {'text': sum(t in before['text'] for t in texts), 'controls': sum(c in before['controls'] for c in controls)}
+        shown = {'text': [t for t in texts if t not in before['text']][:6], 'controls': [c for c in controls if c not in before['controls']][:12]}
+    # remember what is on the page and was told to the LLM now: unchanged items stay known, the new ones just shown join them, items that left are forgotten
+    # (so a toast that disappears and comes back is news again)
+    known = (before or {'text': set(), 'controls': set()})
+    f.reported[key] = {'text': {t for t in texts if t in known['text']} | set(shown['text']), 'controls': {c for c in controls if c in known['controls']} | set(shown['controls'])}
+    out = {'title': title, **shown}
+    if skipped['text'] or skipped['controls']:out['unchanged'] = {k: v for k, v in skipped.items() if v}
+    return out
 
 
 def _abort_hit(f, pid, window_id, abort_if, since):

@@ -497,7 +497,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         webs = f._top_web_areas(state)
         if len(webs) > 1:
             return {'status': 'deferred', 'reason': 'web_area_ambiguous', 'window': {'title': state['raw'].get('window_title')}, 'found': {'web_areas': len(webs)},
-                    'hint': 'The window holds %d separate page areas (for example a browser extension popup beside the page). Close the extra one, or give the exact title of the window that holds only the page, and call look again.' % len(webs),
+                    'hint': 'The window holds %d separate page areas (an extension popup beside the page?). Close the extra one or give the exact title of the page window, then call look.' % len(webs),
                     'ms_by_stage': ms}
         began = f.clock()
         analysis = analyze(f, state)
@@ -585,6 +585,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         f.looks[(pid, window_id, response['look_id'])] = {'pid': pid, 'window_id': window_id, 'terms': terms, 'n': len(shown), 'opts': opts, 'created': f.clock()}
         while len(f.looks) > 8:
             f.looks.pop(next(iter(f.looks)))
+        f.reported[(pid, window_id, extras['title'])] = {'text': set(response['text']), 'controls': set(response['controls']) | {c for r in response['records'] for c in r['controls']}}  # what the next do summary need not repeat (CE-FACADE-011)
         ms['total'] = round((f.clock() - t0) * 1000)
         response['ms_by_stage'] = ms
         f.event('look', route='deterministic' if fields is None else 'nuextract3', records=len(shown), look_id=response['look_id'], ms=ms['total'])

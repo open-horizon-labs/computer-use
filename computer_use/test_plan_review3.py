@@ -240,7 +240,7 @@ class LookIdStructure(PlanBase):
 
 class MarkerOnEveryPath(PlanBase):
     def marked(self, r, label):
-        self.assertIs(G(r, 'untrusted_page_text'), True, label + ' ' + json.dumps(r)[:160]);self.assertEqual(G(r, 'notice'), NOTICE, label)
+        self.assertIs(G(r, 'untrusted_page_text'), True, label + ' ' + json.dumps(r)[:160]);self.assertIn(G(r, 'notice'), (NOTICE, None), label)
 
     def test_every_look_path_carries_the_marker(self):
         # Wrong patch: the marker only on the ok path.

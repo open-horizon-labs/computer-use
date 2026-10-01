@@ -580,12 +580,9 @@ def bridge(f):
 
 DISCOVERY_HINTS = {  # #64: an empty or unavailable list says what would appear, why it matters and the one call to get it
     'listed': 'Pass device=<an id from devices> to `look` and `do` to work on a phone or emulator, or title=<a window title> for a Mac window.',
-    'empty': 'No phone or emulator is attached, so devices is empty; each one would appear as {id, platform, name}, and its id is the device for `look` and `do`. '
-             'Start an Android emulator (emulator -avd <name>) or attach a phone with USB debugging, or boot an iOS simulator (open the Simulator app, or '
-             'xcrun simctl boot <udid>); then call `look` with device="list" again. For a Mac window pass title=<a window title> instead.',
+    'empty': 'No phone or emulator is attached; each would appear as {id, platform, name}. Start one (emulator -avd <name>, or xcrun simctl boot <udid>), then call `look` with device="list" again; or pass title=<a window title>.',
     'empty_cold': 'The device backend had only just started and was asked again after a short wait; a simulator that is still booting may appear on the next call.',
-    'backend': 'The device backend did not start (devices_unavailable.message says what to install or fix): only the user can install it, so tell the user and do not '
-               'retry until they have. Mac windows are unaffected: pass title=<a window title> to `look` and `do`.',
+    'backend': 'The device backend did not start (devices_unavailable.message): only the user can install it, so tell the user and do not retry. Mac windows still work: pass title=<a window title>.',
 }
 
 
@@ -698,16 +695,16 @@ DEVICE_KINDS = ('press', 'type', 'verify', 'goto')
 DEVICE_HINTS = {
     'mobile_backend_unavailable': 'The device backend (mobile-mcp) could not run; nothing was done. Tell the user what the setup block or the message says to install or fix; do not retry until they have.',
     'device_not_found': 'No such device; nothing was done. Call `look` with device="list", then `do` with an id from it.',
-    'mobile_device_agent_missing': 'The device needs mobile-mcp\'s on-device agent before its screen can be read; nothing was done. Tell the user (the on-device agent is installed on the device, not by this server); do not retry until they have.',
+    'mobile_device_agent_missing': "The device needs mobile-mcp's on-device agent to be read; nothing was done. Tell the user (it is installed on the device, not by this server); do not retry until they have.",
     'mobile_observation_failed': 'The device screen could not be read, nothing was tapped by this step. Check the device is unlocked and reachable, then call `do` again.',
     'mobile_action_failed': 'The device action was not confirmed and may have reached the device (see delivery). Call `look` to read the screen before acting again.',
     'mobile_backend_timeout': 'The device backend did not answer in time (see delivery). Call `look` to read the screen before acting again.',
-    'screen_unchanged_after_action': 'Step %(n)d\'s action was sent but the screen did not change and its expect was not seen: the tap may have been dropped (a locked or sleeping device, a covered control). Do not repeat it blindly: call `look` to read the screen, unlock the device if needed, then call `do` with the remaining steps.',
+    'screen_unchanged_after_action': "Step %(n)d's action was sent but the screen did not change and expect was not seen (locked device, covered control?). Do not repeat it blindly: call look, unlock if needed, then do.",
     'focus_not_on_field': 'After the tap the keyboard focus is on another field, so nothing was typed by step %(n)d. Call `look`, then `do` with the exact label of the field you mean.',
     'control_not_found': 'No control on the device screen matches step %(n)d (found.controls lists the buttons); nothing was tapped by this step. Call `look`, then `do` with the exact label from it.',
     'control_ambiguous': 'Several elements on the device screen carry step %(n)d\'s label; nothing was guessed or tapped. Use a longer exact label (see `look`), or control_match=prefix only if you mean it.',
     'control_not_pressable': 'The element of step %(n)d is present but disabled or has no size right now; nothing was tapped by this step. Call `look`, then `do` with the steps from step %(n)d on.',
-    'toggle_state_unseen': 'Step %(n)d presses a switch or checkbox, which flips its CURRENT state, and this plan carries no look_id of a look that saw that state; nothing was tapped by this step. Call `look`, then `do` with its look_id and an expect naming the resulting state.',
+    'toggle_state_unseen': 'Step %(n)d flips a switch or checkbox and the plan has no look_id that saw its state; nothing was tapped. Call look, then do with its look_id and an expect naming the new state.',
 }
 
 

@@ -222,20 +222,16 @@ def budget_scenarios():
     LLM reads the look's strings, writes one step, and stops at a refusal or stop (no retry). Fixture-derived, not a rate. Returns {name: measure}."""
     import asyncio
     import server
-    from call_budget import result_text
+    from call_budget import result_text, new_seen, tally, seen_measure
     out = {}
     def run(backend, policy, which=None):
-        f = Facade(mobile=mobile.Mobile(which or backend), sleep=lambda s: None)
+        seen = new_seen()
+        f = Facade(mobile=mobile.Mobile(which or backend), sleep=seen['naps'].append)
         server.facade = f
-        seen = {'calls': 0, 'tools': [], 'max_bytes': 0}
         def call(name, **kw):
-            seen['calls'] += 1
-            seen['tools'].append(name)
-            text = result_text(asyncio.run(server.mcp.call_tool(name, kw)))
-            seen['max_bytes'] = max(seen['max_bytes'], len(text))
-            return json.loads(text)
+            return tally(seen, name, result_text(asyncio.run(server.mcp.call_tool(name, kw))))
         result = policy(call)
-        return {'calls': seen['calls'], 'tools': seen['tools'], 'max_bytes': seen['max_bytes'], 'status': result['status'],
+        return {**seen_measure(seen), 'status': result['status'],
                 'reader': int('reader' in f.providers), 'chooser': int('generic' in f.providers)}
     def look_then_press(label, expect):
         def policy(call):
@@ -286,7 +282,7 @@ class LookOnDevices(DeviceCase):
         # wrong patch: a look_id that ignores what the screen shows (here: a constant)
         a, b = self.f.look(device=EMULATOR), self.f.look(device=EMULATOR)
         self.assertEqual(a['look_id'], b['look_id'])
-        self.assertEqual({k: v for k, v in a.items() if k != 'ms_by_stage'}, {k: v for k, v in b.items() if k != 'ms_by_stage'})
+        self.assertEqual({k: v for k, v in a.items() if k not in ('ms_by_stage', 'notice')}, {k: v for k, v in b.items() if k not in ('ms_by_stage', 'notice')})  # the second look of a device omits the notice sentence
         self.backend.set('networks')
         self.assertNotEqual(self.f.look(device=EMULATOR)['look_id'], a['look_id'])
 
