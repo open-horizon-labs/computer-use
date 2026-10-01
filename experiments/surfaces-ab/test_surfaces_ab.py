@@ -462,7 +462,7 @@ class SafetyTest(unittest.TestCase):
     def test_foreign_facade_detected(self):
         rows = [(10, '/x/.venv-facade/bin/python /x/computer_use/server.py'), (11, '/c/space-mover display serve --width 1920'),
                 (12, 'npm exec @mobilenext/mobile-mcp@1.0.6'), (13, '/Applications/Zoom.app/Contents/MacOS/zoom.us')]
-        self.assertEqual([p for p, _ in surfaces.foreign_facades(rows, own={11})], [10, 12])
+        self.assertEqual([p for p, _ in surfaces.foreign_facades(rows, own={11})], [12])  # an idle server (10) is allowed since #91; its active helper (12) still blocks
 
     def test_harness_display_is_not_a_stray(self):
         rows = [(5, '/c/space-mover display serve'), (6, '/y/Google Chrome for Testing.app/x')]

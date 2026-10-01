@@ -162,7 +162,9 @@ def foreign_facades(rows, own=()):
     """Processes of ANOTHER facade session (a computer_use/server.py, its display helper, mobile-mcp, its agent browser) that are not
     the harness's own. Two facades kill each other's browser and steal the shared agent display (#91), and the stray sweep could kill
     their helpers, so a run refuses while one is up (pure)."""
-    return [(p, c) for p, c in rows if p not in set(own) and any(f in c for f in FOREIGN)]
+    # An idle server (no browser, display helper or mobile-mcp of its own) cannot collide: since #91 (merged) a second server uses
+    # its own profile and never kills a live owner's browser. Only a facade's active helpers block a run.
+    return [(p, c) for p, c in rows if p not in set(own) and any(f in c for f in FOREIGN) and not c.rstrip().endswith('computer_use/server.py')]
 
 
 def emulator_argv(avd, headless):
