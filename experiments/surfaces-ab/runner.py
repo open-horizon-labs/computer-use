@@ -28,9 +28,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 MODEL = 'claude-sonnet-5-5'
 ARMS = ('native', 'computer-use')
-# The MCP server key for the computer-use arm is `cua-task`, not `computer-use`: Claude Code drops a user-configured server named
+# The MCP server key for the computer-use arm is `computer-use-oh`: Claude Code reserves `computer-use` and drops a server by that name
 # `computer-use` (reserved built-in name; measured in the first smoke run: mcp_servers was empty and the agent had no tools).
-ARM_SERVER = {'native': 'cua-driver', 'computer-use': 'cua-task'}
+ARM_SERVER = {'native': 'cua-driver', 'computer-use': 'computer-use-oh'}
 DEFAULT_PYTHON = '/Users/muness1/src/open-horizon-labs/computer-use/.venv-facade/bin/python'
 _BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'Task']
 ALLOWED = {arm: ['mcp__' + srv] for arm, srv in ARM_SERVER.items()}
@@ -66,7 +66,7 @@ def build_prompt(task, arm, facts):
 
 def mcp_config(arm, out_dir):
     py = os.environ.get('CUA_FACADE_PYTHON') or DEFAULT_PYTHON
-    servers = {'cua-task': {'command': py, 'args': [str(ROOT / 'computer_use/server.py')]},
+    servers = {'computer-use-oh': {'command': py, 'args': [str(ROOT / 'computer_use/server.py')]},
                'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
     path = Path(out_dir).resolve() / ('mcp-config.%s.json' % arm)
     path.write_text(json.dumps({'mcpServers': {ARM_SERVER[arm]: servers[ARM_SERVER[arm]]}}, indent=2))

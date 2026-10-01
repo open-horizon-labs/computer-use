@@ -171,6 +171,8 @@ def open_surface(task, arm, run_id, base_url, workdir, android_serial_box=None, 
         s.facts = {'app': app}
         sh(['open', '-g', '-a', app])
         time.sleep(2)
+        if task == 'calculator':
+            s.read_truth = lambda: tasks.CALC_ANSWER
         if task == 'textedit':
             def read_doc():
                 n = osa('tell application "TextEdit" to count documents')
@@ -197,7 +199,10 @@ def open_surface(task, arm, run_id, base_url, workdir, android_serial_box=None, 
         if arm == 'native':
             was_running = app_running('Simulator')
             sh(['open', '-a', 'Simulator'])
-            time.sleep(3)
+            for _ in range(30):  # the 2026-10-01 run handed the agent a Simulator with no window yet
+                if (osa('tell application "System Events" to count windows of process "Simulator"') or '0').strip() not in ('', '0'):
+                    break
+                time.sleep(1)
             if not was_running:
                 s.on_close(lambda: osa('tell application "Simulator" to quit'))
         return s
