@@ -39,7 +39,7 @@ MUTATIONS = {
          'test_plan.Validation.test_an_invented_look_id_is_refused']),
     'null_expect_on_a_non_final_step': (
         'allow expect=null anywhere',
-        [('plan.py', "        if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and not final:", "        if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and False:")],
+        [('plan.py', "        if kind not in ('verify', 'close_tab', 'read_pages', 'resize') and 'expect' not in step and not final:", "        if kind not in ('verify', 'close_tab', 'read_pages', 'resize') and 'expect' not in step and False:")],
         ['test_plan.Validation.test_null_expect_on_a_non_final_step_is_refused_before_any_click']),
     'steps_continue_after_a_non_done_step': (
         'keep executing the remaining steps after a failed one',
@@ -116,6 +116,28 @@ MUTATIONS = {
         'drop the CUA_TASK_ADVANCED guard',
         [('server.py', "if ADVANCED:register_advanced()", "register_advanced()")],
         ['test_budget.ToolSurface.test_primitives_registered_by_default_fail', 'test_plan.ServerSurface.test_the_default_surface_is_exactly_do_then_look_and_the_primitives_are_absent']),
+    'resize_a_window_that_is_not_the_agent_browser': (
+        'resize whatever window the caller names (#78)',
+        [('agent_browser.py', "(ctx.get('pid') is not None and (not self.alive() or ctx['pid'] != self.proc.pid))", "False"),
+         ('agent_browser.py', "        if ctx.get('window_id') is not None and ctx['window_id'] != seen[0]:\n            raise not_ours", "        if False:\n            raise not_ours")],
+        ['test_resize.Refusals.test_the_users_window_is_never_resized', 'test_resize.Refusals.test_another_window_id_in_the_agent_process_is_not_resized']),
+    'resize_accepted_without_readback': (
+        'call a delivered set_window_frame done without the Driver\'s confirmed readback (#78)',
+        [('agent_browser.py', "        if value.get('effect') != 'confirmed' or not (read_back or readback) or (readback and not self._close(readback, target)):", "        if False:")],
+        ['test_resize.NotProven.test_an_effect_that_is_not_confirmed_is_not_done', 'test_resize.NotProven.test_a_confirmed_effect_without_a_readback_is_not_done',
+         'test_resize.NotProven.test_a_readback_off_by_more_than_two_points_is_not_done']),
+    'resize_lets_the_window_leave_the_display': (
+        'no clamp and no whole-window-inside re-check (#78)',
+        [('agent_browser.py', "        w, h = min(width, rect['width']), min(height, rect['height'])", "        w, h = width, height"),
+         ('agent_browser.py', "        x = min(max(before['x'], rect['x']), rect['x'] + rect['width'] - w)", "        x = before['x']"),
+         ('agent_browser.py', "        y = min(max(before['y'], rect['y']), rect['y'] + rect['height'] - h)", "        y = before['y']"),
+         ('agent_browser.py', " or not f.agent.inside(now):", ":")],
+        ['test_resize.Resize.test_a_resize_larger_than_the_display_is_clamped_and_the_window_stays_inside', 'test_resize.Resize.test_a_window_near_the_edge_is_moved_in_not_left_sticking_out',
+         'test_resize.NotProven.test_a_window_that_ends_outside_the_display_is_refused_even_with_a_matching_readback']),
+    'resize_keeps_the_stale_look': (
+        'leave the cached look of the resized window in place (#78)',
+        [('agent_browser.py', "            del f.looks[key]", "            pass")],
+        ['test_resize.Resize.test_the_next_look_does_not_bind_to_a_look_taken_before_the_resize']),
     'hash_only_the_displayed_lines': (
         'the look_id covers what was displayed, not the full lines (review P1-1)',
         [('look.py', "return look_id_of([r['rec']['lines'] for r in rows], title, analysis['headings'], analysis['control_state'])", "return look_id_of([r['lines'] for r in rows], title, analysis['headings'], analysis['control_state'])")],
