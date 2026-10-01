@@ -49,6 +49,7 @@ def named(elements, name):
 TDONGLE = raw('android_tdongle_overview.elements.txt')          # REAL
 ANR = raw('android_anr_dialog.synthetic.elements.txt')          # SYNTHETIC dialog subtree, real node shapes
 IOS = raw('ios_settings.synthetic.elements.txt')                # SYNTHETIC iOS shapes
+IOS_HOME = raw('ios_home.elements.txt')                         # REAL: the iPhone 17 Pro simulator's home screen, read after the agent bootstrap
 LAUNCHER = raw('android_launcher.elements.txt')                # REAL: the emulator's home screen
 
 
@@ -90,6 +91,37 @@ def form_screen(focused=None):
     return out
 
 
+def list_screen(extra=None):
+    """A list screen in the real Android shapes (synthetic): a heading (text, no control), then one row per saved network: title, status, a Forget button,
+    the rows stacked (no row overlaps another). The last row has two buttons. `extra` rows go on top, pushing the rest down."""
+    rows = [('Home Wi-Fi', 'Connected', ['Forget']), ('Office', 'Saved', ['Forget']), ('Guest', 'Saved', ['Forget']), ('Cafe', 'Saved', ['Forget', 'Share'])]
+    if extra:
+        rows = extra + rows
+    out = [el('android.widget.TextView', 'Saved networks', rect=(44, 150, 600, 80))]
+    y = 300
+    for title, status, buttons in rows:
+        out.append(el('android.widget.TextView', title, ident='com.example:id/title', rect=(44, y, 500, 60)))
+        out.append(el('android.widget.TextView', status, ident='com.example:id/title', rect=(44, y + 40, 500, 50)))
+        for n, label in enumerate(buttons):
+            out.append(el('android.widget.Button', label, ident='com.example:id/action', rect=(600 + 200 * n, y + 10, 180, 80)))
+        y += 160
+    return out
+
+
+def installer_for(backend=None, fail=None):
+    """A fake for mobile.install_agent: records its devices; installing makes the backend's agent available (unless `fail` is a MobileGap to raise)."""
+    calls = []
+
+    def install(device):
+        calls.append(device)
+        if fail:
+            raise fail
+        if backend is not None:
+            backend.agent_missing = False
+    install.calls = calls
+    return install
+
+
 class FakeBackend:
     """mobile-mcp as the facade sees it: call(tool, args, mutating) -> (text, is_error), answering in 1.0.6's texts. Refs are the element's index in the
     latest list (like @e5), so a stale ref points at a different element once the screen has shifted."""
@@ -98,6 +130,7 @@ class FakeBackend:
         self.current, self.moves = start, dict(moves or {})
         self.calls, self.tapped, self.typed, self.opened, self.closed = [], [], [], [], 0
         self.drop_taps = False
+        self.agent_missing = False   # iOS before `agent install`: the list answers the REAL refusal text (fixtures/mobile/ios_agent_missing.txt)
         self.fail = {}      # tool -> text returned instead (an ActionableError is plain text in mobile-mcp)
         self.on_type = None
         self.lists = 0
@@ -131,6 +164,8 @@ class FakeBackend:
             return (FIX / 'devices.json').read_text(), False
         if tool == 'mobile_list_elements_on_screen':
             assert args.get('format') == 'json' and args.get('device'), args
+            if self.agent_missing:
+                return (FIX / 'ios_agent_missing.txt').read_text(), False
             return self.text(), False
         if tool == 'mobile_click_on_screen_at_coordinates':
             assert mutating, 'an action must say it is one (never re-sent after a failure)'
@@ -169,8 +204,12 @@ class FakeBackend:
         return [c for c in self.calls if c[0] in ('mobile_click_on_screen_at_coordinates', 'mobile_type_keys', 'mobile_open_url')]
 
 
-def facade_for(backend):
-    return Facade(mobile=mobile.Mobile(backend), sleep=lambda s: None)
+def never_install(device):
+    raise AssertionError('the agent installer must not run here: %s' % device)
+
+
+def facade_for(backend, installer=never_install):
+    return Facade(mobile=mobile.Mobile(backend, installer=installer), sleep=lambda s: None)
 
 
 def overview_backend():
@@ -209,6 +248,13 @@ def budget_scenarios():
     dropped = overview_backend()
     dropped.drop_taps = True
     out['mobile_dropped_tap_stop'] = run(dropped, look_then_press('Networks', 'Saved networks'))  # a locked phone: the tap "succeeds" and nothing changes
+    def look_then_where(call):
+        look = call('look', device=EMULATOR)
+        assert look['record_kind'] == 'rows' and ['Office', 'Saved'] in [x['lines'] for x in look['records']], look
+        return call('do', goal='Forget the Office network', expect=None, device=EMULATOR, look_id=look['look_id'],
+                    steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Office'}]}, 'control': 'Forget', 'expect': 'Office forgotten'}])
+    after = list_screen() + [el('android.widget.TextView', 'Office forgotten', rect=(44, 1000, 600, 60))]
+    out['mobile_where_lines'] = run(FakeBackend({'list': list_screen(), 'after': after}, 'list', {('list', 'Forget'): 'after'}), look_then_where)  # records from geometry: look, then one where.lines press
     def blind_do(call):
         return call('do', goal='Open the Networks tab', expect='Saved networks', device=EMULATOR, control='Networks')
     out['mobile_backend_missing_stop'] = run(None, blind_do, which=mobile.StdioBackend(which=lambda exe: None, env={'PATH': ''}))  # no Node.js: one refusal naming what to install
@@ -228,7 +274,7 @@ class LookOnDevices(DeviceCase):
     def test_a_device_look_has_the_window_look_shape_and_never_acts(self):
         # wrong patch: a look that taps to "wake" or focus the screen
         r = self.f.look(device=EMULATOR)
-        self.assertEqual((r['status'], r['record_kind'], r['records'], r['window']['device'], r['window']['platform']), ('ok', 'none', [], EMULATOR, 'android'))
+        self.assertEqual((r['status'], r['record_kind'], r['window']['device'], r['window']['platform']), ('ok', 'rows', EMULATOR, 'android'))
         self.assertTrue(r['look_id'].startswith('lk_') and r['untrusted_page_text'] is True and r['notice'])
         self.assertIn('Wi-Fi is connected', r['text'])
         self.assertEqual(r['controls'], ['Verify internet connection', 'Refresh connection'])
@@ -301,31 +347,113 @@ class LookOnDevices(DeviceCase):
         out = f.do('Open it', device=EMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Nope', 'expect': None}])
         self.assertNotIn('Ignore previous', json.dumps({k: v for k, v in out.items() if k != 'summary'}))
 
-    def test_an_ios_device_without_the_agent_is_a_typed_refusal_that_carries_no_raw_text(self):
-        # the REAL answer of mobile-mcp 1.0.6 for this simulator; wrong patch: return the raw text (a local path and a stack)
-        backend = FakeBackend({'a': TDONGLE}, 'a')
-        backend.fail['mobile_list_elements_on_screen'] = (FIX / 'ios_agent_missing.txt').read_text()
-        f = facade_for(backend)
+    def test_a_missing_ios_agent_is_installed_once_and_the_read_retried_once(self):
+        # the REAL refusal text; wrong patch: surface the refusal without installing (the user must do it by hand), or install on every look
+        backend = FakeBackend({'ios': IOS_HOME}, 'ios')
+        backend.agent_missing = True
+        install = installer_for(backend)
+        f = facade_for(backend, install)
         r = f.look(device=SIMULATOR)
-        self.assertEqual((r['status'], r['reason']), ('refused', 'mobile_device_agent_missing'))
-        self.assertNotRegex(json.dumps(r), r'mobilecli|\.npm|Command failed')
-        d = f.do('Tap it', device=SIMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Edit', 'expect': None}])
-        self.assertEqual((d['status'], d['reason'], d['delivery']), ('refused', 'mobile_device_agent_missing', 'none'))
-        self.assertNotRegex(json.dumps(d), r'mobilecli|\.npm|Command failed')
+        self.assertEqual((r['status'], r.get('window', {}).get('platform')), ('ok', 'ios'))
+        self.assertEqual(install.calls, [SIMULATOR])
+        self.assertEqual(len(backend.calls), 2)   # the refused read, then the retry
+        self.assertIn('Safari', r['controls'])
         self.assertEqual(backend.actions(), [])
+        r = f.look(device=SIMULATOR)              # the agent is there now: no second install
+        self.assertEqual((r['status'], install.calls), ('ok', [SIMULATOR]))
+
+    def test_a_do_on_an_ios_device_without_the_agent_bootstraps_then_reads_fresh_and_taps(self):
+        backend = FakeBackend({'ios': IOS_HOME}, 'ios')
+        backend.agent_missing = True
+        install = installer_for(backend)
+        d = facade_for(backend, install).do('Open Safari', device=SIMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Safari', 'expect': None}])
+        self.assertEqual((d['status'], install.calls), ('delivered_unverified', [SIMULATOR]))
+        self.assertEqual(len(backend.actions()), 1)
+
+    def test_a_failed_install_is_a_typed_refusal_naming_the_exact_command_and_nothing_loops(self):
+        # wrong patch: return the raw text (a local path and a stack), or retry the install/read until it works
+        backend = FakeBackend({'a': TDONGLE}, 'a')
+        backend.agent_missing = True
+        gap = mobile.MobileGap('mobile_device_agent_missing', 'installing the iOS agent failed (exit 1). Run `%s` yourself, then call again. Nothing was done' % ' '.join(mobile.agent_install_command(SIMULATOR)))
+        install = installer_for(backend, fail=gap)
+        f = facade_for(backend, install)
+        r = f.look(device=SIMULATOR)
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'mobile_device_agent_missing'))
+        self.assertIn('npx -y mobilecli@1.0.16 agent install --device ' + SIMULATOR, r['message'])
+        self.assertNotRegex(json.dumps(r), r'\.npm|Command failed|Error:')
+        d = f.do('Tap it', device=SIMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Edit', 'expect': None}])
+        self.assertEqual((d['status'], d.get('reason'), d['delivery']), ('refused', 'mobile_device_agent_missing', 'none'))
+        self.assertEqual(install.calls, [SIMULATOR, SIMULATOR])       # once per call, never inside one
+        self.assertEqual(len(backend.calls), 2)                       # one read per call: no retry after a failed install
+        self.assertEqual(backend.actions(), [])
+
+    def test_an_agent_still_missing_after_the_install_is_refused_after_exactly_one_retry(self):
+        backend = FakeBackend({'a': TDONGLE}, 'a')
+        backend.agent_missing = True
+        install = installer_for(None)   # "installs" but the device keeps answering that the agent is missing
+        r = facade_for(backend, install).look(device=SIMULATOR)
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'mobile_device_agent_missing'))
+        self.assertEqual((install.calls, len(backend.calls)), ([SIMULATOR], 2))
+        self.assertIn('--force', r['message'])
+
+    def test_a_device_that_does_not_need_the_agent_never_runs_the_installer(self):
+        self.assertEqual(self.f.look(device=EMULATOR)['status'], 'ok')   # never_install would fail the test
+
+    def test_install_agent_runs_the_pinned_cli_bounded_and_names_it_when_it_cannot(self):
+        import subprocess
+        ran = []
+
+        def run_ok(command, **kw):
+            ran.append((command, kw.get('timeout')))
+            return subprocess.CompletedProcess(command, 0, '', '')
+        have = lambda exe: '/usr/bin/' + exe
+        self.assertIsNone(mobile.install_agent(SIMULATOR, run=run_ok, which=have, platform='darwin'))
+        self.assertEqual(ran, [(['npx', '-y', 'mobilecli@1.0.16', 'agent', 'install', '--device', SIMULATOR], mobile.AGENT_INSTALL_TIMEOUT_S)])
+        cli = 'npx -y mobilecli@1.0.16 agent install --device ' + SIMULATOR
+
+        def expect_refusal(why, **kw):
+            with self.assertRaises(mobile.MobileGap) as caught:
+                mobile.install_agent(SIMULATOR, **{'run': run_ok, 'which': have, 'platform': 'darwin', **kw})
+            self.assertEqual(caught.exception.reason, 'mobile_device_agent_missing', why)
+            self.assertIn(cli, str(caught.exception), why)
+            self.assertIn(why, str(caught.exception))
+            return caught.exception
+        expect_refusal('Xcode', which=lambda exe: None if exe == 'xcrun' else have(exe))
+        expect_refusal('Xcode', platform='linux')
+        expect_refusal('Node.js', which=lambda exe: None if exe == 'npx' else have(exe))
+        expect_refusal('exit 3', run=lambda command, **kw: subprocess.CompletedProcess(command, 3, 'secret /Users/x/.npm', 'Command failed'))
+        expect_refusal('did not finish', run=lambda command, **kw: (_ for _ in ()).throw(subprocess.TimeoutExpired(command, 1)))
+        err = expect_refusal('could not be started', run=lambda command, **kw: (_ for _ in ()).throw(FileNotFoundError('/Users/x/.npm')))
+        self.assertNotIn('/Users', str(err))
+
+    def test_the_real_ios_home_screen_has_icon_rows_as_records(self):
+        # REAL tree (types are "Icon" and "Other", no XCUIElementType prefix); wrong patch: only Button/Cell are controls, so the home screen has none
+        r = facade_for(FakeBackend({'ios': IOS_HOME}, 'ios')).look(device=SIMULATOR)
+        self.assertEqual(r['record_kind'], 'rows')
+        self.assertEqual([x['controls'] for x in r['records']], [['Fitness', 'Watch', 'Contacts', 'Files'], ['Preview', 'Utilities folder', 'Device Kit'], ['Safari', 'Messages']])
+
+    def test_raw_backend_text_never_reaches_the_answer(self):
+        # wrong patch: return mobile-mcp's own text (a local path and a stack) in the refusal or failure
+        backend = FakeBackend({'a': TDONGLE}, 'a')
+        for text in ('Error: boom at /Users/x/.npm/_npx/abc/node_modules/mobile-mcp.js', 'Command failed: /Users/x/.npm/_npx/abc/mobilecli-darwin-arm64 list'):
+            backend.fail['mobile_list_elements_on_screen'] = text
+            r = facade_for(backend).look(device=EMULATOR)
+            self.assertNotRegex(json.dumps(r), r'/Users|\.npm|Command failed|boom')
+            d = facade_for(backend).do('x', device=EMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Networks', 'expect': None}])
+            self.assertNotRegex(json.dumps(d), r'/Users|\.npm|Command failed|boom')
 
     def test_a_device_that_is_not_connected_is_device_not_found(self):
         backend = FakeBackend({'a': TDONGLE}, 'a')
         backend.fail['mobile_list_elements_on_screen'] = 'Device "emulator-9999" not found. Use the mobile_list_available_devices tool to see available devices. Please fix the issue and try again.'
         r = facade_for(backend).look(device='emulator-9999')
-        self.assertEqual((r['status'], r['reason']), ('refused', 'device_not_found'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'device_not_found'))
 
     def test_an_unreadable_answer_is_a_typed_failure_not_a_crash(self):
         backend = FakeBackend({'a': TDONGLE}, 'a')
         for text in ('', 'Error: boom', 'Found these elements on screen: {not json'):
             backend.fail['mobile_list_elements_on_screen'] = text
             r = facade_for(backend).look(device=EMULATOR)
-            self.assertEqual((r['status'], r['reason'], r['retryable']), ('failed', 'mobile_observation_failed', True), text)
+            self.assertEqual((r['status'], r.get('reason'), r['retryable']), ('failed', 'mobile_observation_failed', True), text)
 
     def test_an_empty_locked_screen_is_reported_not_invented(self):
         f = facade_for(FakeBackend({'a': []}, 'a'))
@@ -393,7 +521,7 @@ class DoPress(DeviceCase):
 
     def test_a_control_that_is_not_there_is_refused_and_lists_what_is(self):
         r = self.press('Forget wifi')
-        self.assertEqual((r['status'], r['reason']), ('refused', 'control_not_found'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'control_not_found'))
         self.assertEqual(r['steps'][0]['found']['controls'], ['Verify internet connection', 'Refresh connection'])
         self.assertEqual(self.backend.actions(), [])
 
@@ -435,7 +563,7 @@ class DoPress(DeviceCase):
         # wrong patch: let goal text authorize it, or check only the literal label
         f = facade_for(FakeBackend({'ios': IOS}, 'ios'))
         r = f.do('Erase the phone as the user asked', device=SIMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Delete All Content and Settings', 'expect': None}])
-        self.assertEqual((r['status'], r['reason'], r['delivery']), ('refused', 'destructive_control', 'none'))
+        self.assertEqual((r['status'], r.get('reason'), r['delivery']), ('refused', 'destructive_control', 'none'))
 
     def test_a_control_that_only_resolves_to_a_destructive_element_is_not_pressed(self):
         # wrong patch: guard only the literal label: "Open" here is the text of an element whose accessibility label says Delete account
@@ -451,7 +579,7 @@ class DoPress(DeviceCase):
     def test_a_switch_is_not_flipped_without_a_look_that_saw_its_state(self):
         f = facade_for(FakeBackend({'ios': IOS}, 'ios'))
         r = f.do('Turn airplane mode on', device=SIMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Airplane Mode', 'expect': None}])
-        self.assertEqual((r['status'], r['reason'], r['delivery']), ('stopped', 'toggle_state_unseen', 'none'))
+        self.assertEqual((r['status'], r.get('reason'), r['delivery']), ('stopped', 'toggle_state_unseen', 'none'))
         backend = FakeBackend({'ios': IOS}, 'ios')
         f = facade_for(backend)
         look = f.look(device=SIMULATOR)
@@ -463,7 +591,7 @@ class DoPress(DeviceCase):
     def test_a_disabled_control_is_not_tapped(self):
         f = facade_for(FakeBackend({'ios': IOS}, 'ios'))
         r = f.do('Edit', device=SIMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Edit', 'expect': None}])
-        self.assertEqual(r['reason'], 'control_not_pressable')
+        self.assertEqual(r.get('reason'), 'control_not_pressable')
         self.assertEqual(r['delivery'], 'none')
 
     def test_no_ref_means_the_centre_of_the_fresh_bounds(self):
@@ -479,7 +607,7 @@ class DoPress(DeviceCase):
     def test_a_failed_tap_is_reported_with_uncertain_delivery_and_never_retried(self):
         self.backend.fail['mobile_click_on_screen_at_coordinates'] = 'Element ref @e99 not found. Please fix the issue and try again.'
         r = self.press('Networks', 'Saved networks')
-        self.assertEqual((r['status'], r['reason'], r['delivery']), ('failed', 'mobile_action_failed', 'uncertain'))
+        self.assertEqual((r['status'], r.get('reason'), r['delivery']), ('failed', 'mobile_action_failed', 'uncertain'))
         self.assertEqual(r['retryable'], False)
         self.assertEqual(len(self.backend.actions()), 1)
         self.assertNotIn('@e99', json.dumps(r))
@@ -506,7 +634,7 @@ class DoPress(DeviceCase):
     def test_abort_if_stops_the_plan_when_the_text_appears(self):
         r = self.f.do('Open Networks then Add', device=EMULATOR, expect=None, abort_if='Two networks are saved', steps=[
             {'do': 'press', 'control': 'Networks', 'expect': 'Saved networks'}, {'do': 'press', 'control': 'Add network', 'expect': None}])
-        self.assertEqual((r['status'], r['reason']), ('aborted', 'abort_if_matched'))
+        self.assertEqual((r['status'], r.get('reason')), ('aborted', 'abort_if_matched'))
         self.assertEqual(self.backend.tapped, ['Networks'])
 
 
@@ -568,7 +696,7 @@ class DoType(unittest.TestCase):
 
     def test_a_type_step_needs_its_text_and_control(self):
         r = self.f.do('x', device=EMULATOR, expect=None, steps=[{'do': 'type', 'control': 'Room', 'expect': None}])
-        self.assertEqual((r['status'], r['reason']), ('refused', 'bad_request'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'bad_request'))
 
     def test_typing_without_an_expect_ends_delivered_unverified(self):
         self.assertEqual(self.type(expect=None)['status'], 'delivered_unverified')
@@ -583,13 +711,13 @@ class DoOtherSteps(DeviceCase):
         backend.current = 'home'
         backend.moves = {}
         r = f.do('Open the page', device=EMULATOR, expect=None, steps=[{'do': 'goto', 'url': 'https://example.test/n', 'expect': 'Saved networks'}])
-        self.assertEqual((r['status'], r['reason']), ('stopped', 'screen_unchanged_after_action'))
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'screen_unchanged_after_action'))
 
     def test_goto_takes_http_urls_only_and_needs_expect_unless_last(self):
         for step in ({'do': 'goto', 'url': 'javascript:alert(1)', 'expect': None}, {'do': 'goto', 'url': 'file:///etc/passwd', 'expect': None}):
             self.assertEqual(self.f.do('x', device=EMULATOR, expect=None, steps=[step])['status'], 'refused')
         r = self.f.do('x', device=EMULATOR, expect=None, steps=[{'do': 'goto', 'url': 'https://example.test/', 'expect': None}, {'do': 'verify', 'expect': 'Saved networks'}])
-        self.assertEqual((r['status'], r['reason']), ('refused', 'expect_required'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'expect_required'))
         self.assertEqual(self.backend.actions(), [])
 
     def test_verify_observes_and_never_acts(self):
@@ -597,13 +725,13 @@ class DoOtherSteps(DeviceCase):
         self.assertEqual((r['status'], r['delivery']), ('observed', 'none'))
         self.assertEqual(self.backend.actions(), [])
         r = self.f.do('Check', device=EMULATOR, expect=None, steps=[{'do': 'verify', 'expect': 'Saved networks'}])
-        self.assertEqual((r['status'], r['reason']), ('stopped', 'not_verified'))
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'not_verified'))
 
     def test_mac_window_steps_are_refused_on_a_device_before_anything_is_read(self):
-        # wrong patch: run where.lines on a device (there are no records: a filter without sight)
         look = self.f.look(device=EMULATOR)
         self.backend.calls.clear()
-        for step, reason in (({'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Networks'}]}, 'expect': None}, 'where_not_supported_on_device'),
+        for step, reason in (({'do': 'press', 'where': {'fields': ['n'], 'predicates': []}, 'expect': None}, 'where_not_supported_on_device'),
+                             ({'do': 'type', 'where': {'lines': [{'line': 'eq', 'value': 'x'}]}, 'control': 'a', 'text': 'b', 'expect': None}, 'bad_request'),
                              ({'do': 'confirm', 'confirm': 'OK', 'dialog_text': ['x'], 'dialog_controls': ['OK'], 'expect': None}, 'not_supported_on_device'),
                              ({'do': 'open_tab', 'url': 'https://example.test/', 'expect': None}, 'not_supported_on_device'),
                              ({'do': 'close_tab'}, 'not_supported_on_device'),
@@ -611,22 +739,22 @@ class DoOtherSteps(DeviceCase):
                              ({'do': 'press', 'menu': ['File', 'New'], 'expect': None}, 'not_supported_on_device'),
                              ({'do': 'press', 'control': 'Networks', 'near': 'x', 'expect': None}, 'bad_request')):
             r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=[step])
-            self.assertEqual((r['status'], r['reason']), ('refused', reason), step)
+            self.assertEqual((r['status'], r.get('reason')), ('refused', reason), step)
         self.assertEqual(self.backend.calls, [])
 
     def test_look_id_rules_are_the_same_as_for_a_window(self):
         r = self.f.do('x', device=EMULATOR, expect=None, look_id='lk_0000000000', steps=[{'do': 'press', 'control': 'Networks', 'expect': None}])
-        self.assertEqual((r['status'], r['reason']), ('refused', 'unknown_look_id'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'unknown_look_id'))
         look = self.f.look(device=EMULATOR)
         r = self.f.do('x', device='emulator-5556', expect=None, look_id=look['look_id'], steps=[{'do': 'press', 'control': 'Networks', 'expect': None}])
-        self.assertEqual((r['status'], r['reason']), ('refused', 'look_window_mismatch'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'look_window_mismatch'))
         r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=[{'do': 'press', 'control': 'Networks', 'expect': 'Saved networks'}])
         self.assertEqual(r['status'], 'done')
 
     def test_device_and_window_targets_do_not_mix_and_list_is_not_a_device(self):
         for kw in ({'title': 'Demo'}, {'pid': 1, 'window_id': 2}):
             r = self.f.do('x', device=EMULATOR, expect=None, steps=[{'do': 'verify', 'expect': 'y'}], **kw)
-            self.assertEqual((r['status'], r['reason']), ('refused', 'bad_request'), kw)
+            self.assertEqual((r['status'], r.get('reason')), ('refused', 'bad_request'), kw)
         self.assertEqual(self.f.do('x', device='list', expect=None, steps=[{'do': 'verify', 'expect': 'y'}])['reason'], 'bad_request')
         self.assertEqual(self.f.do('x', device='bad id', expect=None, steps=[{'do': 'verify', 'expect': 'y'}])['reason'], 'bad_request')
         self.assertEqual(self.backend.calls, [])
@@ -636,6 +764,163 @@ class DoOtherSteps(DeviceCase):
         self.assertLessEqual(len(json.dumps(r)), 6144)
         self.assertTrue(r['untrusted_page_text'] and r['notice'])
         self.assertEqual(r['summary']['title'], EMULATOR)
+
+
+class RecordsOnDevices(unittest.TestCase):
+    """Records derived from element geometry (vertical banding: a row = elements whose vertical extents overlap; a record needs at least one control) and
+    where.lines over them with the same look_id rules as a window."""
+    def setUp(self):
+        self.backend = FakeBackend({'list': list_screen(), 'extra': list_screen([('Library', 'Saved', ['Forget'])])}, 'list')
+        self.f = facade_for(self.backend)
+
+    def ref_of(self, screen, title):
+        """The ref of the first button at the height of the row titled `title` (refs are list positions, as in the fake backend)."""
+        els = self.backend.screens[screen]
+        y = next(e['coordinates']['y'] for e in els if e.get('text') == title)
+        return '@e%d' % (next(i for i, e in enumerate(els) if e['type'].endswith('Button') and e['coordinates']['y'] == y + 10) + 1)
+
+    def taps(self):
+        return [c[1].get('ref') for c in self.backend.actions()]
+
+    def test_a_list_screen_yields_one_record_per_row_with_its_lines_and_controls(self):
+        # wrong patches: every element its own record (a record per text and per button, lines never together); group by resource-id only (all titles and
+        # statuses share one id, so the whole list is one record)
+        r = self.f.look(device=EMULATOR)
+        self.assertEqual(r['record_kind'], 'rows')
+        self.assertEqual([(x['lines'], x['controls']) for x in r['records']],
+                         [(['Home Wi-Fi', 'Connected'], ['Forget']), (['Office', 'Saved'], ['Forget']), (['Guest', 'Saved'], ['Forget']), (['Cafe', 'Saved'], ['Forget', 'Share'])])
+        self.assertEqual([x['r'] for x in r['records']], ['r1', 'r2', 'r3', 'r4'])
+        self.assertEqual(r['counts']['records'], 4)
+        self.assertIn('Saved networks', r['text'])          # the heading is page text, not a record: it has no control
+        self.assertEqual(self.backend.actions(), [])
+
+    def test_a_row_without_a_control_is_not_a_record(self):
+        # wrong patch: every band is a record (status bar, headings and paragraphs would be records nobody can press)
+        r = self.f.look(device=EMULATOR)
+        self.assertNotIn(['Saved networks'], [x['lines'] for x in r['records']])
+        # and the REAL emulator tree: only its two Buttons hold a control in a row of their own
+        real = facade_for(FakeBackend({'a': TDONGLE}, 'a')).look(device=EMULATOR)
+        self.assertEqual([(x['lines'], x['controls']) for x in real['records']], [([], ['Verify internet connection']), ([], ['Refresh connection'])])
+        none = facade_for(FakeBackend({'a': LAUNCHER}, 'a')).look(device=EMULATOR)   # the REAL home screen: no element is a button
+        self.assertEqual((none['record_kind'], none['records']), ('none', []))
+        self.assertTrue(any('no records' in n for n in none['notes']))
+
+    def test_a_wrapping_cell_joins_the_one_row_it_holds_and_a_list_container_is_no_row(self):
+        # iOS shapes (a Cell wraps its labels). Wrong patch: every wrapper is a row or joins a row (the container that spans all rows would be a control of
+        # the first row), or a cell is ignored (its row would have no control of its own)
+        screen = [el('Other', '', name='Everything', rect=(0, 180, 402, 600)),
+                  el('StaticText', 'Heading', rect=(10, 100, 200, 30)),
+                  el('Cell', '', label='Open Alpha', rect=(0, 200, 402, 80)), el('StaticText', 'Alpha', rect=(16, 205, 200, 30)), el('StaticText', 'First item', rect=(16, 240, 200, 30)),
+                  el('Button', 'Star', rect=(340, 215, 40, 40)),
+                  el('Cell', '', label='Open Beta', rect=(0, 300, 402, 80)), el('StaticText', 'Beta', rect=(16, 305, 200, 30)), el('StaticText', 'Second item', rect=(16, 340, 200, 30))]
+        screen[0]['type'] = 'Cell'
+        r = facade_for(FakeBackend({'a': screen}, 'a')).look(device=SIMULATOR)
+        self.assertEqual([(x['lines'], x['controls']) for x in r['records']], [(['Alpha', 'First item'], ['Open Alpha', 'Star']), (['Beta', 'Second item'], ['Open Beta'])])
+
+    def test_where_lines_picks_the_row_by_its_lines_and_taps_its_control_on_a_fresh_list(self):
+        # wrong patch: where.lines matches without a look_id (see test_where_lines_needs_a_look_id...)
+        look = self.f.look(device=EMULATOR)
+        r = self.f.do('Forget Office', device=EMULATOR, expect=None, look_id=look['look_id'],
+                      steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Office'}]}, 'control': 'Forget', 'expect': None}])
+        self.assertEqual(r['status'], 'delivered_unverified', r)
+        self.assertEqual(self.taps(), [self.ref_of('list', 'Office')])
+        self.assertEqual(r['steps'][0]['selected']['description'], 'Button: Forget')
+
+    def test_where_lines_without_a_control_presses_the_only_control_of_the_row(self):
+        look = self.f.look(device=EMULATOR)
+        one = [{'do': 'press', 'where': {'lines': [{'line': 'contains', 'value': 'guest'}, {'line': 'eq', 'value': 'Saved'}]}, 'expect': None}]
+        r = self.f.do('Forget Guest', device=EMULATOR, expect=None, look_id=look['look_id'], steps=one)
+        self.assertEqual((r['status'], self.taps()), ('delivered_unverified', [self.ref_of('list', 'Guest')]))
+        self.backend.calls.clear()
+        two = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Cafe'}]}, 'expect': None}]    # Forget and Share: nothing is guessed
+        r = self.f.do('Cafe', device=EMULATOR, expect=None, look_id=look['look_id'], steps=two)
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'control_ambiguous'))
+        self.assertEqual(self.backend.actions(), [])
+        three = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Cafe'}]}, 'control': 'Share', 'expect': None}]
+        r = self.f.do('Cafe', device=EMULATOR, expect=None, look_id=look['look_id'], steps=three)
+        self.assertEqual(r['status'], 'delivered_unverified')
+        four = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Cafe'}]}, 'control': 'Nope', 'expect': None}]
+        r = self.f.do('Cafe', device=EMULATOR, expect=None, look_id=look['look_id'], steps=four)
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'control_not_found'))
+
+    def test_where_lines_needs_a_look_id_and_one_of_this_device(self):
+        # wrong patch: let where.lines match without a look_id (a filter written without seeing the screen is how the wrong row gets tapped)
+        step = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Office'}]}, 'control': 'Forget', 'expect': None}]
+        r = self.f.do('x', device=EMULATOR, expect=None, steps=step)
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'look_required'))
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id='lk_0000000000', steps=step)
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'unknown_look_id'))
+        look = self.f.look(device=EMULATOR)
+        r = self.f.do('x', device='emulator-5556', expect=None, look_id=look['look_id'], steps=step)
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'look_window_mismatch'))
+        self.assertEqual(self.backend.actions(), [])
+        self.assertEqual(len(self.backend.calls), 1)        # only the look read the device
+
+    def test_the_screen_must_still_read_as_the_look_showed_it(self):
+        # wrong patch: skip the look_id recomputation (a banner pushed the rows down: the row the model meant is not where the look put it)
+        look = self.f.look(device=EMULATOR)
+        self.backend.set('extra')
+        step = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Office'}]}, 'control': 'Forget', 'expect': None}]
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=step)
+        self.assertEqual((r['status'], r.get('reason'), r['delivery']), ('stopped', 'page_changed_since_look', 'none'))
+        self.assertEqual(self.backend.actions(), [])
+
+    def test_several_or_no_matching_rows_tap_nothing_and_show_the_lines(self):
+        look = self.f.look(device=EMULATOR)
+        several = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Saved'}]}, 'control': 'Forget', 'expect': None}]
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=several)
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'where_matches_several'))
+        self.assertEqual(r['steps'][0]['evidence']['match_count'], 3)
+        none = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Nowhere'}]}, 'control': 'Forget', 'expect': None}]
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=none)
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'no_matching_record'))
+        narrowed = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Saved'}, {'line': 'not_contains', 'value': 'office'}, {'line': 'neq', 'value': 'Guest'}]}, 'control': 'Share', 'expect': None}]
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=narrowed)
+        self.assertEqual((r['status'], self.taps()), ('delivered_unverified', [self.share_ref()]))
+
+    def share_ref(self):
+        els = self.backend.screens['list']
+        return '@e%d' % (next(i for i, e in enumerate(els) if e.get('text') == 'Share') + 1)
+
+    def test_a_negative_condition_over_cut_lines_is_refused_and_a_cut_row_needs_accept_hidden_text(self):
+        look = self.f.look(device=EMULATOR, max_lines=1)       # each row shows one of its two lines
+        self.assertGreater(look['truncated']['lines'], 0)
+        negative = [{'do': 'press', 'where': {'lines': [{'line': 'contains', 'value': 'Office'}, {'line': 'not_contains', 'value': 'Guest'}]}, 'control': 'Forget', 'expect': None}]
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=negative)
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'negative_condition_over_cut_lines'))
+        positive = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Office'}]}, 'control': 'Forget', 'expect': None}]
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=positive)
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'selected_record_has_hidden_text'))
+        self.assertEqual(self.backend.actions(), [])
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=[{**positive[0], 'accept_hidden_text': True}])
+        self.assertEqual(r['status'], 'delivered_unverified')
+
+    def test_uniqueness_is_decided_over_every_row_not_only_the_ones_the_look_showed(self):
+        # a focused look shows one row; a condition that also fits a row outside it is still ambiguous
+        look = self.f.look(device=EMULATOR, focus='Office')
+        self.assertEqual([x['lines'] for x in look['records']], [['Office', 'Saved']])
+        step = [{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Saved'}]}, 'control': 'Forget', 'expect': None}]
+        r = self.f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=step)
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'where_matches_several'))
+        self.assertEqual(self.backend.actions(), [])
+
+    def test_where_lines_on_a_screen_without_records_is_still_refused_before_anything_is_read(self):
+        backend = FakeBackend({'a': LAUNCHER}, 'a')
+        f = facade_for(backend)
+        look = f.look(device=EMULATOR)
+        backend.calls.clear()
+        r = f.do('x', device=EMULATOR, expect=None, look_id=look['look_id'], steps=[{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Chrome'}]}, 'control': 'Chrome', 'expect': None}])
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'where_not_supported_on_device'))
+        self.assertEqual(backend.calls, [])
+
+    def test_a_focused_look_lists_the_matching_rows_and_the_response_stays_bounded(self):
+        r = self.f.look(device=EMULATOR, focus='cafe')
+        self.assertEqual([x['lines'] for x in r['records']], [['Cafe', 'Saved']])
+        r = self.f.look(device=EMULATOR, max_records=2)
+        self.assertEqual((len(r['records']), r['truncated']['records']), (2, 2))
+        r = self.f.look(device=EMULATOR, max_bytes=1500)
+        self.assertLessEqual(len(json.dumps(r)), 1500)
+        self.assertGreater(r['truncated']['bytes'], 0)
 
 
 class Lifecycle(unittest.TestCase):
@@ -711,17 +996,17 @@ class Lifecycle(unittest.TestCase):
         b = self.backend(die_after=0)
         f = Facade(mobile=mobile.Mobile(b), sleep=lambda s: None)
         r = f.look(device=EMULATOR)
-        self.assertEqual((r['status'], r['reason']), ('refused', 'mobile_backend_unavailable'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'mobile_backend_unavailable'))
         self.assertEqual(b.starts, 2)  # one start and exactly one restart
         d = f.do('x', device=EMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Refresh connection', 'expect': None}])
-        self.assertEqual((d['status'], d['reason'], d['delivery']), ('refused', 'mobile_backend_unavailable', 'none'))
+        self.assertEqual((d['status'], d.get('reason'), d['delivery']), ('refused', 'mobile_backend_unavailable', 'none'))
 
     def test_an_action_is_never_re_sent_when_the_child_dies_under_it(self):
         # wrong patch: retry the tap on the restarted child (it may already have landed). The child answers the list, then dies on the tap
         b = self.backend(die_after=1)
         f = Facade(mobile=mobile.Mobile(b), sleep=lambda s: None)
         r = f.do('Refresh', device=EMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Refresh connection', 'expect': 'Connected'}])
-        self.assertEqual((r['status'], r['reason'], r['delivery']), ('failed', 'mobile_action_failed', 'uncertain'))
+        self.assertEqual((r['status'], r.get('reason'), r['delivery']), ('failed', 'mobile_action_failed', 'uncertain'))
         self.assertEqual(len(self.calls('mobile_click_on_screen_at_coordinates')), 1)
         self.assertEqual(b.starts, 1)
 
@@ -732,24 +1017,24 @@ class Lifecycle(unittest.TestCase):
         self.addCleanup(b.close)
         f = Facade(mobile=mobile.Mobile(b), sleep=lambda s: None)
         r = f.look(device=EMULATOR)
-        self.assertEqual((r['status'], r['reason']), ('refused', 'mobile_backend_unavailable'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'mobile_backend_unavailable'))
         self.assertIn('Node.js', r['message'])
         self.assertIn('install', r['message'])
         d = f.do('Tap', device=EMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Refresh connection', 'expect': None}])
-        self.assertEqual((d['status'], d['reason'], d['delivery']), ('refused', 'mobile_backend_unavailable', 'none'))
+        self.assertEqual((d['status'], d.get('reason'), d['delivery']), ('refused', 'mobile_backend_unavailable', 'none'))
         self.assertIn('Node.js', d['steps'][0]['message'] if d['steps'] else d['message'])
         self.assertEqual(b.starts, 0)
 
     def test_a_configured_command_that_is_missing_is_named_not_a_crash(self):
         b = mobile.StdioBackend(command=['definitely-not-installed-mobile-mcp'])
         r = Facade(mobile=mobile.Mobile(b), sleep=lambda s: None).look(device=EMULATOR)
-        self.assertEqual((r['status'], r['reason']), ('refused', 'mobile_backend_unavailable'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'mobile_backend_unavailable'))
         self.assertIn(mobile.COMMAND_ENV, r['message'])
 
     def test_a_command_that_cannot_start_is_a_typed_refusal_with_no_stderr(self):
         b = mobile.StdioBackend(command=[sys.executable, '-c', 'import sys; sys.stderr.write("secret /Users/x/key"); sys.exit(3)'], start_timeout=20)
         r = Facade(mobile=mobile.Mobile(b), sleep=lambda s: None).look(device=EMULATOR)
-        self.assertEqual((r['status'], r['reason']), ('refused', 'mobile_backend_unavailable'))
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'mobile_backend_unavailable'))
         self.assertNotIn('secret', json.dumps(r))
 
     def test_the_default_command_is_the_pinned_package_and_the_override_is_an_operator_setting(self):
@@ -775,7 +1060,7 @@ class Surface(unittest.TestCase):
         server.facade = facade_for(backend)
         text = asyncio.run(server.mcp.call_tool('look', {'device': EMULATOR}))
         body = json.loads((text.content if hasattr(text, 'content') else text)[0].text)
-        self.assertEqual((body['status'], body['record_kind']), ('ok', 'none'))
+        self.assertEqual((body['status'], body['record_kind']), ('ok', 'rows'))
         text = asyncio.run(server.mcp.call_tool('do', {'goal': 'Open Networks', 'expect': 'Saved networks', 'device': EMULATOR, 'control': 'Networks'}))
         self.assertEqual(json.loads((text.content if hasattr(text, 'content') else text)[0].text)['status'], 'done')
 

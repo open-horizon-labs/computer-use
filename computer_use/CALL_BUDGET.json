@@ -917,6 +917,23 @@
       },
       "native_reference_calls": 4
     },
+    "mobile_where_lines": {
+      "description": "Synthetic list screen in the real Android shapes, records derived from element geometry: look(device) -> do(press where.lines Office, control Forget, expect Office forgotten) on a fresh element list; 2 LLM-visible calls, no reader, no chooser",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
     "onboarding_first_do": {
       "description": "REAL captured booking tree on a ready machine: look, then the first verified do (press, expect proved); time_to_first_verified_do = 2 calls; no reader, no chooser",
       "final_status": "done",

@@ -10,9 +10,15 @@ The contract is unchanged, only the observation and the delivery differ:
           control_ambiguous, control_not_pressable, destructive_control), taps by the fresh element's ref (else the centre of its fresh bounds),
           and verifies every step on another fresh list against `expect`. The tap's own "Clicked on" never counts: upstream Cua found taps
           silently dropped on a locked phone, so a tap that changed nothing is reported screen_unchanged_after_action, never done.
-mobile-mcp lists every node of the screen flat, without hierarchy and without a clickable flag, so a device look has no records (record_kind none) and
-where.lines is refused; a control is an element whose type is a button, switch, cell and the like, and any other element that carries the label can be
-pressed by it when no button does (nested nodes of one control collapse to the outermost).
+mobile-mcp lists every node of the screen flat, without hierarchy and without a clickable flag, so the records of a device look are DERIVED from element
+geometry (derive_records): elements whose vertical extents overlap form one row, and a row is a record only when it holds at least one control. `where.lines`
+then works exactly as on a Mac window (a look_id of a look of this device, the page must still read the same, one match binds) and is refused
+where_not_supported_on_device only when the look found no records. A control is an element whose type is a button, switch, cell and the like, and any other
+element that carries the label can be pressed by it when no button does (nested nodes of one control collapse to the outermost).
+
+iOS: a simulator or device answers "Agent is not installed" until mobile-mcp's on-device agent is installed. mobile-mcp has no tool for that; the agent is
+installed by its CLI (`npx -y mobilecli@1.0.16 agent install --device <id>`), which the facade runs ONCE, bounded, when a read is refused
+mobile_device_agent_missing, and then retries the read ONCE. A failed install is the same typed refusal naming the exact command; nothing loops.
 Everything the device displays is untrusted page text, exactly as in a Mac look.
 """
 from __future__ import annotations
@@ -23,6 +29,8 @@ import os
 import re
 import shlex
 import shutil
+import subprocess
+import sys
 import threading
 from datetime import timedelta
 
@@ -31,6 +39,8 @@ from core import Gap
 
 PACKAGE = '@mobilenext/mobile-mcp@1.0.6'
 DEFAULT_COMMAND = ['npx', '-y', PACKAGE]
+AGENT_PACKAGE = 'mobilecli@1.0.16'      # the CLI mobile-mcp 1.0.6 is built on (its @mobilenext/mobilecli-* binary is 1.0.16); it owns `agent install`
+AGENT_INSTALL_TIMEOUT_S = 300.0        # the install builds nothing on a simulator but downloads the agent; bounded, never looped
 COMMAND_ENV = 'CUA_MOBILE_MCP'          # operator override of the command line (tests use it for a fake server); not a secret
 START_TIMEOUT_S = 180.0                # the first npx run downloads the package
 CALL_TIMEOUT_S = 30.0
@@ -67,11 +77,37 @@ def command_from_env(env=None):
     return shlex.split(raw) if raw and raw.strip() else list(DEFAULT_COMMAND)
 
 
+def agent_install_command(device):
+    return ['npx', '-y', AGENT_PACKAGE, 'agent', 'install', '--device', device]
+
+
+def install_agent(device, run=subprocess.run, which=shutil.which, platform=None):
+    """Install mobile-mcp's on-device (iOS) agent with its CLI, once and bounded. Returns None on success; raises MobileGap('mobile_device_agent_missing')
+    naming the exact command when Xcode or Node.js is missing or the command fails or times out. Raw output (paths, stack traces) is never carried."""
+    command = agent_install_command(device)
+    shown = ' '.join(command)
+    def refuse(why):
+        return MobileGap('mobile_device_agent_missing', '%s. Run `%s` yourself, then call again. Nothing was done' % (why, shown))
+    if (platform or sys.platform) != 'darwin' or which('xcrun') is None:
+        raise refuse('the iOS agent can only be installed on a Mac with Xcode (xcrun was not found; install Xcode from the App Store and run `xcode-select --install`)')
+    if which('npx') is None:
+        raise refuse('Node.js (npx) was not found on PATH; install Node.js 18 or newer (https://nodejs.org)')
+    try:
+        done = run(command, capture_output=True, text=True, timeout=AGENT_INSTALL_TIMEOUT_S, stdin=subprocess.DEVNULL, env={**os.environ, 'MOBILEMCP_DISABLE_TELEMETRY': '1'})
+    except subprocess.TimeoutExpired:
+        raise refuse('installing the iOS agent did not finish within %ds' % AGENT_INSTALL_TIMEOUT_S)
+    except OSError:
+        raise refuse('the install command could not be started')
+    if done.returncode != 0:
+        raise refuse('installing the iOS agent failed (exit %s)' % done.returncode)
+    return None
+
+
 def classify(text, action=False):
     """Map mobile-mcp's answer text to a typed reason WITHOUT echoing it (it carries local paths): (reason, message, delivery)."""
     low = (text or '').lower()
     if 'agent is not installed' in low:
-        return ('mobile_device_agent_missing', 'the device agent (mobile-mcp\'s on-device helper) is not installed on this device; an iOS simulator or device needs it before its screen can be read (see the mobile-mcp setup notes). Nothing was done', 'none')
+        return ('mobile_device_agent_missing', 'the device agent (mobile-mcp\'s on-device helper) is not installed on this device; an iOS simulator or device needs it before its screen can be read. Install it with: %s. Nothing was done' % ' '.join(agent_install_command('<device id>')), 'none')
     if 'not found' in low and 'device' in low:
         return ('device_not_found', 'no such device is connected; list them with `look`(device="list") and use an id from that list. Nothing was done', 'none')
     if action:
@@ -221,7 +257,7 @@ class StdioBackend:
 # -- element mapping ---------------------------------------------------------------------------------------------------------------------
 
 ANDROID_CONTROL = re.compile(r'(?:Button|ImageButton|ToggleButton|CheckBox|RadioButton|Switch|SwitchCompat|Spinner|Chip|TabView|MenuItemView|ActionMenuItemView)')
-IOS_CONTROL = frozenset({'Button', 'Link', 'Switch', 'Toggle', 'Tab', 'Cell', 'MenuItem', 'Key'})
+IOS_CONTROL = frozenset({'Button', 'Link', 'Switch', 'Toggle', 'Tab', 'Cell', 'MenuItem', 'Key', 'Icon'})  # Icon: a home-screen app icon (real tree, type "Icon")
 TOGGLE_KINDS = frozenset({'CheckBox', 'RadioButton', 'Switch', 'SwitchCompat', 'ToggleButton', 'Toggle'})
 ANDROID_INPUT = re.compile(r'.*EditText|AutoCompleteTextView|MultiAutoCompleteTextView|SearchAutoComplete')
 IOS_INPUT = frozenset({'TextField', 'SecureTextField', 'SearchField', 'TextView'})
@@ -318,8 +354,74 @@ def dialog_roots(els):
     return [e for e in els if (e['id_tail'] in DIALOG_IDS and e['id'].startswith('android:id/')) or (not e['android'] and e['kind'] in DIALOG_KINDS)]
 
 
+BAND_SLACK = 2          # pixels two vertical extents may overlap by and still be two rows (antialiasing, 1px borders)
+TALL_LEAF = 0.5         # a named leaf taller than this share of the screen is a scroll area or backdrop, not a row member
+
+
+def derive_records(els):
+    """Records from element geometry, as the perception layout fallback groups text regions. The list is flat, so: (1) candidates are the elements that carry
+    a name (a label, text or content description) and have a size; (2) LEAVES are the candidates that hold no other candidate; (3) leaves are banded
+    top to bottom, one band being the leaves whose vertical extents overlap (a row of a list, a card, a toolbar); (4) a control that wraps several leaves
+    (a list cell, a nav item) joins the ONE band its leaves are in; a cell that holds no other cell merges the bands it holds (stacked title and subtitle are one row), and a
+    control that spans several rows (a list container) is ignored; (5) a band is a record only
+    when it holds at least one control. Lines are the texts of the band in reading order; controls are what can be pressed in it. Returns records in page order,
+    each {'root', 'lines', 'controls' (elements, left to right), 'top'} (`root` numbers the band; lk.select numbers the records r1.. itself)."""
+    def carries(e):
+        return bool(label_of(e)) if e['role'] in ('control', 'input') else bool(tagged_line(e))
+    cands = [e for e in els if area(e) > 0 and carries(e)]
+    def wraps(c):
+        return any(d is not c and inside(d['bounds'], c['bounds']) and (area(d) < area(c) or (area(d) == area(c) and d['i'] > c['i'])) for d in cands)
+    container_ids = {c['i'] for c in cands if wraps(c)}
+    page = max((e['bounds'][1] + e['bounds'][3] for e in els), default=0)
+    leaves = [e for e in cands if e['i'] not in container_ids]
+    if len(leaves) > 1:
+        leaves = [e for e in leaves if e['bounds'][3] <= page * TALL_LEAF]
+    bands = []
+    for e in sorted(leaves, key=lambda e: (e['bounds'][1], e['bounds'][0], e['i'])):
+        top, bottom = e['bounds'][1], e['bounds'][1] + e['bounds'][3]
+        if bands and top < bands[-1]['bottom'] - BAND_SLACK:
+            bands[-1]['leaves'].append(e)
+            bands[-1]['bottom'] = max(bands[-1]['bottom'], bottom)
+        else:
+            bands.append({'top': top, 'bottom': bottom, 'leaves': [e], 'wrappers': []})
+    wrappers = [c for c in cands if c['i'] in container_ids and c['role'] == 'control' and live(c)]
+    def holding(w):
+        return [b for b in bands if any(inside(l['bounds'], w['bounds']) for l in b['leaves'])]
+    for w in wrappers:
+        # a cell that holds no other cell IS the row: the bands it holds (a title above a subtitle) are one record; a wrapper that holds other cells, or one as
+        # tall as a scroll area, is a list container and merges nothing
+        if w['bounds'][3] > page * TALL_LEAF or any(o is not w and inside(o['bounds'], w['bounds']) for o in wrappers):
+            continue
+        hit = holding(w)
+        for other in hit[1:]:
+            hit[0]['leaves'] += other['leaves']
+            hit[0]['top'], hit[0]['bottom'] = min(hit[0]['top'], other['top']), max(hit[0]['bottom'], other['bottom'])
+            bands.remove(other)
+    for w in wrappers:
+        hit = holding(w)
+        if len(hit) == 1:
+            hit[0]['wrappers'].append(w)
+    records = []
+    for n, band in enumerate(bands, 1):
+        members = band['leaves'] + band['wrappers']
+        controls = sorted((e for e in members if e['role'] in ('control', 'input') and label_of(e)), key=lambda e: (e['bounds'][0], e['bounds'][1], e['i']))
+        if not controls:
+            continue
+        wrapped = {lk.norm(label_of(w)) for w in band['wrappers']}
+        texts = sorted((e for e in band['leaves'] if e['role'] == 'text'), key=lambda e: (e['bounds'][1], e['bounds'][0], e['i']))
+        plain = {lk.norm(e['names'][0]) for e in texts if e['kind'] in PLAIN_TEXT and e['names']}
+        lines = []
+        for e in texts:
+            line = tagged_line(e)
+            if not line or lk.norm(e['names'][0]) in wrapped or (e['kind'] not in PLAIN_TEXT and lk.norm(e['names'][0]) in plain) or line in lines:
+                continue
+            lines.append(line)
+        records.append({'root': n, 'lines': lines, 'controls': controls, 'top': band['top']})
+    return records
+
+
 def analyze(els):
-    """Structure of one element list, no model: dialogs, page text, controls, inputs, toggles. Nothing here is a record: the list has no hierarchy."""
+    """Structure of one element list, no model: dialogs, page text, controls, inputs, toggles and the records derived from geometry (derive_records)."""
     members, dialogs = set(), []
     for root in dialog_roots(els):
         inner = [e for e in els if e['i'] > root['i'] and inside(e['bounds'], root['bounds'])]
@@ -348,6 +450,7 @@ def analyze(els):
     toggles = [{'label': label_of(e)[:40], 'state': 'checked' if (e['checked'] or e['value'] in ('1', 'true', 'on')) else 'unchecked'} for e in rest if e['role'] == 'control' and e['toggle'] and label_of(e)]
     state = sorted([e['kind'], label_of(e), str(e['enabled']), str(e['checked']), str(e['selected']), str(e['focused']), content_of(e) if e['role'] == 'input' else ''] for e in els if e['role'] in ('control', 'input'))
     return {'dialogs': dialogs, 'text': text, 'controls': controls, 'disabled': disabled, 'inputs': inputs, 'toggles': toggles, 'control_state': state,
+            'records': derive_records(rest), 'headings': [],
             'counts': {'elements': len(els), 'controls': sum(1 for e in els if e['role'] == 'control')}}
 
 
@@ -356,8 +459,23 @@ def signature(els):
     return json.dumps([[e['type'], e['names'], e['value'], e['id'], e['enabled'], e['checked'], e['selected'], e['focused'], e['bounds']] for e in els], ensure_ascii=False, sort_keys=True)
 
 
-NOTE_FLAT = ('a device look has no records: mobile-mcp lists the screen flat, without hierarchy or a clickable flag. Press by the exact label of a control '
-             '(a button, switch or cell first, else any element that carries the label); where.lines is not available')
+NOTE_RECORDS = ('records are derived from element geometry (mobile-mcp lists the screen flat): elements whose vertical extents overlap form one row, and a row '
+                'with at least one control is a record. Press by the exact label of a control, or use where.lines with this look_id to pick the row')
+NOTE_FLAT = ('this screen yields no records (no row holds a control): mobile-mcp lists it flat, without hierarchy or a clickable flag. Press by the exact label of a '
+             'control (a button, switch or cell first, else any element that carries the label); where.lines is not available')
+
+
+def look_id_for(a, rows, device):
+    """What the look showed AND did not: the device, the FULL lines of each displayed record, the page text and every control's state."""
+    return lk.look_id_of([r['rec']['lines'] for r in rows] + [a['text']], device, [], a['control_state'])
+
+
+def record_row(r):
+    item = {'r': r['r'], 'controls': list(dict.fromkeys(label_of(e)[:30] for e in r['rec']['controls'] if e['enabled'])), 'lines': r['lines']}
+    disabled = list(dict.fromkeys(label_of(e)[:30] for e in r['rec']['controls'] if not e['enabled']))
+    if disabled:
+        item['disabled'] = disabled
+    return item
 
 
 def check_device(device):
@@ -369,8 +487,8 @@ def check_device(device):
 
 class Mobile:
     """The facade's view of mobile-mcp: typed reads and actions over any backend with call(tool, args, mutating) -> (text, is_error) and close()."""
-    def __init__(self, backend=None):
-        self.backend = backend
+    def __init__(self, backend=None, installer=install_agent):
+        self.backend, self.installer, self.installed = backend, installer, []
 
     def _backend(self):
         if self.backend is None:
@@ -394,9 +512,26 @@ class Mobile:
             raise MobileGap('mobile_observation_failed', 'mobile-mcp could not list devices')
         return [{k: _text(d.get(k))[:60] for k in ('id', 'name', 'platform', 'type', 'version', 'state') if d.get(k) is not None} for d in rows if isinstance(d, dict)][:DEVICE_LIST_MAX]
 
-    def elements(self, device):
+    def _read(self, device):
         text, error = self._backend().call('mobile_list_elements_on_screen', {'device': device, 'format': 'json'})
         return parse_elements(text)
+
+    def elements(self, device):
+        """A fresh element list. A refusal mobile_device_agent_missing installs the on-device agent ONCE and retries the read ONCE (never a loop): a failed
+        install, or an agent still missing after it, is the typed refusal naming the exact command."""
+        try:
+            return self._read(device)
+        except MobileGap as gap:
+            if gap.reason != 'mobile_device_agent_missing':
+                raise
+        self.installer(device)
+        self.installed.append(device)
+        try:
+            return self._read(device)
+        except MobileGap as gap:
+            if gap.reason == 'mobile_device_agent_missing':
+                raise MobileGap('mobile_device_agent_missing', 'the iOS agent was installed but the device still answers that it is missing. Run `%s` yourself (add --force to reinstall), then call again. Nothing was done' % ' '.join(agent_install_command(device)))
+            raise
 
     def _act(self, tool, args, ok_prefix):
         text, error = self._backend().call(tool, args, mutating=True)
@@ -455,7 +590,7 @@ def discovery(f):
 # -- look --------------------------------------------------------------------------------------------------------------------------------
 
 def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60):
-    """Read-only look at a device screen, or device="list" for discovery. Same response shape as a window look (no records)."""
+    """Read-only look at a device screen, or device="list" for discovery. Same response shape as a window look; records are derived from geometry."""
     t0 = f.clock()
     try:
         if device == LIST_TOKEN:
@@ -463,7 +598,7 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
         lk.check_look_args(None, max_records, max_bytes, focus, max_lines, line_chars)
         check_device(device)
         if fields is not None:
-            raise Gap('not_supported_on_device: fields (the extraction model) read records, and a device screen has none')
+            raise Gap('not_supported_on_device: fields (the extraction model) read the values of records, and a device look shows the strings only')
         els = bridge(f).elements(device)
         terms = lk.focus_terms(focus)
         a = analyze(els)
@@ -475,12 +610,18 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
         match = (lambda line: not terms or any(t in lk.norm(line) for t in terms))
         kept_text = [t for t in shown if match(t)]
         kept_controls = [c for c in a['controls'] if match(c)]
-        notes = [NOTE_FLAT]
+        opts = (max_lines, line_chars)
+        rows, _, matched = lk.select(a, terms, cap=max_records, opts=opts)
+        response_rows = [record_row(r) for r in rows]
+        lost += sum(r['lost'] for r in rows)
+        notes = [NOTE_RECORDS if a['records'] else NOTE_FLAT]
+        if matched > len(rows):
+            notes.append('%d more records matched but only max_records=%d are shown; pass focus=<words from the record you want> or raise max_records' % (matched - len(rows), max_records))
         if not els:
             notes.append('the device listed no elements: it may be locked, asleep or showing a secure screen; nothing was read')
         lost += max(0, len(kept_text) - TEXT_MAX_LINES)
         response = {'status': 'ok', 'untrusted_page_text': True, 'notice': lk.NOTICE, 'window': {'title': device, 'device': device, 'platform': platform_of(els)},
-                    'look_id': None, 'record_kind': 'none', 'records': [], 'text': kept_text[:TEXT_MAX_LINES], 'dialogs': a['dialogs'][:DIALOG_MAX], 'controls': kept_controls[:CONTROL_MAX]}
+                    'look_id': None, 'record_kind': 'rows' if a['records'] else 'none', 'records': response_rows, 'text': kept_text[:TEXT_MAX_LINES], 'dialogs': a['dialogs'][:DIALOG_MAX], 'controls': kept_controls[:CONTROL_MAX]}
         if a['disabled']:
             response['disabled_controls'] = a['disabled'][:CONTROL_MAX]
         if a['inputs']:
@@ -488,8 +629,8 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
         if a['toggles']:
             response['toggles'] = a['toggles'][:INPUT_MAX]
         if terms:
-            response['focus'] = {'terms': terms[:8], 'matched': len(kept_text) + len(kept_controls), 'filtered_out': len(shown) - len(kept_text) + len(a['controls']) - len(kept_controls)}
-        response['counts'] = {'records': 0, 'controls': a['counts']['controls'], 'page_controls': len(a['controls']), 'non_page_controls': max(0, a['counts']['controls'] - len(a['controls'])), 'elements': a['counts']['elements']}
+            response['focus'] = {'terms': terms[:8], 'matched': len(kept_text) + len(kept_controls) + matched, 'filtered_out': len(shown) - len(kept_text) + len(a['controls']) - len(kept_controls) + len(a['records']) - matched}
+        response['counts'] = {'records': len(a['records']), 'controls': a['counts']['controls'], 'page_controls': len(a['controls']), 'non_page_controls': max(0, a['counts']['controls'] - len(a['controls'])), 'elements': a['counts']['elements']}
         response['sources'] = {'device': True, 'mobile_mcp': PACKAGE}
         def closing_notes(cut, lines):
             out = list(notes)
@@ -501,22 +642,23 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
         def measured():  # the COMPLETE response with the worst-case closing notes, timings and counters: max_bytes bounds THIS
             return len(json.dumps({**response, 'look_id': 'lk_0000000000', 'truncated': {'records': 0, 'lines': 999, 'bytes': 999}, 'notes': closing_notes(999, 999), 'ms_by_stage': {'observe': 99999, 'total': 999999}}))
         bytes_cut = 0
-        while measured() > max_bytes and (response['text'] or response['controls'] or response.get('inputs') or response.get('toggles') or response['dialogs']):
-            for key in ('text', 'controls', 'toggles', 'inputs', 'dialogs'):
+        while measured() > max_bytes and (response['records'] or response['text'] or response['controls'] or response.get('inputs') or response.get('toggles') or response['dialogs']):
+            for key in ('records', 'text', 'controls', 'toggles', 'inputs', 'dialogs'):
                 if response.get(key):
                     response[key] = response[key][:-1]
                     bytes_cut += 1
                     break
         notes = closing_notes(bytes_cut, lost)
-        response['look_id'] = lk.look_id_of([a['text']], device, [], a['control_state'])
-        response['truncated'] = {'records': 0, 'lines': lost, 'bytes': bytes_cut}
+        shown_rows = rows[:len(response['records'])]
+        response['look_id'] = look_id_for(a, shown_rows, device)
+        response['truncated'] = {'records': matched - len(rows), 'lines': lost, 'bytes': bytes_cut}
         response['notes'] = notes
-        f.looks[(device, 'device', response['look_id'])] = {'device': device, 'created': f.clock(), 'n': 0}
+        f.looks[(device, 'device', response['look_id'])] = {'device': device, 'created': f.clock(), 'n': len(shown_rows), 'terms': terms, 'opts': opts, 'records': len(a['records'])}
         while len(f.looks) > 8:
             f.looks.pop(next(iter(f.looks)))
         total = round((f.clock() - t0) * 1000)
         response['ms_by_stage'] = {'observe': total, 'total': total}
-        f.event('look', route='device', records=0, look_id=response['look_id'], ms=total)
+        f.event('look', route='device', records=len(response['records']), look_id=response['look_id'], ms=total)
         return response
     except MobileGap as gap:
         return {'status': 'refused' if gap.reason in REFUSED else 'failed', 'reason': gap.reason, 'message': str(gap), **({} if gap.reason in REFUSED else {'retryable': True}),
@@ -528,7 +670,7 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
 
 # -- do ----------------------------------------------------------------------------------------------------------------------------------
 
-DEVICE_STEP_KEYS = frozenset({'do', 'goal', 'control', 'control_match', 'text', 'expect', 'allow_destructive', 'url'})
+DEVICE_STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'text', 'expect', 'allow_destructive', 'accept_hidden_text', 'url'})
 DEVICE_KINDS = ('press', 'type', 'verify', 'goto')
 DEVICE_HINTS = {
     'mobile_backend_unavailable': 'The device backend (mobile-mcp) could not run; nothing was done. Tell the user what the setup block or the message says to install or fix; do not retry until they have.',
@@ -554,8 +696,10 @@ def unsupported(steps):
         if not isinstance(raw, dict):
             continue
         kind = raw.get('do')
-        if raw.get('where') is not None:
-            raise Gap('where_not_supported_on_device: step %d where filters records, and a device screen has none (mobile-mcp lists it flat); press by the exact label of the control (see the controls in `look`(device=...))' % n)
+        if isinstance(raw.get('where'), dict) and raw['where'].get('fields') is not None:
+            raise Gap('where_not_supported_on_device: step %d where.fields reads record values with the extraction model, which a device screen does not have; use where.lines over the strings `look`(device=...) showed, or press by the exact label of the control' % n)
+        if kind != 'press' and raw.get('where') is not None:
+            raise Gap('bad_request: step %d (%s) does not take where on a device; where picks the record a press acts in' % (n, kind))
         if kind in ('confirm', 'open_tab', 'close_tab', 'read_pages') or (kind == 'press' and raw.get('menu') is not None):
             raise Gap('not_supported_on_device: step %d (%s) is for a Mac window; on a device use press, type, verify and goto' % (n, kind if raw.get('menu') is None else 'press menu'))
         extra = sorted(k for k, v in raw.items() if v is not None and k not in DEVICE_STEP_KEYS)
@@ -695,14 +839,71 @@ def destructive(step, element, literal):
     return None
 
 
+def record_stage(x, step, before):
+    """`where.lines` on a device, the twin of plan.lines_stage over records derived from the FRESH list. Returns (element, None) for the one control to press,
+    else (None, result) where result is the stopped step. 1. The screen must still read the way the look showed it (its look_id is recomputed from the fresh
+    list with the look's own focus, cap and line cut). 2. Uniqueness is decided over ALL records of the fresh list. 3. Negative conditions are refused for
+    records with cut lines; selecting one needs accept_hidden_text. 4. Within the record the control is named by step.control, else it must be the only one."""
+    import plan as planmod
+    look = next((v for k, v in x.f.looks.items() if k[0] == x.device and k[2] == step['_look_id']), None)
+    a = analyze(before)
+    stop = lambda reason, **more: (None, {'status': 'stopped', 'reason': reason, 'delivery': 'none', **more})
+    if look is None:
+        return stop('unknown_look_id')
+    opts = look['opts']
+    shown, _, _ = lk.select(a, look['terms'], cap=look['n'], opts=opts)
+    if look_id_for(a, shown, x.device) != step['_look_id']:
+        return stop('page_changed_since_look', found={'records': len(a['records']), 'record_kind': 'rows' if a['records'] else 'none'})
+    every, _, _ = lk.select(a, [], cap=None, opts=opts)
+    displayed = {r['rec']['root'] for r in shown}
+    conds = step['where']['lines']
+    lines_of = lambda r: [lk.norm(t) for t in r['lines']]
+    positive = [c for c in conds if c['line'] in ('eq', 'contains')]
+    negative = [c for c in conds if c['line'] not in ('eq', 'contains')]
+    candidates = [r for r in every if all(planmod.cond_ok(lines_of(r), c) for c in positive)]
+    cut = [r['r'] for r in candidates if r['lost']]
+    if negative and cut:
+        return stop('negative_condition_over_cut_lines', evidence={'records_with_cut_or_omitted_lines': cut[:8], 'count': len(cut)})
+    matched = [r for r in candidates if all(planmod.cond_ok(lines_of(r), c) for c in negative)]
+    shown_matches = [r for r in matched if r['rec']['root'] in displayed]
+    if len(matched) != 1 or len(shown_matches) != 1:
+        return stop('no_matching_record' if len(matched) < 2 else 'where_matches_several',
+                    evidence={'matches': [{'lines': r['lines']} for r in shown_matches[:5]], 'match_count': len(shown_matches) if len(matched) < 2 else len(matched),
+                              'displayed_matches': len(shown_matches), **({'outside_look': len(matched) - len(shown_matches)} if len(matched) != len(shown_matches) else {})})
+    only = matched[0]
+    if only['lost'] and step.get('accept_hidden_text') is not True:
+        return stop('selected_record_has_hidden_text', evidence={'record': only['r'], 'hidden_lines': only['lost']})
+    pool = only['rec']['controls']
+    if step.get('control') is not None:
+        prefix = step.get('control_match') == 'prefix'
+        exact = [e for e in pool if names_match(e, step['control'], prefix)[0]]
+        pool = exact or [e for e in pool if names_match(e, step['control'], prefix)[1]]
+        pool = collapse(pool)
+        if not pool:
+            return stop('control_not_found', found={'controls': [label_of(e)[:30] for e in only['rec']['controls']][:FOUND_MAX]})
+    pool = collapse(pool)
+    ok = [e for e in pool if live(e)]
+    if len(ok) != 1:
+        if not ok and pool:
+            return stop('control_not_pressable')
+        return stop('control_ambiguous', control_count=len(ok) or len(pool), found={'controls': [label_of(e)[:30] for e in pool][:FOUND_MAX]})
+    return ok[0], None
+
+
 def step_press(x, step):
     before = x.elements()
-    target, problem = resolve(before, step['control'], step.get('control_match') == 'prefix', (lambda e: e['role'] == 'control', lambda e: e['role'] == 'text'))
+    if step.get('where') is not None:
+        target, stopped = record_stage(x, step, before)
+        if stopped:
+            return stopped
+        problem = None
+    else:
+        target, problem = resolve(before, step['control'], step.get('control_match') == 'prefix', (lambda e: e['role'] == 'control', lambda e: e['role'] == 'text'))
     if problem:
         return {'status': 'refused' if problem['reason'] != 'control_not_pressable' else 'stopped', 'delivery': 'none', **not_found_payload(before, ('control',)),
                 'reason': problem['reason'], **({'control_count': problem['count']} if problem['reason'] == 'control_ambiguous' else {}),
                 'message': '%s: %s' % (problem['reason'], 'no element on the device screen carries that exact label' if problem['reason'] == 'control_not_found' else 'nothing was tapped')}
-    refusal = destructive(step, target, step['control'])
+    refusal = destructive(step, target, step.get('control') or '')
     if refusal:
         return refusal
     if target['toggle'] and step.get('_look_id') is None:
@@ -787,6 +988,10 @@ def run_plan(f, goal, device, steps, look_id, abort_if, budget_s, expect, single
         plan_steps = planmod.validate(f, goal, None, -1, -1, steps, look_id, abort_if, budget_s, expect, single)
         if look_id is not None and not any(key[0] == device and key[2] == look_id for key in f.looks):
             raise Gap('look_window_mismatch: no `look` of THIS device returned that look_id; call `look`(device=...) and use its look_id')
+        if any(isinstance(s, dict) and s.get('where') is not None for s in steps):
+            seen = next((v for k, v in f.looks.items() if k[0] == device and k[2] == look_id), None)
+            if not seen or not seen.get('records'):
+                raise Gap('where_not_supported_on_device: the look of this screen found no records (no row holds a control; mobile-mcp lists it flat), so there is nothing for where.lines to pick; press by the exact label of a control (see the controls in `look`(device=...))')
     except Gap as gap:
         return refuse(gap)
     x = Run(f, device, budget_s, f.clock())
@@ -814,7 +1019,7 @@ def run_plan(f, goal, device, steps, look_id, abort_if, budget_s, expect, single
         if not ok:
             if result.get('message'):
                 entry['message'] = lk.safe_message(result.get('reason'), result['message'])
-            for key in ('found', 'control_count'):
+            for key in ('found', 'control_count', 'evidence'):
                 if key in result:
                     entry[key] = result[key]
             failed = {'n': n, 'reason': result.get('reason') or status, 'status': status}
