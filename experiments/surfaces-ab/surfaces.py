@@ -382,6 +382,7 @@ def _open_surface(s, task, arm, run_id, base_url, workdir, ios_udid=None):
         udid = ios_udid or booted_iphone()
         s.facts = {'device': udid, 'app': None}
         s.read_truth = lambda: tasks.ios_truth(udid)
+        sh(['xcrun', 'simctl', 'terminate', udid, 'com.apple.Preferences'])  # start every run from the home screen, not where a previous run left Settings (2026-10-01: a vanilla run found About already open)
         s.on_close(lambda: sh(['xcrun', 'simctl', 'terminate', udid, 'com.apple.Preferences']))
         if arm in ('native', 'vanilla'):
             hub = '/Applications/Xcode.app/Contents/Applications/DeviceHub.app'
