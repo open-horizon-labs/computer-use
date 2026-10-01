@@ -48,8 +48,10 @@ Settings > Privacy & Security > Accessibility, or run `space-mover trusted --pro
 lazily at the first window it needs to park, keeps it for the server's lifetime and stops it at shutdown (not at `finish`).
 
 - **Windows the facade creates** are parked (`spaces_client.park`, verified by bounds) right after they exist and before the
-  first look or act, through `Facade.window_created(window_id)`. Today no facade path creates a window: `open_tab` and
-  `read_pages` send Cmd+T to an existing window (a new tab needs no parking) and the facade launches no app. A future path that
+  first look or act, through `Facade.window_created(window_id)`. The one path that creates a window is the agent browser
+  (`computer_use/agent_browser.py`): `goto`, `open_tab` and `read_pages` launch or reuse one Chrome for Testing window and
+  call `window_created` for it once it exists. In a tab of that window a new tab needs no parking. The agent browser is
+  refused `agent_browser_misplaced` if its window is not wholly on the agent display. Any other path that
   makes a window must call `window_created(window_id, title)` once the window exists and is titled; a park answering
   `window_not_found` (a new window is briefly missing from the AX list) is retried 12 times at 0.5 s.
 - **Agent-owned apps** (`CUA_AGENT_APPS`, comma-separated app names, bundle ids or fnmatch patterns; default `qemu-system-*`,
