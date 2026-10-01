@@ -98,4 +98,4 @@ support this narrow routing contract only. The repo dispatcher uses this config
 when its caller loads it; changing this file does not modify the separately
 installed `~/.local/share/fleet-cua-decider/select-fleet` process or the Cua
 Driver installation. See [provider setup](../../../docs/PROVIDERS.md) and the
-[skill setup reference](../../../skills/cua-capability-dispatch/references/setup.md).
+[skill setup reference](../../../skills/computer-use/references/setup.md).

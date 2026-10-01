@@ -1621,10 +1621,6 @@ class Facade:
             return kept if len(items) <= self.DO_LIST_CAP else {**kept, '_truncated': len(items)-self.DO_LIST_CAP}
         return list(values)[:self.DO_LIST_CAP]
 
-    def _visual_available(self):
-        try:self.provider('visual');return True
-        except Exception:return False
-
     def _expect_check(self, state, before, expect, target=None, typed=None):
         """Case-insensitive exact, else contains, each required in exactly ONE text-bearing NON-control node of the page content
         (static text, status text, field values other than the typed target): a button label, the address bar and the tab strip prove
