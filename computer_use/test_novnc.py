@@ -1,13 +1,16 @@
 """#56: noVNC in a browser tab. The page is one canvas plus noVNC markers; its drawn labels (Perception) are placed in the bound tab's viewport CSS px and
-pressed through the Driver's browser_click, in the background, at the exact point. Fakes only: no noVNC page, browser or desktop was available, so nothing
-here was measured live. Each test names the tempting wrong patch it fails."""
+pressed through the Driver's browser_click, in the background, at the exact point. The tidy fakes below were written before any live run; the LiveShapes tests at the
+end replay the real 2026-10-01 capture (computer_use/fixtures/novnc/). Each test names the tempting wrong patch it fails."""
+import copy
+import json
 import unittest
+from pathlib import Path
 
 import novnc
 import shapes as sh
 import test_dom as td
 import test_live_shapes as lv
-from core import Facade, Gap
+from core import Facade, Gap, interpret_answer
 
 PNG = b'\x89PNG\r\n\x1a\n' + b'\x00\x00\x00\rIHDR' + (1600).to_bytes(4, 'big') + (1200).to_bytes(4, 'big')
 OUTLINE = '- rootwebarea\n  - canvas'
@@ -60,7 +63,8 @@ class Detect(unittest.TestCase):
 class Look(unittest.TestCase):
     def test_look_records_the_surface_and_lists_the_drawn_labels(self):
         r = facade(NoVncDriver()).look('Demo')
-        self.assertEqual(r['surface'], 'novnc');self.assertEqual([t['text'] for t in r['canvas']['text_regions']], ['Settings', 'Connect', 'Notes']);self.assertNotIn('refusal', r)
+        # 'Notes' is drawn above the viewport (the tab strip of the window capture): it is not the remote desktop and is not offered (live: the address bar and "Download Chrome" were).
+        self.assertEqual(r['surface'], 'novnc');self.assertEqual([t['text'] for t in r['canvas']['text_regions']], ['Settings', 'Connect']);self.assertNotIn('refusal', r)
     def test_a_canvas_without_the_marker_uses_the_ordinary_canvas_route(self):
         r = facade(NoVncDriver(url='http://h/charts')).look('Demo')
         self.assertNotIn('surface', r);self.assertEqual(len(r['canvas']['text_regions']), 3)
@@ -79,7 +83,7 @@ class Mapping(unittest.TestCase):
         # Wrong patch: use capture px as CSS px (that would be 450, 420), or forget the viewport origin (225, 210).
         f = facade(NoVncDriver());f.look('Demo');state = next(iter(f.snapshots.values()))
         view = novnc.mapping(f, state)
-        self.assertEqual((view['sx'], view['sy'], view['y']), (2.0, 2.0, 80))
+        self.assertEqual((view['kx'], view['ky'], view['oy']), (2.0, 2.0, 160))
         self.assertEqual(novnc.css_point(view, {'x': 400, 'y': 400, 'width': 100, 'height': 40}), (225.0, 130.0))
     def test_a_point_outside_the_viewport_is_refused(self):
         f = facade(NoVncDriver());f.look('Demo');view = novnc.mapping(f, next(iter(f.snapshots.values())))
@@ -138,6 +142,105 @@ class Press(unittest.TestCase):
     def test_an_ordinary_canvas_still_needs_allow_foreground(self):
         d = NoVncDriver(url='http://h/charts');facade(d).do('Press "Settings"', title='Demo', expect='Connected')
         self.assertEqual(d.clicked(), []);self.assertEqual(d.executed, [])
+
+
+# --- Replays of the LIVE capture (2026-10-01): stock noVNC 1.x (vnc.html) in the agent browser on a second display, Driver 0.31.0, a Tk dialog on an Xvfb desktop
+# reached through x11vnc + websockify. computer_use/fixtures/novnc/ holds the Driver's own answers (screenshot base64 removed, macOS menu bar trimmed). Never edited.
+FIX = Path(__file__).resolve().parent / 'fixtures' / 'novnc'
+LIVE_PNG = b'\x89PNG\r\n\x1a\n' + b'\x00\x00\x00\rIHDR' + (1280).to_bytes(4, 'big') + (696).to_bytes(4, 'big')
+
+
+def fx(name):
+    return json.loads((FIX / name).read_text())
+
+
+class LiveNoVncDriver(NoVncDriver):
+    """The captured window, outline and Perception regions. `refuse_click` is the Driver's verbatim browser_click answer; `after_regions` is what is drawn once any click landed."""
+    def __init__(self, semantic='connected.semantic.json'):
+        ax, sem = fx('connected.ax.json'), fx(semantic)
+        super().__init__(png=LIVE_PNG, outline=sem['outline'], url=sem['page']['url'])
+        self.fix = {'window_title': ax['window_title'], 'elements': ax['elements']}
+        self.window_bounds, self.raw_extra = ax['window_bounds'], {'screenshot_frame_valid': ax['screenshot_frame_valid']}
+        self.live_regions, self.refuse_click, self.after_regions = fx('connected.regions.json')['regions'], None, None
+    def call(self, tool, args, timeout=20):
+        if tool == 'parse_visual_regions':
+            extra = self.after_regions if self.after_regions and (self.clicked() or self.executed) else []
+            self.parse_result = {'regions': copy.deepcopy(self.live_regions) + copy.deepcopy(extra)}
+            return super(NoVncDriver, self).call(tool, args, timeout)
+        if tool == 'browser_click' and self.refuse_click:
+            self.browser_calls.append((tool, copy.deepcopy(args)));return interpret_answer(tool, copy.deepcopy(self.refuse_click))  # the real wrapper's reading of the captured answer
+        return super().call(tool, args, timeout)
+    def observe(self, *args):
+        raw = super().observe(*args);raw.update(self.raw_extra);return raw
+
+
+RESULT = [{'id': 'r1', 'kind': 'text', 'text': 'Result: Approve', 'bounds': {'x': 480, 'y': 330, 'width': 220, 'height': 36}}]
+
+
+class LiveShapes(unittest.TestCase):
+    def test_the_stock_client_with_its_toolbar_is_detected_and_a_normal_canvas_page_is_not(self):
+        # Wrong patch: require "no other page content" (the live outline holds a heading, five toolbar buttons, a textarea and an image beside the canvas).
+        sem = fx('connected.semantic.json');self.assertTrue(novnc.detect(sem))
+        self.assertTrue(novnc.detect({**sem, 'page': {'url': 'http://h/app'}}), 'the client heading names it without a route')
+        plain = {**sem, 'outline': sem['outline'].replace('heading "no VNC"', 'heading "Sales"'), 'page': {'url': 'http://h/app'}}
+        self.assertFalse(novnc.detect(plain))
+        self.assertFalse(novnc.detect({**sem, 'outline': sem['outline'] + '\n- link "Home"'}))
+    def test_the_credentials_dialog_is_page_dom_and_is_recognised_there(self):
+        # Wrong patch: look for noVNC_ ids (the outline has none) or only for drawn text (the dialog is DOM, the canvas still says Connecting).
+        pw = fx('password.semantic.json')
+        self.assertTrue(novnc.detect(pw));self.assertTrue(novnc.password_prompt(pw, []));self.assertFalse(novnc.password_prompt(fx('connected.semantic.json'), []))
+    def test_look_lists_the_remote_labels_only_not_the_tab_strip_and_address_bar(self):
+        r = facade(LiveNoVncDriver()).look('Demo')
+        texts = [t['text'] for t in r['canvas']['text_regions']]
+        self.assertEqual(r['surface'], 'novnc');self.assertNotIn('refusal', r)
+        for want in ('Approve', 'Decline', 'Postpone', 'Deploy build 42 to production?'):self.assertIn(want, texts)
+        for chrome in ('Download Chrome', 'coder-muness-cu-novnc-5', 'C'):self.assertNotIn(chrome, texts)
+        self.assertIn('Extra keys', r['controls'])
+    def test_frame_is_screen_absolute_so_the_viewport_origin_is_the_capture_frame(self):
+        # Wrong patch (the first live run): treat the web area frame as window-local: x=-1880 on the second display put every label at x=2563 of 1840, outside the viewport.
+        f = facade(LiveNoVncDriver());f.look('Demo');view = novnc.mapping(f, next(iter(f.snapshots.values())))
+        self.assertEqual((view['ox'], view['oy'], view['w'], view['h']), (0, 99, 1840.0, 857.0))
+        self.assertAlmostEqual(view['kx'], 1280 / 1840);self.assertAlmostEqual(view['ky'], 596 / 857)
+        x, y = novnc.css_point(view, {'x': 433, 'y': 384, 'width': 85, 'height': 34})  # "Approve"
+        self.assertAlmostEqual(x, 683.53, 2);self.assertAlmostEqual(y, 434.25, 2)
+    def test_without_the_capture_frame_the_window_origin_is_subtracted(self):
+        d = LiveNoVncDriver();f = facade(d);f.look('Demo');state = next(iter(f.snapshots.values()))
+        for node in state['nodes'].values():node.pop('screenshot_frame', None)
+        view = novnc.mapping(f, state)
+        self.assertAlmostEqual(view['oy'], (183 - 40) * 696 / 1000);self.assertEqual(view['ox'], 0)
+    def test_a_disagreeing_capture_frame_is_refused(self):
+        f = facade(LiveNoVncDriver());f.look('Demo');state = next(iter(f.snapshots.values()))
+        for node in state['nodes'].values():
+            if node.get('role') == 'AXWebArea':node['screenshot_frame'] = {'x': 0, 'y': 99, 'w': 640, 'h': 596}
+        with self.assertRaises(Gap) as why:novnc.mapping(f, state)
+        self.assertIn('viewport_mapping_unavailable', str(why.exception))
+    def test_background_press_is_refused_typed_when_the_driver_refuses_the_trusted_click(self):
+        # Wrong patches: report the generic driver_refused; retry; fall back to a background pixel click (live: aimed at Approve, it pressed Decline, the canvas centre).
+        d = LiveNoVncDriver();d.refuse_click = fx('browser_click_trust_refused.json')['answer'];d.after_regions = RESULT
+        r = facade(d).do('Press "Approve"', title='Demo', expect=None, steps=[{'do': 'press', 'control': 'Approve', 'expect': 'Result: Approve'}])
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'novnc_background_click_unavailable'), r)
+        self.assertEqual(r['delivery'], 'none');self.assertEqual(d.executed, [])
+        clicks = d.clicked();self.assertEqual(len(clicks), 1)
+        self.assertAlmostEqual(clicks[0]['x'], 683.53, 2);self.assertAlmostEqual(clicks[0]['y'], 434.25, 2)
+    def test_an_allowed_press_is_a_foreground_pixel_click_on_the_label_and_verified(self):
+        d = LiveNoVncDriver();d.refuse_click = fx('browser_click_trust_refused.json')['answer'];d.after_regions = RESULT
+        r = facade(d).do('Press "Approve"', title='Demo', expect=None, steps=[{'do': 'press', 'control': 'Approve', 'expect': 'Result: Approve', 'allow_foreground': True}])
+        self.assertEqual(r['status'], 'done', r);self.assertEqual(d.clicked(), [], 'no CDP coordinates when the window may be fronted')
+        self.assertEqual(len(d.executed), 1);click = d.executed[0]
+        self.assertEqual((click['x'], click['y'], click['delivery_mode']), (475.5, 401.0, 'foreground'));self.assertEqual(click['capture_id'], 'cap')
+    def test_a_wrong_expect_is_never_reported_done(self):
+        d = LiveNoVncDriver()  # the desktop does not show the result
+        r = facade(d).do('Press "Decline"', title='Demo', expect=None, steps=[{'do': 'press', 'control': 'Decline', 'expect': 'Result: Approve', 'allow_foreground': True}])
+        self.assertNotEqual(r['status'], 'done');self.assertEqual(len(d.executed), 1)
+    def test_the_password_dialog_refuses_look_press_and_typing_and_nothing_is_sent(self):
+        # Wrong patch: only notice a password when Perception drew it, or when noVNC_ ids exist: the live dialog is DOM and the outline has no ids.
+        d = LiveNoVncDriver('password.semantic.json');f = facade(d)
+        r = f.look('Demo');self.assertEqual((r['surface'], r['refusal']['reason']), ('novnc', 'credentials_required'));self.assertEqual(r['canvas']['text_regions'], [])
+        r = f.do('Press "Password"', title='Demo', expect=None, steps=[{'do': 'press', 'control': 'Password', 'expect': 'Connected', 'allow_foreground': True}])
+        self.assertEqual(r['reason'], 'credentials_required')
+        r = f.do('Type the password', title='Demo', operation='type_text', text='x')
+        self.assertEqual(r['reason'], 'credentials_required')
+        self.assertEqual(d.executed, []);self.assertEqual(d.clicked(), []);self.assertFalse([c for c in d.browser_calls if c[0] == 'browser_type'])
 
 
 if __name__ == '__main__':unittest.main()

@@ -87,6 +87,24 @@ MUTATING_TOOLS = frozenset({'click', 'double_click', 'right_click', 'type_text',
 READ_TOOLS = frozenset({'get_window_state', 'list_windows', 'get_browser_state', 'parse_visual_regions'})  # the only calls a lost Driver session may re-run (#31)
 
 
+def interpret_answer(tool, value, note=''):
+    """The Driver's parsed JSON answer, or the Gap/DriverCallFailed it amounts to. Module level so a test fake can replay a captured answer through it."""
+    if not isinstance(value, dict):
+        raise DriverCallFailed('driver_call_failed: %s returned a non-object result%s' % (tool, note), tool, 'unusable_output')
+    if value.get('refusal') or value.get('status') == 'refused':
+        raise Gap('Driver refused: ' + str((value.get('refusal') or {}).get('code', 'unknown')))
+    # The Driver can answer success-shaped with effect "refused" (#5, #38), at the top level or on any action of results: never delivered.
+    rows = [value] + [r for r in (value.get('results') or []) if isinstance(r, dict)]
+    refused = next((r for r in rows if r.get('effect') == 'refused'), None)
+    if refused:
+        nested = refused.get('refusal') if isinstance(refused.get('refusal'), dict) else {}
+        error = refused.get('error') if isinstance(refused.get('error'), dict) else {}  # live: browser_click answers {"effect": "refused", "error": {"code": "browser_input_trust_unavailable"}}
+        code = refused.get('refusal_code') or refused.get('code') or nested.get('code') or error.get('code')
+        code = code if isinstance(code, str) and re.fullmatch(r'[a-z][a-z0-9_]{0,60}', code) else 'driver_refused'
+        raise Gap('%s: the Driver refused %s (effect refused); nothing was delivered' % (code, tool))
+    return value
+
+
 class Driver:
     def __init__(self, executable=None):
         self.executable = executable or os.environ.get('CUA_DRIVER', str(Path.home()/'.local/bin/cua-driver'))
@@ -141,19 +159,7 @@ class Driver:
             raise DriverCallFailed('driver_call_failed: %s timed out after %ss%s' % (tool, timeout, note), tool, 'timeout')
         except (OSError, ValueError):
             raise DriverCallFailed('driver_call_failed: %s returned no usable result%s' % (tool, note), tool, 'unusable_output')
-        if not isinstance(value, dict):
-            raise DriverCallFailed('driver_call_failed: %s returned a non-object result%s' % (tool, note), tool, 'unusable_output')
-        if value.get('refusal') or value.get('status') == 'refused':
-            raise Gap('Driver refused: ' + str((value.get('refusal') or {}).get('code', 'unknown')))
-        # The Driver can answer success-shaped with effect "refused" (#5, #38), at the top level or on any action of results: never delivered.
-        rows = [value] + [r for r in (value.get('results') or []) if isinstance(r, dict)]
-        refused = next((r for r in rows if r.get('effect') == 'refused'), None)
-        if refused:
-            nested = refused.get('refusal') if isinstance(refused.get('refusal'), dict) else {}
-            code = refused.get('refusal_code') or refused.get('code') or nested.get('code')
-            code = code if isinstance(code, str) and re.fullmatch(r'[a-z][a-z0-9_]{0,60}', code) else 'driver_refused'
-            raise Gap('%s: the Driver refused %s (effect refused); nothing was delivered' % (code, tool))
-        return value
+        return interpret_answer(tool, value, note)
 
     def observe(self, pid, window_id, session, timeout=20, wait_ms=None):
         # resolve() avoids Driver rejecting /tmp's symlink as a nondirectory.
@@ -1282,7 +1288,13 @@ class Facade:
         # A capture-bound click names its window in `target`; Driver 0.30.4 refuses target together with top-level pid/window_id
         # (invalid_action_target, live deep test 2026-09-30: every canvas press failed). The stored arguments keep them for the checks.
         wire=lambda args:{k:v for k,v in args.items() if not ('target' in args and k in ('pid','window_id'))}
-        result=execute_bound(request,decision,request['snapshot_id'],lambda tool,args:self.driver.call(tool,wire(args)))
+        try:result=execute_bound(request,decision,request['snapshot_id'],lambda tool,args:self.driver.call(tool,wire(args)))
+        except Gap as gap:
+            if item.get('novnc') and str(gap).startswith('browser_input_trust_unavailable'):
+                # Live (Driver 0.31.0, Chrome on macOS): the trusted CDP click would activate the standalone browser window, so the Driver refuses it, nothing delivered.
+                item['used']=False
+                raise Gap("novnc_background_click_unavailable: the Driver refuses a coordinate click in the background on this browser (Chromium's trusted CDP input would front the window); nothing was clicked. Pass allow_foreground=true (this call or step) to let the Driver briefly front the window for a real pointer event at the exact drawn label, only if the user allows that")
+            raise
         self.latest.pop((state['pid'],state['window_id']),None)
         self.event('act',route='cua-driver',selection=selection,revalidation='unchanged_observation',
                    original_binding=item['decision']['binding_digest'],fresh_binding=decision['binding_digest'],
@@ -1827,8 +1839,10 @@ class Facade:
             if text.startswith(('permission_required', 'browser_tab_ambiguous')):return {'reason': text.split(':', 1)[0], 'hint': text}, None
             raise
         if surface is None:return None, None
-        try:texts = [r['text'] for r in self._text_regions(snapshot)]
-        except Gap:texts = []
+        texts = []
+        if self.perception_state == 'healthy' and state['raw'].get('capture_id'):
+            try:texts = [r['text'] for r in self._text_regions(snapshot)]
+            except Gap:texts = []
         if nv.password_prompt(surface['semantic'], texts):
             return {'reason': 'credentials_required', 'dead_end': True, 'report_to_user': nv.CREDENTIALS_HINT, 'hint': nv.CREDENTIALS_HINT}, None
         return None, surface
@@ -1861,6 +1875,9 @@ class Facade:
         picks exactly one. Capture-bound click at the region centre, as choose_regions. Returns {'status': selected|defer|none, ...}."""
         state = self.state(snapshot);capture_id = state['raw'].get('capture_id')
         regions = self._text_regions(snapshot);norm = self._ocr_normalize;want = norm(label)
+        if novnc:
+            import novnc as nv
+            regions = nv.in_viewport(novnc['view'], regions)  # the window capture also draws the tab strip and address bar: only the remote desktop is a label
         texts = self._region_texts(regions)
         exact = [r for r in regions if norm(r['text']) == want]
         if not exact:return {'status': 'none', 'region_texts': texts}
@@ -1881,7 +1898,9 @@ class Facade:
         arguments = {'pid': state['pid'], 'window_id': state['window_id'], 'session': self.session, 'capture_id': capture_id, 'delivery_mode': 'background',
                      'target': {'kind': 'window', 'pid': state['pid'], 'window_id': state['window_id']},
                      'x': bounds.get('x', 0) + bounds.get('width', 0) / 2, 'y': bounds.get('y', 0) + bounds.get('height', 0) / 2}
-        if novnc:
+        # Allowed to front the window: the Driver's capture-bound pixel click lands on the exact label (live 2026-10-01), so no CDP coordinates are needed.
+        novnc_click = bool(novnc) and not self.foreground_ok
+        if novnc_click:
             # noVNC in a tab (#56): the point is the drawn label's centre in the bound tab's viewport CSS px, delivered by browser_click (background, exact point).
             import novnc as nv
             x, y = nv.css_point(novnc['view'], bounds);operation = 'browser_click'
@@ -1894,7 +1913,7 @@ class Facade:
         handle = 'sel_' + uuid.uuid4().hex
         self.selections[handle] = {'snapshot': snapshot, 'request': copy.deepcopy(request), 'decision': copy.deepcopy(decision), 'mode': 'regions', 'operation': 'click',
                                    'text': None, 'used': False, 'allow_foreground': self.foreground_ok, 'capture_id': capture_id,
-                                   **({'novnc': {'want': want, 'x': arguments['x'], 'y': arguments['y']}} if novnc else {})}
+                                   **({'novnc': {'want': want, 'x': arguments['x'], 'y': arguments['y']}} if novnc_click else {})}
         while len(self.selections) > 32:self.selections.pop(next(iter(self.selections)))
         self.event('choose', snapshot=snapshot, route='exact_region_label', mode='regions', authorized=True, reason='exact_region_label', near_used=near is not None)
         return {'status': 'selected', 'route': 'exact_region_label', 'selection': handle, 'selected_id': target['id'], 'decision': decision}
@@ -2204,6 +2223,14 @@ class Facade:
             choose_args = dict(operation=operation, text=text)
             if reading:choose_args.update(reading=reading['reading'], accept_unknown=list(accept_unknown or []) or None, **pick)
             else:
+                if operation != 'click':
+                    # noVNC (#56): its password dialog is page DOM (live: a form with a Password textbox), the canvas has no editable element, and the stock client has a hidden
+                    # keyboard textarea. Typing never reaches any of them: refused before a field is chosen, whatever label the caller names. Needs no Perception.
+                    refused, nv_type = self._novnc_gate(pid_, window_, snapshot, state)
+                    if refused:return finish('deferred', **refused)
+                    if nv_type:
+                        return finish('deferred', reason='novnc_typing_unavailable', dead_end=True,
+                                      hint='This is a noVNC page: its canvas has no editable element, and the Driver types only into one (browser_type needs a ref), so nothing was typed. Ask the user to type, or use a computer-use server on the remote machine.')
                 norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
                 tokens = self.quoted_tokens(goal)
                 label = control if control is not None else (tokens[0] if len(tokens) == 1 else None)
@@ -2248,17 +2275,20 @@ class Facade:
                     if len(same) == 1:
                         node = state['nodes'][same[0]];mode = 'exact';choose_args.update(exact_name=node.get('label'), exact_role=node.get('role'))
                 if mode == 'semantic':
+                    nv = None
+                    if not offered and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
+                        refused, nv = self._novnc_gate(pid_, window_, snapshot, state)
+                        if refused:return finish('deferred', **refused)
                     if offered:choose_args.update(candidate_ids=['e'+str(i) for i in offered])
                     else:
-                        if self.perception_state == 'healthy' and state['raw'].get('capture_id') and state['raw'].get('capture_id'):
-                            refused, nv = self._novnc_gate(pid_, window_, snapshot, state)
-                            if refused:return finish('deferred', **refused)
-                            if nv and operation != 'click':
-                                return finish('deferred', reason='novnc_typing_unavailable', dead_end=True,
-                                              hint='This is a noVNC page: its canvas has no editable element, and the Driver types only into one (browser_type needs a ref), so nothing was typed. Ask the user to type, or use a computer-use server on the remote machine.')
                         seen_texts = []
                         if operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
-                            try:seen_texts = self._region_texts(self._text_regions(snapshot))
+                            try:
+                                seen_texts = self._text_regions(snapshot)
+                                if nv:
+                                    import novnc as nv_module
+                                    seen_texts = nv_module.in_viewport(nv['view'], seen_texts)
+                                seen_texts = self._region_texts(seen_texts)
                             except Gap:seen_texts = []
                         if seen_texts:
                             return finish('deferred', reason='region_label_needed', found={'region_texts': seen_texts},

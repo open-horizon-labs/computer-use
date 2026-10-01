@@ -1,0 +1,16 @@
+{
+ "_source": "Driver 0.31.0 `cua-driver call browser_click` on the agent browser's noVNC tab (Chrome for Testing on macOS), live 2026-10-01; verbatim answer, exit code 0",
+ "answer": {
+  "effect": "refused",
+  "error": {
+   "code": "browser_input_trust_unavailable",
+   "hint": "Chromium's trusted CDP Input route activates its standalone browser window on macOS; use input_route=\"dom_event\" with a ref for a synthetic full-background click"
+  },
+  "escalation": {
+   "reason": "route_unavailable",
+   "target": "page"
+  },
+  "route": "trusted_input",
+  "summary": "refused (browser_input_trust_unavailable): Chromium's trusted CDP Input route activates its standalone browser window on macOS; use input_route=\"dom_event\" with a ref for a synthetic full-background click"
+ }
+}

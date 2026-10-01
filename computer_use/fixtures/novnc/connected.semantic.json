@@ -1,0 +1,22 @@
+{
+ "complete": true,
+ "names": [
+  "no VNC",
+  "no",
+  "VNC",
+  "___________________________________________________________________________________________________"
+ ],
+ "ok": true,
+ "omitted": {
+  "css_hidden": 2,
+  "no_layout": 1,
+  "unknown": 2
+ },
+ "outline": "- generic\n  - generic\n    - generic\n- heading \"no VNC\"\n  - statictext \"no\"\n  - linebreak\n  - statictext \"VNC\"\n    - generic [editable=\"plaintext\"]\n- button \"Extra keys\" [focusable=true]\n- generic\n- generic\n- button \"Clipboard\" [focusable=true]\n- generic\n- button \"Fullscreen\" [focusable=true]\n- button \"Settings\" [focusable=true]\n- generic\n      - statictext \"___________________________________________________________________________________________________\" [editable=\"plaintext\"]\n- button \"Disconnect\" [focusable=true]\n- generic\n- generic\n- generic\n  - textbox: ___________________________________________________________________________________________________ [editable=\"plaintext\",focusable=true,required=false]\n- canvas [focusable=true,focused=true]",
+ "page": {
+  "title": "coder-muness-cu-novnc-56:99 - noVNC",
+  "url": "http://127.0.0.1:6080/vnc.html?autoconnect=true&resize=scale"
+ },
+ "refs": 24,
+ "segments": 1
+}
