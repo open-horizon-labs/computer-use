@@ -15,6 +15,7 @@ Chromium-family executable instead of downloading Chrome for Testing. Nothing he
 import atexit
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -28,6 +29,8 @@ INSTALL_TIMEOUT_S = 600
 WINDOW_WAIT_S = 20
 WINDOW_POLL_S = 0.5
 INSET = 40
+MIN_SIZE, MAX_SIZE = 200, 8000
+RESIZE_TOLERANCE = 2.0  # points: the Driver's readback (and the independent re-check) must agree with the target this closely
 KILL_AFTER_S = 3  # SIGTERM to the process group, then this long before SIGKILL
 SESSION_FILES = ('Current Session', 'Last Session', 'Current Tabs', 'Last Tabs')  # cookies and storage stay; only what restores tabs goes
 RESTORE_NEW_TAB = 5  # session.restore_on_startup: open the new tab page (never the previous session)
@@ -301,6 +304,70 @@ class AgentBrowser:
         self.window_id = seen[0]
         f.window_created(seen[0], seen[1], seen[2])
         return self.proc.pid, seen[0]
+
+    # ---- resize (#78) ----
+    @staticmethod
+    def _frame(value):
+        try:
+            return {k: float(value[k]) for k in ('x', 'y', 'width', 'height')}
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _close(frame, target):
+        return frame is not None and all(abs(frame[k] - target[k]) <= RESIZE_TOLERANCE for k in target)
+
+    def _set_frame(self, f, pid, window_id, frame):
+        import browser
+        return browser._call(f, 'set_window_frame', {'pid': pid, 'window_id': window_id, **frame})
+
+    def resize(self, f, ctx, width, height, profile=None):
+        """Resize ONLY the agent browser window (never a window of another app or the user's browser), keeping it wholly inside the agent display.
+        Done only when the Driver confirms the effect with a readback within RESIZE_TOLERANCE of the (clamped) target AND a fresh window listing agrees and
+        lies inside the display; else a typed Gap. Returns {pid, window_id, width, height, x, y, clamped}."""
+        from core import Gap
+        not_ours = Gap('resize_not_agent_window: only the agent browser window can be resized; that window is not it. Nothing was resized.')
+        agent_ok = profile == 'agent' or (profile is None and self.mode == 'auto')
+        if not agent_ok or (ctx.get('pid') is not None and (not self.alive() or ctx['pid'] != self.proc.pid)):
+            raise not_ours
+        seen = self._window(f) if self.alive() else None
+        if not seen:
+            raise Gap('resize_no_agent_window: the agent browser has no window; nothing was resized.')
+        if ctx.get('window_id') is not None and ctx['window_id'] != seen[0]:
+            raise not_ours
+        window_id, before = seen[0], self._frame(seen[2])
+        rect = f.agent.launch_rect()
+        if rect is None or before is None:
+            raise Gap('resize_unverified: the agent display or the window bounds are unknown, so the window cannot be kept inside the display; nothing was resized.')
+        w, h = min(width, rect['width']), min(height, rect['height'])
+        x = min(max(before['x'], rect['x']), rect['x'] + rect['width'] - w)
+        y = min(max(before['y'], rect['y']), rect['y'] + rect['height'] - h)
+        target = {'x': x, 'y': y, 'width': w, 'height': h}
+        try:
+            value = self._set_frame(f, self.proc.pid, window_id, target)
+        except Gap as error:
+            text = str(error)
+            if text.startswith('Driver refused:'):
+                code = re.sub(r'[^a-z0-9_]', '', text.split(':', 1)[1].strip().lower())[:60] or 'unknown'
+                raise Gap('resize_refused: the Driver refused to resize the window (%s); nothing was resized.' % code)
+            raise Gap('resize_unverified: the Driver call failed, so the window may have been resized.')
+        value = value if isinstance(value, dict) else {}
+        readback = next((self._frame(value[k]) for k in ('readback', 'frame', 'bounds') if isinstance(value.get(k), dict)), None)
+        if value.get('effect') != 'confirmed' or not self._close(readback, target):
+            raise Gap('resize_unverified: the Driver did not confirm the new size with a readback within %g points; the window may have changed.' % RESIZE_TOLERANCE)
+        after = self._window(f)
+        rect = f.agent.launch_rect()  # the display layout is read again: containment is checked against the display as it is now
+        now = after[2] if after and after[0] == window_id else None
+        if rect is None or not self._close(self._frame(now), target) or not f.agent.inside(now):
+            try:
+                self._set_frame(f, self.proc.pid, window_id, before)  # best effort: put it back where it was
+            except Gap:
+                pass
+            raise Gap('resize_outside_display: the window is not wholly inside the agent display after resizing (or its listed bounds differ from the readback).')
+        for key in [k for k in f.looks if k[0] == self.proc.pid and k[1] == window_id]:
+            del f.looks[key]  # a look of the old width must not bind to the reflowed page
+        f.latest.pop((self.proc.pid, window_id), None)
+        return {'pid': self.proc.pid, 'window_id': window_id, 'x': x, 'y': y, 'width': w, 'height': h, 'clamped': (w, h) != (width, height)}
 
     def stop(self):
         """Quit the WHOLE browser: SIGTERM to the process group, up to KILL_AFTER_S for it to go, then SIGKILL to the group; then any process still

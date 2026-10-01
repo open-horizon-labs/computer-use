@@ -19,9 +19,9 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu', 'profile'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu', 'profile', 'width', 'height'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
-DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages')
+DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages', 'resize')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
 MAX_CONDITIONS = 6
 MAX_VALUE_CHARS = 60
@@ -62,7 +62,7 @@ def starts_on_agent_browser(f, steps):
     """#64: the first step navigates the server's own browser, whose window is chosen (and opened when needed) by that step, so the caller has no title yet."""
     first = steps[0] if isinstance(steps, list) and steps and isinstance(steps[0], dict) else {}
     browser = getattr(f, 'agent_browser', None)
-    return first.get('do') in ('goto', 'open_tab', 'read_pages') and browser is not None and (first.get('profile') == 'agent' or (first.get('profile') is None and browser.mode == 'auto'))
+    return first.get('do') in ('goto', 'open_tab', 'read_pages', 'resize') and browser is not None and (first.get('profile') == 'agent' or (first.get('profile') is None and browser.mode == 'auto'))
 
 
 def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect, single):
@@ -134,7 +134,8 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                  'goto': {'do', 'goal', 'url', 'expect', 'profile'},
                  'open_tab': {'do', 'goal', 'url', 'expect', 'profile'},
                  'close_tab': {'do', 'goal', 'expect', 'allow_foreground'},
-                 'read_pages': {'do', 'goal', 'urls', 'fields', 'profile'}}[kind]
+                 'read_pages': {'do', 'goal', 'urls', 'fields', 'profile'},
+                 'resize': {'do', 'goal', 'width', 'height', 'profile'}}[kind]
         if 'profile' in step and step['profile'] not in ('agent', 'user'):
             raise _gap('bad_request: %s profile is "agent" (the default: the agent browser) or "user" (your own browser profile)' % at)
         extra = sorted(set(step) - takes)
@@ -142,7 +143,7 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             raise _gap('bad_request: %s (%s) does not take %s' % (at, kind, ', '.join(extra)))
         if kind == 'verify' and 'expect' not in step:
             raise _gap('expect_required: %s is a verify step and needs expect (visible page text)' % at)
-        if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and not final:
+        if kind not in ('verify', 'close_tab', 'read_pages', 'resize') and 'expect' not in step and not final:
             raise _gap('expect_required: %s needs expect: the page text that will be visible once it worked (null is allowed only on the last step, which then ends delivered_unverified)' % at)
         if kind == 'press':
             if 'menu' in step:
@@ -165,6 +166,14 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 step['url'] = browser.check_url(step['url'])
             except Exception as error:
                 raise _gap(str(error).replace('bad_request: ', 'bad_request: %s ' % at, 1))
+        if kind == 'resize':
+            import agent_browser
+            for key in ('width', 'height'):
+                value = step.get(key)
+                if isinstance(value, bool) or not isinstance(value, int) or not agent_browser.MIN_SIZE <= value <= agent_browser.MAX_SIZE:
+                    raise _gap('bad_request: %s (resize) needs integer width and height, %d to %d points' % (at, agent_browser.MIN_SIZE, agent_browser.MAX_SIZE))
+            if step.get('profile') == 'user' or (getattr(f, 'agent_browser', None) is not None and f.agent_browser.mode != 'auto' and step.get('profile') != 'agent'):
+                raise _gap('resize_not_agent_window: %s (resize) only resizes the agent browser window; a window of the user\'s own browser or any other app is never resized' % at)
         if kind == 'read_pages':
             import browser
             urls = step.get('urls')
@@ -402,6 +411,11 @@ HINTS = {
     'agent_browser_misplaced': 'The agent browser opened outside the agent display, so it was quit at once and nothing was navigated. Tell the user what the message says; do not switch to profile="user" or retry in a loop.',
     'permission_required': 'The Driver has no access to that browser profile; Stop and ask the user to grant it (see setup), then call do once more. Never reroute to another browser or profile.',
     'perception_not_available': "This page is drawn pixels and Cua Perception is not healthy; nothing was clicked. Run the setup block's fix if who=agent, else tell the user; then call look again.",
+    'resize_not_agent_window': 'resize only works on the agent browser window; nothing was resized. Call `do` with a resize step and no profile (or profile="agent"), or tell the user their own windows are never resized.',
+    'resize_no_agent_window': 'The agent browser has no window to resize; nothing was changed. Call `do` with a goto step first (it opens the agent browser), then call `do` with the resize step.',
+    'resize_refused': 'The Driver refused to resize the agent window (see message); nothing else was tried. Call `look` to read the window as it is, or tell the user what the message says.',
+    'resize_unverified': 'The Driver did not confirm the new size, or its readback differs; the window may be resized. Call `look` to see the page and its width now; do not repeat the resize blindly.',
+    'resize_outside_display': 'After resizing the window is not wholly inside the agent display; the old size was restored if possible. Call `look` to check the window, then call `do` with a smaller width and height.',
     'navigate_refused': 'The Driver refused to navigate (see message); nothing else was tried. Do not retry the same goto: call `do` with a different url, or tell the user what the message says.',
     'navigate_failed': 'The page did not load (an HTTP error or a network failure); nothing else was tried. Check the url, then call `do` with the goto step once more or tell the user.',
     'navigated_elsewhere': 'The tab shows a different page than the url of step %(n)d (the message gives both); nothing was clicked. Call `look` to read where it is, or call `do` with the goto step for the url you mean.',
@@ -520,6 +534,9 @@ def _fit(result):
     return result
 
 
+RESIZE_UNCERTAIN = ('resize_unverified', 'resize_outside_display')  # the window may have changed: not a clean refusal
+
+
 AGENT_REFUSALS = ('agent_browser_unavailable', 'agent_display_unavailable', 'agent_browser_misplaced')  # refused before anything was opened or navigated
 
 
@@ -565,7 +582,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             break
         began = f.clock()
         kind = step['do']
-        spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify', 'goto': 'verify', 'open_tab': 'verify', 'close_tab': 'verify', 'read_pages': 'verify'}[kind],
+        spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify', 'goto': 'verify', 'open_tab': 'verify', 'close_tab': 'verify', 'read_pages': 'verify', 'resize': 'verify'}[kind],
                 'control': step.get('control'), 'text': step.get('text'), 'near': step.get('near'), 'expect': step.get('expect'),
                 'accept_unknown': step.get('accept_unknown'), 'treat_as_match': step.get('treat_as_match'), 'records': None}
         channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive'), 'look_id': look_id}
@@ -603,6 +620,34 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             entries.append(entry)
             carry['before'], carry['identity'] = None, None
             if not complete:
+                break
+            continue
+        if kind == 'resize':
+            # #78 (CE-FACADE-009): resize ONLY the agent browser window; done only on the Driver's confirmed readback plus an independent re-check that the whole window is inside the agent display.
+            try:
+                if f.agent_browser is None:
+                    raise Gap('resize_not_agent_window: no agent browser is configured; nothing was resized.')
+                done = f.agent_browser.resize(f, ctx, step['width'], step['height'], step.get('profile'))
+                ctx['pid'], ctx['window_id'] = done.pop('pid'), done.pop('window_id')
+                ctx['agent'] = True
+                result = {'status': 'done', 'delivery': 'delivered', 'resize': done}
+            except Gap as gap:
+                reason = str(gap).split(':', 1)[0]
+                uncertain = reason in RESIZE_UNCERTAIN
+                result = {'status': 'failed' if uncertain else 'refused', 'reason': reason, 'message': str(gap), 'delivery': 'unknown' if uncertain else 'none'}
+            status = result['status']
+            entry = {'n': n, 'do': kind, 'status': status, 'ms': round((f.clock() - began) * 1000)}
+            if result.get('resize'):
+                entry['resize'] = result['resize']
+            if result.get('reason'):
+                entry['reason'] = result['reason']
+                entry['message'] = lk.safe_message(result['reason'], result['message'])
+            if result['delivery'] != 'none':
+                delivery = 'delivered' if result['delivery'] == 'delivered' or delivery == 'delivered' else 'uncertain'
+            entries.append(entry)
+            carry['before'], carry['identity'] = None, None
+            if status != 'done':
+                failed = {'n': n, 'reason': result['reason'], 'status': status}
                 break
             continue
         if kind in ('goto', 'open_tab', 'close_tab'):
@@ -753,7 +798,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         status = 'stopped'
     response = {'status': status, **({'failed_step': failed['n'], 'reason': failed['reason']} if failed else {}), 'steps': entries,
                 'delivery': delivery, 'follow_up_needed': status not in ('done', 'observed')}
-    navigates = plan_steps[0].get('do') in ('goto', 'open_tab', 'read_pages')
+    navigates = plan_steps[0].get('do') in ('goto', 'open_tab', 'read_pages', 'resize')
     if ctx['pid'] is not None:
         summary = _summary(f, ctx['pid'], ctx['window_id'])
         if navigates:

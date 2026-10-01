@@ -91,7 +91,7 @@ class StepWhere(BaseModel):
 
 class PlanStep(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    do: str = Field(description='press | type | confirm | verify | goto | open_tab | close_tab | read_pages')
+    do: str = Field(description='press | type | confirm | verify | goto | open_tab | close_tab | read_pages | resize')
     goal: str|None = Field(default=None, description='Short text, criteria never element IDs or the answer; defaults to the plan goal')
     where: StepWhere|None = Field(default=None, description='press only: which record (lines or fields). Without where, control names the one unique control to press')
     control: str|None = Field(default=None, description='press: the exact button label (whole-word prefix with control_match=prefix); type: the exact field label')
@@ -112,6 +112,8 @@ class PlanStep(BaseModel):
     profile: Literal['agent','user']|None = Field(default=None, description='goto / open_tab / read_pages: where the page opens. Default: the AGENT browser (one Chrome for Testing window on the agent display, started on first use; later steps act on it). "user": the user\'s own browser window named by title (needs granted access, else permission_required). CUA_AGENT_BROWSER=user makes it the default')
     urls: list[str]|None = Field(default=None, description='read_pages (required, 1 to 5 http or https URLs): each is opened in ONE new tab, landing verified, looked at and closed; your own tab is never navigated. Returns steps[].pages=[{url, status ok|failed|skipped, landing, look_id, summary, closed}]; a page that does not land is reported and the others are still read (the step ends stopped pages_incomplete). No expect: it reads, it does not act')
     fields: dict[str, ReadField]|None = Field(default=None, description='read_pages only: read these fields per record of every page with the extraction model (opt-in, costs seconds per page)')
+    width: int|None = Field(default=None, description='resize (required): the new window width in points; only the agent browser window is resized, kept inside the agent display (clamped), done only on the Driver\'s readback; the next look reflows the page')
+    height: int|None = Field(default=None, description='resize (required): the new window height in points; see width')
     confirm: str|None = Field(default=None, description='confirm: the exact label of the dialog control to press; the step must directly follow the press that opened the dialog')
 
 
