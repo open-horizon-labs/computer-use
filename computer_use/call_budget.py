@@ -571,6 +571,13 @@ def measure_plan_scenarios():
         return booking_look_do(call)
     out['nav_goto_look_plan'] = run(nav_driver(press=True), goto_look_plan, lv.LiveReader(lv.BOOKING_PATTERNS))
 
+    # CE-FACADE-010 (#64): the aha moment, the first verified do, traced as time_to_first_verified_do: look, do (2 calls) on a ready machine and goto, look, do
+    # (3) when the page is not open yet. The scripted LLM is the same as above; first_do_calls is the facade's own trace, and table() requires it to equal the counted calls. Fixture-derived, not a rate.
+    out['onboarding_first_do'] = run(booking_driver(), booking_look_do, lv.LiveReader(lv.BOOKING_PATTERNS))
+    out['onboarding_first_do']['first_do_calls'] = (server.facade.first_do or {}).get('calls')
+    out['onboarding_first_do_goto'] = run(nav_driver(press=True), goto_look_plan, lv.LiveReader(lv.BOOKING_PATTERNS))
+    out['onboarding_first_do_goto']['first_do_calls'] = (server.facade.first_do or {}).get('calls')
+
     def open_read_close(call):
         first = call('do', goal='Open the booking page in a new tab', expect=None, title='Demo', steps=[{'do': 'open_tab', 'url': tb.BOOKING, 'expect': 'Dr. Priya Shah'}])
         if first['status'] != 'done':return first
@@ -624,6 +631,7 @@ def table(budget=None, measured=None):
         if m['status'] != limits.get('final_status', 'done'):bad.append('status %s, expected %s' % (m['status'], limits.get('final_status', 'done')))
         if m['tools'] and any(t not in budget['default_path_tools']['value'] for t in m['tools']):bad.append('default path used %s' % sorted(set(m['tools'])))
         if m['max_bytes'] > limit_bytes:bad.append('response %d bytes > %d' % (m['max_bytes'], limit_bytes))
+        if 'first_do_calls' in m and m['first_do_calls'] != m['calls']:bad.append('time_to_first_verified_do traced %s calls, counted %d' % (m['first_do_calls'], m['calls']))
         rows.append((name, m['calls'], limits['max_llm_visible_calls']['value'], 'FAIL' if bad else 'PASS',
                      'reader=%d chooser=%d bytes=%d%s' % (m['reader'], m['chooser'], m['max_bytes'], '; ' + '; '.join(bad) if bad else '')))
         problems += ['%s: %s' % (name, b) for b in bad]

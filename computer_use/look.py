@@ -530,10 +530,10 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                     if len(order) > CANVAS_MAX:
                         extras['notes'].append('%d more drawn texts are not listed (the first %d are shown)' % (len(order) - CANVAS_MAX, CANVAS_MAX))
                 except Gap:
-                    extras['notes'].append('this page has no pressable controls and its drawn text could not be read (the perception parse failed)')
+                    extras['notes'].append('this page has no pressable controls and its drawn text could not be read (the perception parse failed); call `look` once more, and if it fails again tell the user')
                 stage('perception', began)
             else:
-                extras['notes'].append('this page has no pressable controls; drawn text can only be listed when Perception is installed and healthy (it is %s)' % f.perception_state)
+                extras['notes'].append('this page has no pressable controls; with Cua Perception healthy canvas.text_regions would list its drawn texts (the control values for `do`), but it is %s: run `python scripts/install_perception.py` (an agent can; a setup block says so when a call is refused), then call `look` again' % f.perception_state)
         response, shown = assemble(f, state, analysis, rows, max_bytes, extras)
         extraction = None
         if fields is not None and shown:
@@ -575,7 +575,7 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         return response
     except DriverCallFailed as gap:
         return {'status': 'failed', 'reason': 'driver_call_failed', 'retryable': True, 'ms_by_stage': ms,
-                'detail': f._failure_detail(gap), 'hint': 'The Driver call failed before anything was clicked; call look again.'}
+                'detail': f._failure_detail(gap), 'hint': 'The Driver call failed before anything was clicked. Call `look` once more; if it fails again the daemon is probably down: a setup block says how to start it, otherwise tell the user. Do not loop.'}
     except Gap as gap:
         reason = f._do_reason(str(gap))
         return {'status': 'refused', 'reason': reason, 'message': safe_message(reason, str(gap)), 'ms_by_stage': ms}

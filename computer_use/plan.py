@@ -58,6 +58,13 @@ def _gap(message):
 
 # --- validation: everything that can be decided without the Driver, before any Driver action -------------------------------------
 
+def starts_on_agent_browser(f, steps):
+    """#64: the first step navigates the server's own browser, whose window is chosen (and opened when needed) by that step, so the caller has no title yet."""
+    first = steps[0] if isinstance(steps, list) and steps and isinstance(steps[0], dict) else {}
+    browser = getattr(f, 'agent_browser', None)
+    return first.get('do') in ('goto', 'open_tab', 'read_pages') and browser is not None and (first.get('profile') == 'agent' or (first.get('profile') is None and browser.mode == 'auto'))
+
+
 def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect, single):
     """Return the normalized steps or raise Gap('<reason>: ...'). No Driver call, no model, no clock."""
     if not isinstance(goal, str) or not goal.strip():
@@ -74,8 +81,8 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         raise _gap('bad_request: with steps, expect belongs on each step; pass expect=null at the top level')
     if title is not None and (pid is not None or window_id is not None):
         raise _gap('bad_request: give title or pid+window_id, not both')
-    if title is None and (pid is None or window_id is None):
-        raise _gap('bad_request: supply title, or pid and window_id')
+    if title is None and (pid is None or window_id is None) and not starts_on_agent_browser(f, steps):
+        raise _gap('bad_request: supply title, or pid and window_id (a plan whose first step is goto, open_tab or read_pages on the agent browser needs neither: its answer carries summary.title)')
     if not isinstance(budget_s, (int, float)) or isinstance(budget_s, bool) or budget_s <= 0:
         raise _gap('bad_request: budget_s must be positive seconds')
     if abort_if is not None and (not isinstance(abort_if, str) or not abort_if.strip() or len(abort_if) > 200):
@@ -355,8 +362,10 @@ HINTS = {
     'pages_incomplete': 'Some pages of step %(n)d were not read (steps[].pages says for each: landing verdict, reason, skipped or not closed); the other pages were read and are in steps[].pages with their look_id (the page is closed again: to act on one, open_tab it, then look). Nothing else ran. Report which pages failed, or call do with read_pages for just those urls.',
     'element_outside_target_window': 'The Driver refused the press: it cannot prove this application-menu item belongs to the window (steps[].message). Nothing was clicked. The Driver can invoke the item by its menu path, but that briefly fronts the window: stop and ask the user; only if they allow it, call do again with the same step plus allow_foreground=true. Never another window, a coordinate click or a raw Driver call.',
     'menu_item_not_found': 'No menu item of step %(n)d\'s menu path is observed in the window (steps[].message says which segment); nothing was pressed. Call look or observe the window, then give the exact labels of the menu bar item and the item.',
-    'menu_item_ambiguous': 'Several menu items carry a segment of step %(n)d\'s menu path; nothing was pressed. Give a longer path from the menu bar item down.',
-    'menu_item_disabled': 'The menu item of step %(n)d is disabled right now; nothing was pressed. Report it.',
+    'look_required': 'A where.lines filter needs the look_id of a look of this window; nothing was done. Call `look` first, then call `do` with the look_id it returns.',
+    'unknown_look_id': 'That look_id is not one `look` returned for this window; nothing was done. Call `look` first, then call `do` with the look_id it returns.',
+    'menu_item_disabled': 'The menu item of step %(n)d is disabled right now; nothing was pressed. Call `look` and press another control, or tell the user the command is unavailable.',
+    'menu_item_ambiguous': 'Several menu items carry a segment of step %(n)d\'s menu path; nothing was pressed. Call `do` again with menu=[...] on step %(n)d giving a longer path from the menu bar item down.',
     'delivery_unverified': 'Step %(n)d\'s click was delivered but its expect was not seen. Do not click again. Call do with steps=[{do:"verify", expect:<page text that should be visible now>}] to check, or report the state.',
     'not_verified': 'The expect of the verify step was not established (control labels never count). Nothing was clicked. Call do with a different expect, or report what look shows.',
     'unknown_competitors_unacknowledged': 'Some records could not be compared with the predicates (step %(n)d unknown_ids and evidence.extracted show their strings). Call do with the same steps and treat_as_match=<ids> on that step if you judge they DO match, or accept_unknown=<ids> if they do NOT. Nothing was clicked by this step.',
@@ -371,8 +380,41 @@ HINTS = {
     'region_label_needed': 'This page has no pressable controls but text is drawn on it (found.region_texts). Give step %(n)d control=<the exact drawn text>, and near=<the text just above or left of it> when it is drawn more than once.',
     'region_ambiguous': 'Several drawn texts read the same; nothing was clicked by step %(n)d. Give step %(n)d near=<the text just above or left of the one you mean> (see the matches).',
     'region_uncorroborated': 'Another drawn text reads almost the same, so the label cannot be trusted; nothing was clicked by step %(n)d. Give near=<the text just above or left of the control> or report it.',
-    'driver_call_failed': 'A Driver call failed (see delivery: none means nothing was clicked). If delivery is none call do again; otherwise call do with a verify step first.',
+    'driver_call_failed': 'A Driver call failed (see delivery: none means nothing was clicked). If delivery is none call do again once; otherwise call do with a verify step first. If it fails again the daemon is probably down: a setup block says how to start it, otherwise tell the user; do not loop.',
     'provider_failure': 'A specialist failed while running step %(n)d (see delivery). If delivery is none call do again; otherwise call do with a verify step first.',
+    # #64: every refusal that reaches a response leads to one concrete next call, or says who to ask and when a retry is allowed.
+    'bad_request': 'The call is malformed in the way its message says; nothing was done. Correct that field and call `do` again.',
+    'expect_required': 'A press, type or confirm step has no expect (only the last step may omit it); nothing was done. Give that step expect=<text that will be visible once it worked>, then call `do` again.',
+    'look_window_mismatch': 'That look_id belongs to another window or device; nothing was done. Call `look` on the target you mean and pass the look_id it returns to `do`.',
+    'window_not_found': 'No window has exactly the title you gave; nothing was done. Pass the exact title of one open window (or pid and window_id) to `look` and `do`; to open a web page start with a goto step.',
+    'window_ambiguous': 'Several windows carry that title; nothing was done. Pass pid and window_id to `look` and `do` for the one you mean.',
+    'window_closed': 'The target window is gone; nothing was done. If it is open again call `look` with its exact title; for a web page start a new one with a goto step in `do`.',
+    'driver_snapshot_unavailable': 'The Driver could not read the window (see message); nothing was clicked. Call `look` once more; if it fails again tell the user (a setup block, if present, says what is down) instead of retrying.',
+    'capture_expired': 'The drawn-text capture expired; nothing was clicked. Call `look` for a fresh one, then `do` with control=<the exact drawn text>.',
+    'capture_unavailable': 'This observation carries no drawn-text capture; nothing was clicked. Call `look` again, then `do` with control=<the exact drawn text>.',
+    'read_budget': 'These records were already read twice for this observation; nothing was clicked. Judge the strings you have, or call `look` for a fresh observation if the page changed.',
+    'needs_foreground': 'The window is on another Space or its controls cannot be resolved in the background; nothing was done. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
+    'pointer_not_deliverable_in_background': 'A background click on a drawn surface would land at its centre, not on the control; nothing was clicked by step %(n)d. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
+    'foreground_required': 'This window cannot open a tab without being fronted briefly; nothing was opened. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
+    'agent_browser_unavailable': 'The server\'s own browser could not start; nothing was opened. If the setup block lists a fix with who=agent, run it; otherwise tell the user what it says. Then call `do` with the same steps once; until then do not switch to profile="user" or another browser yourself.',
+    'agent_display_unavailable': 'CUA_AGENT_DISPLAY=required and the agent display cannot start; nothing was opened or moved. Tell the user (the setup block names the fix and who); only they can set CUA_AGENT_DISPLAY=auto. Do not retry `do` until it is fixed.',
+    'permission_required': 'The Driver has not been granted access to that browser profile; nothing was opened in another browser or profile. Stop and ask the user to grant it (the setup block names the step and who); once they have, call `do` with the same steps once. Never reroute to another browser, profile or raw Driver call.',
+    'perception_not_available': 'This page is drawn pixels and Cua Perception is not installed or healthy; nothing was clicked. If the setup block lists a fix with who=agent run it, otherwise tell the user; then call `look` again. Until then use a page with real controls.',
+    'navigate_refused': 'The Driver refused to navigate (see message); nothing else was tried. Do not retry the same goto: call `do` with a different url, or tell the user what the message says.',
+    'navigate_failed': 'The page did not load (an HTTP error or a network failure); nothing else was tried. Check the url, then call `do` with the goto step once more or tell the user.',
+    'navigated_elsewhere': 'The tab shows a different page than the url of step %(n)d (the message gives both); nothing was clicked. Call `look` to read where it is, or call `do` with the goto step for the url you mean.',
+    'login_wall': 'The page asks to sign in; nothing was typed. Stop and ask the user to sign in themselves in that browser, then call `do` with the goto step again.',
+    'landing_unknown': 'The tab reported no page url after navigating, so the landing is unproven; it may still be loading. Call `look` in a moment, or call `do` with steps=[{do:"verify", expect:<text that page shows>}].',
+    'browser_tab_ambiguous': 'The window reports several tabs and none active; nothing was done. Ask the user to bring the tab you mean to the front of its window, then call `look`.',
+    'tab_not_opened': 'The new tab did not appear as exactly one new active tab; it was not retried. Call `look` to see the window, then call `do` with a goto step (it navigates the active tab) instead of open_tab.',
+    'tab_not_opened_by_facade': 'Only a tab `do` opened itself can be closed, and this one is not recognisably it; nothing was pressed. Leave the tab open and tell the user, or ask them to close it.',
+    'tab_close_control_not_found': 'The tab strip shows no Close button for that tab; nothing was pressed. Stop and ask the user; only if they allow the window to be fronted briefly call `do` with close_tab and allow_foreground=true.',
+    'tab_close_control_ambiguous': 'Several tabs carry that title, so no Close button was pressed. Stop and ask the user to close the extra tab, or tell them which tab to close; then call `look`.',
+    'tab_strip_changed': 'The tab strip changed while its Close button was pressed, twice; nothing was pressed. Call `look`, then call `do` with close_tab once more.',
+    'tab_not_closed': 'After pressing Close the tab is still listed; it was not retried. Call `look` to read the window, or tell the user the tab is still open.',
+    'ui_changed': 'The menu changed between finding the item and pressing it; nothing was pressed. Call `look`, then call `do` with the same press step and menu=[...] again.',
+    'not_supported_on_device': 'That step kind or field is for Mac windows, not devices; nothing was done. Use press, type, verify or goto with device, or pass title instead of device.',
+    'where_not_supported_on_device': 'where is for Mac windows; nothing was done on the device. Call `do` with control=<the exact label from `look`(device=<id>)> instead.',
 }
 GENERIC_HINT = 'Step %(n)d stopped and nothing further ran. Call look to see the page now, then do with the remaining steps (the earlier steps are already done; do not repeat them).'
 
@@ -470,10 +512,9 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
     def refuse(gap):
         reason = f._do_reason(str(gap))
         message = lk.safe_message(reason, str(gap))
-        hints = {'look_required': 'Call look first, then do with its look_id.', 'unknown_look_id': 'Call look first, then do with the look_id it returns.'}
         f.event('do_plan', status='refused', reason=reason, steps=0)
         return {'status': 'refused', 'reason': reason, 'message': message, 'steps': [], 'delivery': 'none', 'follow_up_needed': True,
-                'hint': hints.get(reason, 'Correct the plan as the message says and call do again; nothing was done.')}
+                'hint': HINTS[reason] % {'n': 1} if reason in HINTS else 'Correct the plan as the message says and call do again; nothing was done.'}
     try:
         plan_steps = validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect, single)
     except Gap as gap:

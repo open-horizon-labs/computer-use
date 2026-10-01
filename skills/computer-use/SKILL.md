@@ -9,6 +9,18 @@ Use the stock computer-use skill and driver for fresh observations and execution
 
 Read [setup](references/setup.md) first to locate or install the runtime and configure providers. Read [the bundled sketch](references/sketch.md) for request semantics and policy. These references travel with `npx skills` installs; do not assume the runtime repository is next to the installed skill. The runtime checkout’s sketch is authoritative when available.
 
+## First five minutes for an agent
+
+The same 20% as the server's welcome screen (its MCP instructions); nothing else is needed to get a first verified result.
+
+1. `look` reads what the target displays (records, controls, text) and returns a `look_id`; it never clicks. Skip it only for one obvious control.
+2. `do` runs your plan (`steps`) deterministically and stops at the first step that is not done. Every step carries an `expect`: text that will be visible once it worked. The expect is the proof; a step without one is never done.
+3. The `look_id` ties the plan to what was seen: filter records with `where.lines` over the strings `look` showed and pass its `look_id`; if the page changed since, nothing is clicked.
+4. Worked example, goto then look then do: `do(goal="Open the booking page", expect=null, steps=[{do:"goto", url:"https://clinic.example/book", expect:"Dr. Priya Shah"}])` (no `title` needed: the server's own browser opens and the answer's `summary.title` names its window); `look(title=<summary.title>)`; `do(goal="Book the Follow-up slot with Dr. Reyes at 1:45 PM", expect=null, title=<same>, look_id=<from look>, steps=[{do:"press", where:{lines:[{line:"eq",value:"Dr. Reyes"},{line:"contains",value:"1:45 PM"}]}, expect:"Booked:"}])`. On a ready machine the first verified `do` takes two calls (`look`, `do`), three when the page must be opened first; the server traces it as `time_to_first_verified_do`.
+5. A deferred or stopped answer carries what you need to call `do` again: follow its `hint`. A refusal (`permission_required`, `foreground_required`, `pointer_not_deliverable_in_background`, `tab_close_control_not_found`, ...) or a `setup` block means stop and ask the user: never reroute to another browser, profile or raw Driver call, and never add `allow_foreground` yourself.
+6. A `setup` block appears only when the environment is not ready for the target you named (the agent browser, the Driver grant, Perception, Node.js, a daemon): `setup=[{check, status, fix, who}]` from the doctor checks that explain the refusal, shown once per blocker set. `fix` is the exact next action; `who` is `agent` (a command you can run, usually `python -m computer_use bootstrap`) or `user` (a System Settings grant or an install: ask them). Retry the same call once after the fix.
+7. A human checks the whole path with `python -m computer_use doctor --probe`: it serves a bundled booking page on loopback and runs one `look` and one verified `do` through the agent browser, reporting `ready` with the time to the first verified `do`.
+
 ## Default workflow
 
 Call `look` first when the page has lists, tables or several similar controls, or when you do not know the exact strings it displays; then call `do`. `look` never clicks and calls no model by default: it returns the lines each record displays (a duration may read "half-hour", not "30 min"), the page text, the controls and a `look_id`. Write the plan from those strings, never from a guess: a filter written blind is how the wrong record gets clicked. For one obviously unique control, skip the look and call `do` with a goal that quotes its label.

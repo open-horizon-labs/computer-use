@@ -532,6 +532,57 @@ MUTATIONS = {
         'never stop mobile-mcp when the server shuts down',
         [('mobile.py', "        with self._lock:\n            self._teardown()\n\n    # -- calls", "        pass\n\n    # -- calls")],
         ['test_mobile.Lifecycle.test_close_stops_the_child_and_the_next_call_starts_a_fresh_one']),
+    # CE-FACADE-010 (#64): agent onboarding.
+    'onboarding_setup_is_the_whole_doctor_report': (
+        'attach every doctor check to a refusal instead of the ones that explain it',
+        [('onboarding.py', "    names, fallback = BLOCKERS[reason]\n", "    names, fallback = tuple(c.__name__ for c in cli.STATIC_CHECKS), None\n")],
+        ['test_onboarding.SetupBlock.test_a_browser_refusal_carries_only_the_browser_blockers_with_who',
+         'test_onboarding.SetupBlock.test_a_device_refusal_carries_the_device_blocker_never_the_browser_ones']),
+    'onboarding_setup_repeated_every_time': (
+        'show the setup block on every refusal, not once per blocker set',
+        [('onboarding.py', "    if not entries or key in f.setup_seen:", "    if not entries:")],
+        ['test_onboarding.SetupBlock.test_once_per_blocker_set_and_again_when_the_set_changes']),
+    'onboarding_setup_on_a_healthy_machine': (
+        'list the checks that pass as blockers too',
+        [('onboarding.py', "    found = [_entry(c) for name in names for c in _run(env, name) if c['status'] in (cli.WARN, cli.BLOCKER)]", "    found = [_entry(c) for name in names for c in _run(env, name)]")],
+        ['test_onboarding.SetupBlock.test_never_on_a_healthy_machine']),
+    'onboarding_doctor_runs_for_every_response': (
+        'run the doctor checks whatever the refusal was',
+        [('onboarding.py', "    hits = [r for r in reasons_of(result) if r in BLOCKERS]", "    hits = list(BLOCKERS)[:1]")],
+        ['test_onboarding.SetupBlock.test_no_environment_reason_means_the_checks_are_never_run']),
+    'onboarding_a_goto_is_the_aha_moment': (
+        'count any done plan (a goto alone) as the first verified do',
+        [('onboarding.py', "any(isinstance(s, dict) and s.get('do') in ACTIONS and s.get('status') == 'done' for s in steps)", "any(isinstance(s, dict) and s.get('status') == 'done' for s in steps)")],
+        ['test_onboarding.FirstVerifiedDo.test_a_goto_or_a_verify_alone_is_not_the_aha_moment']),
+    'onboarding_first_do_overwritten': (
+        'overwrite time_to_first_verified_do on every done do',
+        [('core.py', "if tool == 'do' and self.first_do is None and onboarding.is_verified_do(result):", "if tool == 'do' and onboarding.is_verified_do(result):")],
+        ['test_onboarding.FirstVerifiedDo.test_it_is_recorded_once']),
+    'onboarding_permission_refusal_gets_the_generic_hint': (
+        'leave permission_required without its own hint (it falls to "call look to see the page")',
+        [('plan.py', "    'permission_required': 'The Driver has not been granted", "    'permission_required_unused': 'The Driver has not been granted")],
+        ['test_onboarding.HintCatalog.test_every_refusal_reason_that_reaches_a_response_has_its_own_hint',
+         'test_onboarding.EmptyStates.test_the_no_permission_hint_names_who_and_the_retry_rule']),
+    'onboarding_a_hint_that_restates_the_reason': (
+        'a hint that only says what the reason already says',
+        [('plan.py', "Call `look` and press another control, or tell the user the command is unavailable.'", "Report it.'")],
+        ['test_onboarding.HintCatalog.test_every_hint_names_an_existing_tool_or_parameter_or_says_who_and_the_retry_rule']),
+    'onboarding_empty_device_list_keeps_the_bare_hint': (
+        'say only "pass device=<an id>" when there is no device to pass',
+        [('mobile.py', "    elif not out['devices']:", "    elif False:")],
+        ['test_onboarding.EmptyStates.test_no_devices_says_what_would_appear_and_the_one_call']),
+    'onboarding_windows_notes_not_merged': (
+        'compute the windows empty-state notes but return the bare list',
+        [('server.py', "            found={**found,**onboarding.windows_notes(facade,found,title)}", "            found=found")],
+        ['test_onboarding.EmptyStates.test_the_advanced_windows_tool_merges_the_notes']),
+    'onboarding_title_dropped_for_every_plan': (
+        'stop requiring a title for any plan, not only a goto on the agent browser',
+        [('plan.py', "    first = steps[0] if isinstance(steps, list) and steps and isinstance(steps[0], dict) else {}\n", "    return True\n    first = {}\n")],
+        ['test_onboarding.FirstCallNeedsNoTitle.test_everything_else_still_names_its_window']),
+    'onboarding_probe_reports_ready_without_a_verified_do': (
+        'doctor --probe calls the machine ready once the clicks were delivered',
+        [('cli.py', "        if done.get('status') != 'done' or not facade.first_do:", "        if False:")],
+        ['test_onboarding.Probe.test_an_unverified_press_is_not_ready']),
     # CE-FACADE-008 follow-up (#59): records on device screens and the iOS agent bootstrap.
     'device_every_element_is_a_record': (
         'make every element its own record (no banding): lines never sit with their controls, so a row cannot be picked by what it says',
