@@ -463,6 +463,100 @@ class Lifecycle(Base):
         self.assertEqual([e for e in self.f.events if e['operation'] == 'agent_browser_recovered_stale'], [])
 
 
+class Two(unittest.TestCase):
+    """#91: two servers on one cache. A fake process table says who is alive (pid -> (start, command)); nothing is launched."""
+    def setUp(self):
+        self.cache = Path(tempfile.mkdtemp())
+        exe = self.cache / 'browsers' / 'chrome' / 'mac_arm-1' / 'chrome-mac-arm64' / 'Google Chrome for Testing.app' / 'Contents' / 'MacOS' / 'Google Chrome for Testing'
+        exe.parent.mkdir(parents=True);exe.write_text('')
+        self.world = World();self.world.profile = self.cache / 'agent-profile'
+        self.alive = {100: ('Thu Oct  1 10:00:00 2026', 'python server.py'), 200: ('Thu Oct  1 10:05:00 2026', 'python server.py')}
+        self.now = 0.0
+        self.f = type('F', (), {'events': [], 'event': lambda me, name, **d: me.events.append((name, d))})()
+
+    def server(self, pid):
+        return AgentBrowser(mode='auto', cache=self.cache, popen=self.world.popen, sleep=lambda s: setattr(self, 'now', self.now + s), clock=lambda: self.now,
+                            killpg=self.world.killpg, kill=self.world.kill, scan=self.world.scan, identify=lambda p: self.alive.get(p), getpid=lambda: pid)
+
+    def launch(self, ab):
+        ab._launch(None, self.f)
+        return ab
+
+    def names(self):
+        return [e[0] for e in self.f.events]
+
+    def test_a_second_server_never_kills_the_live_owners_browser_and_uses_its_own_profile(self):
+        # Wrong patch: the old _recover_stale on the shared profile (SIGKILLed the live server's Chrome, issue #91).
+        first, second = self.server(100), self.server(200)
+        self.launch(first)
+        owner_browser = first.proc.pid
+        self.launch(second)
+        self.assertEqual(self.world.signals, [], 'nothing was signalled')
+        self.assertIn(owner_browser, [r[0] for r in self.world.live()])
+        self.assertEqual(second.profile, self.cache / 'agent-profile-200')
+        self.assertIn('--user-data-dir=%s' % (self.cache / 'agent-profile-200'), self.world.commands[-1])
+        self.assertIn('agent_browser_separate_profile', self.names())
+        second_browser = second.proc.pid
+        first.stop()
+        self.assertIn(second_browser, [r[0] for r in self.world.live()], 'the owner stopping does not touch the second server\'s browser')
+        second.stop()
+        self.assertFalse((self.cache / 'agent-profile-200').exists(), 'the per-server profile is removed at shutdown')
+
+    def test_a_server_that_never_launched_kills_nothing_at_shutdown(self):
+        # Wrong patch: stop() sweeps the shared profile even when another server owns it.
+        first, idle = self.server(100), self.server(200)
+        self.launch(first)
+        idle.stop()
+        self.assertEqual(self.world.signals, [])
+
+    def test_a_dead_owner_is_recovered_and_the_lock_taken(self):
+        # Wrong patch: treat any lock as live (never recover), or no lock taken.
+        first, second = self.server(100), self.server(200)
+        self.launch(first)
+        stale = first.proc.pid
+        del self.alive[100]
+        self.launch(second)
+        self.assertNotIn(stale, [r[0] for r in self.world.live()], 'the dead owner\'s browser was recovered')
+        self.assertEqual(second.profile, second.base_profile)
+        self.assertEqual(json.loads((second.profile / 'computer-use.owner').read_text())['pid'], 200)
+
+    def test_a_reused_pid_is_not_a_live_owner(self):
+        # Wrong patch: pid liveness alone (the OS gave the owner's pid to an unrelated process, or to another python server started later).
+        first, second = self.server(100), self.server(200)
+        self.launch(first)
+        self.alive[100] = ('Fri Oct  2 09:00:00 2026', 'vim notes.txt')
+        self.launch(second)
+        self.assertEqual(second.profile, second.base_profile, 'the stale lock was recovered, not honoured')
+        self.assertNotIn('agent_browser_separate_profile', self.names())
+        # same command line but a different start time is still a reused pid
+        (second.base_profile / 'computer-use.owner').write_text(json.dumps({'pid': 100, 'start': 'Thu Oct  1 10:00:00 2026', 'command': 'python server.py', 'browser_pid': 1}))
+        self.alive[100] = ('Fri Oct  2 09:00:00 2026', 'python server.py')
+        self.alive[300] = ('Fri Oct  2 09:10:00 2026', 'python server.py')
+        third = self.launch(self.server(300))
+        self.assertEqual(third.profile, third.base_profile)
+
+    def test_stale_per_server_profiles_are_cleaned_at_the_next_launch_but_live_ones_are_kept(self):
+        # Wrong patch: never clean them (they pile up), or clean every agent-profile-* (a live server's profile).
+        dead, live = self.cache / 'agent-profile-999', self.cache / 'agent-profile-200'
+        for d, pid in ((dead, 999), (live, 200)):
+            d.mkdir()
+            start, command = self.alive.get(pid, ('Wed Sep 30 08:00:00 2026', 'python server.py'))
+            (d / 'computer-use.owner').write_text(json.dumps({'pid': pid, 'start': start, 'command': command}))
+        self.launch(self.server(100))
+        self.assertFalse(dead.exists())
+        self.assertTrue(live.exists())
+
+    def test_recovering_the_shared_profile_does_not_match_a_per_server_profile(self):
+        # Wrong patch: substring match on the user-data-dir ('agent-profile' is a prefix of 'agent-profile-200').
+        first = self.server(100)
+        self.launch(first)
+        del self.alive[100]
+        self.world.add_process(5000, 'chrome --user-data-dir=%s --remote-debugging-port=0' % (self.cache / 'agent-profile-200'))
+        self.alive[300] = ('x', 'y')
+        self.launch(self.server(300))
+        self.assertIn(5000, [r[0] for r in self.world.live()])
+
+
 class NoRestore(Base):
     def test_preferences_are_seeded_so_no_session_is_restored(self):
         # Wrong patches: leave restore_on_startup unset (Chrome reopened the 6 tabs of the last run); drop other keys; seed after popen.

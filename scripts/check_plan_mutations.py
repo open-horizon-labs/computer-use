@@ -116,6 +116,10 @@ MUTATIONS = {
         'drop the CUA_TASK_ADVANCED guard',
         [('server.py', "if ADVANCED:register_advanced()", "register_advanced()")],
         ['test_budget.ToolSurface.test_primitives_registered_by_default_fail', 'test_plan.ServerSurface.test_the_default_surface_is_exactly_do_then_look_and_the_primitives_are_absent']),
+    'kill_a_live_owners_browser': (
+        'treat a live owner\'s profile as stale and kill what uses it (#91)',
+        [('agent_browser.py', "        return bool(found and owner.get('start') == found[0] and owner.get('command') == found[1])", "        return False")],
+        ['test_agent_browser.Two.test_a_second_server_never_kills_the_live_owners_browser_and_uses_its_own_profile']),
     'resize_a_window_that_is_not_the_agent_browser': (
         'resize whatever window the caller names (#78)',
         [('agent_browser.py', "(ctx.get('pid') is not None and (not self.alive() or ctx['pid'] != self.proc.pid))", "False"),
