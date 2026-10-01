@@ -195,7 +195,8 @@ class TextTaskTest(unittest.TestCase):
     def test_textedit_document(self):
         self.assertEqual(tasks.judge('textedit', doc=tasks.TEXTEDIT_SENTENCE + '\n', acted=True)[0], 'correct')
         self.assertEqual(tasks.judge('textedit', doc='something else', acted=True)[0], 'wrong')
-        self.assertEqual(tasks.judge('textedit', doc=None, acted=True)[0], 'no-action')
+        self.assertEqual(tasks.judge('textedit', doc=None, acted=True)[0], 'failed')  # acted, left no document
+        self.assertEqual(tasks.judge('textedit', doc=None, acted=False)[0], 'no-action')
         self.assertEqual(tasks.judge('textedit', doc='', acted=True, timed_out=True)[0], 'timeout')
 
 
@@ -326,7 +327,8 @@ class PromptAndRunnerTest(unittest.TestCase):
         self.assertEqual(runner.main(['--plan']), 0)
 
     def test_native_browser_is_chrome_for_testing_with_throwaway_profile(self):
-        argv = surfaces.chrome_argv('/x/Google Chrome for Testing', '/tmp/prof', 'http://127.0.0.1:1/')
+        argv = surfaces.chrome_argv('/x/Google Chrome for Testing', '/tmp/prof', 'http://127.0.0.1:1/', {'x': 3000, 'y': 0, 'width': 1920, 'height': 1080})
+        self.assertIn('--window-position=3040,40', argv)  # inside the agent display, never the user's screen
         self.assertTrue(any(a == '--user-data-dir=/tmp/prof' for a in argv))
         self.assertNotIn('Google Chrome.app', ' '.join(argv))
 
@@ -401,6 +403,140 @@ class ScoreTest(unittest.TestCase):
             (base / 't.jsonl').write_text('')
             run = {'run_id': 'r2', 'arm': 'native', 'task': 'booking', 'returncode': 'timeout', 'transcript': 't.jsonl'}
             self.assertEqual(score.score_run(run, base / 'none.jsonl', base)['outcome'], 'timeout')
+
+
+class _FakeDisplay:
+    def __init__(self, rect, park_moves=True):
+        self._rect, self.park_moves, self.parked = rect, park_moves, []
+        self.client = self
+        self.windows = None
+
+    def inside(self, b):
+        r = self._rect
+        return bool(b) and r['x'] <= b['x'] and r['y'] <= b['y'] and b['x'] + b['width'] <= r['x'] + r['width'] and b['y'] + b['height'] <= r['y'] + r['height']
+
+    def park(self, wid):
+        if not self.park_moves:
+            raise RuntimeError('window was not moved')
+        self.parked.append(wid)
+        for w in self.windows:
+            if w['window_id'] == wid:
+                w['bounds'] = {'x': self._rect['x'] + 10, 'y': 10, 'width': 400, 'height': 300}
+
+
+class ParkTest(unittest.TestCase):
+    RECT = {'x': 3000, 'y': 0, 'width': 1920, 'height': 1080}
+
+    def run_park(self, windows, park_moves=True, match=lambda w: w['app_name'] == 'Calculator'):
+        ad = _FakeDisplay(self.RECT, park_moves)
+        ad.windows = windows
+        clock = iter(range(0, 1000)).__next__
+        return ad, surfaces.park_windows(match, timeout=5, list_windows=lambda: [dict(w) for w in ad.windows], display=ad,
+                                         sleep=lambda s: None, clock=clock)
+
+    def win(self, x, app='Calculator', wid=7):
+        return {'window_id': wid, 'app_name': app, 'layer': 0, 'pid': 1, 'bounds': {'x': x, 'y': 50, 'width': 400, 'height': 300}}
+
+    def test_parks_and_verifies(self):
+        ad, parked = self.run_park([self.win(100)])
+        self.assertEqual(parked, [7])
+
+    def test_already_on_agent_display_needs_no_park(self):
+        ad, parked = self.run_park([self.win(3100)])
+        self.assertEqual(parked, [])
+
+    def test_park_failure_refuses_instead_of_leaving_window_on_user_screen(self):
+        with self.assertRaises(surfaces.SetupRefused):
+            self.run_park([self.win(100)], park_moves=False)
+
+    def test_no_window_refuses(self):
+        with self.assertRaises(surfaces.SetupRefused):
+            self.run_park([self.win(100, app='Zoom')])
+
+    def test_user_windows_never_parked(self):
+        ad, _ = self.run_park([self.win(100), self.win(200, app='Slack', wid=9)])
+        self.assertEqual(ad.parked, [7])
+
+
+class SafetyTest(unittest.TestCase):
+    def test_foreign_facade_detected(self):
+        rows = [(10, '/x/.venv-facade/bin/python /x/computer_use/server.py'), (11, '/c/space-mover display serve --width 1920'),
+                (12, 'npm exec @mobilenext/mobile-mcp@1.0.6'), (13, '/Applications/Zoom.app/Contents/MacOS/zoom.us')]
+        self.assertEqual([p for p, _ in surfaces.foreign_facades(rows, own={11})], [10, 12])
+
+    def test_harness_display_is_not_a_stray(self):
+        rows = [(5, '/c/space-mover display serve'), (6, '/y/Google Chrome for Testing.app/x')]
+        self.assertEqual([p for p, _ in surfaces.killable(rows, own={5})], [6])
+
+    def test_page_token_hides_the_arm(self):
+        for rid in ('native-booking-1', 'computer-use-booking-1'):
+            tok = runner.page_token(rid)
+            self.assertNotIn('native', tok)
+            self.assertNotIn('computer', tok)
+        self.assertNotEqual(runner.page_token('native-booking-1'), runner.page_token('computer-use-booking-1'))
+
+    def test_web_prompts_name_no_arm(self):
+        facts = {'url': 'http://127.0.0.1:1/booking?run=r123', 'title': 'Clinic Slots r123'}
+        for arm in runner.ARMS:
+            self.assertNotIn('native', runner.build_prompt('booking', arm, facts).lower().replace('natively', ''))
+            self.assertNotIn('computer-use', runner.build_prompt('booking', arm, facts))
+
+    def test_ios_prompt_names_the_app_actually_opened(self):
+        self.assertIn('Simulator app', runner.build_prompt('ios', 'native', {'device': 'U', 'app': 'Simulator'}))
+        self.assertIn('Device Hub', runner.build_prompt('ios', 'native', {'device': 'U', 'app': 'Device Hub'}))
+
+    def test_agent_cannot_use_shell_like_builtins(self):
+        for arm in runner.ARMS:
+            for tool in ('Bash', 'Monitor', 'CronCreate', 'RemoteTrigger'):
+                self.assertIn(tool, runner.DISALLOWED[arm])
+
+
+class LabelTest(unittest.TestCase):
+    def test_acted_without_answer_is_failed_not_no_action(self):
+        self.assertEqual(tasks.judge('calculator', text='', truth='1316', acted=True)[0], 'failed')
+        self.assertEqual(tasks.judge('calculator', text='', truth='1316', acted=False)[0], 'no-action')
+        self.assertEqual(tasks.judge('calculator', text='', truth='1316', acted=True, timed_out=True)[0], 'timeout')
+
+    def test_events_acted_without_events_is_failed(self):
+        self.assertEqual(tasks.judge('booking', events=[], acted=True)[0], 'failed')
+        self.assertEqual(tasks.judge('booking', events=[], acted=False)[0], 'no-action')
+
+    def test_declined_report_is_failed_even_if_a_number_matches(self):
+        text = "I couldn't get the Android version. The device is androidnaa-api35 on API 15 or so; I never reached Settings."
+        out, detail = tasks.judge('android', text=text, truth='15', acted=True)
+        self.assertEqual(out, 'failed')
+        self.assertTrue(detail['declined'])
+        self.assertEqual(tasks.judge('ios', text='I could not open Settings.', truth='26.5', acted=True)[0], 'failed')
+        self.assertEqual(tasks.judge('ios', text='The simulator runs iOS 26.5.', truth='26.5', acted=True)[0], 'correct')
+
+    def test_compare_reports_strict_and_relaxed(self):
+        out, detail = tasks.judge('compare', text='Quillon Arc Lamp, $36.75\n(Marlow Banker Lamp at $29.00 is out of stock)',
+                                  truth=fx.COMPARE_ANSWER, acted=True)
+        self.assertEqual((out, detail['strict']), ('correct', 'wrong'))
+        out, detail = tasks.judge('compare', text='Quillon Arc Lamp, $36.75', truth=fx.COMPARE_ANSWER, acted=True)
+        self.assertEqual((out, detail['strict']), ('correct', 'correct'))
+
+    def test_missing_truth_is_unscored_not_wrong(self):
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d)
+            (base / 't.jsonl').write_text(json.dumps({'type': 'assistant', 'message': {'id': 'm', 'content': [{'type': 'tool_use', 'id': 'u', 'name': 'mcp__x__y'}]}}) + '\n'
+                                          + json.dumps({'type': 'result', 'result': 'It runs Android 15', 'num_turns': 2}) + '\n')
+            for run in ({'truth': None}, {'truth': None, 'truth_error': 'RuntimeError: adb getprop returned nothing'}):
+                rec = dict(run, run_id='x', arm='native', task='android', transcript='t.jsonl')
+                self.assertEqual(score.score_run(rec, base / 'events.jsonl', base)['outcome'], 'unscored')
+
+    def test_events_are_looked_up_by_page_token(self):
+        with tempfile.TemporaryDirectory() as d:
+            base = Path(d)
+            (base / 't.jsonl').write_text(json.dumps({'type': 'result', 'result': 'booked', 'num_turns': 1}) + '\n')
+            (base / 'events.jsonl').write_text(json.dumps({'ts': 1, 'run': 'rtok', 'action': 'book', 'id': fx.BOOKING_EXPECTED_ID}) + '\n')
+            rec = {'run_id': 'native-booking-1', 'page_run': 'rtok', 'arm': 'native', 'task': 'booking', 'transcript': 't.jsonl'}
+            self.assertEqual(score.score_run(rec, base / 'events.jsonl', base)['outcome'], 'correct')
+
+    def test_device_hub_is_attributed(self):
+        tl = [{'kind': 'focus_change', 'to_app': 'Device Hub', 't': 1}, {'kind': 'new_user_window', 'app': 'qemu-system-aarch64', 't': 2}]
+        self.assertEqual(score.attributed(tl)['agent_focus_steals'], 1)
+        self.assertEqual(score.attributed(tl)['agent_windows_on_user_screens'], 1)
 
 
 if __name__ == '__main__':

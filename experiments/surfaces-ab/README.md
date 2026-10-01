@@ -35,19 +35,23 @@ consented in chat, **not** consent itself. Consent for the 2026-10-01 smoke run 
 | 9 | `android` | emulator `androidnaa-api35` | Android version from Settings > About | `adb shell getprop ro.build.version.release` |
 | 10 | `ios` | booted iPhone 17 Pro simulator | iOS version from Settings > General > About | `simctl list devices -j` runtime of the device |
 
-Outcomes: `correct`, `wrong`, `no-action` (the agent never acted) or `timeout`. Text answers are strict: `compare` is wrong if
+Outcomes: `correct`, `wrong`, `failed` (it called tools but left no answer, document or complete event sequence, or its reply
+opens by saying it could not do the job: `detail.declined`), `no-action` (no MCP tool call and no event), `timeout` (wins over
+failed/no-action), `unscored` (the harness has no independent truth for the run: the probe failed, `truth_error`).
 
-**Changed after the first run (2026-10-01):** `compare` was scored wrong whenever the reply mentioned a decoy price. Both arms named the right lamp and price and mentioned the decoys only to explain the choice, so the rule is now: correct if the reply names the right lamp and price and does not lead with a decoy. Results report both the strict and the relaxed score.
-the reply also mentions a decoy price; numbers ignore thousands separators; versions ignore a trailing `.0`.
+
+**Changed after the first run (2026-10-01):** `compare` was scored wrong whenever the reply mentioned a decoy price. Both arms named the right lamp and price and mentioned the decoys only to explain the choice, so the rule is now: correct if the reply names the right lamp and price and does not lead with a decoy. Results report both: `outcome` is the relaxed rule, `detail.strict` the original one (no decoy price mentioned at all). Numbers ignore thousands separators; versions ignore a trailing `.0`.
+
+Pages show a neutral run token (`page_run`, a hash of the run id), so neither arm's prompt names the arm.
 
 ## Surfaces and where windows go
 
 | | native | computer-use |
 |---|---|---|
-| web | a dedicated **Chrome for Testing** (`~/.cache/computer-use/browsers/chrome/*/chrome-mac-arm64/`) with its own temp `--user-data-dir`, opened on the main screen by the harness, killed after. Never the user's Google Chrome. | the facade's own agent browser on the agent (virtual) display; the prompt gives the URL |
-| macOS apps | launched by the harness (`open -g`), quit after; refused if the app is already running (the user's documents are never at risk) | same |
-| Android | emulator started windowed by the harness, killed after | emulator started `-no-window`, killed after; `device=<AVD name>` |
-| iOS | drives the Simulator.app window (opened by the harness only if it was not running) | `device=<UDID>`; Simulator.app is not started |
+| web | a dedicated **Chrome for Testing** (`~/.cache/computer-use/browsers/chrome/*/chrome-mac-arm64/`) with its own temp `--user-data-dir`, opened inside the agent display's bounds and verified there (parked if not) before the run, killed after. Never the user's Google Chrome. | the facade's own agent browser on the agent (virtual) display; the prompt gives the URL |
+| macOS apps | launched by the harness (`open -g`), parked on the agent display, quit after; refused if the app is already running (the user's documents are never at risk) | same |
+| Android | emulator started windowed by the harness, its window parked on the agent display, killed after | emulator started `-no-window`, killed after; `device=<AVD name>` |
+| iOS | drives the Device Hub (Xcode 27; Simulator.app before) window, parked on the agent display; left running (quitting it shuts the simulator down) and hidden at harness exit if the harness opened it; a simulator the harness booted is shut down at exit | `device=<UDID>`; Simulator.app is not started |
 
 Asymmetry to keep in mind when reading results: native is *handed an open window* and computer-use *a URL or device id*,
 because that is how each tool is meant to be addressed. The harness only starts and cleans what a job needs; it diffs the
@@ -111,3 +115,11 @@ python3 experiments/surfaces-ab/runner.py --i-have-consent --tasks booking --arm
 One run per cell is directional evidence, not a benchmark. The fixtures are ours, the Wikipedia value is read live, the
 iOS and Android jobs depend on the local simulator and AVD, and phase 1 exercised only job 1 live: the mac, Android and iOS
 setup code is covered offline for argv and process-diff logic only.
+
+## Setup refusals
+
+A run is refused (recorded as `skipped`, nothing is charged) when: another facade session is running (`computer_use/server.py`,
+its `space-mover display serve`, mobile-mcp or an agent-profile browser; preflight and again before every run); the agent display
+cannot be created; a window the harness opened cannot be verified on the agent display; or the app is the user's own. Any
+error after the agent has run is kept on the record (`error`, `truth_error`) and the run is still scored.
+

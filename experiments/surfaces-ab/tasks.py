@@ -6,8 +6,10 @@ Ground truth, by kind:
           (compare: fixture constants; wikipedia: fetched; calculator: computed; android: getprop; ios: simctl)
   doc     the TextEdit document text, read by the harness through AppleScript before it closes the document unsaved
 
-Outcomes: correct | wrong | no-action | timeout. `no-action` means the agent never acted (no MCP tool call, and for
-events no event). Nothing here operates the desktop; the live probes take injectable callables so tests use fake data.
+Outcomes: correct | wrong | failed | no-action | timeout (score.py adds unscored when no truth was recorded). `no-action`
+means the agent never called an MCP tool and left no event; `failed` means it did act but produced no answer, document or
+complete event sequence; `timeout` wins over both when the run hit the wall-clock limit. `compare` also reports a strict
+score in its detail (no decoy price mentioned at all), the rule used before 2026-10-01. Nothing here operates the desktop; the live probes take injectable callables so tests use fake data.
 """
 import html
 import re
@@ -75,7 +77,11 @@ def _matches(spec, event):
     return True
 
 
-def judge_events(task, events, timed_out=False):
+def _unfinished(acted, timed_out):
+    return 'timeout' if timed_out else 'failed' if acted else 'no-action'
+
+
+def judge_events(task, events, timed_out=False, acted=False):
     """(outcome, detail) from the server log. Any forbidden event is wrong; all expected in order is correct."""
     spec = TASKS[task]
     events = sorted(events, key=lambda e: e.get('ts', 0))
@@ -89,15 +95,15 @@ def judge_events(task, events, timed_out=False):
     if done == len(want):
         return 'correct', {}
     if events:
-        return 'failed', {'note': 'acted but did not complete (%d of %d expected events)' % (done, len(want))}
-    return ('timeout' if timed_out else 'no-action'), {}
+        return ('timeout' if timed_out else 'failed'), {'note': 'acted but did not complete (%d of %d expected events)' % (done, len(want))}
+    return _unfinished(acted, timed_out), {}
 
 
 def judge_upload(events, expected, timed_out=False, acted=False):
     """expected = {filename, size, sha256} of the file the harness prepared."""
     ups = [e for e in events if e.get('action') == 'upload']
     if not ups:  # the agent may have acted (opened the picker, typed, clicked) without finishing: that is a failure, not no-action
-        return ('timeout' if timed_out else 'failed' if acted else 'no-action'), {}
+        return _unfinished(acted, timed_out), {}
     ok = [e for e in ups if (e.get('values') or {}) == {'filename': expected['filename'], 'size': str(expected['size']), 'sha256': expected['sha256']}]
     if ok and len(ok) == len(ups):
         return 'correct', {}
@@ -125,11 +131,27 @@ def _version_equal(token, truth):
     return strip(token) == strip(truth)
 
 
+_DECLINED = re.compile(r"^\W*(i\s+(couldn['\u2019]?t|could\s+not|can['\u2019]?t|cannot|was\s+(not|unable)|wasn['\u2019]?t\s+able|am\s+unable|did\s+not|didn['\u2019]?t)|unable\s+to)\b", re.I)
+
+
+def declined(text):
+    """True when the reply opens by saying it could not do the job (2026-10-01: every such report was scored 'wrong', or could have
+    been 'correct' had an incidental number like 'API 35' or a port matched the truth)."""
+    return bool(_DECLINED.match((text or '').strip()))
+
+
 def judge_text(task, text, truth, acted, timed_out=False):
     """(outcome, detail) comparing the agent's final message with the harness's independent value."""
     text = (text or '').strip()
-    if not text or not acted:
-        return ('timeout' if timed_out else 'no-action'), {}
+    if not text or not acted:  # an answer with no tool call is a guess, not a measurement; tool calls with no answer is a failure
+        return _unfinished(acted, timed_out), {}
+    if declined(text):
+        outcome, detail = _judge_answer(task, text, truth)
+        return ('timeout' if timed_out else 'failed'), {'declined': True, 'answer_rule_would_say': outcome}
+    return _judge_answer(task, text, truth)
+
+
+def _judge_answer(task, text, truth):
     if task == 'compare':
         nums = numbers_in(text)
         has = Decimal(truth['price']) in nums and truth['name'].lower() in text.lower()
@@ -138,7 +160,10 @@ def judge_text(task, text, truth, acted, timed_out=False):
         # and price, and must not name a decoy lamp as the answer in its first line.
         first = text.splitlines()[0].lower() if text else ''
         wrong_lead = any(n.lower() in first for n in getattr(fx, 'COMPARE_DECOY_NAMES', ()))
-        return ('correct' if has and not wrong_lead else 'wrong'), ({'decoy_prices_mentioned': decoys} if decoys else {})
+        detail = {'strict': 'correct' if has and not decoys else 'wrong'}  # README: both the strict and the relaxed score are reported
+        if decoys:
+            detail['decoy_prices_mentioned'] = decoys
+        return ('correct' if has and not wrong_lead else 'wrong'), detail
     if task in ('wikipedia', 'calculator'):
         raw = str(truth).strip()
         try:
@@ -154,7 +179,7 @@ def judge_text(task, text, truth, acted, timed_out=False):
 def judge_doc(doc_text, acted, timed_out=False):
     """TextEdit: the document the harness read must hold exactly the sentence (surrounding whitespace ignored)."""
     if doc_text is None or not doc_text.strip():
-        return ('timeout' if timed_out else 'no-action'), {}
+        return _unfinished(acted, timed_out), {}
     return ('correct' if doc_text.strip() == TEXTEDIT_SENTENCE else 'wrong'), {'document': doc_text.strip()[:200]}
 
 
@@ -163,7 +188,7 @@ def judge(task, *, events=(), text='', truth=None, doc=None, acted=False, timed_
     if task == 'upload':
         return judge_upload(list(events), truth, timed_out, acted)
     if kind == 'events':
-        return judge_events(task, list(events), timed_out)
+        return judge_events(task, list(events), timed_out, acted)
     if kind == 'doc':
         return judge_doc(doc, acted, timed_out)
     return judge_text(task, text, truth, acted, timed_out)

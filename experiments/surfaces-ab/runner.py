@@ -32,7 +32,11 @@ ARMS = ('native', 'computer-use')
 # `computer-use` (reserved built-in name; measured in the first smoke run: mcp_servers was empty and the agent had no tools).
 ARM_SERVER = {'native': 'cua-driver', 'computer-use': 'computer-use-oh'}
 DEFAULT_PYTHON = '/Users/muness1/src/open-horizon-labs/computer-use/.venv-facade/bin/python'
-_BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'Task']
+# Every built-in that can act outside the arm's MCP server (the stream-json init lists Monitor, Cron*, RemoteTrigger, SendMessage,
+# Artifact... besides the classic file/shell tools). ToolSearch stays: both arms need it to load their deferred MCP tools.
+_BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'Task', 'Monitor',
+              'CronCreate', 'CronDelete', 'RemoteTrigger', 'ScheduleWakeup', 'PushNotification', 'SendMessage', 'Artifact', 'ArtifactData',
+              'ArtifactComments', 'EnterWorktree', 'ExitWorktree', 'LSP', 'DesignSync']
 ALLOWED = {arm: ['mcp__' + srv] for arm, srv in ARM_SERVER.items()}
 # Skill is off in native (the installed skill would reintroduce facade guidance); the computer-use arm never needs it either.
 DISALLOWED = {'native': _BASE_DENY + ['Skill'], 'computer-use': _BASE_DENY + ['Skill']}
@@ -59,7 +63,9 @@ def build_prompt(task, arm, facts):
         intro = ('An Android emulator window is open on this Mac. ' if arm == 'native'
                  else 'An Android emulator is running (device id %s). ' % facts['device'])
     else:
-        intro = ('The iPhone 17 Pro simulator is open on this Mac in Device Hub (Xcode 27). ' if arm == 'native'
+        app = facts.get('app') or 'Device Hub'
+        intro = (('The iPhone 17 Pro simulator is open on this Mac in Device Hub (Xcode 27). ' if app == 'Device Hub'
+                  else 'The iPhone 17 Pro simulator is open on this Mac in the Simulator app. ') if arm == 'native'
                  else 'An iPhone 17 Pro simulator is running (device id %s). ' % facts['device'])
     return intro + goal + TAIL
 
@@ -115,8 +121,10 @@ def preflight(arms, task_ids):
     if 'computer-use' in arms:
         if not Path(os.environ.get('CUA_FACADE_PYTHON') or DEFAULT_PYTHON).exists():
             problems.append('facade python missing (set CUA_FACADE_PYTHON): %s' % (os.environ.get('CUA_FACADE_PYTHON') or DEFAULT_PYTHON))
-        if any(tasks.TASKS[t]['surface'] == 'web' for t in task_ids) and any('agent-profile' in c for _, c in surfaces.processes()):
-            problems.append('an agent browser (Chrome for Testing, agent-profile) is already running; the facade would kill it on start. Stop that session first.')
+    foreign = surfaces.foreign_facades(surfaces.processes(), surfaces.own_pids())
+    if foreign:
+        problems.append('another computer-use facade session is running (it and the arm would kill each other\'s browser and share the '
+                        'agent display, and the stray sweep could kill its helpers); stop it first: %s' % '; '.join('%d %s' % (p, c[:80]) for p, c in foreign))
     if any(tasks.TASKS[t]['surface'] == 'web' for t in task_ids) and 'native' in arms:
         try:
             surfaces.chrome_binary()
@@ -145,44 +153,67 @@ def record_run(manifest_path, manifest):
     tmp.replace(manifest_path)
 
 
+def page_token(run_id):
+    """The run id the PAGE shows (URL, title, event log): neutral, so neither arm's prompt names the arm (the window title used to read
+    'Clinic Slots native-booking-...' vs a URL with 'run=computer-use-booking-...')."""
+    import hashlib
+    return 'r' + hashlib.sha256(run_id.encode()).hexdigest()[:10]
+
+
 def run_one(arm, task, args, base_url, out_dir, events_path):
+    """One run. Raises surfaces.SetupRefused (or another error) only BEFORE the agent starts; once it has run, any later failure
+    (truth probe, sanitizing) is recorded on the record, which is still returned and scored (never silently a skip)."""
     spec = tasks.TASKS[task]
     run_id = '%s-%s-%d' % (arm, task, int(time.time()))
+    page_run = page_token(run_id)
     print('== %s / %s run=%s ==' % (task, arm, run_id), flush=True)
     work = Path(tempfile.mkdtemp(prefix='cua-ab-work-'))
     before = surfaces.processes()
-    record = {'run_id': run_id, 'arm': arm, 'task': task, 'surface': spec['surface'], 'model': args.model, 'started': time.strftime('%Y-%m-%dT%H:%M:%S')}
-    surface, mon = None, None
+    record = {'run_id': run_id, 'page_run': page_run, 'arm': arm, 'task': task, 'surface': spec['surface'], 'model': args.model, 'started': time.strftime('%Y-%m-%dT%H:%M:%S')}
+    surface, mon, ran = None, None, False
     try:
-        surface = surfaces.open_surface(task, arm, run_id, base_url, work)
+        foreign = surfaces.foreign_facades(surfaces.processes(), surfaces.own_pids())
+        if foreign:  # re-checked per run: another session may have started one since preflight
+            raise surfaces.SetupRefused('another facade session is running: %s' % '; '.join('%d %s' % (p, c[:60]) for p, c in foreign))
+        surface = surfaces.open_surface(task, arm, page_run, base_url, work)
+        record['facts'] = {k: v for k, v in surface.facts.items()}
         prompt = build_prompt(task, arm, surface.facts)
         record['prompt'] = prompt
         config = mcp_config(arm, out_dir)
         raw = out_dir / ('%s.raw.jsonl' % run_id)
         mon = monitor.Monitor(out_dir / ('%s.monitor.jsonl' % run_id))
         mon.start()
+        ran = True
         try:
             record.update(run_agent(arm, prompt, raw, args.model, args.max_turns, args.agent_timeout, config))
         finally:
             record['monitor'] = mon.stop()
-        truth = surface.read_truth()
+            record['timeline'] = '%s.monitor.jsonl' % run_id
+        try:
+            truth = surface.read_truth()
+        except Exception as error:  # the run happened: keep it, unscored, instead of losing it as a 'skip' (or scoring None as wrong)
+            truth = None
+            record['truth_error'] = '%s: %s' % (type(error).__name__, error)
         if task == 'textedit':
-            record['doc_text'] = truth.get('doc_text')
+            record['doc_text'] = (truth or {}).get('doc_text')
         else:
-            record['truth'] = truth or None
+            record['truth'] = truth if truth not in ({}, '') else None
         score.sanitize_file(raw, out_dir / ('%s.transcript.jsonl' % run_id))
         raw.unlink()
         record['transcript'] = '%s.transcript.jsonl' % run_id
-        record['timeline'] = '%s.monitor.jsonl' % run_id
-    except BaseException as error:
+    except KeyboardInterrupt as error:
         record['error'] = '%s: %s' % (type(error).__name__, error)
         raise
+    except Exception as error:
+        record['error'] = '%s: %s' % (type(error).__name__, error)
+        if not ran:
+            raise
     finally:
         if mon is not None and mon.proc is not None and mon.proc.poll() is None:
             mon.stop()
         errors = surface.close() if surface is not None else []
         new = surfaces.new_processes(before, surfaces.processes())
-        stray = surfaces.killable(new)
+        stray = surfaces.killable(new, surfaces.own_pids())
         if stray:
             surfaces.kill_pids([p for p, _ in stray])
         time.sleep(1)
@@ -240,7 +271,7 @@ def main(argv=None):
                         raise KeyboardInterrupt
                     try:
                         record = run_one(arm, task, args, base_url, out_dir, events_path)
-                    except RuntimeError as error:  # setup refusal (app already running, no emulator...): record and move on
+                    except Exception as error:  # setup refusal before the agent ran (app already running, no agent display...): record, move on
                         print('  skipped: %s' % error)
                         manifest.append({'arm': arm, 'task': task, 'skipped': str(error)})
                         record_run(manifest_path, manifest)

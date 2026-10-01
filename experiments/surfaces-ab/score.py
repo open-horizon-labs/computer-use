@@ -105,8 +105,8 @@ def load_timeline(path):
 # Apps a run itself starts or drives. Only their focus changes and windows count against an arm: Cua Driver routes input
 # in the background, so anything else that appears or takes focus during a run is the user's own activity (measured
 # 2026-10-01: every new_user_window in the computer-use rerun belonged to Zoom, Discord, Slack, Chrome, 1Password ...).
-AGENT_APPS = ('Google Chrome for Testing', 'Calculator', 'TextEdit', 'qemu-system-aarch64', 'qemu-system-x86_64', 'Emulator',
-              'Android Emulator', 'Simulator', 'Cua Driver', 'CuaDriver')
+AGENT_APPS = ('Google Chrome for Testing', 'Calculator', 'TextEdit', 'qemu-system', 'Emulator',
+              'Android Emulator', 'Simulator', 'Device Hub', 'DeviceHub', 'Cua Driver', 'CuaDriver')  # Device Hub: Xcode 27's Simulator
 
 
 def attributed(timeline):
@@ -122,8 +122,14 @@ def score_run(run, events_path, base):
     """One result row for a manifest record. Paths in the record are relative to `base`."""
     trace = scan_transcript(base / run['transcript'])
     timed_out = run.get('returncode') == 'timeout'
-    outcome, detail = tasks.judge(run['task'], events=load_events(events_path, run['run_id']), text=trace['final_text'],
-                                  truth=run.get('truth'), doc=run.get('doc_text'), acted=trace['mcp_calls'] > 0, timed_out=timed_out)
+    kind = tasks.TASKS[run['task']]['kind']
+    needs_truth = run['task'] == 'upload' or kind == 'text'
+    if run.get('truth_error') or (needs_truth and run.get('truth') is None):
+        # No independent truth (probe failed): never judge against None (it used to score 'wrong' via a 'none' substring match).
+        outcome, detail = 'unscored', {'note': run.get('truth_error') or 'no ground truth recorded'}
+    else:
+        outcome, detail = tasks.judge(run['task'], events=load_events(events_path, run.get('page_run') or run['run_id']), text=trace['final_text'],
+                                      truth=run.get('truth'), doc=run.get('doc_text'), acted=trace['mcp_calls'] > 0, timed_out=timed_out)
     mon = run.get('monitor') or {}
     timeline = load_timeline(base / run['timeline']) if run.get('timeline') else []
     return {
