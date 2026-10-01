@@ -32,6 +32,7 @@ import shutil
 import subprocess
 import sys
 import threading
+import time
 from datetime import timedelta
 
 import look as lk
@@ -55,6 +56,9 @@ CONTROL_MAX = lk.CONTROL_LIST_MAX
 INPUT_MAX = lk.INPUT_LIST_MAX
 DIALOG_MAX = lk.DIALOG_MAX
 DEVICE_LIST_MAX = 20
+COLD_START_S = 15.0                    # an empty device list this soon after the backend started is not trusted (#69: simulators appear a few seconds later)
+COLD_RETRY_S = 2.0                     # the wait before asking again; at most COLD_RETRIES times, never a loop
+COLD_RETRIES = 2
 FOUND_MAX = 12
 REFUSED = frozenset({'mobile_backend_unavailable', 'device_not_found', 'mobile_device_agent_missing', 'bad_request', 'not_supported_on_device',
                      'where_not_supported_on_device', 'look_required', 'unknown_look_id', 'look_window_mismatch', 'destructive_control', 'expect_required'})
@@ -123,6 +127,7 @@ class StdioBackend:
         self.command = list(command) if command else command_from_env()
         self.env, self.which, self.start_timeout = env, which, start_timeout
         self.starts = 0
+        self.started_at = None
         self._lock = threading.RLock()
         self._thread = None
         self._box = None
@@ -172,6 +177,7 @@ class StdioBackend:
         thread.start()
         self._thread, self._box = thread, box
         self.starts += 1
+        self.started_at = time.monotonic()
         if not ready.wait(self.start_timeout + 5) or 'session' not in box:
             error = box.get('error')
             self._teardown()
@@ -342,12 +348,9 @@ def platform_of(els):
 
 
 def tagged_line(e):
-    name = e['names'][0] if e['names'] else ''
-    if not name:
-        return None
-    if e['kind'] in PLAIN_TEXT:
-        return name
-    return ('image: ' if e['kind'].endswith('ImageView') or e['kind'] in ('Image', 'Icon') else 'group: ') + name
+    """The displayed text of an element, else None (#69). Only displayed-text kinds (PLAIN_TEXT) are lines: a container, group, image or icon NAME is never a line
+    (iOS names an empty 'Other' view 'label-view'); a control keeps its name as its control label."""
+    return (e['names'][0] if e['names'] else None) if e['kind'] in PLAIN_TEXT else None
 
 
 def dialog_roots(els):
@@ -487,8 +490,9 @@ def check_device(device):
 
 class Mobile:
     """The facade's view of mobile-mcp: typed reads and actions over any backend with call(tool, args, mutating) -> (text, is_error) and close()."""
-    def __init__(self, backend=None, installer=install_agent):
-        self.backend, self.installer, self.installed = backend, installer, []
+    def __init__(self, backend=None, installer=install_agent, sleep=time.sleep):
+        self.backend, self.installer, self.installed, self.sleep = backend, installer, [], sleep
+        self.cold_empty = False   # the last devices() answered empty while the backend had only just started
 
     def _backend(self):
         if self.backend is None:
@@ -502,7 +506,11 @@ class Mobile:
             except Exception:  # noqa: BLE001 - closing must never raise at shutdown
                 pass
 
-    def devices(self):
+    def _just_started(self):
+        at = getattr(self.backend, 'started_at', None)
+        return at is not None and time.monotonic() - at < COLD_START_S
+
+    def _list_devices(self):
         text, error = self._backend().call('mobile_list_available_devices', {})
         try:
             rows = json.loads(text).get('devices') if not error else None
@@ -511,6 +519,18 @@ class Mobile:
         if not isinstance(rows, list):
             raise MobileGap('mobile_observation_failed', 'mobile-mcp could not list devices')
         return [{k: _text(d.get(k))[:60] for k in ('id', 'name', 'platform', 'type', 'version', 'state') if d.get(k) is not None} for d in rows if isinstance(d, dict)][:DEVICE_LIST_MAX]
+
+    def devices(self):
+        """The devices mobile-mcp lists. An EMPTY answer within COLD_START_S of the backend's start is not trusted (#69): wait COLD_RETRY_S and ask again, at most COLD_RETRIES times."""
+        out = self._list_devices()
+        self.cold_empty = False
+        for _ in range(COLD_RETRIES):
+            if out or not self._just_started():
+                break
+            self.sleep(COLD_RETRY_S)
+            out = self._list_devices()
+        self.cold_empty = not out and self._just_started()
+        return out
 
     def _read(self, device):
         text, error = self._backend().call('mobile_list_elements_on_screen', {'device': device, 'format': 'json'})
@@ -563,6 +583,7 @@ DISCOVERY_HINTS = {  # #64: an empty or unavailable list says what would appear,
     'empty': 'No phone or emulator is attached, so devices is empty; each one would appear as {id, platform, name}, and its id is the device for `look` and `do`. '
              'Start an Android emulator (emulator -avd <name>) or attach a phone with USB debugging, or boot an iOS simulator (open the Simulator app, or '
              'xcrun simctl boot <udid>); then call `look` with device="list" again. For a Mac window pass title=<a window title> instead.',
+    'empty_cold': 'The device backend had only just started and was asked again after a short wait; a simulator that is still booting may appear on the next call.',
     'backend': 'The device backend did not start (devices_unavailable.message says what to install or fix): only the user can install it, so tell the user and do not '
                'retry until they have. Mac windows are unaffected: pass title=<a window title> to `look` and `do`.',
 }
@@ -584,6 +605,8 @@ def discovery(f):
         out['hint'] = DISCOVERY_HINTS['backend']
     elif not out['devices']:
         out['hint'] = DISCOVERY_HINTS['empty']
+        if getattr(bridge(f), 'cold_empty', False):
+            out['hint'] = DISCOVERY_HINTS['empty_cold'] + ' ' + out['hint']
     return out
 
 

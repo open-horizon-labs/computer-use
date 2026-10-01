@@ -296,7 +296,23 @@ class LookOnDevices(DeviceCase):
         self.assertIn('Networks', r['text'])
         self.assertEqual(r['text'].count('Networks'), 1)
         self.assertNotIn('group: Networks', r['text'])      # the frame only repeats the label shown as text
-        self.assertIn('group: Wifi signal full.', r['text'])  # a label with no text of its own is still shown, tagged
+        self.assertNotIn('Wifi signal full.', r['text'])      # #69: a container's name with no text of its own is not displayed text
+
+    def test_container_names_never_become_lines_on_the_real_ios_home(self):
+        # #69, REAL ios_home: wrong patch: treat every named element as a line (records then read ['group: label-view'])
+        r = facade_for(FakeBackend({'ios': IOS_HOME}, 'ios')).look(device=SIMULATOR, max_bytes=20000)
+        self.assertTrue(r['records'])
+        for rec in r['records']:
+            self.assertFalse([x for x in rec['lines'] if x.startswith(('group:', 'image:')) or 'label-view' in x], rec)
+        self.assertIn('Fitness', {c for rec in r['records'] for c in rec['controls']})
+        self.assertFalse([t for t in r['text'] if t.startswith(('group:', 'image:')) or 'label-view' in t], r['text'])
+        self.assertIn('Safari', r['controls'])
+
+    def test_only_displayed_text_kinds_are_lines_on_a_synthetic_list(self):
+        els = [mobile.normalize({'type': t, 'name': n, 'coordinates': {'x': 0, 'y': 0, 'width': 50, 'height': 20}}, i) for i, (t, n) in enumerate(
+            [('StaticText', 'Hello'), ('Other', 'label-view'), ('Icon', 'Safari'), ('Image', 'logo'), ('android.widget.TextView', 'Title'),
+             ('android.view.ViewGroup', 'row'), ('android.widget.ImageView', 'pic')])]
+        self.assertEqual([mobile.tagged_line(e) for e in els], ['Hello', None, None, None, 'Title', None, None])
 
     def test_bounds_are_reported_never_silent(self):
         # wrong patch: slice the response to max_bytes and say nothing
@@ -488,6 +504,46 @@ class LookOnDevices(DeviceCase):
         self.assertEqual(r['devices'], [])
         self.assertEqual(r['devices_unavailable']['reason'], 'mobile_backend_unavailable')
         self.assertTrue(r['windows'])
+
+
+class ColdStart(unittest.TestCase):
+    def devices_after(self, empties, started_ago):
+        from test_core import FakeDriver
+        backend = FakeBackend({'a': TDONGLE}, 'a')
+        backend.started_at = mobile.time.monotonic() - started_ago
+        real = backend.call
+        left = {'n': empties}
+
+        def call(tool, args, mutating=False, timeout=None):
+            if tool == 'mobile_list_available_devices' and left['n'] > 0:
+                left['n'] -= 1
+                backend.calls.append((tool, dict(args)))
+                return json.dumps({'devices': []}), False
+            return real(tool, args, mutating, timeout)
+        backend.call = call
+        sleeps = []
+        m = mobile.Mobile(backend, sleep=sleeps.append)
+        return Facade(FakeDriver(), mobile=m, sleep=lambda s: None), backend, sleeps
+
+    def test_an_empty_list_right_after_the_backend_started_is_asked_again(self):
+        # #69; wrong patch: trust the first empty answer
+        f, backend, sleeps = self.devices_after(1, 0.5)
+        r = f.look(device='list')
+        self.assertEqual([d['id'] for d in r['devices']], [EMULATOR, SIMULATOR])
+        self.assertEqual((len(backend.calls), sleeps), (2, [mobile.COLD_RETRY_S]))
+
+    def test_a_list_that_stays_empty_is_retried_a_bounded_number_of_times_and_the_hint_says_the_backend_just_started(self):
+        f, backend, sleeps = self.devices_after(99, 0.5)
+        r = f.look(device='list')
+        self.assertEqual(r['devices'], [])
+        self.assertEqual(len(backend.calls), 1 + mobile.COLD_RETRIES)
+        self.assertIn('only just started', r['hint'])
+
+    def test_an_empty_list_from_a_long_running_backend_is_trusted_at_once(self):
+        f, backend, sleeps = self.devices_after(99, 600)
+        r = f.look(device='list')
+        self.assertEqual((r['devices'], len(backend.calls), sleeps), ([], 1, []))
+        self.assertNotIn('only just started', r['hint'])
 
 
 class DoPress(DeviceCase):
