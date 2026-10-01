@@ -776,6 +776,58 @@ class DriverEffectRefused(DoBase):
         self.assertEqual(r['status'], 'done')
 
 
+PARTIAL = {'effect': 'partial', 'path': 'key_events_fg', 'requested_chars': 19, 'delivered_chars': 0, 'retry_from_character': 0, 'retryable': True, 'code': 'type_text_incomplete'}
+
+
+class PartialType(DoBase):
+    """#57: effect partial on a type_text is reported (delivery_detail), never plain delivered, and never retried."""
+    def setUp(self):
+        super().setUp()
+        driver = self.driver;driver.rows = [];driver.field = True;driver.confirm_text = None;self.visual = UnknownVision()
+        self.answer = PARTIAL;real = driver.call
+        driver.call = lambda tool, args, timeout=20: (real(tool, args, timeout), self.answer)[1] if tool == 'type_text' else real(tool, args, timeout)
+
+    def type_step(self, **kw):return self.do('Type the name into "Name"', operation='type_text', text='hello world', **kw)
+
+    def test_partial_with_expect_satisfied_stays_done_with_the_detail(self):
+        # Wrong patch: any partial downgrades the outcome even though the independent check passed.
+        self.driver.confirm_text = 'Saved'
+        r = self.type_step(expect='Saved')
+        self.assertEqual((r['status'], r['verified']), ('done', True))
+        self.assertEqual(r['delivery_detail'], {'effect': 'partial', 'requested_chars': 19, 'delivered_chars': 0, 'retryable_reported': True})
+
+    def test_partial_without_or_with_unsatisfied_expect_is_delivered_unverified_with_the_hint(self):
+        # Wrong patches: plain delivered / deferred delivery_unverified without the warning; trust delivered_chars 0 as no side effect.
+        for expect in (None, 'Saved'):
+            r = self.type_step(**({'expect': expect} if expect else {}))
+            self.assertEqual((r['status'], r['reason'], r['delivery']), ('delivered_unverified', 'type_incomplete_unverified', 'delivered'))
+            self.assertIn('0 of 19 chars', r['hint']);self.assertIn('never repeat the type step blindly', r['hint']);self.assertLessEqual(len(r['hint']), 240)
+            self.assertEqual(r['delivery_detail']['delivered_chars'], 0);self.assertTrue(r['trace_summary']['follow_up_needed'])
+
+    def test_code_alone_marks_partial_and_a_per_action_effect_counts(self):
+        self.answer = {'code': 'type_text_incomplete'}
+        self.assertEqual(self.type_step()['status'], 'delivered_unverified')
+        self.answer = {'effect': 'ok', 'results': [{'effect': 'partial', 'requested_chars': 3, 'delivered_chars': 1}]}
+        r = self.type_step()
+        self.assertEqual((r['status'], r['delivery_detail']['retryable_reported']), ('delivered_unverified', False))
+
+    def test_a_plain_answer_has_no_delivery_detail(self):
+        self.answer = {'effect': 'unverifiable'}
+        self.assertNotIn('delivery_detail', self.type_step())
+
+    def test_partial_is_never_retried_even_when_recovery_reruns_the_pipeline(self):
+        # Wrong patch: treat partial as a failure and retry the type (or re-run it after the stale recovery).
+        self.driver.shift_at = lambda v: v == 2
+        r = self.type_step(expect='Saved')
+        typed = [c for c in self.driver.executed if 'text' in c]
+        self.assertEqual(len(typed), 1);self.assertEqual(r['status'], 'delivered_unverified')
+
+    def test_a_plan_step_reports_it_and_never_repeats_the_type(self):
+        r = self.f.do('Type the name', title='Demo', steps=[{'do': 'type', 'control': 'Name', 'text': 'hello world', 'expect': None}])
+        self.assertEqual(r['status'], 'delivered_unverified');self.assertEqual(r['steps'][0]['delivery_detail']['delivered_chars'], 0)
+        self.assertIn('read the field before any retry', r['hint']);self.assertEqual(len([c for c in self.driver.executed if 'text' in c]), 1)
+
+
 class ForgetfulDaemon(FlatDriver):
     """A Driver daemon that forgets its sessions when restarted: every call naming an unstarted session exits 1, like the real CLI."""
     def __init__(self):

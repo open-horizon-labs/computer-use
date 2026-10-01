@@ -2,6 +2,10 @@
 
 Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may still change in minor releases.
 
+## 0.1.1 (unreleased)
+
+- A `type_text` the Driver answers with `effect: partial` (or `type_text_incomplete`) is now reported as `delivered_unverified` with `delivery_detail` and a hint that its delivered count is not proof (look and read the field before any retry), unless an `expect` verified it (#57).
+
 ## 0.1.0 (2026-10-01)
 
 First release. `look` then `do` for Mac apps, browser pages, and Android/iOS devices, with every action proved by an independent check, and an agent-owned browser that runs on a virtual display so it never takes over your screen. Verified live on the signed Cua Driver 0.31.0 (also 0.30.4): 12/12 fixture tasks and 7/7 browser checks through the product path, plus a tap on the iOS simulator.

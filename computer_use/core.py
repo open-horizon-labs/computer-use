@@ -56,6 +56,14 @@ class StaleUI(Gap):
     Typed, so do recovers from it without matching on message text."""
 
 
+def partial_detail(result):
+    """#57: a mutating Driver answer with effect partial (top level or on an action) or code type_text_incomplete. The counts are reported, never proof."""
+    rows=[result]+[r for r in (result.get('results') or []) if isinstance(r,dict)] if isinstance(result,dict) else []
+    row=next((r for r in rows if r.get('effect')=='partial' or r.get('code')=='type_text_incomplete'),None)
+    if not row:return None
+    count=lambda key:row.get(key) if isinstance(row.get(key),int) and not isinstance(row.get(key),bool) else None
+    return {'effect':'partial','requested_chars':count('requested_chars'),'delivered_chars':count('delivered_chars'),'retryable_reported':row.get('retryable') is True}
+
 class DriverCallFailed(Gap):
     """A Cua Driver call failed at the process boundary (exit, timeout, unusable
     output). Typed, so callers never match on message text. Carries no stderr.
@@ -1279,8 +1287,9 @@ class Facade:
         self.event('act',route='cua-driver',selection=selection,revalidation='unchanged_observation',
                    original_binding=item['decision']['binding_digest'],fresh_binding=decision['binding_digest'],
                    verification='pending')
+        detail=partial_detail(result)
         return {'status':'delivered','driver_result':result,'requires_verification':True,
-                'pid':state['pid'],'window_id':state['window_id']}
+                'pid':state['pid'],'window_id':state['window_id'],**({'delivery_detail':detail} if detail else {})}
 
     def _novnc_recheck(self, item, handle, current):
         """The label is drawn at the same viewport point on a FRESH capture (exact normalized text, mapping recomputed from this observation); else StaleUI."""
@@ -2314,7 +2323,7 @@ class Facade:
                 if lines_where:plan['out']['identity_strings'] = list(lines_where['identity'])
                 elif reading:
                     values = [identity.get(k) for k in spec[4]];plan['out']['identity_strings'] = values if all(values) else None
-            try:deliver(selection)
+            try:ctx['partial']=(deliver(selection) or {}).get('delivery_detail')
             except StaleUI as gap:
                 if not recoverable(identity):
                     return finish('deferred', reason='record_changed_unverifiable', selected=picked,
@@ -2387,7 +2396,13 @@ class Facade:
                      **({'confirmation': confirmation} if confirmation else {}),
                      **({'evidence': {'eligible': len(reading['filter']['eligible_ids']), 'excluded': len(reading['filter']['excluded_ids']),
                                       'unknown': len(reading['filter']['unknown_ids'])}} if reading else {})}
+            detail = ctx.get('partial')
+            if detail:extra['delivery_detail'] = detail  # #57: reported as the Driver said it, never as proof
             if verification['status'] == 'satisfied':return finish('done', **extra, verified=True)
+            if detail:
+                return finish('delivered_unverified', reason='type_incomplete_unverified', verified=False, **extra,
+                              hint='The Driver reported a partial type (%s of %s chars) but its count is not proof: the text may be fully present. Call look(title=...), read the field before any retry; never repeat the type step blindly.'
+                              % (detail['delivered_chars'], detail['requested_chars']))
             if not expect:
                 return finish('delivered_unverified', reason='expect_not_given', verified=False, **extra,
                               hint='The click was delivered but no expect was given, so nothing was checked. Do not click again. To check, call do with operation="verify" and expect=<text that should now be visible>.')

@@ -367,6 +367,7 @@ HINTS = {
     'menu_item_disabled': 'The menu item of step %(n)d is disabled right now; nothing was pressed. Call `look` and press another control, or tell the user the command is unavailable.',
     'menu_item_ambiguous': 'Several menu items carry a segment of step %(n)d\'s menu path; nothing was pressed. Call `do` again with menu=[...] on step %(n)d giving a longer path from the menu bar item down.',
     'delivery_unverified': 'Step %(n)d\'s click was delivered but its expect was not seen. Do not click again. Call do with steps=[{do:"verify", expect:<page text that should be visible now>}] to check, or report the state.',
+    'type_incomplete_unverified': 'The Driver reported a partial type but its count is not proof: the text may be fully present. Call look(title=...), read the field before any retry; never repeat the type step blindly.',
     'not_verified': 'The expect of the verify step was not established (control labels never count). Nothing was clicked. Call do with a different expect, or report what look shows.',
     'unknown_competitors_unacknowledged': 'Some records could not be compared (step %(n)d unknown_ids, evidence.extracted). Call do with the same steps plus treat_as_match=<ids> if they DO match, or accept_unknown=<ids> if not.',
     'unknown_or_incomplete_scope': 'Some records could not be compared (step %(n)d unknown_ids, evidence.extracted). Call do with the same steps plus treat_as_match=<ids> if they DO match, or accept_unknown=<ids> if not.',
@@ -715,6 +716,8 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             entry['selected'] = {'description': result['selected'].get('description', '')[:120]}
         if result.get('verification'):
             entry['verification'] = {k: result['verification'].get(k) for k in ('status', 'route')}
+        if result.get('delivery_detail'):
+            entry['delivery_detail'] = result['delivery_detail']
         if result.get('delivery') and result['delivery'] != 'none':
             delivery = result['delivery'] if delivery != 'delivered' else 'delivered'
         ok = status in ('done', 'observed') or (status == 'delivered_unverified' and n == len(plan_steps))
@@ -765,6 +768,8 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         title = (response.get('summary') or {}).get('title')
         named = 'title=<summary.title>' if not title else 'title=%s' % json.dumps(title)
         response['hint'] = 'The navigation was delivered but no expect was given, so nothing was checked. Call look(%s) to see it, or call do(%s, steps=[{do:"verify", expect:<page text that should be visible now>}]) to check. Do not repeat the goto.' % (named, named)
+    elif status == 'delivered_unverified' and entries[-1].get('reason') == 'type_incomplete_unverified':
+        response['hint'] = HINTS['type_incomplete_unverified']
     elif status == 'delivered_unverified':
         response['hint'] = 'The last click was delivered but no expect was given, so nothing was checked. Do not click again. To check, call do with steps=[{do:"verify", expect:<page text that should be visible now>}].'
     if status == 'failed':
