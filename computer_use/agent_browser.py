@@ -176,6 +176,7 @@ def find_installed(root):
 class AgentBrowser:
     def __init__(self, mode=None, path=None, cache=None, popen=subprocess.Popen, run=subprocess.run, sleep=time.sleep, clock=time.monotonic, which=shutil.which,
                  killpg=os.killpg, kill=os.kill, scan=scan_processes, identify=identify_process, getpid=os.getpid):
+        self.real_launch = popen is subprocess.Popen  # focus is read and restored only around a real launch, never in tests with fakes
         self.mode = mode if mode in MODES else mode_from_env()
         self.path = path if path is not None else (os.environ.get('CUA_AGENT_BROWSER_PATH') or None)
         self.cache = Path(cache or CACHE)
@@ -228,6 +229,31 @@ class AgentBrowser:
             args += ['--window-position=%d,%d' % (rect['x'] + 40, rect['y'] + 40), '--window-size=%d,%d' % (rect['width'] - 80, rect['height'] - 80)]
         return args + ['about:blank']
 
+    def front_app(self):
+        """pid of the user's frontmost app before a launch, or None (best effort, read-only)."""
+        if not getattr(self, 'real_launch', False):
+            return None
+        try:
+            out = subprocess.run(['lsappinfo', 'front'], capture_output=True, text=True, timeout=3).stdout.strip()
+            info = subprocess.run(['lsappinfo', 'info', '-only', 'pid', out], capture_output=True, text=True, timeout=3).stdout if out else ''
+            m = re.search(r'\bpid\s*=\s*(\d+)', info)
+            return int(m.group(1)) if m else None
+        except Exception:
+            return None
+
+    def restore_front(self, pid):
+        """Give focus back to the app that had it when Chrome took it on launch; never touches it when Chrome did not take focus."""
+        if not pid or not self.proc or pid == self.proc.pid:
+            return
+        now = self.front_app()
+        if now is None or now == pid:
+            return
+        try:
+            subprocess.run(['osascript', '-e', 'tell application "System Events" to set frontmost of (first process whose unix id is %d) to true' % pid],
+                     capture_output=True, text=True, timeout=5)
+        except Exception:
+            pass
+
     def alive(self):
         return self.proc is not None and self.proc.poll() is None
 
@@ -241,6 +267,7 @@ class AgentBrowser:
             seed_no_restore(profile)
             if rect:  # its saved placement would override the flags, so rewrite it first
                 seed_window_placement(profile, rect)
+        self._front_before = self.front_app()  # Chrome activates itself on launch (measured 2026-10-01: it took focus from Zoom)
         proc = self.popen(self.argv(exe, rect), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)  # own process group
         self.launches += 1
         if not self._atexit:
@@ -390,6 +417,7 @@ class AgentBrowser:
             raise misplaced(seen[2], rect)
         self.window_id = seen[0]
         f.window_created(seen[0], seen[1], seen[2])
+        self.restore_front(getattr(self, '_front_before', None))
         return self.proc.pid, seen[0]
 
     # ---- resize (#78) ----
