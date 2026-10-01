@@ -109,9 +109,15 @@ AGENT_APPS = ('Google Chrome for Testing', 'Calculator', 'TextEdit', 'qemu-syste
               'Android Emulator', 'Simulator', 'Device Hub', 'DeviceHub', 'Cua Driver', 'CuaDriver')  # Device Hub: Xcode 27's Simulator
 
 
-def attributed(timeline):
-    """Interruptions caused by the run's own apps: focus taken by one, and its windows appearing on the user's screens."""
-    mine = lambda name: any(a.lower() in (name or '').lower() for a in AGENT_APPS)
+# The vanilla arm drives the real screen with a keyboard, so it can also open Spotlight, the Dock's apps, Safari, System Settings ...
+VANILLA_EXTRA_APPS = ('Spotlight', 'Safari', 'System Settings', 'System Preferences', 'Finder', 'Dock')
+
+
+def attributed(timeline, arm=None):
+    """Interruptions caused by the run's own apps: focus taken by one, and its windows appearing on the user's screens.
+    The vanilla arm also owns what its keyboard can open (VANILLA_EXTRA_APPS)."""
+    apps = AGENT_APPS + (VANILLA_EXTRA_APPS if arm == 'vanilla' else ())
+    mine = lambda name: any(a.lower() in (name or '').lower() for a in apps)
     focus = [e for e in timeline if e.get('kind') == 'focus_change' and mine(e.get('to_app'))]
     wins = [e for e in timeline if e.get('kind') == 'new_user_window' and mine(e.get('app') or e.get('owner'))]
     return {'agent_focus_steals': len(focus), 'agent_windows_on_user_screens': len(wins),
@@ -139,7 +145,7 @@ def score_run(run, events_path, base):
         'interruptions': {k: mon.get(k) for k in ('focus_changes', 'focus_steals', 'new_user_windows', 'windows_to_user_display',
                                                   'overlay_windows', 'cursor_move_samples', 'cursor_bursts', 'cursor_px',
                                                   'cursor_moves_on_agent_display', 'new_agent_windows', 'monitor_ok')},
-        'attributed': attributed(timeline),
+        'attributed': attributed(timeline, run['arm']),
         'annoyances': monitor.annoyances(timeline, mon),
         'final_text': trace['final_text'][:300], 'truth': run.get('truth'),
     }

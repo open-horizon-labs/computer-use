@@ -146,6 +146,42 @@ def park_windows(match, timeout=30, list_windows=_driver_windows, display=None, 
     raise SetupRefused('window(s) %s still on the user\'s screen after parking (%s)' % ([w['window_id'] for w in outside], errors or 'no error reported'))
 
 
+def main_rect():
+    """Bounds of the MAIN display in points (the vanilla arm works on the user's real screen)."""
+    import vanilla_cu
+    return vanilla_cu.main_display().rect()
+
+
+def _inside_rect(rect, b):
+    return bool(b) and b['x'] >= rect['x'] - 1 and b['y'] >= rect['y'] - 1 and b['x'] + b['width'] <= rect['x'] + rect['width'] + 1 and b['y'] + b['height'] <= rect['y'] + rect['height'] + 1
+
+
+def move_window(pid, x, y):
+    """Make process `pid` frontmost and, when x is given, position its first window there (System Events; no mouse involved)."""
+    place = '' if x is None else 'try\nset position of window 1 of p to {%d, %d}\nend try\n' % (x, y)
+    osa('tell application "System Events"\nset p to first process whose unix id is %d\nset frontmost of p to true\n%send tell' % (pid, place))
+
+
+def show_on_main(match, rect, timeout=30, list_windows=_driver_windows, move=move_window, sleep=time.sleep, clock=time.time):
+    """The vanilla arm's setup: every layer-0 window that `match`es must be fully on the main display `rect` and in front. Windows found
+    elsewhere (e.g. restored onto the agent display) are moved onto it. Refuses (SetupRefused) when none appears or one stays off-screen."""
+    deadline = clock() + timeout
+    while True:
+        mine = [w for w in list_windows() if w.get('layer', 0) == 0 and (w.get('bounds') or {}).get('height', 0) > 100 and match(w)]
+        outside = [w for w in mine if not _inside_rect(rect, w.get('bounds'))]
+        if mine and not outside:
+            move(mine[0]['pid'], None, None)  # in place: just bring it to the front
+            return [w['window_id'] for w in mine]
+        if clock() >= deadline:
+            break
+        for w in outside:
+            move(w['pid'], rect['x'] + 60, rect['y'] + 60)
+        sleep(1)
+    if not mine:
+        raise SetupRefused('no window to show appeared within %ds' % timeout)
+    raise SetupRefused('window(s) %s are not on the main display' % [w['window_id'] for w in outside])
+
+
 def chrome_argv(binary, profile_dir, url, rect):
     """Native-arm browser: a dedicated Chrome for Testing with its own throwaway profile, opened inside `rect` (the agent display's
     bounds, passed in so this stays pure). Never the user's Chrome."""
@@ -254,7 +290,7 @@ def _wait_title(timeout=15):
 
 
 def open_surface(task, arm, run_id, base_url, workdir, android_serial_box=None, ios_udid=None):
-    """Prepare the surface for one run. `arm` is 'native' or 'computer-use'. A setup that fails part-way closes what it already
+    """Prepare the surface for one run. `arm` is 'native', 'computer-use' or 'vanilla' (vanilla: windows open and in front on the MAIN display). A setup that fails part-way closes what it already
     opened (the caller never receives the Surface, so it could not) and re-raises."""
     s = Surface()
     try:
@@ -283,26 +319,34 @@ def _open_surface(s, task, arm, run_id, base_url, workdir, ios_udid=None):
         if task == 'wikipedia':
             value = tasks.wikipedia_truth()  # fetched BEFORE the run, so a page edited mid-run cannot change what was asked
             s.read_truth = lambda value=value: value
-        if arm == 'native':
+        if arm in ('native', 'vanilla'):
+            vanilla = arm == 'vanilla'  # vanilla: the same throwaway Chrome for Testing, but on the MAIN display and frontmost
+            rect = main_rect() if vanilla else agent_rect()
             profile = tempfile.mkdtemp(prefix='cua-ab-chrome-')
-            proc = subprocess.Popen(chrome_argv(chrome_binary(), profile, url, agent_rect()), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+            proc = subprocess.Popen(chrome_argv(chrome_binary(), profile, url, rect), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
             s.on_close(lambda: shutil.rmtree(profile, ignore_errors=True))
             s.on_close(lambda: kill_pids([proc.pid] + [p for p, c in processes() if profile in c]))
             _wait_title()
             # --window-position is a request, not a guarantee: verify (and park) before the agent is told the window exists.
-            s.facts['parked'] = park_windows(lambda w, pid=proc.pid: w.get('pid') == pid)
+            if vanilla:
+                s.facts['shown'] = show_on_main(lambda w, pid=proc.pid: w.get('pid') == pid, rect)
+            else:
+                s.facts['parked'] = park_windows(lambda w, pid=proc.pid: w.get('pid') == pid)
         return s
     if surface == 'mac':
         app = spec['app']
         if app_running(app):
             raise RuntimeError('%s is already running: refusing to touch the user\'s %s state; quit it and rerun' % (app, app))
         s.facts = {'app': app}
-        sh(['open', '-g', '-a', app])
+        sh(['open', '-a', app] if arm == 'vanilla' else ['open', '-g', '-a', app])  # vanilla: opened in front, as a person would
         time.sleep(2)
         s.on_close(lambda: osa('tell application "%s" to quit' % app))  # registered first so it runs last, after any document close
         # Both arms: the harness opened this window, so it goes onto the agent display whichever tool drives it (the computer-use arm's
         # Calculator used to stay on the user's screen while the native arm's was parked).
-        s.facts['parked'] = park_windows(lambda w, app=app: (w.get('app_name') or '') == app)
+        if arm == 'vanilla':
+            s.facts['shown'] = show_on_main(lambda w, app=app: (w.get('app_name') or '') == app, main_rect())
+        else:
+            s.facts['parked'] = park_windows(lambda w, app=app: (w.get('app_name') or '') == app)
         if task == 'calculator':
             s.read_truth = lambda: tasks.CALC_ANSWER
         if task == 'textedit':
@@ -315,10 +359,10 @@ def _open_surface(s, task, arm, run_id, base_url, workdir, ios_udid=None):
     if surface == 'android':
         if sh(['adb', 'devices']).stdout.count('emulator-'):
             raise RuntimeError('an Android emulator is already running: the harness only runs its own; stop it and rerun')
-        if arm == 'native':  # the emulator restores its window from emulator-user.ini: put it on the agent display, restore the file after
+        if arm in ('native', 'vanilla'):  # the emulator restores its window from emulator-user.ini: put it on the agent display (vanilla: main display), restore the file after
             ini = Path.home() / '.android/avd' / ('%s.avd' % tasks.ANDROID_AVD) / 'emulator-user.ini'
             saved = ini.read_text() if ini.exists() else None
-            r = agent_rect()
+            r = main_rect() if arm == 'vanilla' else agent_rect()
             lines = [l for l in (saved or '').splitlines() if not l.startswith(('window.x', 'window.y'))]
             ini.write_text('\n'.join(['window.x = %d' % (r['x'] + 60), 'window.y = %d' % (r['y'] + 60)] + lines) + '\n')
             s.on_close(lambda ini=ini, saved=saved: ini.write_text(saved) if saved is not None else ini.unlink(missing_ok=True))
@@ -328,19 +372,22 @@ def _open_surface(s, task, arm, run_id, base_url, workdir, ios_udid=None):
         s.facts = {'device': tasks.ANDROID_AVD, 'serial': serial}
         s.read_truth = lambda: tasks.android_truth(serial=serial)
         s.on_close(lambda: sh(['adb', '-s', serial, 'emu', 'kill']))
+        emu = lambda w, pid=proc.pid: w.get('pid') == pid or 'qemu' in (w.get('app_name') or '').lower() or 'Emulator' in (w.get('app_name') or '')
         if arm == 'native':  # the emulator window, onto the agent display
-            s.facts['parked'] = park_windows(lambda w, pid=proc.pid: w.get('pid') == pid or 'qemu' in (w.get('app_name') or '').lower() or 'Emulator' in (w.get('app_name') or ''))
+            s.facts['parked'] = park_windows(emu)
+        if arm == 'vanilla':  # ... or visible on the main display, in front
+            s.facts['shown'] = show_on_main(emu, main_rect())
         return s
     if surface == 'ios':
         udid = ios_udid or booted_iphone()
         s.facts = {'device': udid, 'app': None}
         s.read_truth = lambda: tasks.ios_truth(udid)
         s.on_close(lambda: sh(['xcrun', 'simctl', 'terminate', udid, 'com.apple.Preferences']))
-        if arm == 'native':
+        if arm in ('native', 'vanilla'):
             hub = '/Applications/Xcode.app/Contents/Applications/DeviceHub.app'
             app_name = 'Device Hub' if Path(hub).exists() else 'Simulator'
             was_running = app_running(app_name)
-            sh(['open', '-g', '-a', hub if app_name == 'Device Hub' else 'Simulator'])
+            sh(['open', '-a', hub if app_name == 'Device Hub' else 'Simulator'] if arm == 'vanilla' else ['open', '-g', '-a', hub if app_name == 'Device Hub' else 'Simulator'])
             if was_running:  # a previous harness hid it at exit (never quit: that shuts the simulator down); unhide without activating
                 osa('tell application "System Events" to set visible of process "%s" to true' % app_name)
             for _ in range(30):  # the 2026-10-01 run handed the agent a Simulator with no window yet
@@ -349,7 +396,10 @@ def _open_surface(s, task, arm, run_id, base_url, workdir, ios_udid=None):
                 time.sleep(1)
             names = ('Device Hub', 'DeviceHub') if app_name == 'Device Hub' else ('Simulator',)
             s.facts['app'] = app_name
-            s.facts['parked'] = park_windows(lambda w: (w.get('app_name') or '') in names)
+            if arm == 'vanilla':
+                s.facts['shown'] = show_on_main(lambda w: (w.get('app_name') or '') in names, main_rect())
+            else:
+                s.facts['parked'] = park_windows(lambda w: (w.get('app_name') or '') in names)
             if not was_running and app_name not in _HIDE_AT_EXIT:
                 _HIDE_AT_EXIT.append(app_name)
             # Quitting Device Hub shuts the simulator down (2026-10-01), so leave it running; its window stays on the agent display.

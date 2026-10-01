@@ -8,7 +8,11 @@ sitting at the Mac**.
 - `computer-use`: this repo's server (`computer_use/server.py`, tools `look` and `do`) only, run with the main checkout's
   `.venv-facade` (override with `CUA_FACADE_PYTHON`).
 
-Both through `claude -p --model claude-sonnet-5-5`, max 60 turns, 600 s timeout, `--strict-mcp-config` with exactly one
+- `vanilla` (opt-in, `--arms vanilla`): how a plain Claude does computer use. One tool, `computer`, with the Anthropic API computer tool's
+  action set (screenshot in, coordinates and keys out); no accessibility tree, no DOM, no Cua Driver. It acts on the user's **real main
+  screen with real HID input** (see "The vanilla arm" below).
+
+All through `claude -p --model claude-sonnet-5-5`, max 60 turns, 600 s timeout, `--strict-mcp-config` with exactly one
 server, file/shell/web tools disallowed (and `Skill` in native), run from a scratch cwd. Reuses the patterns of
 [`../facade-vs-native`](../facade-vs-native/README.md): per-arm MCP config, stream-json transcripts, a server-side event log
 as ground truth, prompts that state user intent only (a test lints every prompt for answers, decoys and tool names).
@@ -58,6 +62,35 @@ because that is how each tool is meant to be addressed. The harness only starts 
 process list before and after every run, kills strays it can attribute (Chrome for Testing, emulator, space-mover,
 mobile-mcp) and records anything still running.
 
+## The vanilla arm (`vanilla_cu.py`, `cuinput.swift`)
+
+Claude Code's built-in computer use cannot run under `claude -p` and there is no API key for the API tool, so the arm implements the same
+contract as a small local MCP server (FastMCP, key `vanilla-cu`, run with the facade venv python): ONE tool `computer` with the API tool's
+actions and parameter names (`screenshot`, `left_click`/`right_click`/`double_click`/`middle_click` + `coordinate`, `mouse_move`,
+`left_click_drag` + `start_coordinate`/`coordinate`, `type` + `text`, `key` + `text` in xdotool style such as `cmd+l` or `Return`,
+`scroll` + `coordinate`/`scroll_direction`/`scroll_amount`, `wait` + `duration`, `cursor_position`).
+
+- Sight: `screencapture -x -C -m` of the main display, scaled with `sips` to fit 1280x800 (aspect kept, never enlarged; a 3024x1964 retina
+  display becomes 1232x800). The tool description states `display_width_px` / `display_height_px` like the API tool.
+- Coordinates are in that scaled space; the server maps them to screen points. Every action except `screenshot` and `cursor_position`
+  returns a fresh screenshot after a 1 s settle (`VANILLA_SETTLE_S`); `wait` returns one too, as in the reference demo.
+- Hands: `cuinput` (Swift, compiled on demand into `~/.cache/computer-use/surfaces-ab/` like the sampler) posts CGEvents at `kCGHIDEventTap`:
+  mouse move/click/drag/scroll at absolute points, unicode typing (`CGEventKeyboardSetUnicodeString`), key chords with modifier flags.
+- Setup is what a vanilla user has: the app or page open and **visible in front on the main display** (web: the same Chrome for Testing
+  with a temp profile; Android: emulator window; iOS: Device Hub), verified on the main display or the run is refused. The prompt is the same
+  intent with a neutral intro ("The page is open on screen."): no URL, title, app id or device id, no tool hints.
+- Preflight (`vanilla_cu.doctor`, run by the runner): Accessibility (can post events) and Screen Recording (capture succeeds and is not
+  blank). Missing either refuses the run with the fix. Grant both to the terminal that runs the harness and restart it.
+- The allowed tools are `mcp__vanilla-cu__computer` and `ToolSearch` only; the same built-ins are disallowed as in the other arms.
+
+Fidelity caveat: same contract as the API `computer` tool but **our own executor**, and no API-side image resizing (the API may downscale
+further); the model is the same `claude-sonnet-5-5`. Scroll direction signs, key-name coverage and the 1 s settle are our choices and were
+verified only offline. Results show how this contract behaves with this executor, not the API tool itself.
+
+Interruption caveat: **cursor moves ARE the agent's in this arm** (it moves the real pointer), so `cursor_*` is its footprint, not user
+noise; it also steals focus by design, and Spotlight, Safari, System Settings, Finder and the Dock count as its own apps in attribution.
+Nothing else may touch the machine during a run.
+
 ## The interruption monitor (`monitor.py`, `sampler.swift`)
 
 A sampler (compiled once to `~/.cache/computer-use/surfaces-ab/sampler`, read-only, never posts events) logs every 200 ms
@@ -84,6 +117,9 @@ python3 experiments/surfaces-ab/runner.py --plan
 
 # LIVE (needs the user's consent in chat; do not touch the mouse): the full suite, 10 jobs x 2 arms
 python3 experiments/surfaces-ab/runner.py --i-have-consent --max-total-minutes 120
+
+# The vanilla arm (REAL screen and mouse; consent in chat; Accessibility + Screen Recording for the terminal)
+python3 experiments/surfaces-ab/runner.py --i-have-consent --arms vanilla --tasks calculator
 
 # One job, one arm, or a re-score of a finished run
 python3 experiments/surfaces-ab/runner.py --i-have-consent --tasks calculator --arms native

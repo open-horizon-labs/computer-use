@@ -27,10 +27,11 @@ import tasks
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 MODEL = 'claude-sonnet-5-5'
-ARMS = ('native', 'computer-use')
+ARMS = ('native', 'computer-use', 'vanilla')
+DEFAULT_ARMS = ('native', 'computer-use')  # vanilla uses the user's REAL screen and mouse: opt in with --arms vanilla
 # The MCP server key for the computer-use arm is `computer-use-oh`: Claude Code reserves `computer-use` and drops a server by that name
 # `computer-use` (reserved built-in name; measured in the first smoke run: mcp_servers was empty and the agent had no tools).
-ARM_SERVER = {'native': 'cua-driver', 'computer-use': 'computer-use-oh'}
+ARM_SERVER = {'native': 'cua-driver', 'computer-use': 'computer-use-oh', 'vanilla': 'vanilla-cu'}
 DEFAULT_PYTHON = '/Users/muness1/src/open-horizon-labs/computer-use/.venv-facade/bin/python'
 # Every built-in that can act outside the arm's MCP server (the stream-json init lists Monitor, Cron*, RemoteTrigger, SendMessage,
 # Artifact... besides the classic file/shell tools). ToolSearch stays: both arms need it to load their deferred MCP tools.
@@ -38,8 +39,9 @@ _BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', '
               'CronCreate', 'CronDelete', 'RemoteTrigger', 'ScheduleWakeup', 'PushNotification', 'SendMessage', 'Artifact', 'ArtifactData',
               'ArtifactComments', 'EnterWorktree', 'ExitWorktree', 'LSP', 'DesignSync']
 ALLOWED = {arm: ['mcp__' + srv] for arm, srv in ARM_SERVER.items()}
+ALLOWED['vanilla'] = ['mcp__vanilla-cu__computer', 'ToolSearch']  # the one tool; ToolSearch loads it (deferred)
 # Skill is off in native (the installed skill would reintroduce facade guidance); the computer-use arm never needs it either.
-DISALLOWED = {'native': _BASE_DENY + ['Skill'], 'computer-use': _BASE_DENY + ['Skill']}
+DISALLOWED = {'native': _BASE_DENY + ['Skill'], 'computer-use': _BASE_DENY + ['Skill'], 'vanilla': _BASE_DENY + ['Skill']}
 
 TAIL = (' Use only the tools available to you. Do not act on any other window, tab or app. '
         'When finished, report exactly what you did and how you verified the result.')
@@ -55,7 +57,10 @@ def build_prompt(task, arm, facts):
     spec = tasks.TASKS[task]
     goal = spec['prompt'].format(**{k: v for k, v in facts.items() if k == 'file'}) if '{file}' in spec['prompt'] else spec['prompt']
     surface = spec['surface']
-    if surface == 'web':
+    if arm == 'vanilla':  # what a plain user would say: it is on the screen, in front. No window titles, URLs, app ids or device ids.
+        intro = {'web': 'The page is open on screen. ', 'mac': 'The %s app is open on screen. ' % facts.get('app'),
+                 'android': 'An Android emulator is open on screen. ', 'ios': 'An iPhone 17 Pro simulator is open on screen. '}[surface]
+    elif surface == 'web':
         intro = ('A Chrome window whose title begins with %r is open on this Mac. ' % facts['title']) if arm == 'native' else 'Open %s in the browser. ' % facts['url']
     elif surface == 'mac':
         intro = 'The %s app is running on this Mac. ' % facts['app']
@@ -73,7 +78,8 @@ def build_prompt(task, arm, facts):
 def mcp_config(arm, out_dir):
     py = os.environ.get('CUA_FACADE_PYTHON') or DEFAULT_PYTHON
     servers = {'computer-use-oh': {'command': py, 'args': [str(ROOT / 'computer_use/server.py')]},
-               'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
+               'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']},
+               'vanilla-cu': {'command': py, 'args': [str(HERE / 'vanilla_cu.py')]}}
     path = Path(out_dir).resolve() / ('mcp-config.%s.json' % arm)
     path.write_text(json.dumps({'mcpServers': {ARM_SERVER[arm]: servers[ARM_SERVER[arm]]}}, indent=2))
     return path
@@ -118,6 +124,11 @@ def preflight(arms, task_ids):
         problems.append('claude is not on PATH')
     if 'native' in arms and not (Path.home() / '.local/bin/cua-driver').exists():
         problems.append('~/.local/bin/cua-driver is missing')
+    if 'vanilla' in arms:
+        if not Path(os.environ.get('CUA_FACADE_PYTHON') or DEFAULT_PYTHON).exists():
+            problems.append('python with the mcp package missing for the vanilla server (set CUA_FACADE_PYTHON)')
+        import vanilla_cu
+        problems += vanilla_cu.doctor()
     if 'computer-use' in arms:
         if not Path(os.environ.get('CUA_FACADE_PYTHON') or DEFAULT_PYTHON).exists():
             problems.append('facade python missing (set CUA_FACADE_PYTHON): %s' % (os.environ.get('CUA_FACADE_PYTHON') or DEFAULT_PYTHON))
@@ -125,7 +136,7 @@ def preflight(arms, task_ids):
     if foreign:
         problems.append('another computer-use facade session is running (it and the arm would kill each other\'s browser and share the '
                         'agent display, and the stray sweep could kill its helpers); stop it first: %s' % '; '.join('%d %s' % (p, c[:80]) for p, c in foreign))
-    if any(tasks.TASKS[t]['surface'] == 'web' for t in task_ids) and 'native' in arms:
+    if any(tasks.TASKS[t]['surface'] == 'web' for t in task_ids) and ('native' in arms or 'vanilla' in arms):
         try:
             surfaces.chrome_binary()
         except RuntimeError as error:
@@ -225,7 +236,7 @@ def run_one(arm, task, args, base_url, out_dir, events_path):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--arms', nargs='+', default=list(ARMS), choices=ARMS)
+    parser.add_argument('--arms', nargs='+', default=list(DEFAULT_ARMS), choices=ARMS)
     parser.add_argument('--tasks', nargs='+', default=list(tasks.ORDER), choices=list(tasks.ORDER))
     parser.add_argument('--runs', type=int, default=1)
     parser.add_argument('--model', default=MODEL)

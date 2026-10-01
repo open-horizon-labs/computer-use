@@ -17,6 +17,7 @@ import score
 import server
 import surfaces
 import tasks
+import vanilla_cu
 
 USER = {'id': 1, 'x': 0, 'y': 0, 'width': 2000, 'height': 1200, 'virtual': False, 'main': True}
 AGENT = {'id': 9, 'x': 2000, 'y': 0, 'width': 1920, 'height': 1080, 'virtual': True}
@@ -300,7 +301,7 @@ class PromptAndRunnerTest(unittest.TestCase):
                 self.assertEqual(list(json.loads(cfg.read_text())['mcpServers']), [server_name])
                 argv = runner.claude_argv(arm, 'p', 'claude-sonnet-5-5', 60, cfg)
                 self.assertIn('--strict-mcp-config', argv)
-                self.assertEqual(argv[argv.index('--allowedTools') + 1], 'mcp__' + server_name)
+                self.assertEqual(argv[argv.index('--allowedTools') + 1], 'mcp__vanilla-cu__computer,ToolSearch' if arm == 'vanilla' else 'mcp__' + server_name)
                 self.assertEqual(argv[argv.index('--model') + 1], 'claude-sonnet-5-5')
                 self.assertEqual(argv[argv.index('--max-turns') + 1], '60')
                 denied = argv[argv.index('--disallowedTools') + 1].split(',')
@@ -537,6 +538,276 @@ class LabelTest(unittest.TestCase):
         tl = [{'kind': 'focus_change', 'to_app': 'Device Hub', 't': 1}, {'kind': 'new_user_window', 'app': 'qemu-system-aarch64', 't': 2}]
         self.assertEqual(score.attributed(tl)['agent_focus_steals'], 1)
         self.assertEqual(score.attributed(tl)['agent_windows_on_user_screens'], 1)
+
+
+
+
+class FakeExecutor:
+    def __init__(self, display, png=b'\x89PNG-fake'):
+        self.display, self.png, self.calls, self.settle = display, png, [], 0
+
+    def perform(self, args):
+        self.calls.append(args)
+        return 'X=1,Y=2' if args['action'] == 'cursor_position' else None
+
+    def screenshot(self):
+        return self.png
+
+    def info(self):
+        return {'post_event': True, 'screen_capture': True}
+
+
+RETINA = vanilla_cu.Display(0, 0, 1512, 982, 3024, 1964)
+SMALL = vanilla_cu.Display(0, 0, 1024, 640, 1024, 640)
+
+
+class VanillaGeometryTest(unittest.TestCase):
+    def test_scaled_size_fits_1280x800_keeps_aspect_and_never_enlarges(self):
+        self.assertEqual(vanilla_cu.scaled_size(3024, 1964), (1232, 800))
+        self.assertEqual(vanilla_cu.scaled_size(2560, 1600), (1280, 800))
+        self.assertEqual(vanilla_cu.scaled_size(1024, 640), (1024, 640))
+        self.assertEqual(vanilla_cu.scaled_size(1920, 1080), (1280, 720))
+
+    def test_scaled_to_points_on_retina_and_back(self):
+        self.assertEqual(RETINA.scaled, (1232, 800))
+        x, y = vanilla_cu.to_points(616, 400, RETINA.scaled, RETINA.points)
+        self.assertAlmostEqual(x, 756.0)
+        self.assertAlmostEqual(y, 491.0)
+        self.assertEqual(vanilla_cu.to_scaled(x, y, RETINA.scaled, RETINA.points), (616, 400))
+        self.assertEqual(vanilla_cu.to_scaled(1512, 982, RETINA.scaled, RETINA.points), (1232, 800))
+
+    def test_non_retina_without_scaling_is_identity(self):
+        self.assertEqual(vanilla_cu.to_points(100, 50, SMALL.scaled, SMALL.points), (100, 50))
+
+    def test_origin_offset_is_added_and_removed(self):
+        p = vanilla_cu.to_points(10, 10, (100, 100), (200, 200), origin=(5, 7))
+        self.assertEqual(p, (25, 27))
+        self.assertEqual(vanilla_cu.to_scaled(*p, (100, 100), (200, 200), origin=(5, 7)), (10, 10))
+
+    def test_executor_maps_clicks_to_points_and_scroll_signs(self):
+        sent = []
+        ex = vanilla_cu.Executor(display=RETINA, run=lambda args, stdin=None: sent.append((args, stdin)) or '')
+        ex.perform(vanilla_cu.validate('left_click', RETINA.scaled, coordinate=[616, 400]))
+        ex.perform(vanilla_cu.validate('double_click', RETINA.scaled, coordinate=[0, 0]))
+        ex.perform(vanilla_cu.validate('left_click_drag', RETINA.scaled, coordinate=[1231, 799], start_coordinate=[616, 400]))
+        ex.perform(vanilla_cu.validate('scroll', RETINA.scaled, coordinate=[616, 400], scroll_direction='down', scroll_amount=4))
+        ex.perform(vanilla_cu.validate('type', RETINA.scaled, text='hi\nthere'))
+        self.assertEqual(sent[0][0], ['click', '756.0', '491.0', 'left', 1])
+        self.assertEqual(sent[1][0], ['click', '0.0', '0.0', 'left', 2])
+        self.assertEqual(sent[2][0][0:3], ['drag', '756.0', '491.0'])
+        self.assertEqual(sent[3][0], ['scroll', '756.0', '491.0', 0, -4])
+        self.assertEqual(sent[4], (['type'], 'hi\nthere'))
+
+    def test_cursor_position_is_reported_in_scaled_space(self):
+        ex = vanilla_cu.Executor(display=RETINA, run=lambda args, stdin=None: '756 491')
+        self.assertEqual(ex.perform({'action': 'cursor_position'}), 'X=616,Y=400')
+
+
+class VanillaValidationTest(unittest.TestCase):
+    SZ = (1232, 800)
+
+    def bad(self, *a, **kw):
+        with self.assertRaises(ValueError):
+            vanilla_cu.validate(*a, **kw)
+
+    def test_unknown_action(self):
+        self.bad('triple_click', self.SZ)
+
+    def test_clicks_need_an_in_bounds_pair(self):
+        for act in ('left_click', 'right_click', 'double_click', 'middle_click', 'mouse_move'):
+            self.bad(act, self.SZ)
+            self.bad(act, self.SZ, coordinate=[10])
+            self.bad(act, self.SZ, coordinate=[1232, 10])
+            self.bad(act, self.SZ, coordinate=[-1, 10])
+            self.bad(act, self.SZ, coordinate=['1', 2])
+            self.assertEqual(vanilla_cu.validate(act, self.SZ, coordinate=[1231, 799])['coordinate'], (1231, 799))
+
+    def test_drag_needs_both_points(self):
+        self.bad('left_click_drag', self.SZ, coordinate=[1, 1])
+        self.bad('left_click_drag', self.SZ, start_coordinate=[1, 1])
+        vanilla_cu.validate('left_click_drag', self.SZ, coordinate=[1, 1], start_coordinate=[5, 5])
+
+    def test_type_needs_text(self):
+        self.bad('type', self.SZ)
+        self.bad('type', self.SZ, text='')
+        self.assertEqual(vanilla_cu.validate('type', self.SZ, text='a b')['text'], 'a b')
+
+    def test_scroll_needs_direction_and_sane_amount(self):
+        self.bad('scroll', self.SZ, coordinate=[1, 1])
+        self.bad('scroll', self.SZ, coordinate=[1, 1], scroll_direction='sideways')
+        self.bad('scroll', self.SZ, coordinate=[1, 1], scroll_direction='up', scroll_amount=0)
+        self.bad('scroll', self.SZ, coordinate=[1, 1], scroll_direction='up', scroll_amount=99)
+        self.assertEqual(vanilla_cu.validate('scroll', self.SZ, coordinate=[1, 1], scroll_direction='up')['scroll_amount'], 3)
+
+    def test_wait_duration_bounds(self):
+        self.bad('wait', self.SZ)
+        self.bad('wait', self.SZ, duration=-1)
+        self.bad('wait', self.SZ, duration=1000)
+        vanilla_cu.validate('wait', self.SZ, duration=1.5)
+
+    def test_screenshot_and_cursor_position_need_nothing(self):
+        vanilla_cu.validate('screenshot', self.SZ)
+        vanilla_cu.validate('cursor_position', self.SZ)
+
+
+class VanillaKeyTest(unittest.TestCase):
+    def test_chords_and_single_keys(self):
+        self.assertEqual(vanilla_cu.parse_key('cmd+l'), [(37, 0x100000)])
+        self.assertEqual(vanilla_cu.parse_key('Return'), [(36, 0)])
+        self.assertEqual(vanilla_cu.parse_key('ctrl+shift+Tab'), [(48, 0x40000 | 0x20000)])
+        self.assertEqual(vanilla_cu.parse_key('super+a'), [(0, 0x100000)])
+        self.assertEqual(vanilla_cu.parse_key('alt+Left'), [(123, 0x80000)])
+        self.assertEqual(vanilla_cu.parse_key('F5'), [(96, 0)])
+
+    def test_sequence_uppercase_and_shifted_symbols(self):
+        self.assertEqual(vanilla_cu.parse_key('cmd+a BackSpace'), [(0, 0x100000), (51, 0)])
+        self.assertEqual(vanilla_cu.parse_key('A'), [(0, 0x20000)])
+        self.assertEqual(vanilla_cu.parse_key('cmd+plus'), [(24, 0x100000 | 0x20000)])
+        self.assertEqual(vanilla_cu.parse_key('space'), [(49, 0)])
+
+    def test_errors(self):
+        for bad in ('', '   ', 'cmd+', 'cmd+shift', 'frobnicate', 'a+b', None):
+            with self.assertRaises(ValueError, msg=repr(bad)):
+                vanilla_cu.parse_key(bad)
+
+    def test_key_action_posts_each_chord(self):
+        sent = []
+        ex = vanilla_cu.Executor(display=SMALL, run=lambda args, stdin=None: sent.append(args) or '')
+        ex.perform(vanilla_cu.validate('key', SMALL.scaled, text='cmd+l Return'))
+        self.assertEqual(sent, [['key', 37, 0x100000], ['key', 36, 0]])
+
+
+class VanillaServerTest(unittest.TestCase):
+    def setUp(self):
+        import asyncio
+        self.asyncio = asyncio
+        self.fake = FakeExecutor(RETINA)
+        self.mcp = vanilla_cu.build_server(self.fake)
+
+    def test_exactly_one_tool_named_computer_with_the_display_size(self):
+        tools = self.asyncio.run(self.mcp.list_tools())
+        self.assertEqual([t.name for t in tools], ['computer'])
+        d = tools[0].description
+        self.assertIn('display_width_px=1232', d)
+        self.assertIn('display_height_px=800', d)
+        self.assertIn('REAL', d)
+        for name in vanilla_cu.ACTIONS:
+            self.assertIn(name, d)
+        props = tools[0].inputSchema['properties']
+        for param in ('action', 'coordinate', 'start_coordinate', 'text', 'scroll_direction', 'scroll_amount', 'duration'):
+            self.assertIn(param, props)
+
+    def test_description_has_no_tree_dom_or_tool_hints(self):
+        d = vanilla_cu.describe(RETINA).lower()
+        for word in ('accessibility', 'dom', 'cua', 'look'):
+            self.assertNotIn(word, d.replace('look at', ''))
+
+    def test_action_returns_a_screenshot_and_screenshot_does_not_act(self):
+        out = self.asyncio.run(self.mcp.call_tool('computer', {'action': 'left_click', 'coordinate': [10, 10]}))
+        self.assertTrue(any(getattr(c, 'type', '') == 'image' for c in (out[0] if isinstance(out, tuple) else out)))
+        self.assertEqual([c['action'] for c in self.fake.calls], ['left_click'])
+        self.asyncio.run(self.mcp.call_tool('computer', {'action': 'screenshot'}))
+        self.assertEqual(len(self.fake.calls), 1)
+
+    def test_cursor_position_answers_in_text(self):
+        out = self.asyncio.run(self.mcp.call_tool('computer', {'action': 'cursor_position'}))
+        content = out[0] if isinstance(out, tuple) else out
+        self.assertEqual(content[0].type, 'text')
+        self.assertIn('X=1', content[0].text)
+
+    def test_invalid_arguments_error_and_post_nothing(self):
+        with self.assertRaises(Exception):
+            self.asyncio.run(self.mcp.call_tool('computer', {'action': 'left_click', 'coordinate': [9999, 1]}))
+        self.assertEqual(self.fake.calls, [])
+
+
+class VanillaDoctorTest(unittest.TestCase):
+    PNG = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR' + (1232).to_bytes(4, 'big') + (800).to_bytes(4, 'big')
+
+    def fake(self, info, png):
+        ex = FakeExecutor(RETINA, png)
+        ex.info = lambda: info
+        return ex
+
+    def test_ready_when_both_permissions_and_a_real_screenshot(self):
+        busy = self.PNG + b'x' * 20000
+        self.assertEqual(vanilla_cu.doctor(self.fake({'post_event': True, 'screen_capture': True}, busy)), [])
+
+    def test_missing_accessibility_and_blank_screenshot_refuse_with_clear_messages(self):
+        problems = vanilla_cu.doctor(self.fake({'post_event': False, 'screen_capture': False}, self.PNG + b'x' * 50))
+        text = ' '.join(problems)
+        self.assertIn('Accessibility', text)
+        self.assertIn('Screen Recording', text)
+        self.assertIn('blank', text)
+
+    def test_screenshot_failure_is_a_problem_not_a_crash(self):
+        ex = self.fake({'post_event': True, 'screen_capture': True}, b'')
+        ex.screenshot = lambda: (_ for _ in ()).throw(RuntimeError('boom'))
+        self.assertIn('boom', ' '.join(vanilla_cu.doctor(ex)))
+
+    def test_blank_heuristic(self):
+        self.assertTrue(vanilla_cu.looks_blank(b'not a png'))
+        self.assertFalse(vanilla_cu.looks_blank(self.PNG + b'x' * 20000))
+
+
+class VanillaArmTest(unittest.TestCase):
+    FACTS = PromptAndRunnerTest.FACTS
+
+    def test_arm_config(self):
+        self.assertIn('vanilla', runner.ARMS)
+        self.assertNotIn('vanilla', runner.DEFAULT_ARMS)  # real screen: explicit opt-in
+        self.assertEqual(runner.ARM_SERVER['vanilla'], 'vanilla-cu')
+        self.assertEqual(runner.ALLOWED['vanilla'], ['mcp__vanilla-cu__computer', 'ToolSearch'])
+        self.assertEqual(runner.DISALLOWED['vanilla'], runner.DISALLOWED['native'])
+        with tempfile.TemporaryDirectory() as tmp:
+            cfg = json.loads(runner.mcp_config('vanilla', tmp).read_text())['mcpServers']
+            self.assertEqual(list(cfg), ['vanilla-cu'])
+            self.assertTrue(cfg['vanilla-cu']['args'][0].endswith('experiments/surfaces-ab/vanilla_cu.py'))
+
+    def test_prompts_are_neutral_and_share_the_same_goal_across_all_three_arms(self):
+        for task in tasks.ORDER:
+            prompts = {arm: runner.build_prompt(task, arm, self.FACTS) for arm in runner.ARMS}
+            goal = tasks.TASKS[task]['prompt']
+            if '{file}' in goal:
+                goal = goal.format(file=self.FACTS['file'])
+            for arm, prompt in prompts.items():
+                self.assertTrue(prompt.endswith(goal + runner.TAIL), '%s/%s' % (task, arm))
+            v = prompts['vanilla']
+            self.assertIn('on screen', v)
+            for word in ('127.0.0.1', 'DEV', 'Chrome', 'accessib', 'DOM', 'cursor', 'screenshot', 'coordinate', 'driver', 'tool'):
+                self.assertNotIn(word.lower(), v.replace(runner.TAIL, '').lower(), '%s: %s' % (task, word))
+
+    def test_vanilla_attribution_counts_its_extra_apps_only_for_vanilla(self):
+        tl = [{'kind': 'focus_change', 'to_app': 'Spotlight'}, {'kind': 'focus_change', 'to_app': 'Google Chrome for Testing'}]
+        self.assertEqual(score.attributed(tl, 'vanilla')['agent_focus_steals'], 2)
+        self.assertEqual(score.attributed(tl, 'native')['agent_focus_steals'], 1)
+
+    def test_show_on_main_moves_a_stray_window_then_verifies(self):
+        rect = {'x': 0, 'y': 0, 'width': 1500, 'height': 900}
+        state = {'b': {'x': 3000, 'y': 0, 'width': 800, 'height': 600}}
+        moved = []
+        def move(pid, x, y):
+            moved.append((pid, x, y))
+            if x is not None:
+                state['b'] = {'x': x, 'y': y, 'width': 800, 'height': 600}
+        lw = lambda: [{'window_id': 5, 'pid': 77, 'layer': 0, 'bounds': state['b']}]
+        self.assertEqual(surfaces.show_on_main(lambda w: True, rect, list_windows=lw, move=move, sleep=lambda s: None), [5])
+        self.assertEqual(moved[0], (77, 60, 60))
+        self.assertEqual(moved[-1], (77, None, None))  # final call only fronts it
+
+    def test_show_on_main_refuses_when_the_window_stays_off_the_main_display(self):
+        rect = {'x': 0, 'y': 0, 'width': 1500, 'height': 900}
+        t = iter(range(100))
+        lw = lambda: [{'window_id': 5, 'pid': 77, 'layer': 0, 'bounds': {'x': 3000, 'y': 0, 'width': 800, 'height': 600}}]
+        with self.assertRaises(surfaces.SetupRefused):
+            surfaces.show_on_main(lambda w: True, rect, timeout=3, list_windows=lw, move=lambda *a: None, sleep=lambda s: None, clock=lambda: next(t))
+        with self.assertRaises(surfaces.SetupRefused):
+            surfaces.show_on_main(lambda w: True, rect, timeout=3, list_windows=lambda: [], move=lambda *a: None, sleep=lambda s: None, clock=lambda: next(t))
+
+    def test_vanilla_web_chrome_opens_on_the_main_display(self):
+        argv = surfaces.chrome_argv('/x/Chrome', '/tmp/p', 'http://127.0.0.1:1/', {'x': 0, 'y': 0, 'width': 1500, 'height': 900})
+        self.assertIn('--window-position=40,40', argv)
+        self.assertIn('--user-data-dir=/tmp/p', argv)
 
 
 if __name__ == '__main__':
