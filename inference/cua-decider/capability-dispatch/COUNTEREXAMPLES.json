@@ -416,9 +416,12 @@
    "scenarios.mobile_dropped_tap_stop.max_chooser_calls": 0,
    "scenarios.mobile_backend_missing_stop.max_llm_visible_calls": 1,
    "scenarios.mobile_backend_missing_stop.max_reader_calls": 0,
-   "scenarios.mobile_backend_missing_stop.max_chooser_calls": 0
+   "scenarios.mobile_backend_missing_stop.max_chooser_calls": 0,
+   "scenarios.mobile_where_lines.max_llm_visible_calls": 2,
+   "scenarios.mobile_where_lines.max_reader_calls": 0,
+   "scenarios.mobile_where_lines.max_chooser_calls": 0
   },
-  "status_note": "Approved by the user 2026-09-30. Shipped in one PR (#54): auto-bootstrapped mobile-mcp 1.0.6 client, device look and do, fixtures captured read-only from emulator-5554 (Android 11) through the facade's own bootstrap. Live read-only run (no tap, no type, no install): device list, look of the emulator (56 elements, 1171 bytes, deterministic look_id, about 0.65 s after a 2 s cold start), verify step, and the iOS simulator refused mobile_device_agent_missing. Not measured: any tap or type on a device, iOS trees, a real phone, taps on a locked screen (upstream finding only)."
+  "status_note": "Approved by the user 2026-09-30. Shipped in one PR (#54): auto-bootstrapped mobile-mcp 1.0.6 client, device look and do, fixtures captured read-only from emulator-5554 (Android 11) through the facade's own bootstrap. Live read-only run (no tap, no type, no install): device list, look of the emulator (56 elements, 1171 bytes, deterministic look_id, about 0.65 s after a 2 s cold start), verify step, and the iOS simulator refused mobile_device_agent_missing. Not measured: any tap or type on a device, iOS trees, a real phone, taps on a locked screen (upstream finding only). Follow-up (#59, scenario mobile_where_lines, 2 calls): records on device screens are derived from element geometry (vertical banding: elements whose vertical extents overlap form a row, a row with at least one control is a record, a cell that holds no other cell is the row it wraps), so where.lines works on a device with the window rules (look_id of this device, the page must read the same, uniqueness over all rows, one match binds) and stays refused where_not_supported_on_device when the look found no records; an iOS device refused mobile_device_agent_missing gets the agent installed once by `npx -y mobilecli@1.0.16 agent install --device <id>` (bounded; a failure is the same refusal naming that command) and the read retried once. Real iOS tree captured read-only after the install (types Icon, Other, StaticText: no XCUIElementType prefix)."
  },
  {
   "id": "CE-FACADE-009",

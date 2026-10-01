@@ -519,10 +519,10 @@ MUTATIONS = {
     'device_raw_backend_text_in_the_answer': (
         "return mobile-mcp's own error text to the model (a local path and a stack)",
         [('mobile.py', "        reason, message, delivery = classify(text)\n        raise MobileGap(reason, message, delivery)", "        reason, message, delivery = classify(text)\n        raise MobileGap(reason, message + ' ' + str(text), delivery)")],
-        ['test_mobile.LookOnDevices.test_an_ios_device_without_the_agent_is_a_typed_refusal_that_carries_no_raw_text']),
+        ['test_mobile.LookOnDevices.test_raw_backend_text_never_reaches_the_answer']),
     'device_look_truncates_silently': (
         'cut the device look to max_bytes and report nothing cut',
-        [('mobile.py', "        response['truncated'] = {'records': 0, 'lines': lost, 'bytes': bytes_cut}", "        response['truncated'] = {'records': 0, 'lines': 0, 'bytes': 0}")],
+        [('mobile.py', "        response['truncated'] = {'records': matched - len(rows), 'lines': lost, 'bytes': bytes_cut}", "        response['truncated'] = {'records': 0, 'lines': 0, 'bytes': 0}")],
         ['test_mobile.LookOnDevices.test_bounds_are_reported_never_silent']),
     'device_typed_text_proves_itself': (
         'accept the text just typed as the proof that typing worked (it is in the field either way)',
@@ -532,6 +532,38 @@ MUTATIONS = {
         'never stop mobile-mcp when the server shuts down',
         [('mobile.py', "        with self._lock:\n            self._teardown()\n\n    # -- calls", "        pass\n\n    # -- calls")],
         ['test_mobile.Lifecycle.test_close_stops_the_child_and_the_next_call_starts_a_fresh_one']),
+    # CE-FACADE-008 follow-up (#59): records on device screens and the iOS agent bootstrap.
+    'device_every_element_is_a_record': (
+        'make every element its own record (no banding): lines never sit with their controls, so a row cannot be picked by what it says',
+        [('mobile.py', "        if bands and top < bands[-1]['bottom'] - BAND_SLACK:", "        if False:")],
+        ['test_mobile.RecordsOnDevices.test_a_list_screen_yields_one_record_per_row_with_its_lines_and_controls']),
+    'device_record_without_a_control': (
+        'keep every band as a record: headings and status text become records nobody can press',
+        [('mobile.py', "        if not controls:\n            continue\n        wrapped =", "        wrapped =")],
+        ['test_mobile.RecordsOnDevices.test_a_row_without_a_control_is_not_a_record']),
+    'device_where_lines_without_a_look_id': (
+        'let where.lines match on a device without a look_id (a filter written without seeing the screen)',
+        [('plan.py', "    if needs_look:\n        if look_id is None:", "    if needs_look:\n        if False:"),
+         ('plan.py', "        if not any(key[2] == look_id for key in f.looks):", "        if False:"),
+         ('plan.py', "    if look_id is not None and not any(key[2] == look_id for key in f.looks):", "    if False:")],
+        ['test_mobile.RecordsOnDevices.test_where_lines_needs_a_look_id_and_one_of_this_device']),
+    'device_where_lines_ignores_a_changed_screen': (
+        'skip the look_id recomputation: the rows moved since the look and the tap lands in the row that is now there',
+        [('mobile.py', "    if look_id_for(a, shown, x.device) != step['_look_id']:", "    if False:")],
+        ['test_mobile.RecordsOnDevices.test_the_screen_must_still_read_as_the_look_showed_it']),
+    'device_where_lines_guesses_among_several_rows': (
+        'tap the first of several rows that satisfy where.lines',
+        [('mobile.py', "    if len(matched) != 1 or len(shown_matches) != 1:", "    if not matched:"),
+         ('mobile.py', "    only = matched[0]\n", "    only = matched[0]\n    shown_matches = matched\n")],
+        ['test_mobile.RecordsOnDevices.test_several_or_no_matching_rows_tap_nothing_and_show_the_lines']),
+    'device_agent_never_bootstrapped': (
+        'leave the iOS agent install to the user: refuse mobile_device_agent_missing without installing',
+        [('mobile.py', "        self.installer(device)\n        self.installed.append(device)\n", "        raise MobileGap('mobile_device_agent_missing', 'install it yourself')\n")],
+        ['test_mobile.LookOnDevices.test_a_missing_ios_agent_is_installed_once_and_the_read_retried_once']),
+    'device_agent_install_repeated': (
+        'run the install again when the agent is still missing after it (a loop on a device that cannot have it)',
+        [('mobile.py', "            if gap.reason == 'mobile_device_agent_missing':\n                raise MobileGap('mobile_device_agent_missing', 'the iOS agent was installed but", "            if gap.reason == 'mobile_device_agent_missing':\n                self.installer(device)\n                raise MobileGap('mobile_device_agent_missing', 'the iOS agent was installed but")],
+        ['test_mobile.LookOnDevices.test_an_agent_still_missing_after_the_install_is_refused_after_exactly_one_retry']),
 }
 
 
