@@ -463,8 +463,8 @@
  },
  {
   "id": "CE-FACADE-011",
-  "status": "proposed",
-  "authority": "Maintainer request 2026-09-30 (#41): lower the tokens per task and the latency per call without losing a guarantee. Proposed; awaits the policy owner's approval like every CE that touches a budget file.",
+  "status": "accepted",
+  "authority": "Maintainer request 2026-09-30 (#41): lower the tokens per task and the latency per call without losing a guarantee. Accepted by the policy owner 2026-10-01.",
   "classification": "projection (response shaping, hint text, tool descriptions, observation settle) plus a new committed budget file computer_use/RESPONSE_BUDGET.json. Not a sketch change: observation, binding, refusal, same-record comparison and independent verification are the existing rules. No tool and no mandatory step is added to the default path (CE-FACADE-005); no CALL_BUDGET number moves.",
   "sketch_clause": "S4.1 (observation scope), S4.6 (independent verification)",
   "input_and_actual": "Measured through the real server tools on the captured Chrome trees (call_budget.measure_scenarios, now per call): the dominant token cost is not the responses (one to three kilobytes each) but the tools/list every session carries: do description 10.7 KB + schema 14.8 KB, look 3.6 + 1.7 KB, instructions 1.6 KB (about 32 KB). Per response: the 130-byte untrusted-text sentence rode on every response; refusal and deferral hints were up to 507 characters and restated the manual and the instructions' stop-and-ask rule; a plan's summary repeated the page heading, the window title and every control the look had just shown; the legacy observation listed twelve identical Book controls; trace_summary carried up to ten attempts. Latency: a first look that waited ACTIONS_PENDING_WAIT_S (2 s) for pressable buttons and then saw the same tree still paid SETTLE_DELAY_S and a third walk.",
