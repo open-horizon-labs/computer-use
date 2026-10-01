@@ -1,0 +1,381 @@
+{
+"source": "REAL Chrome AX (the committed form.ax.json capture, 2026-09-28: web content only, ancestors structure-only, tab strip and address bar synthetic) plus the intake-form controls found live in the A/B suite 2026-10-01 (experiments/surfaces-ab, runs/rerun-cu-2026-10-01/computer-use-form-*.transcript.jsonl): the Department <select> as AXPopUpButton (label Department, value = the displayed option) whose closed AXMenu lists only the selected AXMenuItem, and the checkbox as AXCheckBox (value 0/1) labelled Email me a copy of this request. Roles, labels and states are read from those transcripts' look output (controls Department / Choose one, toggles Choose one selected + the box unchecked, 5 AXPopUpButton in the window); frames and actions follow the real neighbours. NOT a raw Driver capture of those two controls: capture them from a live run when one is allowed and replace this file.",
+"task": "form_select_checkbox",
+"route": "/form",
+"window_title": "Volunteer Form capture-form",
+"window_bounds": {
+"height": 639.0,
+"width": 1028.0,
+"x": 10.0,
+"y": 706.0
+},
+"elements": [
+{
+"element_index": 0,
+"role": "AXWindow",
+"depth": 0
+},
+{
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 1,
+"element_index": 14,
+"enabled": true,
+"frame": {
+"h": 552.0,
+"w": 1028.0,
+"x": 10.0,
+"y": 793.0
+},
+"in_web_content": true,
+"label": "Volunteer Form capture-form",
+"parent_index": 0,
+"role": "AXWebArea",
+"selected": false
+},
+{
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 15,
+"enabled": true,
+"frame": {
+"h": 37.0,
+"w": 640.0,
+"x": 204.0,
+"y": 825.0
+},
+"in_web_content": true,
+"label": "Volunteer Form capture-form",
+"parent_index": 14,
+"role": "AXHeading",
+"selected": false,
+"value": "1"
+},
+{
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 3,
+"element_index": 16,
+"enabled": true,
+"frame": {
+"h": 37.0,
+"w": 441.0,
+"x": 204.0,
+"y": 825.0
+},
+"in_web_content": true,
+"label": "Volunteer Form capture-form",
+"parent_index": 15,
+"role": "AXStaticText",
+"selected": false,
+"value": "Volunteer Form capture-form"
+},
+{
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 17,
+"enabled": true,
+"frame": {
+"h": 19.0,
+"w": 75.0,
+"x": 204.0,
+"y": 883.0
+},
+"in_web_content": true,
+"label": "Full name",
+"parent_index": 14,
+"role": "AXStaticText",
+"selected": false,
+"value": "Full name"
+},
+{
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 18,
+"enabled": true,
+"frame": {
+"h": 22.0,
+"w": 147.0,
+"x": 279.0,
+"y": 883.0
+},
+"in_web_content": true,
+"label": "Full name",
+"parent_index": 14,
+"role": "AXTextField",
+"selected": false
+},
+{
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 19,
+"enabled": true,
+"frame": {
+"h": 19.0,
+"w": 106.0,
+"x": 204.0,
+"y": 921.0
+},
+"in_web_content": true,
+"label": "Email address",
+"parent_index": 14,
+"role": "AXStaticText",
+"selected": false,
+"value": "Email address"
+},
+{
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 20,
+"enabled": true,
+"frame": {
+"h": 22.0,
+"w": 147.0,
+"x": 310.0,
+"y": 921.0
+},
+"in_web_content": true,
+"label": "Email address",
+"parent_index": 14,
+"role": "AXTextField",
+"selected": false
+},
+{
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 21,
+"enabled": true,
+"frame": {
+"h": 19.0,
+"w": 89.0,
+"x": 204.0,
+"y": 958.0
+},
+"in_web_content": true,
+"label": "Postal code",
+"parent_index": 14,
+"role": "AXStaticText",
+"selected": false,
+"value": "Postal code"
+},
+{
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 22,
+"enabled": true,
+"frame": {
+"h": 22.0,
+"w": 148.0,
+"x": 292.0,
+"y": 958.0
+},
+"in_web_content": true,
+"label": "Postal code",
+"parent_index": 14,
+"role": "AXTextField",
+"selected": false
+},
+{
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 23,
+"enabled": true,
+"frame": {
+"h": 22.0,
+"w": 125.0,
+"x": 212.0,
+"y": 996.0
+},
+"in_web_content": true,
+"label": "Submit application",
+"parent_index": 14,
+"role": "AXButton",
+"selected": false
+},
+{
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 24,
+"enabled": true,
+"frame": {
+"h": 22.0,
+"w": 52.0,
+"x": 349.0,
+"y": 996.0
+},
+"in_web_content": true,
+"label": "Reset",
+"parent_index": 14,
+"role": "AXButton",
+"selected": false
+},
+{
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 25,
+"enabled": true,
+"frame": {
+"h": 22.0,
+"w": 58.0,
+"x": 413.0,
+"y": 996.0
+},
+"in_web_content": true,
+"label": "Cancel",
+"parent_index": 14,
+"role": "AXButton",
+"selected": false
+},
+{
+"element_index": 328,
+"parent_index": 0,
+"role": "AXTabGroup",
+"enabled": true
+},
+{
+"element_index": 329,
+"parent_index": 328,
+"role": "AXRadioButton",
+"label": "Fixture page - Memory usage - 90.0 MB",
+"enabled": true
+},
+{
+"element_index": 330,
+"parent_index": 0,
+"role": "AXTextField",
+"value": "127.0.0.1:8934/form?run=fixture",
+"enabled": true
+},
+{
+"actions": [
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 26,
+"enabled": true,
+"frame": {
+"h": 19.0,
+"w": 89.0,
+"x": 204.0,
+"y": 996.0
+},
+"in_web_content": true,
+"label": "Department",
+"parent_index": 14,
+"role": "AXStaticText",
+"selected": false,
+"value": "Department"
+},
+{
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 27,
+"enabled": true,
+"frame": {
+"h": 22.0,
+"w": 120.0,
+"x": 292.0,
+"y": 996.0
+},
+"in_web_content": true,
+"label": "Department",
+"parent_index": 14,
+"role": "AXPopUpButton",
+"selected": false,
+"value": "Choose one"
+},
+{
+"actions": [
+"AXCancel",
+"AXPick"
+],
+"depth": 3,
+"element_index": 28,
+"enabled": true,
+"in_web_content": true,
+"parent_index": 27,
+"role": "AXMenu",
+"selected": false
+},
+{
+"actions": [
+"AXPress"
+],
+"depth": 4,
+"element_index": 29,
+"enabled": true,
+"in_web_content": true,
+"label": "Choose one",
+"parent_index": 28,
+"role": "AXMenuItem",
+"selected": true
+},
+{
+"actions": [
+"AXPress",
+"AXShowMenu",
+"AXScrollToVisible"
+],
+"depth": 2,
+"element_index": 30,
+"enabled": true,
+"frame": {
+"h": 22.0,
+"w": 22.0,
+"x": 204.0,
+"y": 1034.0
+},
+"in_web_content": true,
+"label": "Email me a copy of this request",
+"parent_index": 14,
+"role": "AXCheckBox",
+"selected": false,
+"value": "0"
+}
+]
+}

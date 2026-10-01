@@ -26,6 +26,11 @@ from agent_display import AgentDisplay
 
 
 OBSERVE_RETRY_DELAYS = (0.5, 1.0)   # seconds before the 2nd and 3rd observation of a page that is not ready
+# A window the Driver lists but whose AX window it cannot resolve yet (live 2026-10-01: Calculator right after `open -g -a Calculator` answered
+# driver_snapshot_unavailable twice, and the agent gave up; in an earlier run the same look worked). A look waits for it: 0.5 + 1.0 + 1.5 = 3.0 s of
+# delays in total, and no attempt starts when its delay plus the Driver's own launch wait (twice DRIVER_LAUNCH_WAIT_MS) would pass LOOK_WAIT_MAX_S.
+# After the last try the same typed refusal is raised unchanged. Looks only (wait_ready): an action never waits here.
+AX_WINDOW_RETRY_DELAYS = (0.5, 1.0, 1.5)
 MEMORY_READOUT = re.compile(r'(Memory usage - )[\d.,]+\s*[KMGT]?B',re.I)
 # Driver 0.31 waits INSIDE get_window_state for a macOS app that is still launching (up to timeout_ms, then the AX walk gets another timeout_ms);
 # past that the snapshot is EMPTY, truncated, degraded_reason ax_app_launching, with no element tokens. The facade pins timeout_ms to the Driver's
@@ -83,7 +88,7 @@ REGION_CANDIDATE_LIMIT = 18  # the generic chooser's capacity (sketch S4.5); nev
 
 
 MUTATING_TOOLS = frozenset({'click', 'double_click', 'right_click', 'type_text', 'drag', 'scroll', 'hotkey', 'press_key',
-                              'invoke_menu', 'set_window_frame', 'browser_click', 'browser_type', 'browser_set_input_files'})
+                              'invoke_menu', 'set_window_frame', 'set_value', 'browser_click', 'browser_type', 'browser_set_input_files'})
 READ_TOOLS = frozenset({'get_window_state', 'list_windows', 'get_browser_state', 'parse_visual_regions'})  # the only calls a lost Driver session may re-run (#31)
 
 
@@ -289,34 +294,47 @@ class Facade:
         began = self.clock();waited_idle = False;reason = None;pending_count = None
         for attempt in range(len(delays) + 1):
             last = attempt == len(delays)
-            try:
-                result = self._observe_once(pid, window_id, timeout)
-            except Gap as error:
-                if last or not str(error).startswith('driver_snapshot_unavailable'):
-                    raise
-            else:
-                reason = self._not_ready(result) or ('thin_page' if self._thin_page(result['snapshot']) else None)
-                if last or reason is None:
-                    if attempt:
-                        self.event('observe_retry', attempts=attempt, ready=reason is None, reason=reason)
-                    if wait_ready and reason is None:
-                        key = (pid, window_id)
-                        # a window first seen, or a new page in it (its title changed): the tree may still be growing
-                        if key not in self._settled_titles or self._settled_titles[key] != result.get('title'):
-                            # CE-FACADE-011: an actions_pending wait ACTIONS_PENDING_WAIT_S of idle already showed the same tree twice (same element count
-                            # before and after the idle gap) and now every page button is pressable: that is the settle proof, so the look does not pay
-                            # SETTLE_DELAY_S and a third walk on top of the 2 s wait. A count that moved still settles.
-                            if pending_count is None or pending_count != len(result.get('elements') or []):
-                                result = self._settled(pid, window_id, timeout, result, began)
-                            else:self.event('observe_settled', extra_observations=0, elements=pending_count, proof='actions_pending_wait')
-                            self._settled_titles[key] = result.get('title')
-                    return result
+            result = self._observe_resolved(pid, window_id, timeout, began) if wait_ready else self._observe_once(pid, window_id, timeout)
+            reason = self._not_ready(result) or ('thin_page' if self._thin_page(result['snapshot']) else None)
+            if last or reason is None:
+                if attempt:
+                    self.event('observe_retry', attempts=attempt, ready=reason is None, reason=reason)
+                if wait_ready and reason is None:
+                    key = (pid, window_id)
+                    # a window first seen, or a new page in it (its title changed): the tree may still be growing
+                    if key not in self._settled_titles or self._settled_titles[key] != result.get('title'):
+                        # CE-FACADE-011: an actions_pending wait ACTIONS_PENDING_WAIT_S of idle already showed the same tree twice (same element count
+                        # before and after the idle gap) and now every page button is pressable: that is the settle proof, so the look does not pay
+                        # SETTLE_DELAY_S and a third walk on top of the 2 s wait. A count that moved still settles.
+                        if pending_count is None or pending_count != len(result.get('elements') or []):
+                            result = self._settled(pid, window_id, timeout, result, began)
+                        else:self.event('observe_settled', extra_observations=0, elements=pending_count, proof='actions_pending_wait')
+                        self._settled_titles[key] = result.get('title')
+                return result
             pending_count = len(result.get('elements') or []) if reason == 'actions_pending' else None
             if reason == 'actions_pending' and self.clock() - began + ACTIONS_PENDING_WAIT_S + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 <= LOOK_WAIT_MAX_S:
                 waited_idle = True  # every actions_pending retry waits idle (a quick re-poll can land in a new episode)
                 self.sleep(ACTIONS_PENDING_WAIT_S)
             else:
                 self.sleep(delays[attempt])
+
+    def _observe_resolved(self, pid, window_id, timeout, began):
+        """_observe_once, waiting out a listed window whose AX window is not resolved yet (driver_snapshot_unavailable): bounded by AX_WINDOW_RETRY_DELAYS and
+        LOOK_WAIT_MAX_S, read-only. Any other failure, and the last unavailable one, is raised as it came."""
+        for n in range(len(AX_WINDOW_RETRY_DELAYS) + 1):
+            try:
+                result = self._observe_once(pid, window_id, timeout)
+            except Gap as error:
+                if n == len(AX_WINDOW_RETRY_DELAYS) or not str(error).startswith('driver_snapshot_unavailable'):
+                    raise
+                delay = AX_WINDOW_RETRY_DELAYS[n]
+                if self.clock() - began + delay + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 > LOOK_WAIT_MAX_S:
+                    raise
+                self.sleep(delay)
+                continue
+            if n:
+                self.event('observe_retry', attempts=n, ready=True, reason='ax_window_unresolved')
+            return result
 
     def _settled(self, pid, window_id, timeout, result, began):
         """The ready observation once the tree stops growing (see SETTLE_DELAY_S): read-only, bounded by count and by LOOK_WAIT_MAX_S."""

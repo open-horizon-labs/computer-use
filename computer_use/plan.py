@@ -390,6 +390,19 @@ HINTS = {
     'destructive_control': 'The control of step %(n)d is destructive and goal text never authorizes it; nothing was clicked. If the user asked for it, call do with allow_destructive=<the exact control label> on that step.',
     'negative_condition_over_cut_lines': 'Step %(n)d uses not_contains/neq over records with cut lines; absence cannot be shown. Use eq/contains, or look with focus or larger max_lines, then do.',
     'selected_record_has_hidden_text': 'The record of step %(n)d had lines cut in the look (evidence.hidden_lines); nothing was clicked. Look with larger max_lines and line_chars, or add accept_hidden_text=true to that step.',
+    'select_ambiguous': 'Several selects carry that label; nothing was changed. Call look, then call do with the exact label of the one you mean (or its group label).',
+    'select_option_not_offered': 'That text is not an option of the select (the message lists them); nothing was changed. Call do again with text set to one option label exactly as the page shows it.',
+    'select_disabled': 'The select is disabled right now; nothing was changed. Call look to see why (a field that must come first?), or tell the user it is unavailable.',
+    'select_refused': 'The Driver would not choose that option (see message); nothing was changed. Call look to read the select, then do with the exact option label, or tell the user.',
+    'select_not_applied': 'The Driver gave no answer; the option may or may not be chosen. Call look and read what the select shows before any retry; never repeat the step blindly.',
+    'select_unverified': 'The select could not be read again after choosing. Call look and read what it shows before any retry; never repeat the step blindly.',
+    'select_value_unchanged': 'The Driver accepted the choice but the select still shows its old value; nothing else was tried. Call look to read it, then tell the user or try once with the exact label.',
+    'select_value_differs': 'The select shows another value than the option you asked for (see message). Call look to read it; do not repeat the step blindly, tell the user if it is wrong.',
+    'checkbox_ambiguous': 'Several checkboxes carry that label; nothing was pressed. Call look, then call do with the exact label of the one you mean.',
+    'checkbox_disabled': 'The checkbox is disabled or not pressable right now; nothing was pressed. Call look to see why, or tell the user it is unavailable.',
+    'checkbox_refused': 'The checkbox was not pressed (see message); nothing was changed. Call look, then call do again from this step.',
+    'checkbox_not_flipped': 'The press was delivered but the checkbox state did not change. Do not press again blindly: call look to read its state, then tell the user or retry once.',
+    'checkbox_unverified': 'The checkbox could not be read again after the press. Call look and read its state before any retry; never repeat the step blindly.',
     'toggle_state_unseen': 'Step %(n)d flips a checkbox, radio or switch and the plan has no look_id that saw its state; nothing was clicked. Call look, then do with its look_id and an expect naming the new state.',
     'confirm_dialog_unexpected_text': 'The dialog text differs from your dialog_text (dialog.lines is the ACTUAL text); the earlier click is done. If it is the right dialog, press a dialog.controls label with expect; else stop.',
     'pages_incomplete': 'Some pages of step %(n)d were not read (steps[].pages gives each verdict); the others are there with their look_id, closed. Report the failures, or call do with read_pages for just those urls.',
@@ -591,6 +604,12 @@ def resolve_browser_window(f, step, ctx, title):
         ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
 
 
+def form_candidate(kind, step):
+    """A type or press step that may name a select or a checkbox (forms.py). A press whose expect is page text keeps the ordinary path: that text is its proof."""
+    import forms
+    return bool(step.get('control')) and step['where_kind'] is None and (kind == 'type' or (kind == 'press' and (step.get('expect') is None or forms.want_state(step['expect']) is not None)))
+
+
 def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect, single):
     from core import Gap
     def refuse(gap):
@@ -785,6 +804,42 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             if not ok:
                 break
             continue
+        if form_candidate(kind, step):
+            # A select (type: text = the exact option label) or a checkbox (press: its state is the proof) of a web form, see forms.py. None = the control is
+            # neither exactly one select nor exactly one checkbox: the ordinary path below decides, as before.
+            import forms
+            from core import Gap
+            try:
+                if ctx['pid'] is None:
+                    found = f.windows(title)['windows']
+                    if len(found) != 1:
+                        raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
+                    ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+                    window = {'pid': ctx['pid'], 'window_id': ctx['window_id']}
+                form = (forms.select(f, ctx['pid'], ctx['window_id'], step['control'], step.get('text'))
+                        if kind == 'type' else forms.toggle(f, ctx['pid'], ctx['window_id'], step['control'], step.get('expect'), spec['goal'], look_id))
+            except Gap as gap:
+                reason = str(gap).split(':', 1)[0]
+                entry = {'n': n, 'do': kind, 'status': 'refused', 'reason': reason, 'message': lk.safe_message(reason, str(gap)), 'ms': round((f.clock() - began) * 1000)}
+                failed = {'n': n, 'reason': reason, 'status': 'refused'}
+                entries.append(entry)
+                break
+            if form is not None:
+                status = form['status']
+                entry = {'n': n, 'do': kind, 'status': status, 'ms': round((f.clock() - began) * 1000)}
+                for key in ('reason', 'selected', 'verification', 'shown', 'state', 'route', 'options'):
+                    if form.get(key):
+                        entry[key] = form[key]
+                if form['delivery'] != 'none':
+                    delivery = 'delivered' if form['delivery'] == 'delivered' or delivery == 'delivered' else 'uncertain'
+                if status != 'done':
+                    entry['message'] = lk.safe_message(form.get('reason'), form.get('message'))
+                    failed = {'n': n, 'reason': form['reason'], 'status': status}
+                entries.append(entry)
+                carry['before'], carry['identity'] = None, None
+                if status != 'done':
+                    break
+                continue
         f.prefix_control = step.get('control_match') == 'prefix'
         f.foreground_ok = step.get('allow_foreground') is True  # this step only
         try:
