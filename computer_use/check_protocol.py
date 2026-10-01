@@ -49,6 +49,10 @@ async def navigation_steps(s,do):
   assert out['steps'] and out['steps'][0]['do']==step['do'],(step,out)
   assert out.get('reason')!='bad_request' and out['steps'][0].get('reason')!='bad_request',(step,out)
   assert out['steps'][0]['status']!='done' or step['do']=='read_pages',(step,out)
+ assert {'files','control'}<=props,sorted(props)
+ res=await s.call_tool('do',{'goal':'Upload the CV','title':'Demo','expect':None,'steps':[{'do':'upload','files':['/nonexistent-dir/cv.pdf'],'control':'f','expect':None}]})
+ assert not res.isError,res.content[0].text  # the real schema accepts upload; the file check refuses it before any Driver call
+ assert json.loads(res.content[0].text).get('reason')=='upload_file_invalid',res.content[0].text
  bad=await s.call_tool('do',{'goal':'x','title':'Demo','expect':None,'steps':[{'do':'goto','uri':'https://clinic.example/booking','expect':None}]})
  assert bad.isError,'an unknown step key must still be rejected by the schema'
 async def advanced_mode():

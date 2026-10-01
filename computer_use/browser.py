@@ -5,7 +5,9 @@ user's own browser profile, and a navigation counts only when the tab's fresh sn
 attach (the existing-profile grant, setup) is returned as permission_required naming what is missing: it is never rerouted to another
 browser or profile. DOM-first observation and multi-page reads are slice 2.
 """
+import os
 import re
+import stat
 from urllib.parse import urlsplit
 
 LOGIN_PATH = re.compile(r'(^|/)(sign[-_]?in|log[-_]?in|signin|login|auth|sso|oauth2?|accounts?/(login|signin))(/|$|\.)', re.I)
@@ -475,3 +477,99 @@ def read_pages(f, pid, window_id, urls, fields=None, budget_s=READ_PAGES_BUDGET_
             else:
                 f.opened_tabs = [t for t in getattr(f, 'opened_tabs', []) if t['window'] != (pid, window_id)] + prior
     return pages
+
+
+# ---- upload (#5 workaround): browser_set_input_files assigns local files to ONE exact live <input type=file> over CDP; no native picker ----
+# Measured live 2026-10-01: a default get_browser_state snapshot lists refs [{frame, node:'input', label:'id=f type=file', ref:'p139:1'}, ...]; a ref
+# is invalidated by ANY newer snapshot of the same tab, so the snapshot is taken immediately before the set and nothing is taken between. The Driver
+# rejects symlinks and non-regular files and never returns paths; the facade checks first and never echoes a path beyond its basename.
+
+UPLOAD_MAX_FILES = 32
+UPLOAD_LIST_IDS = 10
+
+
+def check_upload_files(files):
+    """The plan's own local files: 1..32 absolute paths of existing regular files that are not symlinks. Returns the list. Raises core.Gap
+    (bad_request for the shape, upload_file_invalid for a path); a message names a file by its basename only, never by its path."""
+    if not isinstance(files, list) or not 1 <= len(files) <= UPLOAD_MAX_FILES:
+        raise _gap('bad_request: files must be a list of 1 to %d absolute file paths' % UPLOAD_MAX_FILES)
+    for index, path in enumerate(files, 1):
+        if not isinstance(path, str) or not path or '\0' in path or len(path) > 4096:
+            raise _gap('upload_file_invalid: file %d is not a usable path string' % index)
+        name = os.path.basename(path)[:80] or 'file %d' % index
+        if not os.path.isabs(path):
+            raise _gap('upload_file_invalid: %s is not an absolute path' % name)
+        try:
+            mode = os.lstat(path).st_mode
+        except OSError:
+            raise _gap('upload_file_invalid: %s does not exist or cannot be read' % name)
+        if stat.S_ISLNK(mode):
+            raise _gap('upload_file_invalid: %s is a symbolic link; give the real file' % name)
+        if not stat.S_ISREG(mode):
+            raise _gap('upload_file_invalid: %s is not a regular file' % name)
+    return list(files)
+
+
+def file_inputs(snapshot):
+    """[{ref, id, name}] of the <input type=file> refs of a default snapshot (node input, 'type=file' in the label), in the Driver's order."""
+    out = []
+    for item in snapshot.get('refs') or []:
+        if not isinstance(item, dict) or item.get('node') != 'input' or not item.get('ref') or not isinstance(item.get('label'), str):
+            continue
+        tokens = item['label'].split()
+        if 'type=file' not in tokens:
+            continue
+        pick = lambda key: next((t[len(key) + 1:] for t in tokens if t.startswith(key + '=')), None)
+        out.append({'ref': item['ref'], 'id': pick('id'), 'name': pick('name')})
+    return out
+
+
+def pick_input(inputs, control):
+    """The one file input to use: the only one on the page (no control), or exactly the one whose id (else name) is `control`. Raises core.Gap."""
+    if not inputs:
+        raise _gap('upload_no_file_input: the page has no file input the Driver can set; it may open a native file picker, which cannot be acted on (#5)')
+    if control is None and len(inputs) == 1:
+        return inputs[0]
+    chosen = [i for i in inputs if control is not None and i['id'] == control] or [i for i in inputs if control is not None and i['name'] == control]
+    if len(chosen) == 1:
+        return chosen[0]
+    ids = [i['id'] or ('name=' + i['name'] if i['name'] else '(no id)') for i in inputs][:UPLOAD_LIST_IDS]
+    raise _gap('upload_input_ambiguous: the page has %d file inputs%s; control must be exactly one of their ids: %s' % (
+        len(inputs), '' if control is None else ' and none (or several) match control %r' % control[:40], ', '.join(x[:40] for x in ids)))
+
+
+def upload(f, pid, window_id, files, control=None):
+    """Assign the plan's local files to one exact live file input of the window's active tab. Returns {'status': 'ok', 'file_count': n}; raises core.Gap.
+
+    Order, each step exact: check the files on our side; bind the tab (as goto does); take a FRESH default snapshot (refs die with any newer
+    snapshot, so none is taken between it and the set); pick the one input; set. Done only on the Driver's own count matching ours; whether
+    the page took the files is the step's expect, read independently by the plan. Only the plan's own `files` are ever sent: never a path
+    that came from page text. A Driver refusal to attach is permission_required, never another browser or profile."""
+    from core import Gap as CoreGap, DriverCallFailed
+    files = check_upload_files(files)
+    if control is not None and (not isinstance(control, str) or not control.strip() or len(control) > 200):
+        raise _gap("bad_request: control must be the file input's id or name as the page shows it")
+    target, tab = bind(f, pid, window_id)
+    try:
+        snapshot = _call(f, 'get_browser_state', {'target_id': target, 'tab_id': tab})
+    except DriverCallFailed:
+        raise _gap('upload_failed: the page could not be read to find its file input; nothing was sent')
+    except CoreGap as error:
+        raise _upload_refused(_refusal_code(error), "read the page's file inputs")
+    chosen = pick_input(file_inputs(snapshot), control)
+    try:
+        value = _call(f, 'browser_set_input_files', {'target_id': target, 'tab_id': tab, 'ref': chosen['ref'], 'files': files})
+    except DriverCallFailed:
+        raise _gap('upload_failed: the Driver did not answer the file assignment; the files may have been set, check the page before any retry')
+    except CoreGap as error:
+        raise _upload_refused(_refusal_code(error), 'set the files')
+    if not isinstance(value, dict) or value.get('status') != 'ok' or value.get('file_count') != len(files):
+        raise _gap('upload_unconfirmed: the Driver did not confirm all %d files; the page may hold some of them, check it before any retry' % len(files))
+    return {'status': 'ok', 'file_count': len(files)}
+
+
+def _upload_refused(code, action):
+    if code in PERMISSION_CODES:
+        return _permission(code, action)
+    safe = code if isinstance(code, str) and re.fullmatch(r'[a-z0-9_]{1,60}', code) else 'refused'
+    return _gap('upload_refused: the Driver refused to %s (%s); nothing else was tried' % (action, safe))

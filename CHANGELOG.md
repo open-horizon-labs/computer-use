@@ -5,6 +5,7 @@ Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may 
 ## 0.1.2 (unreleased)
 
 - Linux: first real captures (Chrome for Testing 154 on Xvfb, Cua Driver 0.31.0 `linux-x86_64`): `computer_use/fixtures/linux/` and the measured role, action, web-root and geometry facts with exact commands in `docs/LINUX.md`. Capture and docs only; no runtime change (#37).
+- Plan step `upload {files, control?, expect}`: the workaround for web file pickers (#5). The Driver's `browser_set_input_files` assigns your local files to one exact live `<input type=file>` over CDP, no native picker. A fresh default snapshot is taken immediately before the set (refs die with any newer snapshot); one file input is used, several need `control` to equal an input id exactly (`upload_input_ambiguous` lists ids), none is `upload_no_file_input`. Files must be absolute, existing, regular and not symlinks, at most 32 (`upload_file_invalid`; only basenames are ever echoed). Mutating: only the step's own `files` are sent, never a path from page text. Done only when `expect` is observed on a fresh read. No new tool and no change to the call budget.
 
 ## 0.1.1 (2026-10-01)
 

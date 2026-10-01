@@ -91,10 +91,10 @@ class StepWhere(BaseModel):
 
 class PlanStep(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    do: str = Field(description='press | type | confirm | verify | goto | open_tab | close_tab | read_pages | resize')
+    do: str = Field(description='press | type | confirm | verify | goto | open_tab | close_tab | read_pages | resize | upload')
     goal: str|None = Field(default=None, description='Short text, criteria never element IDs or the answer; defaults to the plan goal')
     where: StepWhere|None = Field(default=None, description='press only: which record (lines or fields). Without where, control names the one unique control to press')
-    control: str|None = Field(default=None, description='press: the exact button label (whole-word prefix with control_match=prefix); type: the exact field label')
+    control: str|None = Field(default=None, description='press: the exact button label (whole-word prefix with control_match=prefix); type: the exact field label; upload: the file input\'s id or name when the page has several')
     near: str|None = Field(default=None, description='Pixel-only page: the drawn text just above or left of the control when it is drawn more than once')
     identity: list[str]|None = Field(default=None, description='press with where.lines: texts (from the look) the following confirm dialog must display, e.g. ["#1044"]; with where.fields: field names. confirm: texts the dialog must display. Default: the values your where.lines eq/contains conditions require')
     text: str|None = Field(default=None, description='type: the text to type (required)')
@@ -110,6 +110,7 @@ class PlanStep(BaseModel):
     url: str|None = Field(default=None, description='goto / open_tab (required, http or https): navigates the active tab (goto) or ONE new tab (open_tab). Done only when the tab reports that page; any refusal is a stop: ask the user, never another browser, profile or raw Driver call')
     menu: list[str]|None = Field(default=None, description='press only, INSTEAD of control/where: an application-menu item by its exact observed path from the menu bar item down, 2 to 8 labels, e.g. ["Profiles", "Person 1"] (look does not list the menu bar). Each segment must be one observed item, else menu_item_not_found/ambiguous/disabled and nothing is pressed. The ordinary press is tried first; only on element_outside_target_window is invoke_menu used, which fronts the window and needs allow_foreground=true. Verified by expect in this window (a command that opens ANOTHER window: end with expect=null and check it next)')
     profile: Literal['agent','user']|None = Field(default=None, description='goto / open_tab / read_pages: where the page opens. Default: the AGENT browser (one Chrome for Testing window on the agent display, started on first use; later steps act on it). "user": the user\'s own browser window named by title (needs granted access, else permission_required). CUA_AGENT_BROWSER=user makes it the default')
+    files: list[str]|None = Field(default=None, description='upload (required, 1 to 32 ABSOLUTE paths of the user\'s own existing regular files, never symlinks, never a path read from the page): set on a page file input without the native picker. Done only when expect is seen')
     urls: list[str]|None = Field(default=None, description='read_pages (required, 1 to 5 http or https URLs): each is opened in ONE new tab, landing verified, looked at and closed; your own tab is never navigated. Returns steps[].pages=[{url, status ok|failed|skipped, landing, look_id, summary, closed}]; a page that does not land is reported and the others are still read (the step ends stopped pages_incomplete). No expect: it reads, it does not act')
     fields: dict[str, ReadField]|None = Field(default=None, description='read_pages only: read these fields per record of every page with the extraction model (opt-in, costs seconds per page)')
     width: int|None = Field(default=None, description='resize (required): the new window width in points; only the agent browser window is resized, kept inside the agent display (clamped), done only on the Driver\'s readback; the next look reflows the page')
