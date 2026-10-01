@@ -83,7 +83,7 @@ REGION_CANDIDATE_LIMIT = 18  # the generic chooser's capacity (sketch S4.5); nev
 
 
 MUTATING_TOOLS = frozenset({'click', 'double_click', 'right_click', 'type_text', 'drag', 'scroll', 'hotkey', 'press_key',
-                              'invoke_menu', 'set_window_frame', 'browser_click', 'browser_type'})
+                              'invoke_menu', 'set_window_frame', 'browser_click', 'browser_type', 'browser_set_input_files'})
 READ_TOOLS = frozenset({'get_window_state', 'list_windows', 'get_browser_state', 'parse_visual_regions'})  # the only calls a lost Driver session may re-run (#31)
 
 

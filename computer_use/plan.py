@@ -19,9 +19,9 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu', 'profile', 'width', 'height'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu', 'profile', 'width', 'height', 'files'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
-DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages', 'resize')
+DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages', 'resize', 'upload')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
 MAX_CONDITIONS = 6
 MAX_VALUE_CHARS = 60
@@ -135,7 +135,8 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                  'open_tab': {'do', 'goal', 'url', 'expect', 'profile'},
                  'close_tab': {'do', 'goal', 'expect', 'allow_foreground'},
                  'read_pages': {'do', 'goal', 'urls', 'fields', 'profile'},
-                 'resize': {'do', 'goal', 'width', 'height', 'profile'}}[kind]
+                 'resize': {'do', 'goal', 'width', 'height', 'profile'},
+                 'upload': {'do', 'goal', 'files', 'control', 'expect', 'profile'}}[kind]
         if 'profile' in step and step['profile'] not in ('agent', 'user'):
             raise _gap('bad_request: %s profile is "agent" (the default: the agent browser) or "user" (your own browser profile)' % at)
         extra = sorted(set(step) - takes)
@@ -166,6 +167,17 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 step['url'] = browser.check_url(step['url'])
             except Exception as error:
                 raise _gap(str(error).replace('bad_request: ', 'bad_request: %s ' % at, 1))
+        if kind == 'upload':
+            import browser
+            if 'files' not in step:
+                raise _gap('bad_request: %s (upload) needs files: 1 to %d absolute paths of local files' % (at, browser.UPLOAD_MAX_FILES))
+            try:
+                step['files'] = browser.check_upload_files(step['files'])
+            except Exception as error:
+                text = str(error)
+                raise _gap(text.replace('bad_request: ', 'bad_request: %s ' % at, 1) if text.startswith('bad_request') else text)
+            if 'control' in step and (not isinstance(step['control'], str) or not step['control'].strip() or len(step['control']) > 200):
+                raise _gap("bad_request: %s (upload) control is the file input's id or name as the page shows it" % at)
         if kind == 'resize':
             import agent_browser
             for key in ('width', 'height'):
@@ -416,6 +428,13 @@ HINTS = {
     'resize_refused': 'The Driver refused to resize the agent window (see message); nothing else was tried. Call `look` to read the window as it is, or tell the user what the message says.',
     'resize_unverified': 'The Driver did not confirm the new size, or its readback differs; the window may be resized. Call `look` to see the page and its width now; do not repeat the resize blindly.',
     'resize_outside_display': 'After resizing the window is not wholly inside the agent display; the old size was restored if possible. Call `look` to check the window, then call `do` with a smaller width and height.',
+    'upload_file_invalid': "A file of the upload step is not an absolute path of an existing regular file (not a symlink); nothing was sent. Call do again with the real absolute paths of the user's own files, at most 32.",
+    'upload_input_ambiguous': 'The page has several file inputs (the message lists their ids); nothing was sent. Call do again with control set to exactly one id, or call look to see which control the page shows.',
+    'upload_no_file_input': 'The page has no file input the Driver can set; nothing was sent. It may open a native picker, which cannot be acted on (#5): call look to read the page, never click the upload button blindly.',
+    'upload_refused': 'The Driver refused to set the files (see message); nothing was sent. Call look to read the page, then call do with the upload step once more, or tell the user what the message says.',
+    'upload_failed': 'The Driver gave no answer; the files may or may not be set. Call look and read the page for the files before any retry; never repeat the upload step blindly.',
+    'upload_unconfirmed': 'The Driver did not confirm every file; some may be set. Call look and read the page for the files before any retry; never repeat the upload step blindly.',
+    'upload_unverified': 'The files were delivered but no expect was given, so nothing was checked. Call look to see the page, or do with a verify step naming text shown once set. Do not repeat the upload.',
     'navigate_refused': 'The Driver refused to navigate (see message); nothing else was tried. Do not retry the same goto: call `do` with a different url, or tell the user what the message says.',
     'navigate_failed': 'The page did not load (an HTTP error or a network failure); nothing else was tried. Check the url, then call `do` with the goto step once more or tell the user.',
     'navigated_elsewhere': 'The tab shows a different page than the url of step %(n)d (the message gives both); nothing was clicked. Call `look` to read where it is, or call `do` with the goto step for the url you mean.',
@@ -537,6 +556,7 @@ def _fit(result):
 RESIZE_UNCERTAIN = ('resize_unverified', 'resize_outside_display')  # the window may have changed: not a clean refusal
 
 
+UPLOAD_REFUSALS = ('upload_file_invalid', 'upload_input_ambiguous', 'upload_no_file_input', 'upload_refused')  # nothing was sent
 AGENT_REFUSALS = ('agent_browser_unavailable', 'agent_display_unavailable', 'agent_browser_misplaced')  # refused before anything was opened or navigated
 
 
@@ -582,7 +602,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             break
         began = f.clock()
         kind = step['do']
-        spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify', 'goto': 'verify', 'open_tab': 'verify', 'close_tab': 'verify', 'read_pages': 'verify', 'resize': 'verify'}[kind],
+        spec = {'goal': step.get('goal') or goal, 'operation': {'press': 'click', 'confirm': 'click', 'type': 'type_text', 'verify': 'verify', 'goto': 'verify', 'open_tab': 'verify', 'close_tab': 'verify', 'read_pages': 'verify', 'resize': 'verify', 'upload': 'verify'}[kind],
                 'control': step.get('control'), 'text': step.get('text'), 'near': step.get('near'), 'expect': step.get('expect'),
                 'accept_unknown': step.get('accept_unknown'), 'treat_as_match': step.get('treat_as_match'), 'records': None}
         channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive'), 'look_id': look_id}
@@ -650,7 +670,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 failed = {'n': n, 'reason': result['reason'], 'status': status}
                 break
             continue
-        if kind in ('goto', 'open_tab', 'close_tab'):
+        if kind in ('goto', 'open_tab', 'close_tab', 'upload'):
             # CE-FACADE-007: navigate the pinned window's active tab; done only when the tab reports the requested page and, when given,
             # expect is visible on a fresh observation. A refusal to attach is permission_required, never another browser.
             import browser
@@ -664,6 +684,10 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 if kind == 'close_tab':
                     browser.close_tab(f, ctx['pid'], ctx['window_id'], allow_foreground=step.get('allow_foreground') is True)
                     page = {'url': '', 'title': ''}
+                elif kind == 'upload':
+                    # Only this step's own `files` are sent (never a path read from the page). Done only when the expect is seen on a fresh read.
+                    browser.upload(f, ctx['pid'], ctx['window_id'], step['files'], step.get('control'))
+                    page = {'url': '', 'title': ''}
                 else:
                     page = (browser.open_tab if kind == 'open_tab' else browser.navigate)(f, ctx['pid'], ctx['window_id'], step['url'])['page']
                 result = {'status': 'done' if kind == 'close_tab' else 'delivered_unverified', 'delivery': 'delivered'}
@@ -676,8 +700,8 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                     result['page'] = {'url': page['url'][:200], 'title': page['title'][:120]}
             except Gap as gap:
                 reason = str(gap).split(':', 1)[0]
-                result = {'status': 'refused' if reason in AGENT_REFUSALS + ('permission_required', 'bad_request', 'tab_not_opened_by_facade', 'foreground_required', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'navigate_refused', 'navigate_failed') else 'failed', 'reason': reason, 'message': str(gap),
-                          'delivery': 'none' if reason in AGENT_REFUSALS + ('permission_required', 'tab_not_opened_by_facade', 'foreground_required', 'bad_request', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'tab_strip_changed') else 'unknown'}
+                result = {'status': 'refused' if reason in AGENT_REFUSALS + ('permission_required', 'bad_request', 'tab_not_opened_by_facade', 'foreground_required', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'navigate_refused', 'navigate_failed') + UPLOAD_REFUSALS else 'failed', 'reason': reason, 'message': str(gap),
+                          'delivery': 'none' if reason in AGENT_REFUSALS + ('permission_required', 'tab_not_opened_by_facade', 'foreground_required', 'bad_request', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'tab_strip_changed') + UPLOAD_REFUSALS else 'unknown'}
             status = result['status']
             entry = {'n': n, 'do': kind, 'status': {'deferred': 'stopped'}.get(status, status), 'ms': round((f.clock() - began) * 1000)}
             for key in ('reason', 'page'):
@@ -813,6 +837,8 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         title = (response.get('summary') or {}).get('title')
         named = 'title=<summary.title>' if not title else 'title=%s' % json.dumps(title)
         response['hint'] = 'The navigation was delivered but no expect was given, so nothing was checked. Call look(%s) to see it, or call do(%s, steps=[{do:"verify", expect:<page text that should be visible now>}]) to check. Do not repeat the goto.' % (named, named)
+    elif status == 'delivered_unverified' and entries[-1]['do'] == 'upload':
+        response['hint'] = HINTS['upload_unverified']
     elif status == 'delivered_unverified' and entries[-1].get('reason') == 'type_incomplete_unverified':
         response['hint'] = HINTS['type_incomplete_unverified']
     elif status == 'delivered_unverified':

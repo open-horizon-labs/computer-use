@@ -2,6 +2,10 @@
 
 Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may still change in minor releases.
 
+## 0.1.2 (unreleased)
+
+- Plan step `upload {files, control?, expect}`: the workaround for web file pickers (#5). The Driver's `browser_set_input_files` assigns your local files to one exact live `<input type=file>` over CDP, no native picker. A fresh default snapshot is taken immediately before the set (refs die with any newer snapshot); one file input is used, several need `control` to equal an input id exactly (`upload_input_ambiguous` lists ids), none is `upload_no_file_input`. Files must be absolute, existing, regular and not symlinks, at most 32 (`upload_file_invalid`; only basenames are ever echoed). Mutating: only the step's own `files` are sent, never a path from page text. Done only when `expect` is observed on a fresh read. No new tool and no change to the call budget.
+
 ## 0.1.1 (2026-10-01)
 
 - Android emulator verified live on a headless emulator (`emulator -avd <name> -no-window`): `look`, a verified press and a verified back through `device=<AVD name>`. Docs and the `bad_request` message now say a running emulator is addressed by its AVD name as `look(device="list")` shows it, not by its adb serial; `doctor` suggests the headless start.
