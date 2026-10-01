@@ -1,4 +1,4 @@
-"""Mutation checks for option B (look, then plan; CE-FACADE-005): apply each tempting WRONG patch to a temporary copy of facade/ and prove that
+"""Mutation checks for option B (look, then plan; CE-FACADE-005): apply each tempting WRONG patch to a temporary copy of computer_use/ and prove that
 the named tests FAIL BY ASSERTION (a test that errors for an unrelated reason does not count as catching it). Exit nonzero if any wrong patch
 survives or is only caught by an error.
 
@@ -23,7 +23,7 @@ MUTATIONS = {
         ['test_look.LookReal.test_the_default_look_calls_no_model_and_no_reader', 'test_look.LookFields.test_without_fields_the_reader_is_never_called']),
     'silent_truncation': (
         'slice the records and say nothing about what was cut',
-        [('look.py', "'truncated': {'records': extras['records_over_cap'], 'lines': lost, 'bytes': bytes_cut}", "'truncated': {'records': 0, 'lines': 0, 'bytes': 0}")],
+        [('look.py', "trunc = {'records': extras['records_over_cap'], 'lines': lost, 'bytes': bytes_cut}", "trunc = {'records': 0, 'lines': 0, 'bytes': 0}")],
         ['test_look.LookShapes.test_a_100_row_list_is_bounded_and_every_cut_is_counted_never_silent',
          'test_look.LookShapes.test_max_bytes_bounds_the_response_and_reports_the_records_it_dropped',
          'test_look.LookShapes.test_long_and_many_lines_are_cut_visibly_and_counted']),
@@ -35,11 +35,11 @@ MUTATIONS = {
          ('core.py', "                if lines_where['look'] is None:\n                    raise Gap(", "                if False:\n                    raise Gap("),
          ('plan.py', "    look = spec['look']\n    opts = look.get('opts', lk.DEFAULT_OPTS)", "    look = spec['look'] or {'terms': [], 'n': 10 ** 6}\n    opts = look.get('opts', lk.DEFAULT_OPTS)"),
          ('plan.py', "    if not same:\n        return {'defer': {'reason': 'page_changed_since_look'", "    if spec['look'] and not same:\n        return {'defer': {'reason': 'page_changed_since_look'")],
-        ['test_plan.Validation.test_where_lines_without_a_look_id_is_refused_before_any_click_and_points_at_cua_look',
+        ['test_plan.Validation.test_where_lines_without_a_look_id_is_refused_before_any_click_and_points_at_look',
          'test_plan.Validation.test_an_invented_look_id_is_refused']),
     'null_expect_on_a_non_final_step': (
         'allow expect=null anywhere',
-        [('plan.py', "        if kind != 'verify' and 'expect' not in step and not final:", "        if kind != 'verify' and 'expect' not in step and False:")],
+        [('plan.py', "        if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and not final:", "        if kind not in ('verify', 'close_tab', 'read_pages') and 'expect' not in step and False:")],
         ['test_plan.Validation.test_null_expect_on_a_non_final_step_is_refused_before_any_click']),
     'steps_continue_after_a_non_done_step': (
         'keep executing the remaining steps after a failed one',
@@ -48,8 +48,8 @@ MUTATIONS = {
          'test_plan.WizardPlans.test_a_stale_page_mid_plan_stops_at_that_step_after_one_bounded_rerun']),
     'selection_reuse_across_steps': (
         'bind every step on the first observation and replay it',
-        [('core.py', "            snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot'];state = self.state(snapshot)\n            count('observe', 'cua-driver')\n            self.reject_answer_leak(state, goal)",
-          "            if plan is not None and plan.get('sticky'):\n                snapshot = plan['sticky'];self.latest[(pid_, window_)] = snapshot\n            else:snapshot = guarded('observe', lambda: self.observe(pid_, window_, timeout=remaining()))['snapshot']\n            if plan is not None:plan.setdefault('first_snapshot', snapshot)\n            state = self.state(snapshot)\n            count('observe', 'cua-driver')\n            self.reject_answer_leak(state, goal)"),
+        [('core.py', "            snapshot = seen['snapshot'];state = self.state(snapshot)\n            self.reject_answer_leak(state, goal)",
+          "            if plan is not None and plan.get('sticky'):\n                snapshot = plan['sticky'];self.latest[(pid_, window_)] = snapshot\n            else:snapshot = seen['snapshot']\n            if plan is not None:plan.setdefault('first_snapshot', snapshot)\n            state = self.state(snapshot)\n            self.reject_answer_leak(state, goal)"),
          ('plan.py', "        channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive'), 'look_id': look_id}", "        channel = {'goal': goal, 'out': {}, 'allow': step.get('allow_destructive'), 'look_id': look_id, 'sticky': carry.get('first')}"),
          ('plan.py', "        carry['before'] = channel['out'].get('before')", "        carry.setdefault('first', channel.get('first_snapshot'))\n        carry['before'] = channel['out'].get('before')")],
         ['test_plan.WizardPlans.test_three_steps_run_in_one_call_each_on_a_fresh_observation_with_a_new_selection']),
@@ -105,17 +105,17 @@ MUTATIONS = {
         [('look.py', "        stage('observe', began)\n        handle = fresh['snapshot']", "        stage('observe', began)\n        f.driver.call('scroll', {'pid': pid, 'window_id': window_id})\n        handle = fresh['snapshot']")],
         ['test_look.LookReal.test_look_is_read_only_no_click_no_window_move']),
     'look_hidden_in_advanced_mode': (
-        'register cua_look only inside register_advanced',
-        [('server.py', "@mcp.tool(annotations=READ)\ndef cua_look(", "def cua_look(")],
+        'register look only inside register_advanced',
+        [('server.py', "@mcp.tool(annotations=READ)\ndef look(", "def look(")],
         ['test_budget.ToolSurface.test_surface_is_clean']),
     'primitive_named_in_a_plan_hint': (
         'a hint that sends the LLM to a primitive',
-        [('plan.py', "Call cua_do with steps=[{do:\"verify\", expect:<page text that should be visible now>}] to check, or report the state.", "Call cua_verify to check, or report the state.")],
+        [('plan.py', "Call do with steps=[{do:\"verify\", expect:<page text that should be visible now>}] to check, or report the state.", "Call verify to check, or report the state.")],
         ['test_plan.BookingPlans.test_an_expect_that_never_appears_is_never_done_and_the_click_is_not_repeated']),
     'primitives_visible_by_default': (
         'drop the CUA_TASK_ADVANCED guard',
         [('server.py', "if ADVANCED:register_advanced()", "register_advanced()")],
-        ['test_budget.ToolSurface.test_primitives_registered_by_default_fail', 'test_plan.ServerSurface.test_the_default_surface_is_exactly_cua_do_then_cua_look_and_the_primitives_are_absent']),
+        ['test_budget.ToolSurface.test_primitives_registered_by_default_fail', 'test_plan.ServerSurface.test_the_default_surface_is_exactly_do_then_look_and_the_primitives_are_absent']),
     'hash_only_the_displayed_lines': (
         'the look_id covers what was displayed, not the full lines (review P1-1)',
         [('look.py', "return look_id_of([r['rec']['lines'] for r in rows], title, analysis['headings'], analysis['control_state'])", "return look_id_of([r['lines'] for r in rows], title, analysis['headings'], analysis['control_state'])")],
@@ -153,7 +153,7 @@ MUTATIONS = {
         ['test_plan_review.TwoWindows.test_identical_rows_in_two_windows_do_not_overwrite_each_others_look']),
     'page_text_unmarked': (
         'return page text with no untrusted marker (review P3-6)',
-        [('look.py', "'untrusted_page_text': True, 'notice': NOTICE, ", ""), ('core.py', "            result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)", "            pass")],
+        [('look.py', "'untrusted_page_text': True, 'notice': NOTICE, ", ""), ('core.py', "            result['untrusted_page_text'] = True  # the flag is on every response; the fixed sentence only where it is news (CE-FACADE-011)\n            if self._notice_needed(result):result['notice'] = lookmod.NOTICE\n            else:result.pop('notice', None)", "            pass")],
         ['test_plan_review.UntrustedText.test_every_look_says_the_page_text_is_untrusted_data']),
     'child_map_cached_on_the_facade': (
         'cache the subtree child map across observations (review P3-7)',
@@ -293,12 +293,12 @@ MUTATIONS = {
         [('core.py', "why = 'toggle_state_unseen' if seen is None else", 'why = None if seen is None else')],
         ['test_plan_review2.ControlState.test_an_unchanged_checkbox_presses_and_a_toggle_without_a_look_is_not_pressed_blind']),
     'responses_unmarked': (
-        'cua_do responses carry page text without the untrusted marker (second review P2-C)',
-        [('core.py', "            result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)", '            pass')],
+        'do responses carry page text without the untrusted marker (second review P2-C)',
+        [('core.py', "            result['untrusted_page_text'] = True  # the flag is on every response; the fixed sentence only where it is news (CE-FACADE-011)\n            if self._notice_needed(result):result['notice'] = lookmod.NOTICE\n            else:result.pop('notice', None)", '            pass')],
         ['test_plan_review2.UntrustedEverywhere.test_plan_responses_carry_the_marker_in_every_page_text_field', 'test_plan_review2.UntrustedEverywhere.test_single_step_responses_carry_the_marker_and_no_page_text_in_hints']),
     'page_text_in_a_hint': (
         'a control label is put into a hint (second review P2-C)',
-        [('core.py', "'control_needed': 'Each record has several controls (found.repeated_controls lists their labels). Call cua_do again with control=<the exact label of the one to press>.',", "'control_needed': 'Each record has several controls (%s). Call cua_do again with control=<the exact label of the one to press>.' % ', '.join(c['label'] for c in found['repeated_controls']),")],
+        [('core.py', "'control_needed': 'Each record has several controls (found.repeated_controls lists their labels). Call do again with control=<the exact label of the one to press>.',", "'control_needed': 'Each record has several controls (%s). Call do again with control=<the exact label of the one to press>.' % ', '.join(c['label'] for c in found['repeated_controls']),")],
         ['test_plan_review2.UntrustedEverywhere.test_single_step_responses_carry_the_marker_and_no_page_text_in_hints']),
     'region_compares_static_text_only': (
         'the dialog whitelist compares only static texts and headings (third review P1-1)',
@@ -350,7 +350,7 @@ MUTATIONS = {
         ['test_plan_review3.MarkerOnEveryPath.test_every_look_path_carries_the_marker']),
     'driver_failure_message_raw': (
         'the single-step driver failure echoes str(gap)',
-        [('core.py', "message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', attempts=", 'message=str(gap), attempts=')],
+        [('core.py', "message='driver_call_failed: a Driver call failed; delivery and retryable say whether anything may have been clicked', detail=self._failure_detail(gap), attempts=", 'message=str(gap), detail=self._failure_detail(gap), attempts=')],
         ['test_plan_review3.MarkerOnEveryPath.test_every_do_path_carries_the_marker_and_no_message_is_raw']),
     'fold_homoglyphs_dropped': (
         'SHRINK: Cyrillic/Greek look-alikes are not mapped',
@@ -421,17 +421,17 @@ MUTATIONS = {
         [('look.py', "    for key in (('label',) if node.get('role') == 'AXHeading' else ('value', 'label')):", "    for key in ('value', 'label'):")],
         ['test_real_pages.RecordPages.test_the_page_text_has_no_heading_level_numerals', 'test_real_pages.RecordPages.test_nested_records_have_no_level_numerals_and_keep_the_section_headings']),
     'subtree_reads_heading_level': (
-        'the shared subtree text reads a heading value (cua_do/D record text)',
+        'the shared subtree text reads a heading value (do/D record text)',
         [('core.py', "                for key in (('label',) if n.get('role') == 'AXHeading' else ('label','value')):", "                for key in ('label','value'):")],
-        ['test_real_pages.RecordPages.test_cua_do_record_context_of_nested_has_no_heading_level_numerals']),
+        ['test_real_pages.RecordPages.test_do_record_context_of_nested_has_no_heading_level_numerals']),
     'title_heading_glued_to_the_first_record': (
         'SHRINK: the page title is never recognized as page text',
         [('core.py', '        if not title or not n:return False', '        return False')],
-        ['test_real_pages.RecordPages.test_flat_ax_first_record_carries_neither_the_heading_nor_its_level', 'test_real_pages.RecordPages.test_cua_do_record_context_agrees_with_the_look', 'test_real_pages.RecordPages.test_a_where_lines_plan_cannot_select_the_first_flat_record_by_the_page_title']),
+        ['test_real_pages.RecordPages.test_flat_ax_first_record_carries_neither_the_heading_nor_its_level', 'test_real_pages.RecordPages.test_do_record_context_agrees_with_the_look', 'test_real_pages.RecordPages.test_a_where_lines_plan_cannot_select_the_first_flat_record_by_the_page_title']),
     'sibling_record_keeps_the_title': (
         'sibling_record no longer skips the title heading',
         [('core.py', "        members = [i for i in members if not self._title_member(state, i)]  # the page's own title heading is page text, not the first record's", '        members = members')],
-        ['test_real_pages.RecordPages.test_cua_do_record_context_agrees_with_the_look']),
+        ['test_real_pages.RecordPages.test_do_record_context_agrees_with_the_look']),
     'selected_false_is_a_state': (
         'selected:false on a plain button is emitted as [unselected] noise (live capture D2)',
         [('look.py', "    return 'selected' if n.get('selected') is True else None", "    return 'selected' if n.get('selected') is True else ('unselected' if 'selected' in n else None)")],
@@ -460,18 +460,212 @@ MUTATIONS = {
         'the default look reads through NuExtract (measured through the real server tools)',
         [('look.py', "        f.looks[(pid, window_id, response['look_id'])] = {", "        try:f.provider('reader').extract({'snapshot_id': state['raw']['snapshot_id'], 'task': 't', 'fields': {'x': 'x'}, 'records': [{'id': 'e1', 'text': 't'}]}, state['raw']['snapshot_id'])\n        except Exception:pass  # the fake reader counts the request before it looks for a pattern\n        f.looks[(pid, window_id, response['look_id'])] = {")],
         ['test_budget.DefaultPathBudget.test_look_then_plan_is_two_calls_with_no_reader_and_no_chooser_on_the_real_trees']),
+    # CE-FACADE-007 wave 3 (#33, #34, #39)
+    'semantic_call_unbounded': (
+        'wait for the semantic snapshot with the Driver default timeout (#29 ran 120 s with no output)',
+        [('dom.py', "        value = f.driver.call('get_browser_state', {'session': f.session, **args}, timeout=timeout)", "        value = f.driver.call('get_browser_state', {'session': f.session, **args})")],
+        ['test_dom.Bounded.test_a_hanging_semantic_call_is_bounded_and_the_look_falls_back_to_ax']),
+    'dom_replaces_ax_silently': (
+        'prefer the DOM silently: its lines replace the AX lines of a record',
+        [('look.py', "            r['dom_lines'] = shown", "            r['dom_lines'] = shown;r['rec'] = dict(r['rec'], lines=lines);r['lines'] = shown")],
+        ['test_dom.Sources.test_the_dom_never_replaces_or_drops_the_ax_look']),
+    'ax_dropped_when_dom_present': (
+        'drop the AX records when a DOM snapshot is present',
+        [('look.py', "    found = dom.compare(analysis, semantic, dom.ax_text_blob(f, state, analysis))", "    found = dom.compare(analysis, semantic, dom.ax_text_blob(f, state, analysis));rows[:] = []")],
+        ['test_dom.Sources.test_the_dom_never_replaces_or_drops_the_ax_look']),
+    'read_pages_failure_skips_the_rest': (
+        'a page that does not land ends the multi-page read for the other pages',
+        [('browser.py', "            if reason in STOP_ALL:\n                stop = reason", "            stop = reason")],
+        ['test_read_pages.Reads.test_a_page_that_lands_elsewhere_does_not_abort_the_others_silently']),
+    'menu_reroute_on_any_refusal': (
+        'route every failure of the ordinary menu press through invoke_menu',
+        [('menu.py', "        refused = getattr(gap, 'code', None) == REFUSAL if isinstance(gap, DriverCallFailed) else REFUSAL in str(gap)", "        refused = True")],
+        ['test_menu.Routing.test_any_other_refusal_of_a_menu_item_is_not_rerouted', 'test_menu.Routing.test_another_exit_1_code_is_never_rerouted']),
+    'menu_reroute_without_foreground': (
+        "invoke_menu (which activates the window) without the caller's allow_foreground",
+        [('menu.py', "        if not f.foreground_ok:\n            raise _gap('%s: the Driver refused to press", "        if False:\n            raise _gap('%s: the Driver refused to press")],
+        ['test_menu.Routing.test_the_refusal_is_preserved_without_allow_foreground_because_invoke_menu_fronts_the_window']),
+    # CE-FACADE-008 (#54): a device is look, then do through mobile-mcp. Each wrong patch below is a tempting shortcut of that contract.
+    'device_tap_on_the_looks_stale_list': (
+        'reuse the element list the look read (cheaper): after any layout change the ref or bounds point at another control',
+        [('mobile.py', "        return parse_elements(text)\n", "        return self.__dict__.setdefault('_stale', {}).setdefault(device, parse_elements(text))\n")],
+        ['test_mobile.DoPress.test_a_press_taps_the_fresh_element_not_what_the_look_showed', 'test_mobile.DoPress.test_a_two_step_plan_reads_fresh_for_every_step']),
+    'device_first_of_several_matches': (
+        'tap the first of several elements that carry the label instead of refusing',
+        [('mobile.py', "        if len(ok) == 1:\n            return ok[0], None", "        if ok:\n            return ok[0], None")],
+        ['test_mobile.DoPress.test_several_matching_elements_are_never_guessed']),
+    'device_trust_the_taps_ok': (
+        "call a tap done because mobile-mcp answered \"Clicked on\" (a locked phone drops taps silently: upstream found exactly that)",
+        [('mobile.py', "    return x.settle(step, before, TAP_DELAYS, extra={'selected': selected})", "    return {'status': 'done', 'delivery': 'delivered', 'selected': selected}")],
+        ['test_mobile.DoPress.test_a_tap_the_device_did_not_act_on_is_never_done',
+         'test_mobile.DoPress.test_a_tap_that_changed_the_screen_but_not_as_expected_is_unverified_not_done',
+         'test_mobile.DoPress.test_no_expect_on_the_last_step_ends_delivered_unverified_never_done']),
+    'device_missing_node_crashes': (
+        'skip the Node.js check and let the spawn failure speak (no install instruction, a start attempted)',
+        [('mobile.py', "        if self.which(exe) is None:\n            if exe == 'npx':", "        if False:\n            if exe == 'npx':")],
+        ['test_mobile.Lifecycle.test_without_node_the_answer_is_a_typed_refusal_naming_what_to_install']),
+    'device_action_resent_after_the_child_died': (
+        'retry the tap on the restarted mobile-mcp (it may already have landed)',
+        [('mobile.py', "                if mutating:\n                    raise MobileGap('mobile_action_failed', 'the mobile-mcp process exited during the action", "                if False:\n                    raise MobileGap('mobile_action_failed', 'the mobile-mcp process exited during the action")],
+        ['test_mobile.Lifecycle.test_an_action_is_never_re_sent_when_the_child_dies_under_it']),
+    'device_type_without_checking_the_focus': (
+        'type after the tap without looking where the focus went (a dropped tap leaves it on the other field)',
+        [('mobile.py', "    if (mine is None or not mine['focused']) and others:", "    if False:")],
+        ['test_mobile.DoType.test_nothing_is_typed_when_the_focus_is_on_another_field']),
+    'device_destructive_guard_on_the_literal_label_only': (
+        'check only the label the caller wrote, not the names of the element it resolved to',
+        [('mobile.py', "    for name in list(element['names']) + [literal]:", "    for name in [literal]:")],
+        ['test_mobile.DoPress.test_a_control_that_only_resolves_to_a_destructive_element_is_not_pressed']),
+    'device_raw_backend_text_in_the_answer': (
+        "return mobile-mcp's own error text to the model (a local path and a stack)",
+        [('mobile.py', "        reason, message, delivery = classify(text)\n        raise MobileGap(reason, message, delivery)", "        reason, message, delivery = classify(text)\n        raise MobileGap(reason, message + ' ' + str(text), delivery)")],
+        ['test_mobile.LookOnDevices.test_raw_backend_text_never_reaches_the_answer']),
+    'device_look_truncates_silently': (
+        'cut the device look to max_bytes and report nothing cut',
+        [('mobile.py', "        response['truncated'] = {'records': matched - len(rows), 'lines': lost, 'bytes': bytes_cut}", "        response['truncated'] = {'records': 0, 'lines': 0, 'bytes': 0}")],
+        ['test_mobile.LookOnDevices.test_bounds_are_reported_never_silent']),
+    'device_typed_text_proves_itself': (
+        'accept the text just typed as the proof that typing worked (it is in the field either way)',
+        [('mobile.py', "    if typed is not None and (needle in lk.norm(typed) or lk.norm(typed) in needle):", "    if False:")],
+        ['test_mobile.DoType.test_the_text_just_typed_never_proves_itself']),
+    'device_close_leaves_the_child_running': (
+        'never stop mobile-mcp when the server shuts down',
+        [('mobile.py', "        with self._lock:\n            self._teardown()\n\n    # -- calls", "        pass\n\n    # -- calls")],
+        ['test_mobile.Lifecycle.test_close_stops_the_child_and_the_next_call_starts_a_fresh_one']),
+    # CE-FACADE-010 (#64): agent onboarding.
+    'onboarding_setup_is_the_whole_doctor_report': (
+        'attach every doctor check to a refusal instead of the ones that explain it',
+        [('onboarding.py', "    names, fallback = BLOCKERS[reason]\n", "    names, fallback = tuple(c.__name__ for c in cli.STATIC_CHECKS), None\n")],
+        ['test_onboarding.SetupBlock.test_a_browser_refusal_carries_only_the_browser_blockers_with_who',
+         'test_onboarding.SetupBlock.test_a_device_refusal_carries_the_device_blocker_never_the_browser_ones']),
+    'onboarding_setup_repeated_every_time': (
+        'show the setup block on every refusal, not once per blocker set',
+        [('onboarding.py', "    if not entries or key in f.setup_seen:", "    if not entries:")],
+        ['test_onboarding.SetupBlock.test_once_per_blocker_set_and_again_when_the_set_changes']),
+    'onboarding_setup_on_a_healthy_machine': (
+        'list the checks that pass as blockers too',
+        [('onboarding.py', "    found = [_entry(c) for name in names for c in _run(env, name) if c['status'] in (cli.WARN, cli.BLOCKER)]", "    found = [_entry(c) for name in names for c in _run(env, name)]")],
+        ['test_onboarding.SetupBlock.test_never_on_a_healthy_machine']),
+    'onboarding_doctor_runs_for_every_response': (
+        'run the doctor checks whatever the refusal was',
+        [('onboarding.py', "    hits = [r for r in reasons_of(result) if r in BLOCKERS]", "    hits = list(BLOCKERS)[:1]")],
+        ['test_onboarding.SetupBlock.test_no_environment_reason_means_the_checks_are_never_run']),
+    'onboarding_a_goto_is_the_aha_moment': (
+        'count any done plan (a goto alone) as the first verified do',
+        [('onboarding.py', "any(isinstance(s, dict) and s.get('do') in ACTIONS and s.get('status') == 'done' for s in steps)", "any(isinstance(s, dict) and s.get('status') == 'done' for s in steps)")],
+        ['test_onboarding.FirstVerifiedDo.test_a_goto_or_a_verify_alone_is_not_the_aha_moment']),
+    'onboarding_first_do_overwritten': (
+        'overwrite time_to_first_verified_do on every done do',
+        [('core.py', "if tool == 'do' and self.first_do is None and onboarding.is_verified_do(result):", "if tool == 'do' and onboarding.is_verified_do(result):")],
+        ['test_onboarding.FirstVerifiedDo.test_it_is_recorded_once']),
+    'onboarding_permission_refusal_gets_the_generic_hint': (
+        'leave permission_required without its own hint (it falls to "call look to see the page")',
+        [('plan.py', "    'permission_required': 'The Driver has no access", "    'permission_required_unused': 'The Driver has no access")],
+        ['test_onboarding.HintCatalog.test_every_refusal_reason_that_reaches_a_response_has_its_own_hint',
+         'test_onboarding.EmptyStates.test_the_no_permission_hint_names_who_and_the_retry_rule']),
+    'onboarding_a_hint_that_restates_the_reason': (
+        'a hint that only says what the reason already says',
+        [('plan.py', "Call `look` and press another control, or tell the user the command is unavailable.'", "Report it.'")],
+        ['test_onboarding.HintCatalog.test_every_hint_names_an_existing_tool_or_parameter_or_says_who_and_the_retry_rule']),
+    'onboarding_empty_device_list_keeps_the_bare_hint': (
+        'say only "pass device=<an id>" when there is no device to pass',
+        [('mobile.py', "    elif not out['devices']:", "    elif False:")],
+        ['test_onboarding.EmptyStates.test_no_devices_says_what_would_appear_and_the_one_call']),
+    'onboarding_windows_notes_not_merged': (
+        'compute the windows empty-state notes but return the bare list',
+        [('server.py', "            found={**found,**onboarding.windows_notes(facade,found,title)}", "            found=found")],
+        ['test_onboarding.EmptyStates.test_the_advanced_windows_tool_merges_the_notes']),
+    'onboarding_title_dropped_for_every_plan': (
+        'stop requiring a title for any plan, not only a goto on the agent browser',
+        [('plan.py', "    first = steps[0] if isinstance(steps, list) and steps and isinstance(steps[0], dict) else {}\n", "    return True\n    first = {}\n")],
+        ['test_onboarding.FirstCallNeedsNoTitle.test_everything_else_still_names_its_window']),
+    'onboarding_probe_reports_ready_without_a_verified_do': (
+        'doctor --probe calls the machine ready once the clicks were delivered',
+        [('cli.py', "        if done.get('status') != 'done' or not facade.first_do:", "        if False:")],
+        ['test_onboarding.Probe.test_an_unverified_press_is_not_ready']),
+    # CE-FACADE-008 follow-up (#59): records on device screens and the iOS agent bootstrap.
+    'device_every_element_is_a_record': (
+        'make every element its own record (no banding): lines never sit with their controls, so a row cannot be picked by what it says',
+        [('mobile.py', "        if bands and top < bands[-1]['bottom'] - BAND_SLACK:", "        if False:")],
+        ['test_mobile.RecordsOnDevices.test_a_list_screen_yields_one_record_per_row_with_its_lines_and_controls']),
+    'device_record_without_a_control': (
+        'keep every band as a record: headings and status text become records nobody can press',
+        [('mobile.py', "        if not controls:\n            continue\n        wrapped =", "        wrapped =")],
+        ['test_mobile.RecordsOnDevices.test_a_row_without_a_control_is_not_a_record']),
+    'device_where_lines_without_a_look_id': (
+        'let where.lines match on a device without a look_id (a filter written without seeing the screen)',
+        [('plan.py', "    if needs_look:\n        if look_id is None:", "    if needs_look:\n        if False:"),
+         ('plan.py', "        if not any(key[2] == look_id for key in f.looks):", "        if False:"),
+         ('plan.py', "    if look_id is not None and not any(key[2] == look_id for key in f.looks):", "    if False:")],
+        ['test_mobile.RecordsOnDevices.test_where_lines_needs_a_look_id_and_one_of_this_device']),
+    'device_where_lines_ignores_a_changed_screen': (
+        'skip the look_id recomputation: the rows moved since the look and the tap lands in the row that is now there',
+        [('mobile.py', "    if look_id_for(a, shown, x.device) != step['_look_id']:", "    if False:")],
+        ['test_mobile.RecordsOnDevices.test_the_screen_must_still_read_as_the_look_showed_it']),
+    'device_where_lines_guesses_among_several_rows': (
+        'tap the first of several rows that satisfy where.lines',
+        [('mobile.py', "    if len(matched) != 1 or len(shown_matches) != 1:", "    if not matched:"),
+         ('mobile.py', "    only = matched[0]\n", "    only = matched[0]\n    shown_matches = matched\n")],
+        ['test_mobile.RecordsOnDevices.test_several_or_no_matching_rows_tap_nothing_and_show_the_lines']),
+    'device_agent_never_bootstrapped': (
+        'leave the iOS agent install to the user: refuse mobile_device_agent_missing without installing',
+        [('mobile.py', "        self.installer(device)\n        self.installed.append(device)\n", "        raise MobileGap('mobile_device_agent_missing', 'install it yourself')\n")],
+        ['test_mobile.LookOnDevices.test_a_missing_ios_agent_is_installed_once_and_the_read_retried_once']),
+    'device_agent_install_repeated': (
+        'run the install again when the agent is still missing after it (a loop on a device that cannot have it)',
+        [('mobile.py', "            if gap.reason == 'mobile_device_agent_missing':\n                raise MobileGap('mobile_device_agent_missing', 'the iOS agent was installed but", "            if gap.reason == 'mobile_device_agent_missing':\n                self.installer(device)\n                raise MobileGap('mobile_device_agent_missing', 'the iOS agent was installed but")],
+        ['test_mobile.LookOnDevices.test_an_agent_still_missing_after_the_install_is_refused_after_exactly_one_retry']),
+    # CE-FACADE-011 (#41): response budgets and trims.
+    'response_notice_on_every_response': (
+        'send the untrusted-text sentence on every response again (the flag is the per-response marker; the sentence is news only once per window)',
+        [('core.py', "        if not self._notice_sent or new:", "        if True:")],
+        ['test_response_budget.NoticeOnlyWhereItIsNews.test_the_first_response_has_the_sentence_and_the_second_look_of_the_same_window_omits_it_but_keeps_the_flag']),
+    'response_notice_never_for_a_new_window': (
+        'send the sentence only in the first response of the server: a second window arrives without it',
+        [('core.py', "        if not self._notice_sent or new:", "        if not self._notice_sent:")],
+        ['test_response_budget.NoticeOnlyWhereItIsNews.test_a_do_on_a_window_already_seen_omits_it_and_a_response_from_a_new_window_has_it_again',
+         'test_response_budget.NoticeOnlyWhereItIsNews.test_pages_opened_by_read_pages_and_a_navigated_title_count_as_new']),
+    'response_summary_repeats_what_the_look_showed': (
+        'put the whole page text and every control into the do summary again',
+        [('plan.py', "    if before:  # CE-FACADE-011", "    if False:  # CE-FACADE-011")],
+        ['test_response_budget.DoCarriesWhatChanged.test_the_summary_after_a_look_carries_only_the_new_text_and_counts_what_it_left_out']),
+    'response_summary_remembers_what_left': (
+        'keep every line ever shown as known (a toast that leaves and comes back is invisible)',
+        [('plan.py', "{t for t in texts if t in known['text']} | set(shown['text'])", "set(known['text']) | set(shown['text'])")],
+        ['test_response_budget.DoCarriesWhatChanged.test_without_a_look_the_summary_is_complete_and_a_toast_that_leaves_and_returns_is_news_again']),
+    'response_settle_after_a_proven_wait': (
+        'settle (SETTLE_DELAY_S and another walk) after an idle wait that already showed the same tree',
+        [('core.py', "if pending_count is None or pending_count != len(result.get('elements') or []):", "if True:")],
+        ['test_response_budget.SettleLatency.test_a_look_that_waited_for_pressable_buttons_and_saw_the_same_tree_does_not_also_settle']),
+    'response_settle_skipped_though_the_tree_moved': (
+        'skip the settle after every actions_pending wait, even when the element count moved',
+        [('core.py', "if pending_count is None or pending_count != len(result.get('elements') or []):", "if pending_count is None:")],
+        ['test_response_budget.SettleLatency.test_a_tree_that_moved_during_the_wait_still_settles']),
+    'response_long_hint': (
+        'a hint over 240 characters restating the manual',
+        [('plan.py', "    'budget_exceeded': 'The plan ran out of time before step %(n)d finished.", "    'budget_exceeded': 'The plan ran out of time and the whole manual follows, repeated at length so that no agent can miss any of it: look first, then do, expect is the proof, every step needs an expect, nothing is clicked blind, stop and ask the user on refusals, and so on. Step %(n)d finished.")],
+        ['test_response_budget.HintsAddTheNextCall.test_no_hint_in_the_sources_is_over_240_characters',
+         'test_response_budget.HintsAddTheNextCall.test_every_plan_hint_with_its_steps_done_suffix_is_within_the_cap']),
+    'response_every_schema_title_stripped': (
+        'strip the generated titles by also deleting the property named title',
+        [('server.py', "                for child in value.values():slim_schema(child)", "                for child in value.values():slim_schema(child)\n                value.pop('title', None)")],
+        ['test_response_budget.ToolListIsBounded.test_the_generated_schema_titles_are_gone_but_a_property_named_title_stays']),
+    'response_do_description_repeats_the_schema': (
+        'copy a plan step field description into the do docstring as well',
+        [('server.py', "    \"\"\"Default path. Call `look` first", "    \"\"\"Default path. press only: which record (lines or fields). Without where, control names the one unique control to press. Call `look` first")],
+        ['test_response_budget.ToolListIsBounded.test_each_parameter_is_documented_once_and_the_docstring_does_not_repeat_the_schema']),
 }
 
 
 def stage(tmp):
-    shutil.copytree(ROOT / 'facade', tmp / 'facade', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+    shutil.copytree(ROOT / 'computer_use', tmp / 'computer_use', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     shutil.copytree(ROOT / 'scripts', tmp / 'scripts', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))  # a copy: a patch must never reach the real file through a symlink
     for name in ('inference', 'skills', 'docs'):
         (tmp / name).symlink_to(ROOT / name)
 
 
 def run_tests(tmp, names):
-    done = subprocess.run([sys.executable, '-m', 'unittest', *names], cwd=str(tmp / 'facade'), capture_output=True, text=True, timeout=600)
+    done = subprocess.run([sys.executable, '-m', 'unittest', *names], cwd=str(tmp / 'computer_use'), capture_output=True, text=True, timeout=600)
     text = done.stdout + done.stderr
     failed = set(re.findall(r'^FAIL: (\w+) \(([\w\.]+)\)', text, re.M))
     errored = set(re.findall(r'^ERROR: (\w+) \(([\w\.]+)\)', text, re.M))
@@ -488,7 +682,7 @@ def main():
         with tempfile.TemporaryDirectory(prefix='cua-mutation-') as raw:
             tmp = Path(raw);stage(tmp)
             for filename, old, new in patches:
-                path = tmp / 'facade' / filename;text = path.read_text()
+                path = tmp / 'computer_use' / filename;text = path.read_text()
                 if text.count(old) != 1:
                     print('%s: patch target not found exactly once in %s: %r' % (name, filename, old[:60]));bad += 1;break
                 path.write_text(text.replace(old, new))

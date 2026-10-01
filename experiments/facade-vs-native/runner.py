@@ -35,18 +35,18 @@ PROMPT_FRAME = ('A Google Chrome window whose title begins with {title!r} is ope
                 'window or tab. When finished, report exactly what you did and how you verified the result.')
 
 # arm -> server family. `facade` is the legacy name for `stack`.
-ARM_SERVER = {'native': 'cua-driver', 'native-skill': 'cua-driver', 'stack': 'cua-task', 'stack-advanced': 'cua-task', 'stack-agent': 'cua-task', 'facade': 'cua-task'}
+ARM_SERVER = {'native': 'cua-driver', 'native-skill': 'cua-driver', 'stack': 'computer-use', 'stack-advanced': 'computer-use', 'stack-agent': 'computer-use', 'facade': 'computer-use'}
 ARMS = list(ARM_SERVER)
 ALLOWED_TOOLS = {arm: ['mcp__' + server] + (['Skill'] if arm == 'native-skill' else []) for arm, server in ARM_SERVER.items()}
-# Exploratory arm (option D, PR 17): ONLY the experimental server-side agent tool is allowed, so the driving LLM cannot fall back to cua_do.
-ALLOWED_TOOLS['stack-agent'] = ['mcp__cua-task__cua_agent']
+# Exploratory arm (option D, PR 17): ONLY the experimental server-side agent tool is allowed, so the driving LLM cannot fall back to do.
+ALLOWED_TOOLS['stack-agent'] = ['mcp__computer-use__agent']
 # Tool-choice hint per arm: it names the toolset the arm is defined by, never the answer or a decoy (the prompt lint checks this).
-ARM_HINT = {'stack-agent': ' Use the cua_agent tool: state the goal, and in `expect` the text that will appear on the page when it has succeeded.'}
+ARM_HINT = {'stack-agent': ' Use the agent tool: state the goal, and in `expect` the text that will appear on the page when it has succeeded.'}
 # File and shell tools are off for every arm: an agent that can Read would load repo
 # context and stop being a clean tool-set comparison. Native additionally has no Skill (unless the
 # `native-skill` arm), since the installed skill would reintroduce facade guidance.
 _BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'Task']
-DISALLOWED_TOOLS = {arm: _BASE_DENY + ([] if arm in ('native-skill',) or ARM_SERVER[arm] == 'cua-task' else ['Skill'])
+DISALLOWED_TOOLS = {arm: _BASE_DENY + ([] if arm in ('native-skill',) or ARM_SERVER[arm] == 'computer-use' else ['Skill'])
                     for arm in ARM_SERVER}
 
 
@@ -73,12 +73,12 @@ def close_window(window_id):
 def mcp_config(arm, out_dir):
     root = HERE.parents[1]
     py = os.environ.get('CUA_FACADE_PYTHON') or str(root / '.venv-facade/bin/python')
-    stack = {'command': py, 'args': [str(root / 'facade/server.py')]}
+    stack = {'command': py, 'args': [str(root / 'computer_use/server.py')]}
     if arm == 'stack-advanced':
         stack['env'] = {'CUA_TASK_ADVANCED': '1'}
     if arm == 'stack-agent':
         stack['env'] = {'CUA_TASK_EXPERIMENTAL_AGENT': '1'}
-    servers = {'cua-task': stack, 'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
+    servers = {'computer-use': stack, 'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
     server = ARM_SERVER[arm]
     path = Path(out_dir).resolve() / f'mcp-config.{arm}.json'  # absolute: the agent runs from a scratch cwd
     path.write_text(json.dumps({'mcpServers': {server: servers[server]}}, indent=2))

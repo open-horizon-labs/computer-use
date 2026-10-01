@@ -1,0 +1,2 @@
+Error: Command failed: ~/.npm/_npx/HASH/node_modules/@mobilenext/mobilecli-darwin-arm64/mobilecli-darwin-arm64 agent status --device C9AFBACD-482B-472D-95B7-D6A96A83AE5A
+Agent is not installed on the device

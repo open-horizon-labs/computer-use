@@ -1,0 +1,986 @@
+{
+  "purpose": "Ceiling on REAL LLM-visible MCP tool calls, measured through the server tool functions under a scripted LLM that starts knowing only the goal, expect and the fields/predicates and learns control, identity and labels from each deferral. Scenarios run on REAL captured Chrome trees, on synthetic shapes for the failures a review found, and on two live findings (n=1 each, one run per cell, so not a rate). No tree captured from an unrelated real site exists yet (capturing one needs the user's consent), so every number is fixture-derived, not a claim about typical pages. Only do and look are visible by default (the primitives need CUA_TASK_ADVANCED=1): option B, look then plan once (CE-FACADE-005), measured with a scripted LLM that starts knowing only the goal and expect and learns the page's strings from look and the plan's deferrals. The plan_* scenarios run through the real server tools on the captured booking and orders trees and on synthetic wizard, 100-row and canvas shapes (n=1 live evidence for the blind-filter failure, none yet for plans). Measured 2026-09: tools were 13% of agent wall time, the driving LLM's turns 87%; a clean booking took 9 mediated calls (native about 5) and the first live do run took 8 because eight tools were visible. Any number changes only with a CE id in changed_by, and that CE's call_budget must record the same number (test_budget.py checks both; CODEOWNERS requires the policy owner's review). The scripted LLM takes its phrases from the goal, so it is a LOWER BOUND on the calls a real LLM needs and the plan_* ceilings guard call counts, not plan correctness; the vocabulary-mismatch, hidden-text, negated-dialog and undeclared-destructive scenarios (review of PR 18) measure what happens when the plan is wrong. Second review: a confirm step declares the dialog text (positive authorization), so the usual confirm flow costs one call more (press, defer with the actual dialog lines, deliberate press: 3 calls; 2 only when the wording is already known). Third review: dialog text and record text are region-complete (a confirm step also declares dialog_controls), so every confirm scenario declares controls; still fixture-derived, live exposure of images, groups, ARIA state and input values is unverified.",
+  "default_path_tools": {
+    "value": [
+      "do",
+      "look"
+    ],
+    "changed_by": "CE-FACADE-005"
+  },
+  "max_tool_count": {
+    "value": 10,
+    "changed_by": "CE-FACADE-005"
+  },
+  "max_response_bytes": {
+    "value": 6144,
+    "changed_by": "CE-FACADE-003"
+  },
+  "scenarios": {
+    "booking_list": {
+      "description": "REAL captured booking page (12 identical Book buttons in a flat AXList): fields+predicates, expect",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "orders_cold": {
+      "description": "REAL orders, LLM knows only goal, expect, predicates: control_needed -> control=Cancel -> dialog deferral -> second do quoting the dialog label",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 6
+    },
+    "orders_confirm": {
+      "description": "REAL orders with control and confirm known up front (identity defaults to the eq-constrained field)",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 6
+    },
+    "confirm_deferral": {
+      "description": "REAL orders, control known, no confirm: dialog deferral, then a second do quoting a dialog label",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 6
+    },
+    "canvas_regions_unique": {
+      "description": "no AX controls; a quoted label matches ONE text region exactly; capture-bound click; the screenshot model verifies (synthetic)",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "canvas_regions": {
+      "description": "LIVE FINDING (n=1): two Export buttons drawn on a canvas labelled by Toolbar and Footer; the LLM knows only the goal: region_label_needed, then control+near (synthetic parse result)",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "booking_blind_predicates": {
+      "description": "LIVE FINDING (n=1): blind predicates (duration contains 30) vs the real \"half-hour\" slot: the first call MUST defer (unknown, not excluded); treat_as_match then books the right slot",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "large_page_400": {
+      "description": "80 records, 400+ elements: response must stay small (synthetic)",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "stale_recovery": {
+      "description": "REAL booking: an unrelated text changes between observe and act; reobserve, re-run, new selection, act",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "driver_failure_recovered": {
+      "description": "REAL booking: one transient Driver failure before the click, retried inside the call",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "unknown_then_accept": {
+      "description": "REAL orders: the decoy \"Walnut desk lamp shade (replacement)\" is unknown for item eq; accept_unknown, then the dialog shows only the item so the LLM quotes its label",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 4,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "ambiguity_deferral": {
+      "description": "REAL booking: several eligible records, chooser abstains; the policy narrows the predicates once",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "per_record_labels": {
+      "description": "synthetic: Book Dr A / Book Dr B / Book Dr C, discovered from structure, success toast",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "single_record": {
+      "description": "synthetic: one card, no repetition",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "toast_after_click": {
+      "description": "synthetic: success toast with an Undo button is the outcome, not a dialog",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "five_button_dialog": {
+      "description": "synthetic: a 5-button dialog is reported with all labels, then a second do quoting Yes",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "disabled_record": {
+      "description": "synthetic: the matching record is disabled -> record_disabled (final status deferred, nothing the LLM can do)",
+      "final_status": "deferred",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "toolbar_records_ambiguous": {
+      "description": "synthetic: records asked on a toolbar page -> records_ambiguous with the quoted-label hint, second do without records",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "canvas_dead_end": {
+      "description": "synthetic: nothing to press and no quotable label -> dead_end with report_to_user (final status deferred)",
+      "final_status": "deferred",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-003"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_booking_look_do": {
+      "description": "REAL booking: look, then do steps with where.lines over the strings it showed (look_id); no reader, no chooser",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_booking_half_hour_look_do": {
+      "description": "REAL booking, the live failure: the LLM SAW \"half-hour\" in the look and filters on it (the blind \"30\" is never written)",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_booking_no_look": {
+      "description": "REAL booking: a where.lines plan with no look is refused before any click (look_required), then look and plan: the cost of skipping the look is one call",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_booking_blind_fields": {
+      "description": "REAL booking: blind where.fields predicates still defer on \"half-hour\" (unknown, never excluded); treat_as_match then books the right slot (chooser picks among eligible)",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_orders_look_do": {
+      "description": "REAL orders, second review: a confirm step must DECLARE the dialog text; the LLM guesses it, the plan stops confirm_dialog_unexpected_text with the ACTUAL lines (click 1 done), it reads them and presses the dialog control deliberately: look, do, do",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 6
+    },
+    "plan_orders_identity_default": {
+      "description": "REAL orders: exact dialog_text declared but no identity on the press; the dialog shows only part of the default identity, so the plan stops after the first click with dialog.lines and the LLM presses the dialog control",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 6
+    },
+    "plan_orders_wrong_dialog_guess": {
+      "description": "REAL orders: the press step expects dialog text the page does not show; the click is delivered and the plan stops confirm_dialog_present; a second do presses the dialog control",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 6
+    },
+    "plan_wizard_3_steps": {
+      "description": "synthetic 3-step wizard: look, then three deterministic steps in ONE do (fresh observation and new selection per step)",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_wizard_wrong_final_label": {
+      "description": "synthetic wizard: the LLM guessed the last button label wrong; the plan stops at step 3 with found.controls and the earlier steps stay done",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_invoices_100_focus": {
+      "description": "synthetic 100-row list shaped like the suite invoices task (near-duplicates): look(focus) then plan with where.lines; no reader",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_invoices_100_fields": {
+      "description": "same 100-row list: look(focus, fields) reads the focused records in chunks (values), then the plan filters on the displayed lines",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_canvas_look_do": {
+      "description": "synthetic canvas, two Export buttons: look lists the drawn texts with what is near each, then one press step with control and near; the screenshot model verifies",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_stale_mid_plan": {
+      "description": "synthetic wizard whose page churns after step 1: the plan stops at step 2 (ui_changed_repeatedly) with step 1 done and nothing clicked in step 2",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_booking_vocab_mismatch": {
+      "description": "REAL booking, review of PR 18: the scripted LLM writes \"30 min\" (its own vocabulary) where the look shows \"half-hour\"; no_matching_record, then it goes back to the look strings and books the Telehealth slot",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_hidden_text_negative": {
+      "description": "REAL booking with SOLD OUT past the 60-character cut: a not_contains condition over the cut line must stop (negative_condition_over_cut_lines), nothing clicked",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_negated_dialog": {
+      "description": "REAL orders whose dialog reads \"Do NOT cancel order #1044\": the press lands, the confirm step must defer (confirm_dialog_negated) and press nothing further",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_destructive_undeclared": {
+      "description": "a Delete account control without allow_destructive: refused before any click, even though the goal says delete",
+      "final_status": "refused",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_destructive_declared_after_refusal": {
+      "description": "the same plan after the refusal, with allow_destructive naming the exact label: done",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_orders_declared_dialog": {
+      "description": "REAL orders best case: the caller already knows the dialog wording and declares it exactly: look, one plan with press and confirm",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 6
+    },
+    "plan_uniqueness_over_all_records": {
+      "description": "REAL booking, second review: look(focus) shows one slot but a loose condition is satisfied by 4 real records; where_matches_several (counted over ALL records), then a condition that singles it out: done",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_hidden_text_ack": {
+      "description": "synthetic: the active order A has \"Status: Cancelled\" on line 8 past the display cut; selecting it stops selected_record_has_hidden_text (nothing clicked)",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_hidden_text_wide_look": {
+      "description": "same page, look(max_lines=20, line_chars=200): the whole record is visible, so the LLM sees A is cancelled and its negative condition picks B: done",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_checkbox_flip": {
+      "description": "synthetic: a checkbox flips between the look and the plan; the look_id covers control state, so the plan stops page_changed_since_look and presses nothing",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_dialog_extra_control": {
+      "description": "REAL orders, third review: the dialog holds a pre-checked \"Also delete my account\" box the caller did not declare in dialog_controls; the confirm defers confirm_dialog_unexpected_text with the actual controls and states and presses nothing further",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "plan_image_badge_seen": {
+      "description": "synthetic, third review: order 1 carries an image labelled \"Cancelled\"; the look shows it as an \"image: Cancelled\" line, so the LLM picks order 2 instead of clicking the cancelled one",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-005"
+      },
+      "native_reference_calls": 5
+    },
+    "nav_goto_look_plan": {
+      "description": "REAL captured booking tree behind a faked Driver browser: goto (verified landing) -> look -> plan press; 3 LLM-visible calls, no reader, no chooser",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "native_reference_calls": 5
+    },
+    "nav_open_tab_read_close": {
+      "description": "REAL captured booking tree, SYNTHETIC tab strip (no live capture has one): open_tab -> look (the read) -> close_tab pressing the facade tab's own AX Close button in the background; 3 calls",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "native_reference_calls": 5
+    },
+    "nav_permission_required_stop": {
+      "description": "Driver refuses to attach to the browser profile: goto stops permission_required in ONE call, nothing navigated, clicked or delivered; the LLM stops and asks the user (no retry, no other browser or profile)",
+      "final_status": "refused",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "native_reference_calls": 5
+    },
+    "nav_read_pages_3": {
+      "description": "REAL captured booking tree behind a faked Driver browser, SYNTHETIC tab strip: ONE do read_pages step over 3 urls (open_tab, look, close_tab each, per-page look_id and landing verdict); 1 call where goto plus look per page costs 6",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "native_reference_calls": 5
+    },
+    "nav_read_pages_one_fails": {
+      "description": "same 3 urls, the second redirects elsewhere: still ONE call; the step ends stopped pages_incomplete with the other two pages read, the redirected page's verdict, and every tab closed (no retry, no silent abort)",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-007"
+      },
+      "native_reference_calls": 5
+    },
+    "mobile_look_do": {
+      "description": "REAL emulator element list (T-Dongle app) behind a fake mobile-mcp: look(device) -> do(press Networks, expect Saved networks) on a fresh element list; 2 LLM-visible calls, no reader, no chooser",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
+    "mobile_ambiguous_label_stop": {
+      "description": "REAL emulator tree: \"Overview\" is both the app nav item and the system Overview button; the press refuses control_ambiguous before any tap: look + one refused do, no retry",
+      "final_status": "refused",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
+    "mobile_dropped_tap_stop": {
+      "description": "REAL emulator tree, a tap the device drops silently (a locked phone): the fresh list is unchanged so the step stops screen_unchanged_after_action, never done; look + one stopped do, no retry",
+      "final_status": "stopped",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
+    "mobile_backend_missing_stop": {
+      "description": "No Node.js: the first device call is refused mobile_backend_unavailable naming what to install, nothing done, no retry; 1 call",
+      "final_status": "refused",
+      "max_llm_visible_calls": {
+        "value": 1,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
+    "mobile_where_lines": {
+      "description": "Synthetic list screen in the real Android shapes, records derived from element geometry: look(device) -> do(press where.lines Office, control Forget, expect Office forgotten) on a fresh element list; 2 LLM-visible calls, no reader, no chooser",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-008"
+      },
+      "native_reference_calls": 4
+    },
+    "onboarding_first_do": {
+      "description": "REAL captured booking tree on a ready machine: look, then the first verified do (press, expect proved); time_to_first_verified_do = 2 calls; no reader, no chooser",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-010"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-010"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-010"
+      },
+      "native_reference_calls": 5
+    },
+    "onboarding_first_do_goto": {
+      "description": "REAL captured booking tree behind a faked Driver browser: goto, look, then the first verified do; time_to_first_verified_do = 3 calls; no reader, no chooser",
+      "final_status": "done",
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-010"
+      },
+      "max_reader_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-010"
+      },
+      "max_chooser_calls": {
+        "value": 0,
+        "changed_by": "CE-FACADE-010"
+      },
+      "native_reference_calls": 5
+    }
+  },
+  "live_task_budgets": {
+    "booking": {
+      "max_llm_visible_calls": {
+        "value": 2,
+        "changed_by": "CE-FACADE-005"
+      }
+    },
+    "orders": {
+      "max_llm_visible_calls": {
+        "value": 3,
+        "changed_by": "CE-FACADE-003"
+      }
+    }
+  }
+}

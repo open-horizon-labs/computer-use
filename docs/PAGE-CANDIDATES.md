@@ -1,6 +1,6 @@
 # NuExtract before finite-choice selection
 
-The `fleet` profile uses NuExtract3 page reading/filtering → Jev finite choice (configured Qwen escalation), with GLiNER2 spans and SystemOne/Qwen screenshots. The default `local-mac` profile selects Julia-1 and has no bundled local NuExtract reader yet; do not configure hosted extraction for local-only use.
+The default `fleet` profile (page content goes to the configured hosted services) uses NuExtract3 page reading/filtering → Jev finite choice (configured Qwen escalation), with GLiNER2 spans and SystemOne screenshots. The opt-in `local-mac` profile selects Julia-1 and has no bundled local NuExtract reader yet; do not configure hosted extraction for local-only use.
 
 Use extraction to reduce a large **observed** candidate set under explicit caller predicates. Chunk the reading, not the chooser's comparison. This is the selected default; the qualified GLiNER2 route is unchanged.
 

@@ -1,14 +1,14 @@
 # Provider configuration
 
-**Current default profile:** `local-mac`, with Julia-1 as the chooser and no hosted fallback. `fleet` remains selectable for NuExtract3 page reading, Jev/Qwen choice, GLiNER2 spans, and SystemOne/Qwen screenshots. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
+**Current default profile:** `fleet` (user decision 2026-09-30, "Jev is the default"): NuExtract3 page reading, Jev/Qwen choice, GLiNER2 spans, and SystemOne screenshots (the only visual route: without `CUA_SYSTEMONE_URL` the visual provider is unavailable and nothing is sent; there is no chat-completion fallback). **The fleet profile sends page content (record text, screenshots, candidate descriptions) to the hosted services you configure** (`CUA_EXTRACT_URL`, `CUA_SELECTOR_COMMAND`, `CUA_SYSTEMONE_URL`); a clean install configures none, so those routes are unavailable until you do, and nothing is sent. `local-mac`, with Julia-1 as the chooser and no hosted fallback, remains selectable by an explicit profile. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
 
 ## Provider profiles
 
-The default is `local-mac`. Switch profiles from the repository checkout with `python3 scripts/set_profile.py local-mac` or `python3 scripts/set_profile.py fleet`. The script moves legacy flat settings under the inferred current profile and preserves them while selecting the new one. Use `CUA_PROFILE=fleet` for a one-process override. The local profile forces Julia-1 and rejects configured hosted selector, extraction, or visual endpoints rather than silently sending evidence off-device.
+The default is `fleet`: a clean install (no `runtime.json`) resolves to it, and so does a `runtime.json` that names Jev or a hosted endpoint without a `profile` key. A `runtime.json` without a `profile` key that names Julia-1 (`CUA_GENERIC_PROVIDER=julia-1` or `CUA_JULIA_COMMAND`) and no hosted endpoint keeps `local-mac`, so an existing Julia operator is never moved to a hosted profile by the default changing. Switch profiles from the repository checkout with `python3 scripts/set_profile.py local-mac` or `python3 scripts/set_profile.py fleet`. The script moves legacy flat settings under the inferred current profile and preserves them while selecting the new one. Use `CUA_PROFILE=fleet` for a one-process override. The local profile forces Julia-1 and rejects configured hosted selector, extraction, or visual endpoints rather than silently sending evidence off-device.
 
 The profile is a provider policy, not an installer. Julia-1 CPU inference and GLiNER2 CPU inference need local Python environments and cached checkpoints. The current NuExtract page adapter and screenshot provider still require a separately implemented local MLX worker; in `local-mac`, those capabilities fail closed when unavailable. Do not configure hosted URLs in a local-only deployment. See [Mac local runtime status](LOCAL-MAC.md) for the supported subset and remaining work.
 
-For hosted Jev, start with the [API key, endpoint and model setup](../skills/cua-capability-dispatch/references/setup.md#jev-api-key-endpoint-and-model). It also documents the separate Qwen key and endpoint, credential precedence, and a Jev-only smoke check.
+For hosted Jev, start with the [API key, endpoint and model setup](../skills/computer-use/references/setup.md#jev-api-key-endpoint-and-model). It also documents the separate Qwen key and endpoint, credential precedence, and a Jev-only smoke check.
 
 Offline tests use injected responses. Live calls require explicit runtime configuration and credentials; extracting this repo does not deploy anything.
 
@@ -28,7 +28,7 @@ The live booking harness also requires the installed stock Cua Driver/jev-use ch
 
 ## Julia-1 generic chooser
 
-`generic_from_config()` loads the active profile. `local-mac` selects Julia-1; `fleet` selects Jev with the configured Qwen escalation. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev, but the local profile rejects that provider. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
+`generic_from_config()` loads the active profile (an explicit `CUA_GENERIC_PROVIDER` wins; with neither, the factory falls back to Jev). A clean install has no `runtime.json`, which resolves to `fleet`, so the out-of-the-box chooser is Jev (page content goes to the configured hosted services); `local-mac` (Julia-1, no hosted route) is selected explicitly with `python3 scripts/set_profile.py local-mac`, `{"profile":"local-mac"}` or `CUA_PROFILE=local-mac`, and a `runtime.json` that only names Julia-1 also resolves to it. `fleet` selects Jev with the configured Qwen escalation. Existing callers that explicitly construct `FleetGeneric()` deliberately remain Jev, but the local profile rejects that provider. The active replay entry point uses the factory; historical Jev comparison scripts remain fixed controls.
 
 ```sh
 export CUA_GENERIC_PROVIDER=julia-1

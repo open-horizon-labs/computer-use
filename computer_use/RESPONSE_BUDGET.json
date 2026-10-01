@@ -1,0 +1,811 @@
+{
+  "purpose": "Ceilings on what the LLM pays per task: the bytes of every JSON response the server returns per budget scenario (max_total_bytes over all calls, max_call_bytes for the largest), the simulated settle and idle waits (max_wait_s: the recorded sleeps of the fake clock, not wall time) and the tools/list the LLM carries every session (instructions, and each default tool description and input schema). Measured through the real server tools on the real captured Chrome trees and the synthetic shapes of CALL_BUDGET.json, so every number is fixture-derived, not a rate on typical pages. Each ceiling is the measured number x 1.1 rounded up; a number changes only with a CE id in changed_by, and that CE records the same number under response_budget (test_budget and test_response_budget check both). Regenerate with python computer_use/call_budget.py --write-response-budget.",
+  "tools_list": {
+    "instructions": {
+      "value": 2032,
+      "changed_by": "CE-FACADE-011"
+    },
+    "do_description": {
+      "value": 6142,
+      "changed_by": "CE-FACADE-011"
+    },
+    "do_schema": {
+      "value": 13341,
+      "changed_by": "CE-FACADE-011"
+    },
+    "look_description": {
+      "value": 2852,
+      "changed_by": "CE-FACADE-011"
+    },
+    "look_schema": {
+      "value": 1571,
+      "changed_by": "CE-FACADE-011"
+    }
+  },
+  "scenarios": {
+    "booking_list": {
+      "max_total_bytes": {
+        "value": 2285,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2285,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "orders_cold": {
+      "max_total_bytes": {
+        "value": 5394,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2191,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "orders_confirm": {
+      "max_total_bytes": {
+        "value": 2130,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2130,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "confirm_deferral": {
+      "max_total_bytes": {
+        "value": 3757,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2342,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "canvas_regions_unique": {
+      "max_total_bytes": {
+        "value": 1316,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1316,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "canvas_regions": {
+      "max_total_bytes": {
+        "value": 2499,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1297,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "large_page_400": {
+      "max_total_bytes": {
+        "value": 1765,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1765,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "stale_recovery": {
+      "max_total_bytes": {
+        "value": 2442,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2442,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "driver_failure_recovered": {
+      "max_total_bytes": {
+        "value": 2459,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2459,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "unknown_then_accept": {
+      "max_total_bytes": {
+        "value": 6222,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2470,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "ambiguity_deferral": {
+      "max_total_bytes": {
+        "value": 3758,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2133,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "booking_blind_predicates": {
+      "max_total_bytes": {
+        "value": 4326,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2486,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "per_record_labels": {
+      "max_total_bytes": {
+        "value": 1697,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1697,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "single_record": {
+      "max_total_bytes": {
+        "value": 1479,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1479,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "toast_after_click": {
+      "max_total_bytes": {
+        "value": 1631,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1631,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "five_button_dialog": {
+      "max_total_bytes": {
+        "value": 3491,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2319,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "disabled_record": {
+      "max_total_bytes": {
+        "value": 1377,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1377,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "toolbar_records_ambiguous": {
+      "max_total_bytes": {
+        "value": 2505,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1336,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "canvas_dead_end": {
+      "max_total_bytes": {
+        "value": 1176,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1176,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_booking_look_do": {
+      "max_total_bytes": {
+        "value": 4228,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3508,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_booking_half_hour_look_do": {
+      "max_total_bytes": {
+        "value": 4248,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3508,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_booking_no_look": {
+      "max_total_bytes": {
+        "value": 4878,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3508,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_booking_blind_fields": {
+      "max_total_bytes": {
+        "value": 2305,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1566,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_orders_look_do": {
+      "max_total_bytes": {
+        "value": 4711,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2398,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_orders_declared_dialog": {
+      "max_total_bytes": {
+        "value": 3471,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2398,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_orders_identity_default": {
+      "max_total_bytes": {
+        "value": 4625,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2398,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_orders_wrong_dialog_guess": {
+      "max_total_bytes": {
+        "value": 4187,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2398,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_wizard_3_steps": {
+      "max_total_bytes": {
+        "value": 1971,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1069,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 2,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_wizard_wrong_final_label": {
+      "max_total_bytes": {
+        "value": 2956,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1529,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 2,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_invoices_100_focus": {
+      "max_total_bytes": {
+        "value": 2928,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2215,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_invoices_100_fields": {
+      "max_total_bytes": {
+        "value": 3715,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3002,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_canvas_look_do": {
+      "max_total_bytes": {
+        "value": 1565,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1071,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 2,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_stale_mid_plan": {
+      "max_total_bytes": {
+        "value": 1906,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1004,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 2,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_booking_vocab_mismatch": {
+      "max_total_bytes": {
+        "value": 5120,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3508,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_hidden_text_negative": {
+      "max_total_bytes": {
+        "value": 4674,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3822,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_negated_dialog": {
+      "max_total_bytes": {
+        "value": 4042,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2398,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_destructive_undeclared": {
+      "max_total_bytes": {
+        "value": 827,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 827,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_destructive_declared_after_refusal": {
+      "max_total_bytes": {
+        "value": 1558,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 827,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_uniqueness_over_all_records": {
+      "max_total_bytes": {
+        "value": 3027,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1215,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_hidden_text_ack": {
+      "max_total_bytes": {
+        "value": 2252,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1455,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_hidden_text_wide_look": {
+      "max_total_bytes": {
+        "value": 1914,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1263,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_checkbox_flip": {
+      "max_total_bytes": {
+        "value": 1659,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 981,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 2,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_dialog_extra_control": {
+      "max_total_bytes": {
+        "value": 4114,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 2398,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "plan_image_badge_seen": {
+      "max_total_bytes": {
+        "value": 1666,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1064,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 2,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "nav_goto_look_plan": {
+      "max_total_bytes": {
+        "value": 5166,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3597,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "onboarding_first_do": {
+      "max_total_bytes": {
+        "value": 4228,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3508,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "onboarding_first_do_goto": {
+      "max_total_bytes": {
+        "value": 5166,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3597,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "nav_open_tab_read_close": {
+      "max_total_bytes": {
+        "value": 4689,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 3597,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "nav_permission_required_stop": {
+      "max_total_bytes": {
+        "value": 1133,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1133,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "nav_read_pages_3": {
+      "max_total_bytes": {
+        "value": 4855,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 4855,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "nav_read_pages_one_fails": {
+      "max_total_bytes": {
+        "value": 4129,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 4129,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 1,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "mobile_look_do": {
+      "max_total_bytes": {
+        "value": 2532,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1796,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "mobile_ambiguous_label_stop": {
+      "max_total_bytes": {
+        "value": 3007,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1796,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "mobile_dropped_tap_stop": {
+      "max_total_bytes": {
+        "value": 3040,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1796,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 2,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "mobile_where_lines": {
+      "max_total_bytes": {
+        "value": 2616,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 1938,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    },
+    "mobile_backend_missing_stop": {
+      "max_total_bytes": {
+        "value": 959,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_call_bytes": {
+        "value": 959,
+        "changed_by": "CE-FACADE-011"
+      },
+      "max_wait_s": {
+        "value": 0,
+        "changed_by": "CE-FACADE-011"
+      }
+    }
+  }
+}

@@ -1,0 +1,43 @@
+# Changelog
+
+Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may still change in minor releases.
+
+## 0.1.0 (2026-10-01)
+
+First release. `look` then `do` for Mac apps, browser pages, and Android/iOS devices, with every action proved by an independent check, and an agent-owned browser that runs on a virtual display so it never takes over your screen. Verified live on the signed Cua Driver 0.31.0 (also 0.30.4): 12/12 fixture tasks and 7/7 browser checks through the product path, plus a tap on the iOS simulator.
+
+### Breaking: rename and migration
+- Tools lose the `cua_` prefix: `look` and `do` (advanced, with `CUA_TASK_ADVANCED=1`: `windows`, `observe`, `read`, `choose`, `act`, `verify`, `trace`, `finish`). No aliases: the default surface stays exactly two tools.
+- The MCP server is `computer-use` (was `cua-task`), so clients see `mcp__computer-use__look` and `mcp__computer-use__do`. `facade/` is now `computer_use/`; the skill is `skills/computer-use/`.
+- Migration: rename the client's MCP server key `cua-task` to `computer-use` and point its args at `computer_use/server.py`; change allow-lists and prompts from `mcp__cua-task__cua_*` to `mcp__computer-use__*`; reinstall the skill under its new name and remove the old `cua-capability-dispatch` copy. `python -m computer_use bootstrap --yes` does the registration (with a backup).
+- Default provider profile on a clean install is now `fleet` (Jev chooser, NuExtract3 page reading), which sends page content to the configured hosted services. `local-mac` (Julia-1) stays selectable; an existing `runtime.json` without a `profile` key that names Julia-1 and no hosted endpoint stays `local-mac`.
+- `close_tab` presses the tab's own Close button (background AX); Cmd+W (foreground) is only an explicit `allow_foreground` fallback.
+- Removed: the unqualified Qwen chat-completion vision fallback. Without `CUA_SYSTEMONE_URL` visual verification ends unverified instead of asking a model that invented screenshot evidence (#8).
+
+### Web: navigation and reading
+- Plan steps `goto`, `open_tab`, `close_tab`, `read_pages` (1 to 5 urls per call) and `press {menu: [...]}` (Driver `invoke_menu`, only with `allow_foreground`). A navigation is done only when the tab reports the requested page; typed stops `navigated_elsewhere`, `login_wall`, `landing_unknown`, `navigate_failed`, `browser_tab_ambiguous`. A refusal to attach to a profile is `permission_required` naming the grant; the facade never reroutes to another browser. `close_tab` closes only a tab this facade opened. A plan that starts with a navigation always answers with `summary.title` (#28, #33, #34, #39, #72).
+- `look` in a browser also reads the page's `semantic_v2` snapshot, bounded (6 s per call, 10 s total, AX-only fallback with `degraded`); DOM-only lines appear as `dom_lines` with `sources_disagree`, never preferred silently, never acted on.
+- noVNC in a browser tab: detected structurally, labels from Perception, a press goes through `browser_click` in the background; a VNC password is never typed (#56; covered by fakes only, not run against a live noVNC page).
+
+### Agent browser and agent display (nothing on your screen)
+- `goto`, `open_tab`, `read_pages` default to one Chrome for Testing window with a profile the server owns, installed on demand, launched on a headless virtual display and reused for the server's lifetime. `profile: "user"` on a step uses your own browser; `CUA_AGENT_BROWSER=auto|user`, `CUA_AGENT_BROWSER_PATH`.
+- `computer_use/spaces/space-mover` (Swift, built on demand) creates the virtual display through the private `CGVirtualDisplay` classes and parks windows by accessibility position; windows of agent-owned apps (Android emulator, Simulator, Chrome Beta/Canary/Chromium; `CUA_AGENT_APPS`) are parked too (`CUA_AGENT_DISPLAY=off|auto|required`).
+- Before every launch the profile's saved window placement is rewritten to the display's bounds; the window must lie wholly inside the display or the browser is quit and the step refused `agent_browser_misplaced`. No display means no launch. Shutdown kills the browser's whole process group; session restore is off; a stale instance is killed before launch (#60).
+
+### Mobile: Android and iOS
+- `look` and `do` take `device` (adb id or iOS simulator UDID). The server starts mobile-mcp itself on first use (`mobile_backend_unavailable` without Node.js); an iOS simulator's on-device agent is installed once, bounded. Device screens yield records by geometry, so `where.lines` works; a tap is verified on a fresh element list (a tap that changed nothing is `screen_unchanged_after_action`). Container names never become lines; an empty device list on cold start is asked again (#54, #59, #69).
+
+### Setup and onboarding
+- `python -m computer_use doctor [--json] [--probe]` (read-only environment check, exit 1 on a blocker; `--probe` runs one verified do on a bundled page on the agent display) and `bootstrap [--yes]` (builds the helper, prefetches mobile-mcp, installs Perception, restarts the daemon with `--grant existing-profile`, prints the manual System Settings steps) (#63).
+- The MCP instructions are a welcome screen (look then do, `expect` is the proof, `look_id`, one worked example, stop and ask on a refusal). A refusal for an environment reason carries `setup: [{check, status, fix, who}]` once per blocker set. Every refusal reason names its next call (checked by a test); `time_to_first_verified_do` is traced (#36, #64).
+
+### Reliability and cost
+- Fixed on real Chrome (Driver 0.30.4 and 0.31.0): plain buttons are not toggles (Chrome's `selected:false`); the first look waits for a growing AX tree and for buttons Chrome has not made pressable yet; a capture-bound (canvas) click sends its window only in `target` (the Driver refused every canvas press otherwise); `close_tab` retries once on a settling window; a failed navigation is `navigate_failed`, only consent codes are `permission_required`; the menu route recognises the Driver's exit-1 refusal; the DOM look counts only displayed-text roles (#50, #51).
+- A Driver answer with `effect: "refused"` is a refusal, never `delivered` (#38). A read-only Driver call that fails as if the session were gone is retried once after `start_session`; failures report `{tool, exit_class, session_restart_tried, driver_code}` and no other Driver text (#31; a live check showed a daemon restart does not drop the session, so this is a defence, not the cause of #30).
+- `look` counts only the page, not the browser's menu bar, on windows without a web area, so a drawn canvas such as an Android emulator reaches Perception (#27).
+- Driver 0.31: `timeout_ms` is sent on 0.31+, `ax_app_launching` is a not-ready reason and never something an action clicks against, and the stacked look wait is bounded (#32).
+- Response budgets (CE-FACADE-011, proposed): `computer_use/RESPONSE_BUDGET.json` holds per-scenario byte and wait ceilings checked by `scripts/check_call_budget.py`; `tools/list` went from 32.5 KB to 23.6 KB, responses are 10.7% smaller over the 54 scenarios (the fixed notice sentence comes once per window, hints are at most 240 characters, a plan's summary carries only what is new).
+
+### Known limits
+- Linux and remote desktops over SSH (#37), the file-picker sheet (upstream trycua/cua#4392, #5) and the cause of #30 are open for 0.2.0.
+- Not exercised live: the Mission Control fallback move of `space-mover`, `invoke_menu`, noVNC, the Android emulator (not running during the release check).
