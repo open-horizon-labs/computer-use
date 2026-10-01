@@ -2,6 +2,8 @@
 
 **Current default profile:** `fleet` (user decision 2026-09-30, "Jev is the default"): a clean install with no `runtime.json` uses the Jev chooser with NuExtract3 page reading and the configured screenshot services, **so page content is sent to the hosted services you configure**. `local-mac` (Julia-1 for local finite choices, refusing every hosted route) stays available: select it explicitly with `python3 scripts/set_profile.py local-mac`. An existing configuration that already names Julia-1 and no hosted service keeps `local-mac`. See [provider profiles](docs/PROVIDERS.md#provider-profiles) and the [local Mac support status](docs/LOCAL-MAC.md).
 
+Why this exists: [WHY.md](WHY.md).
+
 A companion to stock computer-use tools and skills. The stock driver observes and executes; this repository supplies typed request guidance, capability routing, evidence matching, bounded semantic recovery, and a CESS simulation loop.
 
 The driving LLM describes intent and evidence requirements. Dispatcher code follows the sketch to choose providers. Models return evidence or an offered ID; the controller retains executable arguments, validates the current binding, and independently verifies progress.
@@ -75,7 +77,7 @@ NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosin
 
 ```sh
 scripts/setup_facade.sh --no-perception
-.venv-facade/bin/python -m unittest discover -s computer_use -p 'test_*.py'   # 559 tests
+.venv-facade/bin/python -m unittest discover -s computer_use -p 'test_*.py'   # 1100 tests
 .venv-facade/bin/python scripts/check_call_budget.py
 python3 inference/cua-decider/capability-dispatch/simulation_gate.py
 ```
