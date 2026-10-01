@@ -83,8 +83,24 @@ list the new process's window). So the launch is guarded three ways, and the use
   verification).
 - **Verify, never park-after.** As soon as the process's titled layer-0 window is listed, its Driver bounds must lie wholly inside
   the display (any overlap with another display, or unknown bounds, fails). If not, the process is quit at once (SIGTERM, SIGKILL
-  after 2 s), the saved placement is deleted (after the process exits, since Chrome writes its placement back as it quits) and the
+  after 3 s), the saved placement is deleted (after the process exits, since Chrome writes its placement back as it quits) and the
   step is refused `agent_browser_misplaced`, naming the bounds seen. Nothing was navigated; the window is never left up.
+
+- **Lifecycle (measured live 2026-09-30: 23 Chrome processes stayed alive after shutdown and the next launch forwarded into them).** Chrome
+  is launched with `start_new_session=True` (its own process group, pgid recorded). `stop()` sends SIGTERM to the group, waits up to 3 s,
+  sends SIGKILL to the group, then scans `ps -axo pid,command` and SIGKILLs by pid any process whose command line still contains our
+  user-data-dir path (a helper outside the group, or what a forwarded launch left). `shutdown()` calls `stop()`; so does interpreter exit
+  (`atexit`) as a last resort. At launch, a process already carrying our user-data-dir (stale from an earlier server) is killed the same
+  way first and logged (`agent_browser_recovered_stale`, with the pids): a launch never forwards into a stale instance.
+- **No session restore.** Before each launch `Default/Preferences` gets `session.restore_on_startup = 5` and `profile.exit_type =
+  "Normal"`, `profile.exited_cleanly = true`; `Default/Sessions` and the files `Current Session`, `Last Session`, `Current Tabs`,
+  `Last Tabs` are deleted (cookies, local and session storage stay); `--disable-session-crashed-bubble --hide-crash-restore-bubble` are
+  passed. The window therefore opens with exactly one tab (the placement seeding above is kept).
+- **The navigated tab is the tab.** After a navigation the Driver flags no tab active. The facade remembers the tab it last navigated
+  (id, then landed url and title) and, when no tab is active and the window shows several, uses it: by id, else by exactly one url+title match
+  (ids are re-minted on every bind). If it cannot be told, the step is still refused `browser_tab_ambiguous`; tabs are never closed blindly
+  (the next launch repairs a many-tab window via the no-restore seeding). `read_pages` closes each tab it opens; a tab left by `open_tab`
+  is the agent's to close with `close_tab`.
 
 The same containment rule applies to any window the facade creates (`window_created`) or first observes for an agent-owned app: a
 window not wholly inside the display is parked (a window that merely straddles it is no longer trusted by its centre).

@@ -12,9 +12,11 @@ Chrome for Testing 154 with --remote-debugging-port=0: DevToolsActivePort is wri
 CUA_AGENT_BROWSER = auto (default: the agent browser) | user (the user's own browser, as before). CUA_AGENT_BROWSER_PATH points at an installed
 Chromium-family executable instead of downloading Chrome for Testing. Nothing here runs until a step needs the agent browser.
 """
+import atexit
 import json
 import os
 import shutil
+import signal
 import subprocess
 import time
 from pathlib import Path
@@ -26,7 +28,9 @@ INSTALL_TIMEOUT_S = 600
 WINDOW_WAIT_S = 20
 WINDOW_POLL_S = 0.5
 INSET = 40
-KILL_AFTER_S = 2
+KILL_AFTER_S = 3  # SIGTERM to the process group, then this long before SIGKILL
+SESSION_FILES = ('Current Session', 'Last Session', 'Current Tabs', 'Last Tabs')  # cookies and storage stay; only what restores tabs goes
+RESTORE_NEW_TAB = 5  # session.restore_on_startup: open the new tab page (never the previous session)
 
 
 def placement_for(rect):
@@ -86,6 +90,40 @@ def clear_window_placement(profile, prefs=True):
                 _write(path, data)
 
 
+def seed_no_restore(profile):
+    """Make the next start open ONE fresh tab: restore_on_startup = 5, a clean exit recorded, and the session files deleted (measured live
+    2026-09-30: the profile restored its previous session and the one agent window held 6 tabs). Cookies and storage are kept."""
+    profile = Path(profile)
+    path = profile / 'Default' / 'Preferences'
+    prefs = _load(path)
+    for key, values in (('session', {'restore_on_startup': RESTORE_NEW_TAB}), ('profile', {'exit_type': 'Normal', 'exited_cleanly': True})):
+        node = prefs.get(key)
+        if not isinstance(node, dict):
+            node = prefs[key] = {}
+        node.update(values)
+    _write(path, prefs)
+    shutil.rmtree(profile / 'Default' / 'Sessions', ignore_errors=True)
+    for name in SESSION_FILES:
+        try:
+            (profile / 'Default' / name).unlink()
+        except OSError:
+            pass
+
+
+def scan_processes():
+    """[(pid, command)] of every process, from `ps -axo pid,command`."""
+    try:
+        out = subprocess.run(['ps', '-axo', 'pid,command'], capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    found = []
+    for line in out.splitlines()[1:]:
+        pid, _, command = line.strip().partition(' ')
+        if pid.isdigit():
+            found.append((int(pid), command.strip()))
+    return found
+
+
 def misplaced(bounds, rect):
     from core import Gap
     return Gap('agent_browser_misplaced: the agent browser window opened at %s, not wholly inside the agent display %s; the browser was quit and its saved '
@@ -118,12 +156,16 @@ def find_installed(root):
 
 
 class AgentBrowser:
-    def __init__(self, mode=None, path=None, cache=None, popen=subprocess.Popen, run=subprocess.run, sleep=time.sleep, clock=time.monotonic, which=shutil.which):
+    def __init__(self, mode=None, path=None, cache=None, popen=subprocess.Popen, run=subprocess.run, sleep=time.sleep, clock=time.monotonic, which=shutil.which,
+                 killpg=os.killpg, kill=os.kill, scan=scan_processes):
         self.mode = mode if mode in MODES else mode_from_env()
         self.path = path if path is not None else (os.environ.get('CUA_AGENT_BROWSER_PATH') or None)
         self.cache = Path(cache or CACHE)
         self.popen, self.run, self.sleep, self.clock, self.which = popen, run, sleep, clock, which
+        self.killpg, self.kill, self.scan = killpg, kill, scan
         self.proc = None
+        self.pgid = None
+        self._atexit = False
         self.window_id = None
         self.launches = 0
 
@@ -159,7 +201,7 @@ class AgentBrowser:
     def argv(self, exe, rect=None):
         """The launch command. With the agent display's bounds the window is placed 40 px inside it, so it never appears on the user's screen."""
         args = [str(exe), '--user-data-dir=%s' % (self.cache / 'agent-profile'), '--remote-debugging-port=0',
-                '--no-first-run', '--no-default-browser-check']
+                '--no-first-run', '--no-default-browser-check', '--disable-session-crashed-bubble', '--hide-crash-restore-bubble']
         if rect:
             args += ['--window-position=%d,%d' % (rect['x'] + 40, rect['y'] + 40), '--window-size=%d,%d' % (rect['width'] - 80, rect['height'] - 80)]
         return args + ['about:blank']
@@ -167,16 +209,61 @@ class AgentBrowser:
     def alive(self):
         return self.proc is not None and self.proc.poll() is None
 
-    def _launch(self, rect):
+    def _launch(self, rect, f=None):
         exe = self.executable()
-        (self.cache / 'agent-profile').mkdir(parents=True, exist_ok=True)
-        if rect and not self.alive():  # our Chrome is not running: its saved placement would override the flags, so rewrite it first
-            seed_window_placement(self.cache / 'agent-profile', rect)
-        proc = self.popen(self.argv(exe, rect), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        profile = self.cache / 'agent-profile'
+        profile.mkdir(parents=True, exist_ok=True)
+        if not self.alive():
+            self._recover_stale(f)  # a Chrome of ours left by an earlier server would take this launch as a forward: it is killed first
+            seed_no_restore(profile)
+            if rect:  # its saved placement would override the flags, so rewrite it first
+                seed_window_placement(profile, rect)
+        proc = self.popen(self.argv(exe, rect), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)  # own process group
         self.launches += 1
+        if not self._atexit:
+            self._atexit = True
+            atexit.register(self.stop)
         if not self.alive():  # a launch that finds the profile in use forwards to the running instance and exits: the first process stays ours
-            self.proc = proc
+            self.proc, self.pgid = proc, proc.pid  # start_new_session: the group id is the pid
         return self.proc
+
+    # ---- kill ----
+    def _ours(self):
+        """[pid] of every process whose command line contains our user-data-dir path (never this process)."""
+        mark = str(self.cache / 'agent-profile')
+        return [pid for pid, command in self.scan() if mark in command and pid != os.getpid()]
+
+    def _signal_group(self, pgid, sig):
+        try:
+            self.killpg(pgid, sig)
+            return True
+        except (ProcessLookupError, PermissionError, OSError):
+            return False
+
+    def _signal_pid(self, pid, sig):
+        try:
+            self.kill(pid, sig)
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
+
+    def _recover_stale(self, f):
+        stale = self._ours()
+        if not stale:
+            return
+        try:
+            f.event('agent_browser_recovered_stale', pids=stale[:50])
+        except Exception:
+            pass
+        for pid in stale:
+            self._signal_pid(pid, signal.SIGTERM)
+        deadline = self.clock() + KILL_AFTER_S
+        while self._ours() and self.clock() < deadline:
+            self.sleep(0.1)
+        self._kill_survivors()
+
+    def _kill_survivors(self):
+        for pid in self._ours():
+            self._signal_pid(pid, signal.SIGKILL)
 
     def _window(self, f):
         """(window_id, title, bounds) of the agent browser's titled window, preferring the remembered one."""
@@ -196,7 +283,7 @@ class AgentBrowser:
                 self.window_id = seen[0]
                 return self.proc.pid, seen[0]
         rect = f.agent.launch_rect()  # the display's current bounds; no display: refused here before anything is launched (None only for CUA_AGENT_DISPLAY=off)
-        self._launch(rect)
+        self._launch(rect, f)
         deadline = self.clock() + WINDOW_WAIT_S
         seen = None
         while True:
@@ -216,14 +303,25 @@ class AgentBrowser:
         return self.proc.pid, seen[0]
 
     def stop(self):
-        proc, self.proc, self.window_id = self.proc, None, None
-        if proc is not None and proc.poll() is None:
-            proc.terminate()
-            try:
-                proc.wait(timeout=KILL_AFTER_S)
-            except Exception:
-                proc.kill()
-                try:
-                    proc.wait(timeout=KILL_AFTER_S)
-                except Exception:
-                    pass
+        """Quit the WHOLE browser: SIGTERM to the process group, up to KILL_AFTER_S for it to go, then SIGKILL to the group; then any process still
+        carrying our user-data-dir (a helper outside the group, or what a forwarded launch left) is killed by pid. The first process is not the only
+        one (23 stayed alive after shutdown, measured live 2026-09-30), so the leader exiting proves nothing."""
+        proc, pgid = self.proc, self.pgid
+        self.proc, self.pgid, self.window_id = None, None, None
+        if pgid is not None:
+            if self._signal_group(pgid, signal.SIGTERM) or (proc is not None and proc.poll() is None):
+                if proc is not None and proc.poll() is None:
+                    try:
+                        proc.terminate()
+                    except Exception:
+                        pass
+                deadline = self.clock() + KILL_AFTER_S
+                while self.clock() < deadline and self._signal_group(pgid, 0):
+                    self.sleep(0.1)
+                self._signal_group(pgid, signal.SIGKILL)
+                if proc is not None and proc.poll() is None:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+        self._kill_survivors()
