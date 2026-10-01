@@ -2,7 +2,7 @@
 
 **Current default profile:** `fleet` (user decision 2026-09-30, "Jev is the default"): a clean install with no `runtime.json` uses the Jev chooser with NuExtract3 page reading and the configured screenshot services, **so page content is sent to the hosted services you configure**. `local-mac` (Julia-1 for local finite choices, refusing every hosted route) stays available: select it explicitly with `python3 scripts/set_profile.py local-mac`. An existing configuration that already names Julia-1 and no hosted service keeps `local-mac`. See [provider profiles](docs/PROVIDERS.md#provider-profiles) and the [local Mac support status](docs/LOCAL-MAC.md).
 
-Why this exists, with the evidence: [docs/WHY.md](docs/WHY.md).
+Why this exists: [WHY.md](WHY.md).
 
 A companion to stock computer-use tools and skills. The stock driver observes and executes; this repository supplies typed request guidance, capability routing, evidence matching, bounded semantic recovery, and a CESS simulation loop.
 
