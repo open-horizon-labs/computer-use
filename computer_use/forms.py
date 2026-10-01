@@ -112,11 +112,22 @@ def _open_and_press(f, pid, window_id, node, index, control, label):
     except (Gap, DriverCallFailed) as error:
         return _result('refused', 'select_refused', message='select_refused: %r could not be opened (%s); nothing was changed' % (control[:60], _code(error)))
     f.latest.pop((pid, window_id), None)
-    fresh = _fresh(f, pid, window_id)
+    # Chrome lists the options under the select a moment after the press (live 2026-10-01: the first read still showed only the
+    # selected one), so re-read within the look's own bounded delays until more than one option is listed.
+    fresh, again = None, []
+    for delay in (0,) + tuple(_core().OBSERVE_RETRY_DELAYS):
+        if delay:
+            f.sleep(delay)
+        fresh = _fresh(f, pid, window_id)
+        if fresh is None:
+            continue
+        again = _found(f, fresh[1], control, SELECT_ROLES)
+        if len(again) == 1 and len(options_of(f, fresh[1], again[0])) > 1:
+            break
+        f.latest.pop((pid, window_id), None)
     if fresh is None:
         return _result('stopped', 'select_unverified', 'uncertain', message='select_unverified: %r was opened but could not be read; nothing was chosen' % control[:60])
     _, opened = fresh
-    again = _found(f, opened, control, SELECT_ROLES)
     if len(again) != 1:
         return _result('stopped', 'select_unverified', 'uncertain', message='select_unverified: %r could not be found again after opening; nothing was chosen' % control[:60])
     members = f.subtree(opened, 'e%d' % again[0])[1]

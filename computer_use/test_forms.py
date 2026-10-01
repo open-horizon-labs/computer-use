@@ -51,8 +51,8 @@ class FormDriver(lv.LiveDriver):
         if tool == 'click':
             self.clicks.append(copy.deepcopy(args))
             token = args['element_token']
-            if token.endswith(':%d' % POPUP):  # live 2026-10-01: pressing the select opens it and lists its options under it
-                self.listed = True
+            if token.endswith(':%d' % POPUP):  # live 2026-10-01: pressing the select opens it and lists its options under it, a read later
+                self.pending = ('list', 2)
                 return {'effect': 'unverifiable'}
             for n, label in enumerate(o for o in OPTIONS if o != self.shown):
                 if self.listed and token.endswith(':%d' % (40 + n)):
@@ -69,6 +69,7 @@ class FormDriver(lv.LiveDriver):
         if self.pending and self.pending[1] <= 1:
             what, _ = self.pending;self.pending = None
             if what == 'box':self.checked = not self.checked
+            elif what == 'list':self.listed = True
             else:self.shown = what
         elif self.pending:self.pending = (self.pending[0], self.pending[1] - 1)
         return super().observe(*args)
