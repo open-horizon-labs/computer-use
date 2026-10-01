@@ -59,7 +59,7 @@ def build_prompt(task, arm, facts):
         intro = ('An Android emulator window is open on this Mac. ' if arm == 'native'
                  else 'An Android emulator is running (device id %s). ' % facts['device'])
     else:
-        intro = ('The iOS Simulator is open on this Mac with an iPhone 17 Pro. ' if arm == 'native'
+        intro = ('The iPhone 17 Pro simulator is open on this Mac in Device Hub (Xcode 27). ' if arm == 'native'
                  else 'An iPhone 17 Pro simulator is running (device id %s). ' % facts['device'])
     return intro + goal + TAIL
 

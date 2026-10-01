@@ -149,7 +149,7 @@ class EventTaskTest(unittest.TestCase):
     def test_orders_needs_confirm(self):
         req, conf = self.ev('cancel_request', '1044', ts=1), self.ev('cancel_confirm', '1044', ts=2)
         self.assertEqual(tasks.judge('orders', events=[req, conf])[0], 'correct')
-        self.assertEqual(tasks.judge('orders', events=[req])[0], 'wrong')  # acted, never completed
+        self.assertEqual(tasks.judge('orders', events=[req])[0], 'failed')  # acted, never completed
         self.assertEqual(tasks.judge('orders', events=[self.ev('cancel_request', '1042')])[0], 'wrong')
 
     def test_form_exact_values(self):

@@ -13,6 +13,7 @@ tests; only the argv builders and the process-diff logic are.
 """
 import glob
 import os
+import json
 import re
 import shutil
 import signal
@@ -136,6 +137,26 @@ def _wait_title(timeout=15):
     time.sleep(min(timeout, 2.5))  # Chrome needs a moment to paint its first frame before the agent looks
 
 
+def grant_browser(title, timeout=20):
+    """The one-time CDP grant (browser_prepare existing_profile) on the native arm's own Chrome for Testing window, so both
+    arms start from the same consent state: computer-use performs this step itself for its agent browser (browser.bind).
+    Without it the native agent's browser_set_input_files is refused browser_consent_required (2026-10-01 upload run)."""
+    driver = str(Path.home() / '.local/bin/cua-driver')
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        out = sh([driver, 'call', 'list_windows', '--json', '{}']).stdout
+        try:
+            wins = [w for w in json.loads(out).get('windows', []) if (w.get('title') or '').startswith(title) and w.get('layer', 0) == 0]
+        except ValueError:
+            wins = []
+        if wins:
+            w = wins[0]
+            r = sh([driver, 'call', 'browser_prepare', '--json', json.dumps({'pid': w['pid'], 'window_id': w['window_id'], 'strategy': {'kind': 'existing_profile'}})], timeout=60)
+            return {'granted': r.returncode == 0, 'detail': (r.stdout or r.stderr)[:200]}
+        time.sleep(1)
+    return {'granted': False, 'detail': 'window titled %r not listed' % title}
+
+
 def open_surface(task, arm, run_id, base_url, workdir, android_serial_box=None, ios_udid=None):
     """Prepare the surface for one run. `arm` is 'native' or 'computer-use'."""
     spec = tasks.TASKS[task]
@@ -163,6 +184,7 @@ def open_surface(task, arm, run_id, base_url, workdir, android_serial_box=None, 
             s.on_close(lambda: shutil.rmtree(profile, ignore_errors=True))
             s.on_close(lambda: kill_pids([proc.pid] + [p for p, c in processes() if profile in c]))
             _wait_title()
+            s.facts['browser_grant'] = grant_browser(title)
         return s
     if surface == 'mac':
         app = spec['app']
@@ -197,14 +219,16 @@ def open_surface(task, arm, run_id, base_url, workdir, android_serial_box=None, 
         s.read_truth = lambda: tasks.ios_truth(udid)
         s.on_close(lambda: sh(['xcrun', 'simctl', 'terminate', udid, 'com.apple.Preferences']))
         if arm == 'native':
-            was_running = app_running('Simulator')
-            sh(['open', '-a', 'Simulator'])
+            hub = '/Applications/Xcode.app/Contents/Applications/DeviceHub.app'
+            app_name = 'Device Hub' if Path(hub).exists() else 'Simulator'
+            was_running = app_running(app_name)
+            sh(['open', '-a', hub if app_name == 'Device Hub' else 'Simulator'])
             for _ in range(30):  # the 2026-10-01 run handed the agent a Simulator with no window yet
-                if (osa('tell application "System Events" to count windows of process "Simulator"') or '0').strip() not in ('', '0'):
+                if (osa('tell application "System Events" to count windows of process "%s"' % app_name) or '0').strip() not in ('', '0'):
                     break
                 time.sleep(1)
             if not was_running:
-                s.on_close(lambda: osa('tell application "Simulator" to quit'))
+                s.on_close(lambda: osa('tell application "%s" to quit' % app_name))
         return s
     raise ValueError(surface)
 

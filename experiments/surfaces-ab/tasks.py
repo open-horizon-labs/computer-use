@@ -89,15 +89,15 @@ def judge_events(task, events, timed_out=False):
     if done == len(want):
         return 'correct', {}
     if events:
-        return 'wrong', {'note': 'acted but did not complete (%d of %d expected events)' % (done, len(want))}
+        return 'failed', {'note': 'acted but did not complete (%d of %d expected events)' % (done, len(want))}
     return ('timeout' if timed_out else 'no-action'), {}
 
 
-def judge_upload(events, expected, timed_out=False):
+def judge_upload(events, expected, timed_out=False, acted=False):
     """expected = {filename, size, sha256} of the file the harness prepared."""
     ups = [e for e in events if e.get('action') == 'upload']
-    if not ups:
-        return ('timeout' if timed_out else 'no-action'), {}
+    if not ups:  # the agent may have acted (opened the picker, typed, clicked) without finishing: that is a failure, not no-action
+        return ('timeout' if timed_out else 'failed' if acted else 'no-action'), {}
     ok = [e for e in ups if (e.get('values') or {}) == {'filename': expected['filename'], 'size': str(expected['size']), 'sha256': expected['sha256']}]
     if ok and len(ok) == len(ups):
         return 'correct', {}
@@ -161,7 +161,7 @@ def judge_doc(doc_text, acted, timed_out=False):
 def judge(task, *, events=(), text='', truth=None, doc=None, acted=False, timed_out=False):
     kind = TASKS[task]['kind']
     if task == 'upload':
-        return judge_upload(list(events), truth, timed_out)
+        return judge_upload(list(events), truth, timed_out, acted)
     if kind == 'events':
         return judge_events(task, list(events), timed_out)
     if kind == 'doc':
