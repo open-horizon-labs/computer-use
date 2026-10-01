@@ -67,9 +67,27 @@ lazily at the first window it needs to park, keeps it for the server's lifetime 
 `goto`, `open_tab` and `read_pages` default to the **agent browser**: one Chrome for Testing process with a profile folder the
 server owns (`~/.cache/computer-use/agent-profile`), started only when no agent browser window exists and then kept and reused for
 the server's lifetime (new tabs or navigation in that window, never a new window per task). Its window is launched inside the agent
-display (`--window-position` from the display's bounds), so nothing shows on your screen; bounds are verified and a window outside
-the display is parked. With the display unavailable it launches normally and is parked (`auto`), or the step is refused before
-launching (`CUA_AGENT_DISPLAY=required`).
+display. Chrome restores the window placement saved in the profile over `--window-position` (measured live 2026-09-30: with a
+saved `browser.window_placement` of (10,37) it opened on the built-in screen and the follow-up park failed, because AX did not yet
+list the new process's window). So the launch is guarded three ways, and the user's screen is never the fallback:
+
+- **Seed.** Before every launch (our Chrome not running; if it runs it is reused, never launched again) the profile's
+  `Default/Preferences` key `browser.window_placement` is rewritten to the agent display's bounds, read from the helper at that
+  moment (never an x remembered from an earlier run; the virtual display appears at a different x each time):
+  `{left: x+40, top: y+40, right: x+width-40, bottom: y+height-40, maximized: false, work_area_left: x, work_area_top: y,
+  work_area_right: x+width, work_area_bottom: y+height}`. The file and keys are created if missing and every other key is kept;
+  any `window_placement` key in `Local State` is removed. The `--window-position/--window-size` flags stay.
+- **No display, no launch.** The display must exist and its bounds be known before the launch. If not, the step is refused
+  `agent_display_unavailable` (also in `auto`) with the setup hint and nothing is opened. `auto` therefore means: no agent display
+  refuses browser work. Only an explicit `CUA_AGENT_DISPLAY=off` set by the user launches without a display (no seeding, no
+  verification).
+- **Verify, never park-after.** As soon as the process's titled layer-0 window is listed, its Driver bounds must lie wholly inside
+  the display (any overlap with another display, or unknown bounds, fails). If not, the process is quit at once (SIGTERM, SIGKILL
+  after 2 s), the saved placement is deleted (after the process exits, since Chrome writes its placement back as it quits) and the
+  step is refused `agent_browser_misplaced`, naming the bounds seen. Nothing was navigated; the window is never left up.
+
+The same containment rule applies to any window the facade creates (`window_created`) or first observes for an agent-owned app: a
+window not wholly inside the display is parked (a window that merely straddles it is no longer trusted by its centre).
 
 - `CUA_AGENT_BROWSER=auto` (default) or `user` (the old default: the window named by `title`). `CUA_AGENT_BROWSER_PATH` names an
   installed Chromium-family executable instead of Chrome for Testing.

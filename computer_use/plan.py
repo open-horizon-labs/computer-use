@@ -397,7 +397,8 @@ HINTS = {
     'pointer_not_deliverable_in_background': 'A background click on a drawn surface would land at its centre, not on the control; nothing was clicked by step %(n)d. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
     'foreground_required': 'This window cannot open a tab without being fronted briefly; nothing was opened. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
     'agent_browser_unavailable': 'The server\'s own browser could not start; nothing was opened. If the setup block lists a fix with who=agent, run it; otherwise tell the user what it says. Then call `do` with the same steps once; until then do not switch to profile="user" or another browser yourself.',
-    'agent_display_unavailable': 'CUA_AGENT_DISPLAY=required and the agent display cannot start; nothing was opened or moved. Tell the user (the setup block names the fix and who); only they can set CUA_AGENT_DISPLAY=auto. Do not retry `do` until it is fixed.',
+    'agent_display_unavailable': 'The agent display cannot start, so nothing was opened (the agent browser never opens on the user\'s screen). Tell the user (the setup block names the fix and who); only they can set CUA_AGENT_DISPLAY=off. Do not retry `do` until it is fixed.',
+    'agent_browser_misplaced': 'The agent browser opened outside the agent display, so it was quit at once and nothing was navigated. Tell the user what the message says; do not switch to profile="user" or retry in a loop.',
     'permission_required': 'The Driver has not been granted access to that browser profile; nothing was opened in another browser or profile. Stop and ask the user to grant it (the setup block names the step and who); once they have, call `do` with the same steps once. Never reroute to another browser, profile or raw Driver call.',
     'perception_not_available': 'This page is drawn pixels and Cua Perception is not installed or healthy; nothing was clicked. If the setup block lists a fix with who=agent run it, otherwise tell the user; then call `look` again. Until then use a page with real controls.',
     'navigate_refused': 'The Driver refused to navigate (see message); nothing else was tried. Do not retry the same goto: call `do` with a different url, or tell the user what the message says.',
@@ -487,7 +488,7 @@ def _fit(result):
     return result
 
 
-AGENT_REFUSALS = ('agent_browser_unavailable', 'agent_display_unavailable')  # refused before anything was opened or navigated
+AGENT_REFUSALS = ('agent_browser_unavailable', 'agent_display_unavailable', 'agent_browser_misplaced')  # refused before anything was opened or navigated
 
 
 def resolve_browser_window(f, step, ctx, title):
