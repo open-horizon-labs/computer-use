@@ -123,7 +123,7 @@ MUTATIONS = {
         ['test_resize.Refusals.test_the_users_window_is_never_resized', 'test_resize.Refusals.test_another_window_id_in_the_agent_process_is_not_resized']),
     'resize_accepted_without_readback': (
         'call a delivered set_window_frame done without the Driver\'s confirmed readback (#78)',
-        [('agent_browser.py', "        if value.get('effect') != 'confirmed' or not self._close(readback, target):", "        if False:")],
+        [('agent_browser.py', "        if value.get('effect') != 'confirmed' or not (read_back or readback) or (readback and not self._close(readback, target)):", "        if False:")],
         ['test_resize.NotProven.test_an_effect_that_is_not_confirmed_is_not_done', 'test_resize.NotProven.test_a_confirmed_effect_without_a_readback_is_not_done',
          'test_resize.NotProven.test_a_readback_off_by_more_than_two_points_is_not_done']),
     'resize_lets_the_window_leave_the_display': (

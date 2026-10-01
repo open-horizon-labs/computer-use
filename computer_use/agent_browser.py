@@ -353,8 +353,10 @@ class AgentBrowser:
             raise Gap('resize_unverified: the Driver call failed, so the window may have been resized.')
         value = value if isinstance(value, dict) else {}
         readback = next((self._frame(value[k]) for k in ('readback', 'frame', 'bounds') if isinstance(value.get(k), dict)), None)
-        if value.get('effect') != 'confirmed' or not self._close(readback, target):
-            raise Gap('resize_unverified: the Driver did not confirm the new size with a readback within %g points; the window may have changed.' % RESIZE_TOLERANCE)
+        evidence = value.get('evidence') if isinstance(value.get('evidence'), list) else []
+        read_back = any(isinstance(e, dict) and e.get('kind') == 'value_readback' for e in evidence)  # Driver 0.31 answers {effect: confirmed, evidence: [{kind: value_readback}]}, no frame
+        if value.get('effect') != 'confirmed' or not (read_back or readback) or (readback and not self._close(readback, target)):
+            raise Gap('resize_unverified: the Driver did not confirm the new size with a readback; the window may have changed.')
         after = self._window(f)
         rect = f.agent.launch_rect()  # the display layout is read again: containment is checked against the display as it is now
         now = after[2] if after and after[0] == window_id else None

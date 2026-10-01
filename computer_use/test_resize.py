@@ -32,11 +32,11 @@ class ResizeDriver(ta.AgentDriver):
             self.world.bounds = {**frame, 'width': frame['width'] + 1.5}
             return {'effect': 'confirmed', 'readback': self.world.bounds}
         if self.mode == 'listing_differs':  # the Driver says so, the window list does not agree
-            return {'effect': 'confirmed', 'readback': frame}
+            return {'delivery': {'mode': 'not_applicable'}, 'effect': 'confirmed', 'evidence': [{'kind': 'value_readback', 'detail': 'WindowServer matched the requested frame within 2 points'}]}  # the real Driver 0.31 shape (live 2026-10-01)
         self.world.bounds = frame
         if self.mode == 'display_moved':  # the display layout changed under the window: it now sticks out
             self.spaces.displays = lambda: [{'id': 6, 'x': -1920, 'y': 0, 'width': 400, 'height': 1080}]
-        return {'effect': 'confirmed', 'readback': frame}
+        return {'delivery': {'mode': 'not_applicable'}, 'effect': 'confirmed', 'evidence': [{'kind': 'value_readback', 'detail': 'WindowServer matched the requested frame within 2 points'}]}  # the real Driver 0.31 shape (live 2026-10-01)
 
 
 class ResizeBase(ta.Base):
