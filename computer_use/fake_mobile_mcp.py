@@ -7,7 +7,6 @@ Configured by environment (all paths are the caller's temp files):
 """
 import json
 import os
-import sys
 
 from mcp.server.fastmcp import FastMCP
 
