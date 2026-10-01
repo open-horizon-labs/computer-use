@@ -134,7 +134,11 @@ def judge_text(task, text, truth, acted, timed_out=False):
         nums = numbers_in(text)
         has = Decimal(truth['price']) in nums and truth['name'].lower() in text.lower()
         decoys = [p for p in fx.COMPARE_DECOY_PRICES if Decimal(p) in nums]
-        return ('correct' if has and not decoys else 'wrong'), ({'decoy_prices_mentioned': decoys} if decoys else {})
+        # Mentioning the decoys while explaining the choice is fine (both arms did on 2026-10-01); the answer must name the right lamp
+        # and price, and must not name a decoy lamp as the answer in its first line.
+        first = text.splitlines()[0].lower() if text else ''
+        wrong_lead = any(n.lower() in first for n in getattr(fx, 'COMPARE_DECOY_NAMES', ()))
+        return ('correct' if has and not wrong_lead else 'wrong'), ({'decoy_prices_mentioned': decoys} if decoys else {})
     if task in ('wikipedia', 'calculator'):
         raw = str(truth).strip()
         try:

@@ -79,6 +79,7 @@ PRODUCTS = [
 ]
 COMPARE_ANSWER = {'name': 'Quillon Arc Lamp', 'price': '36.75'}
 COMPARE_DECOY_PRICES = ['42.00', '29.00']
+COMPARE_DECOY_NAMES = ['Halden Task Lamp', 'Marlow Banker Lamp']
 
 
 def render_shop(run):

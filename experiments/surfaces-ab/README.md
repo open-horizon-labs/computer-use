@@ -36,6 +36,8 @@ consented in chat, **not** consent itself. Consent for the 2026-10-01 smoke run 
 | 10 | `ios` | booted iPhone 17 Pro simulator | iOS version from Settings > General > About | `simctl list devices -j` runtime of the device |
 
 Outcomes: `correct`, `wrong`, `no-action` (the agent never acted) or `timeout`. Text answers are strict: `compare` is wrong if
+
+**Changed after the first run (2026-10-01):** `compare` was scored wrong whenever the reply mentioned a decoy price. Both arms named the right lamp and price and mentioned the decoys only to explain the choice, so the rule is now: correct if the reply names the right lamp and price and does not lead with a decoy. Results report both the strict and the relaxed score.
 the reply also mentions a decoy price; numbers ignore thousands separators; versions ignore a trailing `.0`.
 
 ## Surfaces and where windows go

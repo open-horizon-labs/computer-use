@@ -175,7 +175,7 @@ class TextTaskTest(unittest.TestCase):
         truth = {'name': 'Quillon Arc Lamp', 'price': '36.75'}
         self.assertEqual(self.j('compare', 'The Quillon Arc Lamp at $36.75.', truth), 'correct')
         self.assertEqual(self.j('compare', 'Marlow Banker Lamp, $29.00', truth), 'wrong')
-        self.assertEqual(self.j('compare', 'Quillon Arc Lamp $36.75 (the Marlow at $29.00 is out of stock)', truth), 'wrong')
+        self.assertEqual(self.j('compare', 'Quillon Arc Lamp $36.75 (the Marlow at $29.00 is out of stock)', truth), 'correct')  # relaxed 2026-10-01 after the first run, see README (both arms explained the decoys)
         self.assertEqual(self.j('compare', 'I could not do it', truth, acted=False), 'no-action')
 
     def test_number_answers_ignore_separators(self):
