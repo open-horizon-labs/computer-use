@@ -4,6 +4,8 @@ Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may 
 
 ## 0.1.1 (unreleased)
 
+- `resize` keeps a 40 pt margin inside the agent display: a request larger than the display used to ask for the full display, which Chrome refuses (it settles 40 pt in), so the step ended `resize_unverified`. Found live (#78).
+
 - Plan step `resize {width, height}`: resizes only the agent browser window with the Driver's `set_window_frame` (current x, y kept, clamped inside the agent display), done only on a confirmed readback within 2 pt plus a re-check that the whole window is inside the display; the user's windows and `profile: "user"` are refused (`resize_not_agent_window`); looks of that window are dropped so the next `look` reflows (#78).
 - A `type_text` the Driver answers with `effect: partial` (or `type_text_incomplete`) is now reported as `delivered_unverified` with `delivery_detail` and a hint that its delivered count is not proof (look and read the field before any retry), unless an `expect` verified it (#57).
 

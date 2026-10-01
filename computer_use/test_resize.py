@@ -68,7 +68,7 @@ class Resize(ResizeBase):
         self.setup()
         r = self.resize({'do': 'resize', 'width': 3000, 'height': 2000})
         self.assertEqual(r['status'], 'done', r)
-        self.assertEqual(self.last(), {'x': -1920.0, 'y': 0.0, 'width': 1920, 'height': 1080})
+        self.assertEqual(self.last(), {'x': -1880.0, 'y': 40.0, 'width': 1840.0, 'height': 1000.0})  # display inset by RESIZE_MARGIN: live, Chrome settles an oversize window there and the Driver answers unverifiable for a full-display request
         self.assertTrue(r['steps'][0]['resize']['clamped'])
         self.assertTrue(self.agent.inside(self.world.bounds))
 
@@ -78,7 +78,7 @@ class Resize(ResizeBase):
         self.world.bounds = {'x': -400.0, 'y': 900.0, 'width': 300.0, 'height': 150.0}
         r = self.resize({'do': 'resize', 'width': 800, 'height': 600})
         self.assertEqual(r['status'], 'done', r)
-        self.assertEqual(self.last(), {'x': -800.0, 'y': 480.0, 'width': 800, 'height': 600})
+        self.assertEqual(self.last(), {'x': -840.0, 'y': 440.0, 'width': 800, 'height': 600})
 
     def test_a_readback_within_two_points_is_accepted(self):
         self.setup()
