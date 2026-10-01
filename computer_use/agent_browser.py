@@ -1,14 +1,18 @@
 """The agent browser (#60, CE-FACADE-009): the default target of goto / open_tab / read_pages.
 
 One Chrome for Testing process with a profile folder WE own, kept for the server's lifetime and reused (one window; new tabs, never a new
-window per task). Its first window opens ON the agent display (launch position from the display's bounds), so nothing flashes on the user's
-screen; with the display unavailable it launches normally and the window is parked. The user's own Chrome is used only when a step says
+window per task). Its first window opens ON the agent display, so nothing flashes on the user's screen. Chrome restores the placement saved in the
+profile over --window-position (measured live 2026-09-30: it opened on the user's built-in screen), so before every launch the profile's
+saved placement is rewritten to the display's CURRENT bounds, the window is verified to lie wholly inside the display right after it
+appears (else the process is quit, the saved placement deleted and the step refused agent_browser_misplaced), and with no agent display
+nothing is launched (agent_display_unavailable) unless the user set CUA_AGENT_DISPLAY=off. The user's screen is never the fallback. The user's own Chrome is used only when a step says
 profile: "user". The Driver binds it through browser_prepare (existing_profile) as for any Chromium: measured live 2026-09-30, Driver 0.31.0,
 Chrome for Testing 154 with --remote-debugging-port=0: DevToolsActivePort is written in our own profile and the bind is exact.
 
 CUA_AGENT_BROWSER = auto (default: the agent browser) | user (the user's own browser, as before). CUA_AGENT_BROWSER_PATH points at an installed
 Chromium-family executable instead of downloading Chrome for Testing. Nothing here runs until a step needs the agent browser.
 """
+import json
 import os
 import shutil
 import subprocess
@@ -21,6 +25,71 @@ INSTALL_ARGV = ['npx', '-y', '@puppeteer/browsers', 'install', 'chrome@stable']
 INSTALL_TIMEOUT_S = 600
 WINDOW_WAIT_S = 20
 WINDOW_POLL_S = 0.5
+INSET = 40
+KILL_AFTER_S = 2
+
+
+def placement_for(rect):
+    """Chrome's browser.window_placement for a window INSET px inside the display rect {x, y, width, height}, on that display's work area."""
+    return {'left': rect['x'] + INSET, 'top': rect['y'] + INSET, 'right': rect['x'] + rect['width'] - INSET, 'bottom': rect['y'] + rect['height'] - INSET,
+            'maximized': False, 'work_area_left': rect['x'], 'work_area_top': rect['y'],
+            'work_area_right': rect['x'] + rect['width'], 'work_area_bottom': rect['y'] + rect['height']}
+
+
+def _load(path):
+    try:
+        data = json.loads(path.read_text())
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _write(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + '.tmp')
+    tmp.write_text(json.dumps(data))
+    os.replace(tmp, path)
+
+
+def _drop_placements(node):
+    """Remove every 'window_placement' key at any depth; True when something was removed."""
+    removed = False
+    if isinstance(node, dict):
+        if 'window_placement' in node:
+            del node['window_placement']
+            removed = True
+        for value in list(node.values()):
+            removed = _drop_placements(value) or removed
+    return removed
+
+
+def seed_window_placement(profile, rect):
+    """Write the placement into <profile>/Default/Preferences (every other key kept, file and keys created) and drop stale copies from Local State."""
+    profile = Path(profile)
+    prefs = _load(profile / 'Default' / 'Preferences')
+    browser = prefs.get('browser')
+    if not isinstance(browser, dict):
+        browser = prefs['browser'] = {}
+    browser['window_placement'] = placement_for(rect)
+    _write(profile / 'Default' / 'Preferences', prefs)
+    clear_window_placement(profile, prefs=False)
+
+
+def clear_window_placement(profile, prefs=True):
+    """Delete the saved placement (Default/Preferences when prefs, and any copy in Local State); files that do not exist are not created."""
+    profile = Path(profile)
+    targets = ([profile / 'Default' / 'Preferences'] if prefs else []) + [profile / 'Local State']
+    for path in targets:
+        if path.exists():
+            data = _load(path)
+            if _drop_placements(data):
+                _write(path, data)
+
+
+def misplaced(bounds, rect):
+    from core import Gap
+    return Gap('agent_browser_misplaced: the agent browser window opened at %s, not wholly inside the agent display %s; the browser was quit and its saved '
+               'window placement deleted. Nothing was navigated.' % (bounds, rect))
 
 
 def mode_from_env(environ=None):
@@ -101,6 +170,8 @@ class AgentBrowser:
     def _launch(self, rect):
         exe = self.executable()
         (self.cache / 'agent-profile').mkdir(parents=True, exist_ok=True)
+        if rect and not self.alive():  # our Chrome is not running: its saved placement would override the flags, so rewrite it first
+            seed_window_placement(self.cache / 'agent-profile', rect)
         proc = self.popen(self.argv(exe, rect), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         self.launches += 1
         if not self.alive():  # a launch that finds the profile in use forwards to the running instance and exits: the first process stays ours
@@ -124,7 +195,7 @@ class AgentBrowser:
             if seen:
                 self.window_id = seen[0]
                 return self.proc.pid, seen[0]
-        rect = f.agent.rect()  # starts the display (auto: None and a note when unavailable; required: refuses before anything is opened)
+        rect = f.agent.launch_rect()  # the display's current bounds; no display: refused here before anything is launched (None only for CUA_AGENT_DISPLAY=off)
         self._launch(rect)
         deadline = self.clock() + WINDOW_WAIT_S
         seen = None
@@ -136,8 +207,12 @@ class AgentBrowser:
         if not seen:
             self.stop()
             raise unavailable('the agent browser started but showed no window in %ds' % WINDOW_WAIT_S)
+        if rect is not None and not f.agent.inside(seen[2]):  # never leave a window on another display up, and do not rely on parking it afterwards
+            self.stop()
+            clear_window_placement(self.cache / 'agent-profile')
+            raise misplaced(seen[2], rect)
         self.window_id = seen[0]
-        f.window_created(seen[0], seen[1], seen[2])  # bounds checked: a window already on the agent display is left alone, anything else is parked
+        f.window_created(seen[0], seen[1], seen[2])
         return self.proc.pid, seen[0]
 
     def stop(self):
@@ -145,6 +220,10 @@ class AgentBrowser:
         if proc is not None and proc.poll() is None:
             proc.terminate()
             try:
-                proc.wait(timeout=5)
+                proc.wait(timeout=KILL_AFTER_S)
             except Exception:
                 proc.kill()
+                try:
+                    proc.wait(timeout=KILL_AFTER_S)
+                except Exception:
+                    pass

@@ -66,33 +66,58 @@ class AgentDisplay:
             self.failure = self._reason(error)
             raise RuntimeError(self.failure)
 
+    def _measure(self):
+        """The agent display's CURRENT bounds, read from the helper every time (never an x remembered from an earlier run: the layout moves)."""
+        self._ensure()
+        for d in self.client.displays():
+            if int(d.get('id', -1)) == int(self.display):
+                self._rect = {k: int(d[k]) for k in ('x', 'y', 'width', 'height')}
+                return self._rect
+        self._rect = None
+        raise RuntimeError('agent display %s is not in the display list' % self.display)
+
     def rect(self):
         """Bounds {x, y, width, height} of the agent display, starting it if needed; None when off or unavailable (auto notes it). required refuses."""
         if self.mode == 'off':
             return None
         try:
-            self._ensure()
-            if self._rect is None:
-                for d in self.client.displays():
-                    if int(d.get('id', -1)) == int(self.display):
-                        self._rect = {k: int(d[k]) for k in ('x', 'y', 'width', 'height')}
+            return self._measure()
         except Exception as error:
             if self.mode == 'required':
                 raise _refused(self._reason(error))
             self.pending.setdefault('note', 'agent_display: unavailable (%s)' % self._reason(error))
             return None
-        return self._rect
 
-    def on_display(self, bounds):
-        """True when a window's bounds (Driver shape {x, y, width, height}) have their centre inside the agent display."""
+    def launch_rect(self):
+        """Bounds to launch a window into, for every mode but an explicit off (None): no display, no launch. The user's screen is never the fallback."""
+        if self.mode == 'off':
+            return None
+        try:
+            return self._measure()
+        except Exception as error:
+            from core import Gap
+            raise Gap('agent_display_unavailable: %s; nothing was opened, because the agent browser never opens on your screen. Fix the agent display '
+                      '(python -m computer_use doctor), or set CUA_AGENT_DISPLAY=off yourself to accept windows on your own screen.' % self._reason(error))
+
+    def inside(self, bounds):
+        """True when the WHOLE window (Driver bounds {x, y, width, height}) lies inside the agent display: any overlap with another display is False."""
         r = self._rect
         if not r or not isinstance(bounds, dict):
             return False
         try:
-            cx, cy = bounds['x'] + bounds['width'] / 2, bounds['y'] + bounds['height'] / 2
+            x, y, w, h = bounds['x'], bounds['y'], bounds['width'], bounds['height']
         except (KeyError, TypeError):
             return False
-        return r['x'] <= cx < r['x'] + r['width'] and r['y'] <= cy < r['y'] + r['height']
+        return r['x'] <= x and r['y'] <= y and x + w <= r['x'] + r['width'] and y + h <= r['y'] + r['height']
+
+    on_display = inside
+
+    def _fresh(self):
+        """Re-read the display bounds before a containment check; a helper that cannot answer leaves the window to be parked (and refused there)."""
+        try:
+            self._measure()
+        except Exception:
+            self._rect = None
 
     def _park(self, window_id):
         """Park one window. True when parked; False when skipped (auto, with the reason noted). required raises a refusal."""
@@ -128,6 +153,7 @@ class AgentDisplay:
         look or act on it. Only windows the facade created are passed here; the user's windows never are."""
         if not title:
             return False
+        self._fresh() if self.mode != 'off' else None
         if self.on_display(bounds):  # opened on the agent display already (launch position): nothing to move
             self.tried.add(window_id)
             return True
@@ -139,6 +165,7 @@ class AgentDisplay:
             return
         for w in windows:
             if w.get('window_id') is not None and w.get('is_on_screen') is not False and self.owned(w):
+                self._fresh()
                 if self.on_display(w.get('bounds')):
                     self.tried.add(w['window_id'])
                 else:
