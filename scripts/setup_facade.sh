@@ -46,7 +46,7 @@ else
   echo "Node.js (npm/npx) not found: Android/iOS device targets need Node.js 18+ (the server answers mobile_backend_unavailable until then); Mac windows are unaffected."
 fi
 
-echo "Done. Register the server: codex mcp add computer-use -- \"$ROOT/.venv-facade/bin/python\" \"$ROOT/computer_use/server.py\""
+echo "Done. Register the server: codex mcp add computer-use-oh -- \"$ROOT/.venv-facade/bin/python\" \"$ROOT/computer_use/server.py\""
 
 echo
 echo "Checking the environment (python -m computer_use doctor; bootstrap fixes what it can) ..."

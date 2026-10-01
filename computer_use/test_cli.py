@@ -177,16 +177,21 @@ class ConfigChecksTest(unittest.TestCase):
 
         def with_servers(servers, files=(server,)):
             return fake_env(contents={path: json.dumps({'mcpServers': servers})}, files=files)
-        good = {'computer-use': {'command': 'py', 'args': [server]}}
+        good = {'computer-use-oh': {'command': 'py', 'args': [server]}}
         self.assertEqual(cli.check_mcp_registration(with_servers(good))['status'], OK)
         self.assertEqual(cli.check_mcp_registration(with_servers({}))['status'], WARN)
         stale = cli.check_mcp_registration(with_servers({**good, 'cua-task': {}}))
         self.assertEqual(stale['status'], WARN)
         self.assertIn('cua-task', stale['detail'])
-        old_path = cli.check_mcp_registration(with_servers({'computer-use': {'args': ['/repo/facade/server.py']}}))
+        old_path = cli.check_mcp_registration(with_servers({'computer-use-oh': {'args': ['/repo/facade/server.py']}}))
         self.assertIn('computer_use/server.py', old_path['detail'])
         self.assertEqual(cli.check_mcp_registration(with_servers(good, files=()))['status'], WARN)
         self.assertEqual(cli.check_mcp_registration(fake_env())['status'], WARN)
+        reserved = cli.check_mcp_registration(with_servers({'computer-use': {'command': 'py', 'args': [server]}}))
+        self.assertEqual(reserved['status'], BLOCKER)
+        self.assertIn('reserved name in Claude Code; run bootstrap --yes to rename', reserved['fix'])
+        both = cli.check_mcp_registration(with_servers({**good, 'computer-use': {}}))
+        self.assertEqual(both['status'], BLOCKER)
 
     def test_skill(self):
         cur = '/home/u/.claude/skills/computer-use/SKILL.md'
@@ -332,6 +337,15 @@ class BootstrapTest(unittest.TestCase):
         self.assertEqual(self.backups(), [])
         self.assertIn('not editing without --yes', text)
 
+    def test_yes_migrates_each_old_key_never_leaving_both(self):
+        for old in ('computer-use', 'cua-task'):
+            self.path.write_text(json.dumps({'mcpServers': {old: {'type': 'stdio', 'command': 'py', 'args': ['/old/server.py'], 'env': {}}}}))
+            self.run_bootstrap('--yes')
+            self.assertEqual(list(json.loads(self.path.read_text())['mcpServers']), ['computer-use-oh'], old)
+        self.path.write_text(json.dumps({'mcpServers': {'computer-use': {'command': 'a', 'args': []}, 'cua-task': {'command': 'b', 'args': []}}}))
+        self.run_bootstrap('--yes')
+        self.assertEqual(list(json.loads(self.path.read_text())['mcpServers']), ['computer-use-oh'])
+
     def test_yes_backs_up_then_renames_and_repoints(self):
         _, text, _ = self.run_bootstrap('--yes')
         backups = self.backups()
@@ -339,8 +353,9 @@ class BootstrapTest(unittest.TestCase):
         self.assertEqual(backups[0].read_text(), self.original)
         data = json.loads(self.path.read_text())
         self.assertNotIn('cua-task', data['mcpServers'])
-        self.assertEqual(data['mcpServers']['computer-use']['args'], [str(self.root / 'computer_use/server.py')])
-        self.assertEqual(data['mcpServers']['computer-use']['command'], 'py')
+        self.assertEqual(data['mcpServers']['computer-use-oh']['args'], [str(self.root / 'computer_use/server.py')])
+        self.assertEqual(data['mcpServers']['computer-use-oh']['command'], 'py')
+        self.assertEqual(list(data['mcpServers']), ['computer-use-oh'])
         self.assertEqual(data['other'], 1)
         self.assertIn('updated ~/.claude.json', text)
 

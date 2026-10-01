@@ -217,8 +217,8 @@ From the runtime checkout, run the setup entrypoint (creates `.venv-facade`, ins
 ```sh
 scripts/setup_facade.sh          # add --no-perception to skip the perception install
 python3 scripts/set_profile.py fleet
-codex mcp add computer-use -- "$PWD/.venv-facade/bin/python" "$PWD/computer_use/server.py"
-codex mcp get computer-use --json
+codex mcp add computer-use-oh -- "$PWD/.venv-facade/bin/python" "$PWD/computer_use/server.py"
+codex mcp get computer-use-oh --json
 ```
 
 Run the profile switch command any time to change providers: `python3 scripts/set_profile.py local-mac` or `python3 scripts/set_profile.py fleet`. Settings are stored separately per profile and switching preserves both sets. If `computer-use` is already registered, skip the `codex mcp add` command. Start a fresh Codex session after installation or a profile change so the server reloads its runtime configuration. `CUA_DRIVER` overrides the default `~/.local/bin/cua-driver`. Runtime commands, endpoints and secrets stay outside this repository. No model starts merely to list tools.
