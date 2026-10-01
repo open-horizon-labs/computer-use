@@ -39,7 +39,7 @@ MUTATIONS = {
          'test_plan.Validation.test_an_invented_look_id_is_refused']),
     'null_expect_on_a_non_final_step': (
         'allow expect=null anywhere',
-        [('plan.py', "        if kind not in ('verify', 'close_tab', 'read_pages', 'resize') and 'expect' not in step and not final:", "        if kind not in ('verify', 'close_tab', 'read_pages', 'resize') and 'expect' not in step and False:")],
+        [('plan.py', "        if kind not in ('verify', 'close_tab', 'read_pages', 'resize', 'swipe') and 'expect' not in step and not final:", "        if kind not in ('verify', 'close_tab', 'read_pages', 'resize', 'swipe') and 'expect' not in step and False:")],
         ['test_plan.Validation.test_null_expect_on_a_non_final_step_is_refused_before_any_click']),
     'steps_continue_after_a_non_done_step': (
         'keep executing the remaining steps after a failed one',
@@ -705,6 +705,19 @@ MUTATIONS = {
         'upload step (#5): name the offending file by its full path in the refusal',
         [('browser.py', "        name = os.path.basename(path)[:80] or 'file %d' % index", "        name = path if isinstance(path, str) and path else 'file %d' % index")],
         ['test_upload.FilesAreChecked.test_a_symlink_is_refused_even_to_a_real_file', 'test_upload.FilesAreChecked.test_the_message_names_the_basename_only']),
+    'device_swipe_done_when_the_list_did_not_change': (
+        'swipe step: report it done because mobile-mcp answered "Swiped", without a changed element list',
+        [('mobile.py', "        if signature(after) != signature(before):\n            return {'status': 'done', 'delivery': 'delivered', 'selected': selected, 'verification'", "        if True:\n            return {'status': 'done', 'delivery': 'delivered', 'selected': selected, 'verification'")],
+        ['test_mobile.DoSwipe.test_a_swipe_that_changed_nothing_is_screen_unchanged_not_done']),
+    'device_launch_takes_the_first_of_several_matching_apps': (
+        'launch step: break a tie between several matching apps by launching the first',
+        [('mobile.py', "        if len(found) == 1:\n            return found[0], None\n        if found:\n            return None, {'reason': 'app_ambiguous'", "        if found:\n            return found[0], None\n        if found:\n            return None, {'reason': 'app_ambiguous'")],
+        ['test_mobile.DoLaunch.test_several_apps_with_the_name_are_refused_with_the_candidates_and_nothing_is_launched']),
+    'device_launch_done_on_the_launch_answer': (
+        'launch step: done because mobile-mcp said "Launched app", the fresh screen never checked against expect',
+        [('mobile.py', "    return x.settle(step, before, LOAD_DELAYS, extra={'selected': selected})\n\n\ndef step_swipe", "    return {'status': 'done', 'delivery': 'delivered', 'selected': selected}\n\n\ndef step_swipe")],
+        ['test_mobile.DoLaunch.test_launch_never_reports_done_on_expect_text_that_was_already_there',
+         'test_mobile.DoLaunch.test_a_launch_that_changes_nothing_is_screen_unchanged_not_done']),
     'checkbox_done_without_the_state_flipping': (
         'a checkbox press is reported done because it was delivered (or its label is still on the page), not because its checked state flipped',
         [('forms.py', "        return {'final': marker == want, 'state': marker, 'gone': False}", "        return {'final': True, 'state': marker, 'gone': False}")],

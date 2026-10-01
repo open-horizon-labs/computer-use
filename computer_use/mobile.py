@@ -60,8 +60,12 @@ COLD_START_S = 15.0                    # an empty device list this soon after th
 COLD_RETRY_S = 2.0                     # the wait before asking again; at most COLD_RETRIES times, never a loop
 COLD_RETRIES = 2
 FOUND_MAX = 12
+APPS_PREFIX = 'Found these apps on device: '
+APP_ENTRY = re.compile(r'(.+?) \(([A-Za-z0-9_][A-Za-z0-9_.\-]*)\)(?:, |$)', re.S)   # "Name (package), Name (package)": a name may hold commas or parentheses
+SWIPE_FRACTION = 2                      # a swipe inside a named container travels half of the container's extent from its centre, so it stays inside
 REFUSED = frozenset({'mobile_backend_unavailable', 'device_not_found', 'mobile_device_agent_missing', 'bad_request', 'not_supported_on_device',
-                     'where_not_supported_on_device', 'look_required', 'unknown_look_id', 'look_window_mismatch', 'destructive_control', 'expect_required'})
+                     'where_not_supported_on_device', 'look_required', 'unknown_look_id', 'look_window_mismatch', 'destructive_control', 'expect_required',
+                     'app_ambiguous', 'app_not_found', 'within_ambiguous', 'within_not_found'})
 
 
 class MobileGap(Gap):
@@ -318,6 +322,16 @@ def parse_elements(text):
     return [normalize(r, i) for i, r in enumerate(raw) if isinstance(r, dict)]
 
 
+def parse_apps(text):
+    """mobile_list_apps' answer ("Found these apps on device: Name (package), Name (package)") as [{name, package}], in its order, one per package."""
+    out, seen = [], set()
+    for name, package in APP_ENTRY.findall((text or '')[len(APPS_PREFIX):]):
+        if package not in seen:
+            seen.add(package)
+            out.append({'name': _text(name), 'package': package})
+    return out
+
+
 def label_of(e):
     """What the control is called: its text, else its accessibility label / content-desc, else its name; a button with none falls back to its resource id."""
     return (e['names'][0] if e['names'] else '') or (e['id_tail'] if e['role'] in ('control', 'input') else '')
@@ -565,6 +579,24 @@ class Mobile:
         args = {'device': device, 'ref': element['ref']} if element['ref'] else {'device': device, 'x': x + w // 2, 'y': y + h // 2}
         self._act('mobile_click_on_screen_at_coordinates', args, 'Clicked on')
 
+    def apps(self, device):
+        """The installed apps mobile-mcp lists: [{name, package}] (an Android package or an iOS bundle id), in its order, one per package."""
+        text, error = self._backend().call('mobile_list_apps', {'device': device})
+        if error or not isinstance(text, str) or not text.startswith(APPS_PREFIX):
+            reason, message, delivery = classify(text)
+            raise MobileGap(reason, message, delivery)
+        return parse_apps(text)
+
+    def launch_app(self, device, package):
+        self._act('mobile_launch_app', {'device': device, 'packageName': package}, 'Launched app')
+
+    def swipe(self, device, direction, point=None, distance=None):
+        """mobile-mcp swipes from the centre of the screen unless it is given a start point; with one it swipes `distance` pixels from there."""
+        args = {'device': device, 'direction': direction}
+        if point is not None:
+            args.update({'x': point[0], 'y': point[1], 'distance': distance})
+        self._act('mobile_swipe_on_screen', args, 'Swiped')
+
     def type_keys(self, device, text):
         self._act('mobile_type_keys', {'device': device, 'text': text, 'submit': False}, 'Typed text')
 
@@ -690,8 +722,8 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
 
 # -- do ----------------------------------------------------------------------------------------------------------------------------------
 
-DEVICE_STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'text', 'expect', 'allow_destructive', 'accept_hidden_text', 'url'})
-DEVICE_KINDS = ('press', 'type', 'verify', 'goto')
+DEVICE_STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'text', 'expect', 'allow_destructive', 'accept_hidden_text', 'url', 'app', 'direction', 'within'})
+DEVICE_KINDS = ('press', 'type', 'verify', 'goto', 'launch', 'swipe')
 DEVICE_HINTS = {
     'mobile_backend_unavailable': 'The device backend (mobile-mcp) could not run; nothing was done. Tell the user what the setup block or the message says to install or fix; do not retry until they have.',
     'device_not_found': 'No such device; nothing was done. Call `look` with device="list", then `do` with an id from it.',
@@ -699,7 +731,11 @@ DEVICE_HINTS = {
     'mobile_observation_failed': 'The device screen could not be read, nothing was tapped by this step. Check the device is unlocked and reachable, then call `do` again.',
     'mobile_action_failed': 'The device action was not confirmed and may have reached the device (see delivery). Call `look` to read the screen before acting again.',
     'mobile_backend_timeout': 'The device backend did not answer in time (see delivery). Call `look` to read the screen before acting again.',
-    'screen_unchanged_after_action': "Step %(n)d's action was sent but the screen did not change and expect was not seen (locked device, covered control?). Do not repeat it blindly: call look, unlock if needed, then do.",
+    'screen_unchanged_after_action': "Step %(n)d's action was sent but the screen did not change and expect was not seen (locked device, covered control, end of the list?). Do not repeat it blindly: call look, unlock if needed, then do.",
+    'app_ambiguous': 'Several apps match step %(n)d (found.apps lists name and package); nothing was launched. Call do again with one exact package from found.apps as app, with the steps from step %(n)d on.',
+    'app_not_found': 'No installed app matches step %(n)d (found.apps lists near matches, else installed apps); nothing was launched. Call do with an exact name or package from found.apps as app, from step %(n)d on.',
+    'within_not_found': 'No element on the device screen is named by step %(n)d within (found.containers lists the large named areas); nothing was swiped. Call look, then do with an exact name, or no within, from step %(n)d on.',
+    'within_ambiguous': 'Several elements carry step %(n)d within; nothing was swiped. Call look, then do with a more specific exact name, or no within to swipe the centre of the screen, from step %(n)d on.',
     'focus_not_on_field': 'After the tap the keyboard focus is on another field, so nothing was typed by step %(n)d. Call `look`, then `do` with the exact label of the field you mean.',
     'control_not_found': 'No control on the device screen matches step %(n)d (found.controls lists the buttons); nothing was tapped by this step. Call `look`, then `do` with the exact label from it.',
     'control_ambiguous': 'Several elements on the device screen carry step %(n)d\'s label; nothing was guessed or tapped. Use a longer exact label (see `look`), or control_match=prefix only if you mean it.',
@@ -721,7 +757,7 @@ def unsupported(steps):
         if kind != 'press' and raw.get('where') is not None:
             raise Gap('bad_request: step %d (%s) does not take where on a device; where picks the record a press acts in' % (n, kind))
         if kind in ('confirm', 'open_tab', 'close_tab', 'read_pages', 'upload') or (kind == 'press' and raw.get('menu') is not None):
-            raise Gap('not_supported_on_device: step %d (%s) is for a Mac window; on a device use press, type, verify and goto' % (n, kind if raw.get('menu') is None else 'press menu'))
+            raise Gap('not_supported_on_device: step %d (%s) is for a Mac window; on a device use press, type, verify, goto, launch and swipe' % (n, kind if raw.get('menu') is None else 'press menu'))
         extra = sorted(k for k, v in raw.items() if v is not None and k not in DEVICE_STEP_KEYS)
         if extra:
             raise Gap('bad_request: step %d (%s) does not take %s on a device' % (n, kind, ', '.join(extra)))
@@ -980,6 +1016,73 @@ def step_goto(x, step):
     return x.settle(step, before, LOAD_DELAYS)
 
 
+def resolve_app(apps, wanted):
+    """(app, None) for exactly one installed app, else (None, {reason, candidates}). Tiers, the first with any match decides: the exact package or bundle id, the
+    exact name, a name that starts with the words given. Several in a tier is app_ambiguous: the first is never taken."""
+    want = lk.norm(wanted)
+    tiers = (lambda a: lk.norm(a['package']) == want, lambda a: lk.norm(a['name']) == want, lambda a: lk.norm(a['name']).startswith(want + ' '))
+    shown = lambda found: ['%s (%s)' % (a['name'][:30], a['package'][:60]) for a in found][:FOUND_MAX]
+    for tier in tiers:
+        found = [a for a in apps if tier(a)]
+        if len(found) == 1:
+            return found[0], None
+        if found:
+            return None, {'reason': 'app_ambiguous', 'candidates': shown(found), 'count': len(found)}
+    near = [a for a in apps if want in lk.norm(a['name']) or want in lk.norm(a['package'])]
+    return None, {'reason': 'app_not_found', 'candidates': shown(near or apps), 'count': len(near)}
+
+
+def step_launch(x, step):
+    before = x.elements()
+    apps = x.mob.apps(x.device)
+    app, problem = resolve_app(apps, step['app'])
+    if problem:
+        return {'status': 'refused', 'delivery': 'none', 'reason': problem['reason'], 'found': {'apps': problem['candidates']},
+                **({'control_count': problem['count']} if problem['reason'] == 'app_ambiguous' else {}),
+                'message': '%s: %s' % (problem['reason'], 'several installed apps match; nothing was launched' if problem['reason'] == 'app_ambiguous' else 'no installed app matches; nothing was launched')}
+    selected = {'description': ('app: %s (%s)' % (app['name'], app['package']))[:120]}
+    try:
+        x.mob.launch_app(x.device, app['package'])
+    except MobileGap as gap:
+        return {'status': 'failed', 'reason': gap.reason, 'delivery': gap.delivery, 'message': str(gap), 'selected': selected}
+    return x.settle(step, before, LOAD_DELAYS, extra={'selected': selected})
+
+
+def step_swipe(x, step):
+    before = x.elements()
+    point = distance = None
+    selected = {'description': 'swipe %s%s' % (step['direction'], ' in ' + step['within'][:60] if step.get('within') else ' from the centre of the screen')}
+    if step.get('within'):
+        target, problem = resolve(before, step['within'], False, (lambda e: True,))
+        if problem:
+            named = sorted((e for e in before if e['role'] != 'control' and label_of(e) and live(e)), key=lambda e: -area(e))
+            reason = 'within_ambiguous' if problem['reason'] == 'control_ambiguous' else 'within_not_found'
+            return {'status': 'refused', 'delivery': 'none', 'reason': reason, 'found': {'containers': list(dict.fromkeys(label_of(e)[:30] for e in named))[:FOUND_MAX]},
+                    'message': '%s: %s' % (reason, 'nothing was swiped')}
+        bx, by, bw, bh = target['bounds']
+        point = (bx + bw // 2, by + bh // 2)
+        distance = max(1, (bw if step['direction'] in ('left', 'right') else bh) // SWIPE_FRACTION)
+    try:
+        x.mob.swipe(x.device, step['direction'], point, distance)
+    except MobileGap as gap:
+        return {'status': 'failed', 'reason': gap.reason, 'delivery': gap.delivery, 'message': str(gap), 'selected': selected}
+    if step.get('expect'):
+        result = x.settle(step, before, TAP_DELAYS, extra={'selected': selected})
+        if result.get('reason') == 'delivery_unverified' and x.last is not None and signature(x.last) == signature(before):  # expect was already on screen, and nothing moved
+            return {**result, 'reason': 'screen_unchanged_after_action', 'delivery': 'uncertain'}
+        return result
+    after = None
+    for n, delay in enumerate((0.0,) + TAP_DELAYS):  # a scroll settles; observe fresh lists, bounded, until one differs from the list the swipe started on
+        if n and x.over():
+            break
+        if delay:
+            x.f.sleep(delay)
+        after = x.elements()
+        if signature(after) != signature(before):
+            return {'status': 'done', 'delivery': 'delivered', 'selected': selected, 'verification': {'status': 'satisfied', 'route': 'device_list_changed'}}
+    return {'status': 'stopped', 'reason': 'screen_unchanged_after_action', 'delivery': 'uncertain', 'selected': selected}
+
+
 def step_verify(x, step):
     check, after = x.verify(step['expect'], None, ())
     result = {'delivery': 'none', 'verification': {k: check.get(k) for k in ('status', 'route', 'reason') if check.get(k)}}
@@ -988,7 +1091,7 @@ def step_verify(x, step):
     return {**result, 'status': 'stopped', 'reason': 'not_verified'}
 
 
-STEPS = {'press': step_press, 'type': step_type, 'goto': step_goto, 'verify': step_verify}
+STEPS = {'press': step_press, 'type': step_type, 'goto': step_goto, 'verify': step_verify, 'launch': step_launch, 'swipe': step_swipe}
 
 
 def summary_of(els, device):
