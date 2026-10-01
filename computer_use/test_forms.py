@@ -50,6 +50,14 @@ class FormDriver(lv.LiveDriver):
             return {'status': 'ok', 'effect': 'confirmed'}
         if tool == 'click':
             self.clicks.append(copy.deepcopy(args))
+            token = args['element_token']
+            if token.endswith(':%d' % POPUP):  # live 2026-10-01: pressing the select opens it and lists its options under it
+                self.listed = True
+                return {'effect': 'unverifiable'}
+            for n, label in enumerate(o for o in OPTIONS if o != self.shown):
+                if self.listed and token.endswith(':%d' % (40 + n)):
+                    self.shown, self.listed = label, False
+                    return {'effect': 'unverifiable'}
             if args['element_token'].endswith(':%d' % BOX):
                 if self.press_mode == 'ok':
                     self.checked = not self.checked
@@ -166,12 +174,40 @@ class Select(Base):
         self.assertIn('popup_option_not_found', r['steps'][0]['message'])
         self.assertEqual((len(self.driver.sets), self.driver.clicks), (1, []), 'no fallback click on a popup')
 
-    def test_a_driver_that_gives_no_answer_is_uncertain_and_not_retried(self):
-        # Wrong patch: retry the set (a second delivery after a first that may have landed).
+    def test_a_failed_set_on_an_unchanged_select_opens_it_and_presses_the_option_under_it(self):
+        # Live 2026-10-01: set_value exits 1 on a closed Chrome select. Wrong patches: retry the set; press an option outside the select.
         self.driver.set_mode = 'fail'
         r = self.plan([self.pick()])
-        self.assertEqual((r.get('status'), r.get('reason'), r.get('delivery'), r.get('retryable')), ('failed', 'select_not_applied', 'uncertain', False), r)
-        self.assertEqual(len(self.driver.sets), 1)
+        self.assertEqual((r.get('status'), r.get('delivery')), ('done', 'delivered'), r)
+        self.assertEqual(len(self.driver.sets), 1, 'the set is never retried')
+        self.assertEqual([c['element_token'].split(':')[1] for c in self.driver.clicks][0], str(POPUP))
+        self.assertEqual(self.driver.shown, 'Billing')
+
+    def test_a_failed_set_that_landed_is_not_pressed_again(self):
+        self.driver.set_mode = 'fail'
+        real = self.driver.call
+        def landed(tool, args, timeout=20):
+            if tool == 'set_value':
+                self.driver.sets.append(args); self.driver.shown = args['value']
+                raise DriverCallFailed('driver_call_failed: set_value exited 1', 'set_value', 'exit')
+            return real(tool, args, timeout)
+        self.driver.call = landed
+        r = self.plan([self.pick()])
+        self.assertEqual(r.get('status'), 'done', r)
+        self.assertEqual(self.driver.clicks, [], 'nothing pressed after a set that landed')
+
+    def test_a_failed_set_that_changed_something_else_is_uncertain_and_not_retried(self):
+        self.driver.set_mode = 'fail'
+        real = self.driver.call
+        def odd(tool, args, timeout=20):
+            if tool == 'set_value':
+                self.driver.sets.append(args); self.driver.shown = 'Other'
+                raise DriverCallFailed('driver_call_failed: set_value exited 1', 'set_value', 'exit')
+            return real(tool, args, timeout)
+        self.driver.call = odd
+        r = self.plan([self.pick()])
+        self.assertEqual((r.get('status'), r.get('reason'), r.get('delivery')), ('failed', 'select_not_applied', 'uncertain'), r)
+        self.assertEqual((len(self.driver.sets), self.driver.clicks), (1, []))
 
     def test_two_selects_with_the_label_are_refused_not_guessed(self):
         self.driver.twin_select = True

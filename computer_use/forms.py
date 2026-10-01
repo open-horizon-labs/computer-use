@@ -102,6 +102,37 @@ def _code(error):
 
 # ---- select --------------------------------------------------------------------------------------------------------------------
 
+def _open_and_press(f, pid, window_id, node, index, control, label):
+    """Open the select with a press, then press the one option item UNDER it whose label is exactly `label`.
+    None when the option was pressed (the caller verifies the shown value); else the step result (nothing chosen)."""
+    Gap, DriverCallFailed = _core().Gap, _core().DriverCallFailed
+    press = lambda token: f.driver.call('click', {'session': f.session, 'pid': pid, 'window_id': window_id, 'element_token': token})
+    try:
+        press(node['element_token'])
+    except (Gap, DriverCallFailed) as error:
+        return _result('refused', 'select_refused', message='select_refused: %r could not be opened (%s); nothing was changed' % (control[:60], _code(error)))
+    f.latest.pop((pid, window_id), None)
+    fresh = _fresh(f, pid, window_id)
+    if fresh is None:
+        return _result('stopped', 'select_unverified', 'uncertain', message='select_unverified: %r was opened but could not be read; nothing was chosen' % control[:60])
+    _, opened = fresh
+    again = _found(f, opened, control, SELECT_ROLES)
+    if len(again) != 1:
+        return _result('stopped', 'select_unverified', 'uncertain', message='select_unverified: %r could not be found again after opening; nothing was chosen' % control[:60])
+    members = f.subtree(opened, 'e%d' % again[0])[1]
+    items = [i for i in sorted(members) if opened['nodes'][i].get('role') == 'AXMenuItem' and lk.norm(opened['nodes'][i].get('label')) == lk.norm(label)]
+    if len(items) != 1:
+        offered = options_of(f, opened, again[0])
+        return _result('refused', 'select_option_not_offered', 'uncertain', options=offered[:12],
+                       message='select_option_not_offered: %d options of %r are labelled %r (offered: %s); nothing was chosen' % (len(items), control[:60], label[:60], ', '.join(o[:30] for o in offered[:12])))
+    try:
+        press(opened['nodes'][items[0]]['element_token'])
+    except (Gap, DriverCallFailed) as error:
+        return _result('failed', 'select_not_applied', 'unknown', message='select_not_applied: pressing %r in %r failed (%s); it may or may not have changed' % (label[:60], control[:60], _code(error)))
+    f.latest.pop((pid, window_id), None)
+    return None
+
+
 def select(f, pid, window_id, control, option):
     """None when `control` is not exactly one select of the page (the old type path decides), else the step result dict."""
     Gap, DriverCallFailed = _core().Gap, _core().DriverCallFailed
@@ -136,7 +167,22 @@ def select(f, pid, window_id, control, option):
         if isinstance(answer, dict) and (answer.get('refusal') or answer.get('status') == 'refused'):  # a fake or a client that hands a refusal back as data
             raise Gap('Driver refused: ' + str((answer.get('refusal') or {}).get('code', 'unknown')))
     except DriverCallFailed:
-        return _result('failed', 'select_not_applied', 'unknown', message='select_not_applied: the Driver gave no answer for %r; it may or may not have changed' % control[:60])
+        # The failed set may still have landed: read the select first, and only press when it still shows what it showed before.
+        now = _fresh(f, pid, window_id)
+        again = _found(f, now[1], control, SELECT_ROLES) if now else []
+        shown_now = shown_of(f, now[1], again[0]) if len(again) == 1 else None
+        if shown_now != label and shown_now != before:
+            return _result('failed', 'select_not_applied', 'unknown', message='select_not_applied: the Driver gave no answer for %r; it may or may not have changed' % control[:60])
+        if shown_now == label:
+            opened = None
+        else:
+            opened = _open_and_press(f, pid, window_id, now[1]['nodes'][again[0]], again[0], control, label)  # the token from the fresh read: the failed set may have expired the old one
+        # Live 2026-10-01 (Chrome for Testing 154, Driver 0.31): a closed select exposes no option children, so set_value exits 1
+        # ("No AX child matching 'Billing'"). Pressing the select opens it; its options then appear under it as AXMenuItems
+        # (Chrome also lists them again in its native menu, outside the select), and pressing the one under the select
+        # chooses it in the background. The value is verified below exactly as for set_value.
+        if opened is not None:
+            return opened
     except Gap as gap:
         return _result('refused', 'select_refused', message='select_refused: the Driver refused to choose %r in %r (%s); nothing was changed' % (label[:60], control[:60], _code(gap)))
     f.latest.pop((pid, window_id), None)
