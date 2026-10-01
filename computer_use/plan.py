@@ -764,7 +764,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
     elif status == 'delivered_unverified' and entries[-1]['do'] in ('goto', 'open_tab'):
         title = (response.get('summary') or {}).get('title')
         named = 'title=<summary.title>' if not title else 'title=%s' % json.dumps(title)
-        response['hint'] = 'The navigation was delivered and the page loaded, but no expect was given, so nothing was checked. Call look(%s) to see it, or call do(%s, steps=[{do:"verify", expect:<page text that should be visible now>}]) to check. Do not repeat the goto.' % (named, named)
+        response['hint'] = 'The navigation was delivered but no expect was given, so nothing was checked. Call look(%s) to see it, or call do(%s, steps=[{do:"verify", expect:<page text that should be visible now>}]) to check. Do not repeat the goto.' % (named, named)
     elif status == 'delivered_unverified':
         response['hint'] = 'The last click was delivered but no expect was given, so nothing was checked. Do not click again. To check, call do with steps=[{do:"verify", expect:<page text that should be visible now>}].'
     if status == 'failed':
