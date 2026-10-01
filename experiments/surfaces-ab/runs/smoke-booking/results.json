@@ -1,0 +1,72 @@
+[
+  {
+    "arm": "native",
+    "task": "booking",
+    "run_id": "native-booking-1790873076",
+    "outcome": "correct",
+    "detail": {},
+    "turns": 10,
+    "mcp_calls": 8,
+    "tokens": {
+      "input": 20,
+      "output": 3120,
+      "cache_read": 850034,
+      "cache_write": 124158
+    },
+    "cost_usd": 0.9654618000000001,
+    "wall_s": 50.5,
+    "returncode": 0,
+    "stop": "success",
+    "interruptions": {
+      "focus_changes": 0,
+      "focus_steals": 0,
+      "new_user_windows": 0,
+      "windows_to_user_display": 0,
+      "overlay_windows": 0,
+      "cursor_move_samples": 0,
+      "cursor_bursts": 0,
+      "cursor_px": 0,
+      "cursor_moves_on_agent_display": 0,
+      "new_agent_windows": 0,
+      "monitor_ok": true
+    },
+    "annoyances": [],
+    "final_text": "I booked one appointment: Dr. Morgan Reyes, 3:00 PM, Telehealth, half-hour video visit.\n\n**Choosing the slot.** I read every listing in the Clinic Slots window (Chrome for Testing, window 69206) and ruled out the rest:\n- **Too early or wrong length:** the 1:30 PM slot is 60 minutes, 1:45 PM starts b",
+    "truth": null
+  },
+  {
+    "arm": "computer-use",
+    "task": "booking",
+    "run_id": "computer-use-booking-1790873135",
+    "outcome": "no-action",
+    "detail": {},
+    "turns": 2,
+    "mcp_calls": 0,
+    "tokens": {
+      "input": 4,
+      "output": 644,
+      "cache_read": 65386,
+      "cache_write": 27065
+    },
+    "cost_usd": 0.17995819999999998,
+    "wall_s": 8.4,
+    "returncode": 0,
+    "stop": "success",
+    "interruptions": {
+      "focus_changes": 0,
+      "focus_steals": 0,
+      "new_user_windows": 0,
+      "windows_to_user_display": 0,
+      "overlay_windows": 0,
+      "cursor_move_samples": 0,
+      "cursor_bursts": 0,
+      "cursor_px": 0,
+      "cursor_moves_on_agent_display": 0,
+      "new_agent_windows": 0,
+      "monitor_ok": true
+    },
+    "annoyances": [],
+    "final_text": "I couldn't book the appointment, because I have no tool that can open or control a browser.\n\n- **What I have:** The tools available to me are for publishing and reading claude.ai artifacts, messaging other agents, scheduling, and a few similar functions. None of them can load `http://127.0.0.1:61891",
+    "truth": null
+  }
+]

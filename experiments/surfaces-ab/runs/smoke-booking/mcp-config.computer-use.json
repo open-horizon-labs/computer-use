@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "computer-use": {
+      "command": "/Users/muness1/src/open-horizon-labs/computer-use/.venv-facade/bin/python",
+      "args": [
+        "/Users/muness1/src/open-horizon-labs/computer-use/.claude/worktrees/agent-a5e809a8f676da5d1/computer_use/server.py"
+      ]
+    }
+  }
+}
