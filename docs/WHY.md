@@ -61,7 +61,19 @@ Limits, in the same place: the helper uses private CoreGraphics classes that can
 
 The offline gate passes 28 of 28 scenarios, 40 of 40 metamorphic variants, 35 of 35 historical replays, and rejects 7 of 7 deliberately wrong repairs (docs/EXTRACTION-VALIDATION.md:5). The unit suite has 1100 tests (`python3 -m unittest discover -s computer_use -p 'test_*.py'`, run at this commit). These show that the code does what the policy says. They do not show that an LLM writes correct plans on messy real pages; that stays open (docs/PLAN-B.md:152-154).
 
-This document makes no claim that runs are cheaper. No raw run data is committed for the README's cost comparisons (README.md:72-73), and the call-budget ceilings come from a scripted LLM on fixtures, so they are a lower bound on real calls (computer_use/CALL_BUDGET.json, `purpose`). The claim is a bounded, checked context, not a lower bill.
+This document makes no claim that runs are cheaper. The README's cost comparisons (README.md:72-73) have no committed raw data and are not repeated here; the call-budget ceilings come from a scripted LLM on fixtures, so they are a lower bound on real calls (computer_use/CALL_BUDGET.json, `purpose`).
+
+### One head-to-head, one run per cell
+
+One live comparison against the stock Cua Driver tools is committed: `experiments/facade-vs-native/runs-compare2/scores.jsonl` (6 runs, model `claude-sonnet-5-5`, one run per task and arm, run 2026-09-28; `manifest.json` has the wall times, the raw transcripts are not committed).
+
+| task | native | facade |
+|---|---|---|
+| booking | correct, 15 turns, $1.14, 35 s | correct, 30 turns, $0.90, 69 s |
+| orders | correct, 19 turns, $0.81, 43 s | correct, 19 turns, $0.91, 58 s |
+| canvas | no-action, 11 turns, $0.51, 21 s | no-action, 16 turns, $0.36, 32 s |
+
+One run per cell proves little. The facade cost less on booking and canvas and more on orders; it took twice the turns on booking (30 against 15) and more on canvas, and its wall time was longer in all three. The gap is small and goes both ways. The claim is a bounded, checked context, not cheaper runs.
 
 ## What it does not do yet
 

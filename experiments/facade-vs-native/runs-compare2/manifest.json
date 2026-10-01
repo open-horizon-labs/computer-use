@@ -1,0 +1,56 @@
+[
+  {
+    "arm": "native",
+    "task": "booking",
+    "run_id": "native-booking-0-1790624085",
+    "title": "Clinic Slots native-booking-0-1790624085",
+    "transcript": "runs-compare2/native-booking-0-1790624085.jsonl",
+    "wall_s": 35.486354625,
+    "returncode": 0
+  },
+  {
+    "arm": "native",
+    "task": "orders",
+    "run_id": "native-orders-0-1790624122",
+    "title": "Orders native-orders-0-1790624122",
+    "transcript": "runs-compare2/native-orders-0-1790624122.jsonl",
+    "wall_s": 42.53014604199999,
+    "returncode": 0
+  },
+  {
+    "arm": "native",
+    "task": "canvas",
+    "run_id": "native-canvas-0-1790624166",
+    "title": "Canvas native-canvas-0-1790624166",
+    "transcript": "runs-compare2/native-canvas-0-1790624166.jsonl",
+    "wall_s": 20.822072583000008,
+    "returncode": 0
+  },
+  {
+    "arm": "facade",
+    "task": "booking",
+    "run_id": "facade-booking-0-1790624188",
+    "title": "Clinic Slots facade-booking-0-1790624188",
+    "transcript": "runs-compare2/facade-booking-0-1790624188.jsonl",
+    "wall_s": 68.69528745800001,
+    "returncode": 0
+  },
+  {
+    "arm": "facade",
+    "task": "orders",
+    "run_id": "facade-orders-0-1790624258",
+    "title": "Orders facade-orders-0-1790624258",
+    "transcript": "runs-compare2/facade-orders-0-1790624258.jsonl",
+    "wall_s": 57.636171374999975,
+    "returncode": 0
+  },
+  {
+    "arm": "facade",
+    "task": "canvas",
+    "run_id": "facade-canvas-0-1790624318",
+    "title": "Canvas facade-canvas-0-1790624318",
+    "transcript": "runs-compare2/facade-canvas-0-1790624318.jsonl",
+    "wall_s": 31.595831625000017,
+    "returncode": 0
+  }
+]
