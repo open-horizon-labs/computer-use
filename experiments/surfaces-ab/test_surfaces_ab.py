@@ -311,7 +311,7 @@ class PromptAndRunnerTest(unittest.TestCase):
             native = json.loads(runner.mcp_config('native', tmp).read_text())['mcpServers']['cua-driver']
             self.assertTrue(native['command'].endswith('/.local/bin/cua-driver'))
             self.assertEqual(native['args'], ['mcp'])
-            cu = json.loads(runner.mcp_config('computer-use', tmp).read_text())['mcpServers']['cua-task']
+            cu = json.loads(runner.mcp_config('computer-use', tmp).read_text())['mcpServers']['computer-use-oh']
             self.assertTrue(cu['args'][0].endswith('computer_use/server.py'))
 
     def test_server_key_is_not_the_reserved_computer_use_name(self):
