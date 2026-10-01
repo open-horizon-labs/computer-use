@@ -1,0 +1,1 @@
+Found these apps on device: Contacts (com.apple.MobileAddressBook), Files (com.apple.DocumentsApp), Fitness (com.apple.Fitness), Messages (com.apple.MobileSMS), Safari (com.apple.mobilesafari), Settings (com.apple.Preferences), Watch (com.apple.Bridge)
