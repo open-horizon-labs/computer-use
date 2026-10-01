@@ -2,7 +2,7 @@
 
 Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may still change in minor releases.
 
-## 0.1.1 (unreleased)
+## 0.1.1 (2026-10-01)
 
 - Android emulator verified live on a headless emulator (`emulator -avd <name> -no-window`): `look`, a verified press and a verified back through `device=<AVD name>`. Docs and the `bad_request` message now say a running emulator is addressed by its AVD name as `look(device="list")` shows it, not by its adb serial; `doctor` suggests the headless start.
 - `resize` keeps a 40 pt margin inside the agent display: a request larger than the display used to ask for the full display, which Chrome refuses (it settles 40 pt in), so the step ended `resize_unverified`. Found live (#78).
