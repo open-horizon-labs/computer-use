@@ -136,7 +136,12 @@ def judge_text(task, text, truth, acted, timed_out=False):
         decoys = [p for p in fx.COMPARE_DECOY_PRICES if Decimal(p) in nums]
         return ('correct' if has and not decoys else 'wrong'), ({'decoy_prices_mentioned': decoys} if decoys else {})
     if task in ('wikipedia', 'calculator'):
-        return ('correct' if Decimal(str(truth)) in numbers_in(text) else 'wrong'), {}
+        raw = str(truth).strip()
+        try:
+            return ('correct' if Decimal(raw.replace(',', '')) in numbers_in(text.replace(',', '')) else 'wrong'), {}
+        except InvalidOperation:  # a non-numeric truth (e.g. a name or a date): normalised substring match
+            norm = lambda v: re.sub(r'\s+', ' ', v).strip().lower()
+            return ('correct' if norm(raw) in norm(text) else 'wrong'), {'truth_kind': 'text'}
     if task in ('android', 'ios'):
         return ('correct' if any(_version_equal(t, str(truth)) for t in version_tokens(text)) else 'wrong'), {}
     raise ValueError('no text judge for %s' % task)
