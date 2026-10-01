@@ -32,6 +32,8 @@ INSET = 40
 MIN_SIZE, MAX_SIZE = 200, 8000
 RESIZE_MARGIN = 40.0  # points kept free on every side of the display: Chrome settles an oversize window at this inset (live 2026-10-01: asked 1920x1080, got 1880x1040), and the Driver then answers unverifiable
 RESIZE_TOLERANCE = 2.0  # points: the Driver's readback (and the independent re-check) must agree with the target this closely
+PROFILE_NAME = 'agent-profile'
+OWNER_FILE = 'computer-use.owner'
 KILL_AFTER_S = 3  # SIGTERM to the process group, then this long before SIGKILL
 SESSION_FILES = ('Current Session', 'Last Session', 'Current Tabs', 'Last Tabs')  # cookies and storage stay; only what restores tabs goes
 RESTORE_NEW_TAB = 5  # session.restore_on_startup: open the new tab page (never the previous session)
@@ -128,6 +130,18 @@ def scan_processes():
     return found
 
 
+def identify_process(pid):
+    """(start time, command line) of a live process, or None: what tells a live owner from a pid the OS has reused."""
+    try:
+        out = subprocess.run(['ps', '-o', 'lstart=,command=', '-p', str(pid)], capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    line = out.strip('\n')
+    if not line.strip():
+        return None
+    return line[:24].strip(), line[24:].strip()
+
+
 def misplaced(bounds, rect):
     from core import Gap
     return Gap('agent_browser_misplaced: the agent browser window opened at %s, not wholly inside the agent display %s; the browser was quit and its saved '
@@ -161,12 +175,16 @@ def find_installed(root):
 
 class AgentBrowser:
     def __init__(self, mode=None, path=None, cache=None, popen=subprocess.Popen, run=subprocess.run, sleep=time.sleep, clock=time.monotonic, which=shutil.which,
-                 killpg=os.killpg, kill=os.kill, scan=scan_processes):
+                 killpg=os.killpg, kill=os.kill, scan=scan_processes, identify=identify_process, getpid=os.getpid):
         self.mode = mode if mode in MODES else mode_from_env()
         self.path = path if path is not None else (os.environ.get('CUA_AGENT_BROWSER_PATH') or None)
         self.cache = Path(cache or CACHE)
         self.popen, self.run, self.sleep, self.clock, self.which = popen, run, sleep, clock, which
-        self.killpg, self.kill, self.scan = killpg, kill, scan
+        self.killpg, self.kill, self.scan, self.identify, self.getpid = killpg, kill, scan, identify, getpid
+        self.base_profile = self.cache / PROFILE_NAME
+        self.profile = self.base_profile  # the profile this server uses: the shared one, or agent-profile-<pid> when another live server owns it
+        self.separate = False
+        self.claimed = False  # until a launch claimed the profile, nothing under it is ours to kill
         self.proc = None
         self.pgid = None
         self._atexit = False
@@ -204,7 +222,7 @@ class AgentBrowser:
     # ---- launch ----
     def argv(self, exe, rect=None):
         """The launch command. With the agent display's bounds the window is placed 40 px inside it, so it never appears on the user's screen."""
-        args = [str(exe), '--user-data-dir=%s' % (self.cache / 'agent-profile'), '--remote-debugging-port=0',
+        args = [str(exe), '--user-data-dir=%s' % self.profile, '--remote-debugging-port=0',
                 '--no-first-run', '--no-default-browser-check', '--disable-session-crashed-bubble', '--hide-crash-restore-bubble']
         if rect:
             args += ['--window-position=%d,%d' % (rect['x'] + 40, rect['y'] + 40), '--window-size=%d,%d' % (rect['width'] - 80, rect['height'] - 80)]
@@ -215,10 +233,11 @@ class AgentBrowser:
 
     def _launch(self, rect, f=None):
         exe = self.executable()
-        profile = self.cache / 'agent-profile'
-        profile.mkdir(parents=True, exist_ok=True)
         if not self.alive():
-            self._recover_stale(f)  # a Chrome of ours left by an earlier server would take this launch as a forward: it is killed first
+            self._claim_profile(f)  # never kills a browser whose owner server is alive; stale ones are recovered
+        profile = self.profile
+        if not self.alive():
+            self._write_owner(None)
             seed_no_restore(profile)
             if rect:  # its saved placement would override the flags, so rewrite it first
                 seed_window_placement(profile, rect)
@@ -229,13 +248,76 @@ class AgentBrowser:
             atexit.register(self.stop)
         if not self.alive():  # a launch that finds the profile in use forwards to the running instance and exits: the first process stays ours
             self.proc, self.pgid = proc, proc.pid  # start_new_session: the group id is the pid
+            self._write_owner(proc.pid)
         return self.proc
 
     # ---- kill ----
-    def _ours(self):
-        """[pid] of every process whose command line contains our user-data-dir path (never this process)."""
-        mark = str(self.cache / 'agent-profile')
-        return [pid for pid, command in self.scan() if mark in command and pid != os.getpid()]
+    def _ours(self, profile=None):
+        """[pid] of every process whose command line names this exact user-data-dir (never this process; agent-profile-<pid> is not agent-profile)."""
+        mark = re.compile(re.escape(str(profile or self.profile)) + r'(?![^\s])')
+        return [pid for pid, command in self.scan() if mark.search(command) and pid != self.getpid()]
+
+    # ---- ownership (#91): a lock file in the profile names the owning server ----
+    def _identity(self, pid=None):
+        pid = self.getpid() if pid is None else pid
+        found = self.identify(pid)
+        return {'pid': pid, 'start': found[0], 'command': found[1]} if found else {'pid': pid, 'start': None, 'command': None}
+
+    def _read_owner(self, profile):
+        try:
+            data = json.loads((Path(profile) / OWNER_FILE).read_text())
+        except (OSError, ValueError):
+            return None
+        return data if isinstance(data, dict) and isinstance(data.get('pid'), int) else None
+
+    def _is_me(self, owner):
+        mine = self._identity()
+        return owner['pid'] == mine['pid'] and owner.get('start') == mine['start'] and owner.get('command') == mine['command']
+
+    def _owner_alive(self, profile):
+        """True only when the lock names ANOTHER server that is running now: same pid with the same start time and command line (a reused pid is not the owner)."""
+        owner = self._read_owner(profile)
+        if not owner or self._is_me(owner):
+            return False
+        found = self.identify(owner['pid'])
+        return bool(found and owner.get('start') == found[0] and owner.get('command') == found[1])
+
+    def _write_owner(self, browser_pid):
+        mine = self._identity()
+        mine['browser_pid'] = browser_pid
+        try:
+            Path(self.profile).mkdir(parents=True, exist_ok=True)
+            (Path(self.profile) / OWNER_FILE).write_text(json.dumps(mine))
+        except OSError:
+            pass
+
+    def _claim_profile(self, f):
+        """Choose the profile for this launch. A live owner other than us keeps its profile and its browser untouched and we use agent-profile-<ourpid>;
+        a dead or absent owner means whatever uses that profile is stale and is recovered. Per-server profiles of dead servers are removed."""
+        self._clean_dead_profiles()
+        self.profile, self.separate = self.base_profile, False
+        if self._owner_alive(self.base_profile):
+            self.profile, self.separate = self.cache / ('%s-%d' % (PROFILE_NAME, self.getpid())), True
+            self._event(f, 'agent_browser_separate_profile', owner_pid=self._read_owner(self.base_profile)['pid'], profile=str(self.profile))
+        self.profile.mkdir(parents=True, exist_ok=True)
+        self.claimed = True
+        self._recover_stale(f)
+
+    def _clean_dead_profiles(self):
+        for path in sorted(self.cache.glob(PROFILE_NAME + '-*')):
+            owner = self._read_owner(path)
+            if not path.is_dir() or (self.separate and path == self.profile) or self._owner_alive(path) or (owner and self._is_me(owner)):
+                continue
+            for pid in self._ours(path):  # only what uses that dead server's own profile
+                self._signal_pid(pid, signal.SIGKILL)
+            shutil.rmtree(path, ignore_errors=True)
+
+    @staticmethod
+    def _event(f, name, **fields):
+        try:
+            f.event(name, **fields)
+        except Exception:
+            pass
 
     def _signal_group(self, pgid, sig):
         try:
@@ -251,6 +333,8 @@ class AgentBrowser:
             pass
 
     def _recover_stale(self, f):
+        if not self.claimed:
+            return
         stale = self._ours()
         if not stale:
             return
@@ -266,6 +350,8 @@ class AgentBrowser:
         self._kill_survivors()
 
     def _kill_survivors(self):
+        if not self.claimed:
+            return
         for pid in self._ours():
             self._signal_pid(pid, signal.SIGKILL)
 
@@ -300,7 +386,7 @@ class AgentBrowser:
             raise unavailable('the agent browser started but showed no window in %ds' % WINDOW_WAIT_S)
         if rect is not None and not f.agent.inside(seen[2]):  # never leave a window on another display up, and do not rely on parking it afterwards
             self.stop()
-            clear_window_placement(self.cache / 'agent-profile')
+            clear_window_placement(self.profile)
             raise misplaced(seen[2], rect)
         self.window_id = seen[0]
         f.window_created(seen[0], seen[1], seen[2])
@@ -396,3 +482,17 @@ class AgentBrowser:
                     except Exception:
                         pass
         self._kill_survivors()
+        self._release_profile()
+
+    def _release_profile(self):
+        self.claimed = False
+        """Give the profile up: a per-server profile is removed, the shared one loses only OUR lock (never another server's)."""
+        owner = self._read_owner(self.profile)
+        if self.separate:
+            shutil.rmtree(self.profile, ignore_errors=True)
+            self.separate, self.profile = False, self.base_profile
+        elif owner and self._is_me(owner):
+            try:
+                (self.profile / OWNER_FILE).unlink()
+            except OSError:
+                pass
