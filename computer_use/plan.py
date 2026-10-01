@@ -19,9 +19,11 @@ import uuid
 import look as lk
 
 MAX_STEPS = 10
-STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu', 'profile', 'width', 'height', 'files'})
+STEP_KEYS = frozenset({'do', 'goal', 'where', 'control', 'control_match', 'near', 'identity', 'text', 'expect', 'treat_as_match', 'accept_unknown', 'confirm', 'allow_destructive', 'dialog_text', 'dialog_controls', 'accept_hidden_text', 'allow_foreground', 'url', 'urls', 'fields', 'menu', 'profile', 'width', 'height', 'files', 'app', 'direction', 'within'})
 WHERE_KEYS = frozenset({'lines', 'fields', 'predicates'})
-DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages', 'resize', 'upload')
+DO_KINDS = ('press', 'type', 'confirm', 'verify', 'goto', 'open_tab', 'close_tab', 'read_pages', 'resize', 'upload', 'launch', 'swipe')
+DEVICE_ONLY = ('launch', 'swipe')  # device steps (mobile.py): a Mac window refuses them before anything is read
+SWIPE_DIRECTIONS = ('up', 'down', 'left', 'right')
 LINE_OPS = ('contains', 'eq', 'not_contains', 'neq')
 MAX_CONDITIONS = 6
 MAX_VALUE_CHARS = 60
@@ -136,7 +138,9 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                  'close_tab': {'do', 'goal', 'expect', 'allow_foreground'},
                  'read_pages': {'do', 'goal', 'urls', 'fields', 'profile'},
                  'resize': {'do', 'goal', 'width', 'height', 'profile'},
-                 'upload': {'do', 'goal', 'files', 'control', 'expect', 'profile'}}[kind]
+                 'upload': {'do', 'goal', 'files', 'control', 'expect', 'profile'},
+                 'launch': {'do', 'goal', 'app', 'expect'},
+                 'swipe': {'do', 'goal', 'direction', 'within', 'expect'}}[kind]
         if 'profile' in step and step['profile'] not in ('agent', 'user'):
             raise _gap('bad_request: %s profile is "agent" (the default: the agent browser) or "user" (your own browser profile)' % at)
         extra = sorted(set(step) - takes)
@@ -144,7 +148,7 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             raise _gap('bad_request: %s (%s) does not take %s' % (at, kind, ', '.join(extra)))
         if kind == 'verify' and 'expect' not in step:
             raise _gap('expect_required: %s is a verify step and needs expect (visible page text)' % at)
-        if kind not in ('verify', 'close_tab', 'read_pages', 'resize') and 'expect' not in step and not final:
+        if kind not in ('verify', 'close_tab', 'read_pages', 'resize', 'swipe') and 'expect' not in step and not final:
             raise _gap('expect_required: %s needs expect: the page text that will be visible once it worked (null is allowed only on the last step, which then ends delivered_unverified)' % at)
         if kind == 'press':
             if 'menu' in step:
@@ -156,6 +160,14 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                         raise _gap('destructive_control: %s menu segment %d is destructive (%s); goal text never authorizes it. Only the step itself can, for the LAST segment: add allow_destructive=%r (its exact label)' % (at, i + 1, ', '.join(destructive_verbs(label)), label[:40]))
             elif 'where' not in step and 'control' not in step:
                 raise _gap('bad_request: %s (press) needs control (the exact button label), where (which record) or menu (an application-menu path)' % at)
+        if kind == 'launch':
+            if not isinstance(step.get('app'), str) or not step['app'].strip() or len(step['app']) > 200:
+                raise _gap('bad_request: %s (launch) needs app: the app name as the device lists it, or its package or bundle id (at most 200 characters)' % at)
+        if kind == 'swipe':
+            if step.get('direction') not in SWIPE_DIRECTIONS:
+                raise _gap('bad_request: %s (swipe) needs direction: %s (the way the finger moves; swipe up shows what is below)' % (at, ', '.join(SWIPE_DIRECTIONS)))
+            if 'within' in step and (not isinstance(step['within'], str) or not step['within'].strip() or len(step['within']) > 200):
+                raise _gap('bad_request: %s (swipe) within is the exact name of the list or scroll area to swipe in' % at)
         if kind == 'type':
             if 'control' not in step or 'text' not in step:
                 raise _gap('bad_request: %s (type) needs control (the field\'s label) and text' % at)
@@ -449,7 +461,8 @@ HINTS = {
     'tab_strip_changed': 'The tab strip changed while its Close button was pressed, twice; nothing was pressed. Call `look`, then call `do` with close_tab once more.',
     'tab_not_closed': 'After pressing Close the tab is still listed; it was not retried. Call `look` to read the window, or tell the user the tab is still open.',
     'ui_changed': 'The menu changed between finding the item and pressing it; nothing was pressed. Call `look`, then call `do` with the same press step and menu=[...] again.',
-    'not_supported_on_device': 'That step kind or field is for Mac windows, not devices; nothing was done. Use press, type, verify or goto with device, or pass title instead of device.',
+    'not_supported_on_device': 'That step kind or field is for Mac windows, not devices; nothing was done. Use press, type, verify, goto, launch or swipe with device, or pass title instead of device.',
+    'not_supported_on_window': 'launch and swipe are for phones and emulators; nothing was done. Call `look` with device="list", then `do` with device=<id> from it, or drop the step.',
     'where_not_supported_on_device': 'where is for Mac windows; nothing was done on the device. Call `do` with control=<the exact label from `look`(device=<id>)> instead.',
 }
 GENERIC_HINT = 'Step %(n)d stopped and nothing further ran. Call look to see the page now, then do with the remaining steps (the earlier steps are already done; do not repeat them).'
@@ -588,6 +601,9 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 'hint': HINTS[reason] % {'n': 1} if reason in HINTS else 'Correct the plan as the message says and call do again; nothing was done.'}
     try:
         plan_steps = validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect, single)
+        for n, s in enumerate(plan_steps, 1):
+            if s['do'] in DEVICE_ONLY:
+                raise Gap('not_supported_on_window: step %d (%s) is for a phone or emulator: pass device=<id> from look(device="list")' % (n, s['do']))
     except Gap as gap:
         return refuse(gap)
     t0 = f.clock()
