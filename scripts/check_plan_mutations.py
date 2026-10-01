@@ -153,7 +153,7 @@ MUTATIONS = {
         ['test_plan_review.TwoWindows.test_identical_rows_in_two_windows_do_not_overwrite_each_others_look']),
     'page_text_unmarked': (
         'return page text with no untrusted marker (review P3-6)',
-        [('look.py', "'untrusted_page_text': True, 'notice': NOTICE, ", ""), ('core.py', "            result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)", "            pass")],
+        [('look.py', "'untrusted_page_text': True, 'notice': NOTICE, ", ""), ('core.py', "            result['untrusted_page_text'] = True  # the flag is on every response; the fixed sentence only where it is news (CE-FACADE-011)\n            if self._notice_needed(result):result['notice'] = lookmod.NOTICE\n            else:result.pop('notice', None)", "            pass")],
         ['test_plan_review.UntrustedText.test_every_look_says_the_page_text_is_untrusted_data']),
     'child_map_cached_on_the_facade': (
         'cache the subtree child map across observations (review P3-7)',
@@ -294,7 +294,7 @@ MUTATIONS = {
         ['test_plan_review2.ControlState.test_an_unchanged_checkbox_presses_and_a_toggle_without_a_look_is_not_pressed_blind']),
     'responses_unmarked': (
         'do responses carry page text without the untrusted marker (second review P2-C)',
-        [('core.py', "            result.setdefault('untrusted_page_text', True);result.setdefault('notice', lookmod.NOTICE)", '            pass')],
+        [('core.py', "            result['untrusted_page_text'] = True  # the flag is on every response; the fixed sentence only where it is news (CE-FACADE-011)\n            if self._notice_needed(result):result['notice'] = lookmod.NOTICE\n            else:result.pop('notice', None)", '            pass')],
         ['test_plan_review2.UntrustedEverywhere.test_plan_responses_carry_the_marker_in_every_page_text_field', 'test_plan_review2.UntrustedEverywhere.test_single_step_responses_carry_the_marker_and_no_page_text_in_hints']),
     'page_text_in_a_hint': (
         'a control label is put into a hint (second review P2-C)',
@@ -560,7 +560,7 @@ MUTATIONS = {
         ['test_onboarding.FirstVerifiedDo.test_it_is_recorded_once']),
     'onboarding_permission_refusal_gets_the_generic_hint': (
         'leave permission_required without its own hint (it falls to "call look to see the page")',
-        [('plan.py', "    'permission_required': 'The Driver has not been granted", "    'permission_required_unused': 'The Driver has not been granted")],
+        [('plan.py', "    'permission_required': 'The Driver has no access", "    'permission_required_unused': 'The Driver has no access")],
         ['test_onboarding.HintCatalog.test_every_refusal_reason_that_reaches_a_response_has_its_own_hint',
          'test_onboarding.EmptyStates.test_the_no_permission_hint_names_who_and_the_retry_rule']),
     'onboarding_a_hint_that_restates_the_reason': (
@@ -615,6 +615,45 @@ MUTATIONS = {
         'run the install again when the agent is still missing after it (a loop on a device that cannot have it)',
         [('mobile.py', "            if gap.reason == 'mobile_device_agent_missing':\n                raise MobileGap('mobile_device_agent_missing', 'the iOS agent was installed but", "            if gap.reason == 'mobile_device_agent_missing':\n                self.installer(device)\n                raise MobileGap('mobile_device_agent_missing', 'the iOS agent was installed but")],
         ['test_mobile.LookOnDevices.test_an_agent_still_missing_after_the_install_is_refused_after_exactly_one_retry']),
+    # CE-FACADE-011 (#41): response budgets and trims.
+    'response_notice_on_every_response': (
+        'send the untrusted-text sentence on every response again (the flag is the per-response marker; the sentence is news only once per window)',
+        [('core.py', "        if not self._notice_sent or new:", "        if True:")],
+        ['test_response_budget.NoticeOnlyWhereItIsNews.test_the_first_response_has_the_sentence_and_the_second_look_of_the_same_window_omits_it_but_keeps_the_flag']),
+    'response_notice_never_for_a_new_window': (
+        'send the sentence only in the first response of the server: a second window arrives without it',
+        [('core.py', "        if not self._notice_sent or new:", "        if not self._notice_sent:")],
+        ['test_response_budget.NoticeOnlyWhereItIsNews.test_a_do_on_a_window_already_seen_omits_it_and_a_response_from_a_new_window_has_it_again',
+         'test_response_budget.NoticeOnlyWhereItIsNews.test_pages_opened_by_read_pages_and_a_navigated_title_count_as_new']),
+    'response_summary_repeats_what_the_look_showed': (
+        'put the whole page text and every control into the do summary again',
+        [('plan.py', "    if before:  # CE-FACADE-011", "    if False:  # CE-FACADE-011")],
+        ['test_response_budget.DoCarriesWhatChanged.test_the_summary_after_a_look_carries_only_the_new_text_and_counts_what_it_left_out']),
+    'response_summary_remembers_what_left': (
+        'keep every line ever shown as known (a toast that leaves and comes back is invisible)',
+        [('plan.py', "{t for t in texts if t in known['text']} | set(shown['text'])", "set(known['text']) | set(shown['text'])")],
+        ['test_response_budget.DoCarriesWhatChanged.test_without_a_look_the_summary_is_complete_and_a_toast_that_leaves_and_returns_is_news_again']),
+    'response_settle_after_a_proven_wait': (
+        'settle (SETTLE_DELAY_S and another walk) after an idle wait that already showed the same tree',
+        [('core.py', "if pending_count is None or pending_count != len(result.get('elements') or []):", "if True:")],
+        ['test_response_budget.SettleLatency.test_a_look_that_waited_for_pressable_buttons_and_saw_the_same_tree_does_not_also_settle']),
+    'response_settle_skipped_though_the_tree_moved': (
+        'skip the settle after every actions_pending wait, even when the element count moved',
+        [('core.py', "if pending_count is None or pending_count != len(result.get('elements') or []):", "if pending_count is None:")],
+        ['test_response_budget.SettleLatency.test_a_tree_that_moved_during_the_wait_still_settles']),
+    'response_long_hint': (
+        'a hint over 240 characters restating the manual',
+        [('plan.py', "    'budget_exceeded': 'The plan ran out of time before step %(n)d finished.", "    'budget_exceeded': 'The plan ran out of time and the whole manual follows, repeated at length so that no agent can miss any of it: look first, then do, expect is the proof, every step needs an expect, nothing is clicked blind, stop and ask the user on refusals, and so on. Step %(n)d finished.")],
+        ['test_response_budget.HintsAddTheNextCall.test_no_hint_in_the_sources_is_over_240_characters',
+         'test_response_budget.HintsAddTheNextCall.test_every_plan_hint_with_its_steps_done_suffix_is_within_the_cap']),
+    'response_every_schema_title_stripped': (
+        'strip the generated titles by also deleting the property named title',
+        [('server.py', "                for child in value.values():slim_schema(child)", "                for child in value.values():slim_schema(child)\n                value.pop('title', None)")],
+        ['test_response_budget.ToolListIsBounded.test_the_generated_schema_titles_are_gone_but_a_property_named_title_stays']),
+    'response_do_description_repeats_the_schema': (
+        'copy a plan step field description into the do docstring as well',
+        [('server.py', "    \"\"\"Default path. Call `look` first", "    \"\"\"Default path. press only: which record (lines or fields). Without where, control names the one unique control to press. Call `look` first")],
+        ['test_response_budget.ToolListIsBounded.test_each_parameter_is_documented_once_and_the_docstring_does_not_repeat_the_schema']),
 }
 
 

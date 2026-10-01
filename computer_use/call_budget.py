@@ -15,6 +15,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 sys.path.insert(0, str(HERE))
 BUDGET = HERE / 'CALL_BUDGET.json'
+RESPONSE_BUDGET = HERE / 'RESPONSE_BUDGET.json'
+RESPONSE_CE = 'CE-FACADE-011'
+HEADROOM = 1.1  # a ceiling is the measured number x 1.1, rounded up
 CES = ROOT / 'inference/cua-decider/capability-dispatch/COUNTEREXAMPLES.json'
 SKILL = ROOT / 'skills/computer-use/SKILL.md'
 SERVER = HERE / 'server.py'
@@ -27,6 +30,51 @@ def load_budget():
     return json.loads(BUDGET.read_text())
 
 
+def load_response_budget():
+    return json.loads(RESPONSE_BUDGET.read_text())
+
+
+def response_budget_violations(budget=None, ces=None):
+    """The same provenance rule as the call numbers: every ceiling names a CE that records the same number under response_budget."""
+    return budget_violations(budget or load_response_budget(), ces, key='response_budget')
+
+
+def ceiling(measured):
+    import math
+    return math.ceil(round(measured * HEADROOM, 6))
+
+
+def response_budget_from(measured, listing, previous=None):
+    """The ceilings for a measured run: bytes and waits x HEADROOM rounded up; every leaf names RESPONSE_CE. Used to (re)generate RESPONSE_BUDGET.json
+    and the matching CE record: `python computer_use/call_budget.py --write-response-budget`. Existing text fields are kept."""
+    out = {k: v for k, v in (previous or {}).items() if k in ('purpose',)}
+    leaf = lambda value: {'value': value, 'changed_by': RESPONSE_CE}
+    out['tools_list'] = {'instructions': leaf(ceiling(listing['instructions']))}
+    for name, sizes in listing['tools'].items():
+        out['tools_list'][name + '_description'] = leaf(ceiling(sizes['description']))
+        out['tools_list'][name + '_schema'] = leaf(ceiling(sizes['schema']))
+    out['scenarios'] = {name: {'max_total_bytes': leaf(ceiling(m['total_bytes'])), 'max_call_bytes': leaf(ceiling(m['max_bytes'])), 'max_wait_s': leaf(ceiling(m['wait_s']) if m['wait_s'] else 0)}
+                        for name, m in measured.items()}
+    return out
+
+
+def response_violations(budget, measured, listing):
+    """Problems of a measured run against RESPONSE_BUDGET.json: a scenario over a ceiling, a scenario with none, the tools/list over its ceiling."""
+    problems = []
+    for name, m in measured.items():
+        limits = budget['scenarios'].get(name)
+        if limits is None:problems.append('%s: no response ceiling in RESPONSE_BUDGET.json' % name);continue
+        for field, label in (('total_bytes', 'max_total_bytes'), ('max_bytes', 'max_call_bytes'), ('wait_s', 'max_wait_s')):
+            if m[field] > limits[label]['value']:problems.append('%s: %s %s > %s %s' % (name, field, m[field], label, limits[label]['value']))
+    tools = budget['tools_list']
+    if listing['instructions'] > tools['instructions']['value']:problems.append('tools_list: instructions %d > %d' % (listing['instructions'], tools['instructions']['value']))
+    for name, sizes in listing['tools'].items():
+        for field in ('description', 'schema'):
+            limit = tools.get('%s_%s' % (name, field))
+            if limit is None or sizes[field] > limit['value']:problems.append('tools_list: %s %s %d > %s' % (name, field, sizes[field], limit and limit['value']))
+    return problems
+
+
 def leaves(node, path=()):
     """Yield (path, leaf-dict) for every {value, changed_by} in the budget."""
     if isinstance(node, dict) and 'value' in node:
@@ -36,8 +84,8 @@ def leaves(node, path=()):
             yield from leaves(value, path + (key,))
 
 
-def budget_violations(budget=None, ces=None):
-    """Every number needs a CE id, the CE must exist, and its recorded call_budget must equal the number."""
+def budget_violations(budget=None, ces=None, key='call_budget'):
+    """Every number needs a CE id, the CE must exist, and its recorded call_budget (response_budget for RESPONSE_BUDGET.json) must equal the number."""
     budget = budget or load_budget()
     ces = ces if ces is not None else json.loads(CES.read_text())
     by_id = {ce['id']: ce for ce in ces}
@@ -46,7 +94,7 @@ def budget_violations(budget=None, ces=None):
         name = '.'.join(path)
         ce = by_id.get(leaf.get('changed_by'))
         if not ce:out.append('%s: changed_by %r names no CE in COUNTEREXAMPLES.json' % (name, leaf.get('changed_by')));continue
-        recorded = ce.get('call_budget', {}).get(name)
+        recorded = ce.get(key, {}).get(name)
         if recorded != leaf['value']:out.append('%s: value %r differs from %s call_budget %r' % (name, leaf['value'], ce['id'], recorded))
     return out
 
@@ -132,6 +180,26 @@ def result_text(blocks):
     return content[0].text if isinstance(content, (list, tuple)) and hasattr(content[0], 'text') else json.dumps(blocks)
 
 
+def new_seen():
+    return {'calls': 0, 'tools': [], 'max_bytes': 0, 'per_call': [], 'naps': [], 'napped': 0}
+
+
+def tally(seen, name, text):
+    """Record one LLM-visible call: its response bytes (len of the JSON text the server returned) and the stage timings it carried
+    (look.ms_by_stage or do.trace_summary.ms_by_stage; the fake clocks make these simulated, not wall time)."""
+    seen['calls'] += 1;seen['tools'].append(name)
+    seen['max_bytes'] = max(seen['max_bytes'], len(text))
+    body = json.loads(text)
+    stages = body.get('ms_by_stage') or (body.get('trace_summary') or {}).get('ms_by_stage') or {}
+    waited = sum(seen['naps'][seen['napped']:]);seen['napped'] = len(seen['naps'])
+    seen['per_call'].append({'tool': name, 'bytes': len(text), 'ms_by_stage': stages, 'wait_s': round(waited, 2)})
+    return body
+
+
+def seen_measure(seen):
+    return {'calls': seen['calls'], 'tools': seen['tools'], 'max_bytes': seen['max_bytes'], 'total_bytes': sum(c['bytes'] for c in seen['per_call']), 'wait_s': round(sum(seen['naps']), 2), 'per_call': seen['per_call']}
+
+
 def scripted_llm(goal_words=()):
     """The minimal LLM policy: it starts knowing ONLY the goal, expect and the fields/predicates it wants, and learns control, identity, labels
     and ids from the deferral itself. Returns follow(result, current) -> next arguments or None (it gives up)."""
@@ -188,13 +256,10 @@ def measure_scenarios():
 
     def run(driver, args, reader, chooser=None, follow=None, vision=None):
         chooser = chooser or fx.NamedChooser();follow = follow or scripted_llm()
-        server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=vision or lv.UnknownVision, sleep=lambda s: None)
-        seen = {'calls': 0, 'tools': [], 'max_bytes': 0}
+        seen = new_seen()  # sleep is recorded, not slept: wait_s is the simulated latency of every settle and idle wait (deterministic)
+        server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=vision or lv.UnknownVision, sleep=seen['naps'].append)
         def call(name, **kw):
-            seen['calls'] += 1;seen['tools'].append(name)
-            text = result_text(asyncio.run(server.mcp.call_tool(name, kw)))
-            seen['max_bytes'] = max(seen['max_bytes'], len(text))
-            return json.loads(text)
+            return tally(seen, name, result_text(asyncio.run(server.mcp.call_tool(name, kw))))
         current = {'title': 'Demo', **args}
         while True:
             result = call('do', **current)
@@ -202,7 +267,7 @@ def measure_scenarios():
             nxt = follow(result, current)
             if nxt is None:break
             current = nxt
-        return {'calls': seen['calls'], 'tools': seen['tools'], 'max_bytes': seen['max_bytes'], 'status': result['status'],
+        return {**seen_measure(seen), 'status': result['status'],
                 'reader': len(reader.requests), 'chooser': len(chooser.requests)}
 
     booking = {'goal': 'Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM', 'expect': 'Booked:',
@@ -323,16 +388,13 @@ def measure_plan_scenarios():
 
     def run(driver, policy, reader, chooser=None, vision=None):
         chooser = chooser or fx.NamedChooser()
-        server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=vision or lv.UnknownVision, sleep=lambda s: None)
-        seen = {'calls': 0, 'tools': [], 'max_bytes': 0}
+        seen = new_seen()  # sleep is recorded, not slept: wait_s is the simulated latency of every settle and idle wait (deterministic)
+        server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=vision or lv.UnknownVision, sleep=seen['naps'].append)
         def call(name, **kw):
-            seen['calls'] += 1;seen['tools'].append(name)
-            text = result_text(asyncio.run(server.mcp.call_tool(name, kw)))
-            seen['max_bytes'] = max(seen['max_bytes'], len(text))
-            return json.loads(text)
+            return tally(seen, name, result_text(asyncio.run(server.mcp.call_tool(name, kw))))
         result = policy(call)
         assert not server.facade.agent.tried, 'CE-FACADE-009: parking is server-side and adds no LLM-visible call; these fixtures hold no created or agent-owned window'
-        return {'calls': seen['calls'], 'tools': seen['tools'], 'max_bytes': seen['max_bytes'], 'status': result['status'], 'reader': len(reader.requests), 'chooser': len(chooser.requests)}
+        return {**seen_measure(seen), 'status': result['status'], 'reader': len(reader.requests), 'chooser': len(chooser.requests)}
 
     booking_goal = 'Book the Follow-up slot with Dr. Morgan Reyes that starts at 1:45 PM'
     def booking_driver():
@@ -620,6 +682,15 @@ def measure_plan_scenarios():
     return out
 
 
+def tools_list_bytes():
+    """What every tools/list (and the initialize instructions) costs the LLM in the default surface: bytes of each visible tool's description (the
+    docstring) and input schema (parameter descriptions), and of the server instructions. Measured through the real FastMCP registry."""
+    import server
+    tools = asyncio.run(server.mcp.list_tools())
+    return {'instructions': len(server.INSTRUCTIONS.encode()),
+            'tools': {t.name: {'description': len((t.description or '').encode()), 'schema': len(json.dumps(t.inputSchema).encode())} for t in tools}}
+
+
 def table(budget=None, measured=None):
     """Rows (scenario, calls, budget, verdict, detail) plus the overall violation list."""
     budget = budget or load_budget();measured = measured or measure_scenarios()
@@ -638,7 +709,30 @@ def table(budget=None, measured=None):
     return rows, problems
 
 
-def all_violations():
-    problems = budget_violations() + surface_violations(SERVER.read_text()) + skill_violations(SKILL.read_text())
-    rows, measured_problems = table()
-    return rows, problems + measured_problems
+def response_table(measured, listing):
+    """Rows (scenario, per-call bytes, total, wait_s, per-call stage ms) for the printed table."""
+    return [(name, [c['bytes'] for c in m['per_call']], m['total_bytes'], m['wait_s'], [sum(c['ms_by_stage'].values()) for c in m['per_call']]) for name, m in measured.items()]
+
+
+def all_violations(with_measure=False):
+    measured = measure_scenarios();listing = tools_list_bytes()
+    problems = budget_violations() + response_budget_violations() + surface_violations(SERVER.read_text()) + skill_violations(SKILL.read_text())
+    rows, measured_problems = table(measured=measured)
+    problems = problems + measured_problems + response_violations(load_response_budget(), measured, listing)
+    return (rows, problems, measured, listing) if with_measure else (rows, problems)
+
+
+if __name__ == '__main__':
+    if sys.argv[1:] == ['--write-response-budget']:
+        previous = load_response_budget() if RESPONSE_BUDGET.exists() else None
+        measured, listing = measure_scenarios(), tools_list_bytes()
+        budget = response_budget_from(measured, listing, previous)
+        RESPONSE_BUDGET.write_text(json.dumps(budget, indent=2) + '\n')
+        flat = {'.'.join(path): leaf['value'] for path, leaf in leaves(budget)}
+        ces = json.loads(CES.read_text())
+        ce = next(c for c in ces if c['id'] == RESPONSE_CE)
+        ce['response_budget'] = {'note': 'Ceilings are the measured number x 1.1 rounded up (bytes of the JSON the server returns; wait_s is the simulated settle and idle waits); a number changes only with this CE or a later one naming it.', **flat}
+        CES.write_text(json.dumps(ces, indent=1, ensure_ascii=False) + '\n')
+        print('wrote %s (%d ceilings) and %s response_budget' % (RESPONSE_BUDGET.name, len(flat), RESPONSE_CE))
+    else:
+        raise SystemExit('usage: call_budget.py --write-response-budget')

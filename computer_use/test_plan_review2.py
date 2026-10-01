@@ -277,7 +277,7 @@ class ControlState(PlanBase):
 class UntrustedEverywhere(PlanBase):
     """P2-C: every response that carries page-derived strings says so, and page text never reaches a hint."""
     def assert_marked(self, r):
-        self.assertIs(G(r, 'untrusted_page_text'), True, json.dumps(r)[:200]);self.assertEqual(G(r, 'notice'), NOTICE)
+        self.assertIs(G(r, 'untrusted_page_text'), True, json.dumps(r)[:200]);self.assertIn(G(r, 'notice'), (NOTICE, None))  # the flag is on every response; the sentence only where it is news (CE-FACADE-011)
         self.assertNotIn('SYSTEM', S(r, 'hint'))
         for e in G(r, 'steps') or []:self.assertNotIn('SYSTEM', S(e, 'hint'))
 
@@ -288,7 +288,8 @@ class UntrustedEverywhere(PlanBase):
             li = sh.E(els, ul, 'AXGroup');sh.E(els, li, 'AXStaticText', INJECT, INJECT);sh.E(els, li, 'AXStaticText', 'Dr. ' + n, 'Dr. ' + n);sh.E(els, li, 'AXButton', 'Book')
         self.shape(els, sh.toast('Booked', buttons=()));look = self.look()
         done = self.plan([{'do': 'press', 'where': {'lines': [{'line': 'eq', 'value': 'Dr. B'}]}, 'expect': 'Booked'}], look_id=look['look_id'], goal='Book B')
-        self.assert_marked(done);self.assertIn('SYSTEM', json.dumps(G(done, 'summary')))
+        self.assert_marked(done);self.assertIn('Booked', G(done, 'summary', 'text'));self.assertTrue(G(done, 'summary', 'unchanged'))  # CE-FACADE-011: the injected text was shown by the look and is counted, not repeated
+        self.assertIn('SYSTEM', json.dumps(look['text']))
         self.shape(els, sh.toast('Booked', buttons=()));look = self.look()
         several = self.plan([{'do': 'press', 'where': {'lines': [{'line': 'contains', 'value': 'SYSTEM'}]}, 'expect': 'Booked'}], look_id=look['look_id'], goal='x')
         self.assert_marked(several);self.assertIn('SYSTEM', json.dumps(G(several, 'steps', 0, 'evidence')))
@@ -311,7 +312,7 @@ class UntrustedEverywhere(PlanBase):
             r = self.f.do('Book Dr. B', title='Demo', **kw)
             self.assert_marked(r)
         self.booking();r = self.f.do(BOOKING_GOAL, title='Demo', expect='Booked:', records={'fields': lv.BOOKING_FIELDS, 'predicates': lv.BOOKING_ONE})
-        self.assertEqual((G(r, 'status'), G(r, 'untrusted_page_text'), G(r, 'notice')), ('done', True, NOTICE))
+        self.assertEqual((G(r, 'status'), G(r, 'untrusted_page_text')), ('done', True));self.assertIn(G(r, 'notice'), (NOTICE, None))
 
     def test_the_marker_is_absent_from_nothing_that_carries_a_page_string(self):
         self.booking();r = self.plan([{'do': 'verify', 'expect': 'Booked:'}], goal='x')
