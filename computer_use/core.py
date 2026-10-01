@@ -75,7 +75,7 @@ REGION_CANDIDATE_LIMIT = 18  # the generic chooser's capacity (sketch S4.5); nev
 
 
 MUTATING_TOOLS = frozenset({'click', 'double_click', 'right_click', 'type_text', 'drag', 'scroll', 'hotkey', 'press_key',
-                              'invoke_menu', 'set_window_frame'})
+                              'invoke_menu', 'set_window_frame', 'browser_click', 'browser_type'})
 READ_TOOLS = frozenset({'get_window_state', 'list_windows', 'get_browser_state', 'parse_visual_regions'})  # the only calls a lost Driver session may re-run (#31)
 
 
@@ -1251,10 +1251,13 @@ class Facade:
             # corner button, the centre button was pressed, reported as success). So it is a wrong click, not a no-op, and it is
             # never sent. A real pointer event needs the Driver's foreground delivery, which fronts the window briefly: only the
             # caller's explicit allow_foreground (this call or this step) permits that.
-            if not item.get('allow_foreground'):
+            if item.get('novnc'):
+                self._novnc_recheck(item, fresh['snapshot'], current)  # background through browser_click: no foreground needed; the label must still be drawn at that point
+            elif not item.get('allow_foreground'):
                 item['used']=False  # nothing was clicked
                 raise Gap("pointer_not_deliverable_in_background: a background pixel click on a drawn surface lands at the element's centre, not at %r; nothing was clicked. Pass allow_foreground=true (this call or step) to let the Driver briefly front the window for a real pointer event, only if the user allows that" % (item['request']['actions'][0].get('name') or '')[:40])
-            for action in request['actions']:action['arguments']['delivery_mode']='foreground'
+            if not item.get('novnc'):
+                for action in request['actions']:action['arguments']['delivery_mode']='foreground'
             request['snapshot_id']=current['raw']['snapshot_id']
             decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
         else:
@@ -1274,6 +1277,18 @@ class Facade:
                    verification='pending')
         return {'status':'delivered','driver_result':result,'requires_verification':True,
                 'pid':state['pid'],'window_id':state['window_id']}
+
+    def _novnc_recheck(self, item, handle, current):
+        """The label is drawn at the same viewport point on a FRESH capture (exact normalized text, mapping recomputed from this observation); else StaleUI."""
+        import novnc as nv
+        want = item['novnc']
+        view = nv.mapping(self, current)
+        for r in self._text_regions(handle):
+            if self._ocr_normalize(r['text']) != want['want']:continue
+            try:x, y = nv.css_point(view, r['bounds'])
+            except Gap:continue
+            if abs(x-want['x']) <= 2 and abs(y-want['y']) <= 2:return
+        raise StaleUI('the drawn label is no longer at that point on a fresh capture; nothing was clicked; reobserve and choose again')
 
     @staticmethod
     def _ocr_normalize(text):
@@ -1788,6 +1803,23 @@ class Facade:
 
     REGION_NEAR_PX = 300
 
+    def _novnc_gate(self, pid, window_id, snapshot, state):
+        """(refusal, surface): refusal is a typed deferred payload (credentials_required, viewport_mapping_unavailable) or None; surface is the bound noVNC tab or None."""
+        import novnc as nv
+        try:
+            surface = nv.surface(self, pid, window_id, state)
+        except Gap as gap:
+            text = str(gap)
+            if text.startswith('viewport_mapping_unavailable'):return {'reason': 'viewport_mapping_unavailable', 'hint': text}, None
+            if text.startswith(('permission_required', 'browser_tab_ambiguous')):return {'reason': text.split(':', 1)[0], 'hint': text}, None
+            raise
+        if surface is None:return None, None
+        try:texts = [r['text'] for r in self._text_regions(snapshot)]
+        except Gap:texts = []
+        if nv.password_prompt(surface['semantic'], texts):
+            return {'reason': 'credentials_required', 'dead_end': True, 'report_to_user': nv.CREDENTIALS_HINT, 'hint': nv.CREDENTIALS_HINT}, None
+        return None, surface
+
     def _text_regions(self, snapshot):
         return [r for r in self.regions(snapshot).get('regions', []) if r.get('kind') == 'text' and (r.get('text') or '').strip() and r.get('bounds')]
 
@@ -1810,7 +1842,7 @@ class Facade:
         if not best or (len(best) > 1 and best[0][0] == best[1][0]):return None
         return best[0][2]['text']
 
-    def region_exact(self, snapshot, label, goal, near=None):
+    def region_exact(self, snapshot, label, goal, near=None, novnc=None):
         """Pixel-only pages: resolve `label` against TEXT regions exactly (normalized) and UNIQUELY, with the near-edit veto of region_corroborated
         (an OCR twin such as 'Sove' for 'Save' vetoes). Several exact matches defer unless `near` (the text of the nearest region above or left)
         picks exactly one. Capture-bound click at the region centre, as choose_regions. Returns {'status': selected|defer|none, ...}."""
@@ -1832,17 +1864,24 @@ class Facade:
                     'hint': '%d text regions read %r%s; nothing was clicked. Call do again with the same control and near=<the text just above or left of the one you mean> (see matches[].near).'
                             % (len(everyone), label, '' if near is None else ' and none is right beside %r' % near)}
         target = exact[0];bounds = target['bounds']
-        action = {'id': target['id'], 'name': target['text'], 'role': 'perception_region:text', 'operation': 'click', 'enabled': True, 'evidence_text': target['text'],
-                  'description': target['text'], 'record_basis': 'perception_layout',
-                  'arguments': {'pid': state['pid'], 'window_id': state['window_id'], 'session': self.session, 'capture_id': capture_id, 'delivery_mode': 'background',
-                                'target': {'kind': 'window', 'pid': state['pid'], 'window_id': state['window_id']},
-                                'x': bounds.get('x', 0) + bounds.get('width', 0) / 2, 'y': bounds.get('y', 0) + bounds.get('height', 0) / 2}}
-        request = {'snapshot_id': state['raw']['snapshot_id'], 'kind': 'semantic', 'operation': 'click', 'goal': goal, 'actions': [action], 'observation': target['text']}
+        operation = 'click'
+        arguments = {'pid': state['pid'], 'window_id': state['window_id'], 'session': self.session, 'capture_id': capture_id, 'delivery_mode': 'background',
+                     'target': {'kind': 'window', 'pid': state['pid'], 'window_id': state['window_id']},
+                     'x': bounds.get('x', 0) + bounds.get('width', 0) / 2, 'y': bounds.get('y', 0) + bounds.get('height', 0) / 2}
+        if novnc:
+            # noVNC in a tab (#56): the point is the drawn label's centre in the bound tab's viewport CSS px, delivered by browser_click (background, exact point).
+            import novnc as nv
+            x, y = nv.css_point(novnc['view'], bounds);operation = 'browser_click'
+            arguments = {'session': self.session, 'target_id': novnc['target_id'], 'tab_id': novnc['tab_id'], 'x': x, 'y': y}
+        action = {'id': target['id'], 'name': target['text'], 'role': 'perception_region:text', 'operation': operation, 'enabled': True, 'evidence_text': target['text'],
+                  'description': target['text'], 'record_basis': 'perception_layout', 'arguments': arguments}
+        request = {'snapshot_id': state['raw']['snapshot_id'], 'kind': 'semantic', 'operation': operation, 'goal': goal, 'actions': [action], 'observation': target['text']}
         decision = {'status': 'selected', 'action_id': target['id'], 'action_authorized': True, 'reason': 'exact_region_label', 'snapshot_id': request['snapshot_id'],
                     'binding_digest': request_digest(request), 'provider_outputs': []}
         handle = 'sel_' + uuid.uuid4().hex
         self.selections[handle] = {'snapshot': snapshot, 'request': copy.deepcopy(request), 'decision': copy.deepcopy(decision), 'mode': 'regions', 'operation': 'click',
-                                   'text': None, 'used': False, 'allow_foreground': self.foreground_ok, 'capture_id': capture_id}
+                                   'text': None, 'used': False, 'allow_foreground': self.foreground_ok, 'capture_id': capture_id,
+                                   **({'novnc': {'want': want, 'x': arguments['x'], 'y': arguments['y']}} if novnc else {})}
         while len(self.selections) > 32:self.selections.pop(next(iter(self.selections)))
         self.event('choose', snapshot=snapshot, route='exact_region_label', mode='regions', authorized=True, reason='exact_region_label', near_used=near is not None)
         return {'status': 'selected', 'route': 'exact_region_label', 'selection': handle, 'selected_id': target['id'], 'decision': decision}
@@ -2141,7 +2180,9 @@ class Facade:
                     listing = self._bounded(sorted({state['nodes'][i].get('label') or '' for i in offered}))
                     fallback = None
                     if not any_named and operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
-                        try:fallback = self.region_exact(snapshot, label, goal, near)
+                        refused, nv = self._novnc_gate(pid_, window_, snapshot, state)
+                        if refused:return finish('deferred', **refused)
+                        try:fallback = self.region_exact(snapshot, label, goal, near, nv)
                         except Gap:fallback = None
                         if fallback and fallback['status'] == 'selected':region_choice = fallback;mode = 'region_exact'
                         elif fallback and fallback['status'] == 'defer':
@@ -2161,6 +2202,12 @@ class Facade:
                 if mode == 'semantic':
                     if offered:choose_args.update(candidate_ids=['e'+str(i) for i in offered])
                     else:
+                        if self.perception_state == 'healthy' and state['raw'].get('capture_id') and state['raw'].get('capture_id'):
+                            refused, nv = self._novnc_gate(pid_, window_, snapshot, state)
+                            if refused:return finish('deferred', **refused)
+                            if nv and operation != 'click':
+                                return finish('deferred', reason='novnc_typing_unavailable', dead_end=True,
+                                              hint='This is a noVNC page: its canvas has no editable element, and the Driver types only into one (browser_type needs a ref), so nothing was typed. Ask the user to type, or use a computer-use server on the remote machine.')
                         seen_texts = []
                         if operation == 'click' and self.perception_state == 'healthy' and state['raw'].get('capture_id'):
                             try:seen_texts = self._region_texts(self._text_regions(snapshot))
