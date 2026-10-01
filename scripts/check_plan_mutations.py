@@ -128,9 +128,9 @@ MUTATIONS = {
          'test_resize.NotProven.test_a_readback_off_by_more_than_two_points_is_not_done']),
     'resize_lets_the_window_leave_the_display': (
         'no clamp and no whole-window-inside re-check (#78)',
-        [('agent_browser.py', "        w, h = min(width, rect['width']), min(height, rect['height'])", "        w, h = width, height"),
-         ('agent_browser.py', "        x = min(max(before['x'], rect['x']), rect['x'] + rect['width'] - w)", "        x = before['x']"),
-         ('agent_browser.py', "        y = min(max(before['y'], rect['y']), rect['y'] + rect['height'] - h)", "        y = before['y']"),
+        [('agent_browser.py', "        w, h = min(width, area['width']), min(height, area['height'])", "        w, h = width, height"),
+         ('agent_browser.py', "        x = min(max(before['x'], area['x']), area['x'] + area['width'] - w)", "        x = before['x']"),
+         ('agent_browser.py', "        y = min(max(before['y'], area['y']), area['y'] + area['height'] - h)", "        y = before['y']"),
          ('agent_browser.py', " or not f.agent.inside(now):", ":")],
         ['test_resize.Resize.test_a_resize_larger_than_the_display_is_clamped_and_the_window_stays_inside', 'test_resize.Resize.test_a_window_near_the_edge_is_moved_in_not_left_sticking_out',
          'test_resize.NotProven.test_a_window_that_ends_outside_the_display_is_refused_even_with_a_matching_readback']),
