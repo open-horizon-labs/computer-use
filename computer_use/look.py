@@ -511,21 +511,25 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
             began = f.clock()
             attach_dom(f, pid, window_id, state, analysis, rows, extras)
             stage('dom', began)
-        if analysis['page_controls'] == 0:
+        import novnc
+        semantic = extras.pop('_semantic', None)
+        is_novnc = novnc.detect(semantic)  # the stock client has its own toolbar buttons, so page_controls is not 0 there: the drawn remote desktop is still the page
+        if is_novnc:
+            extras['surface'] = 'novnc'
+            if novnc.password_prompt(semantic, []):  # the credentials dialog is DOM (no Perception needed to see it): the user enters it, never this tool
+                extras['refusal'] = {'reason': 'credentials_required', 'hint': novnc.CREDENTIALS_HINT}
+        if analysis['page_controls'] == 0 or is_novnc:
             if f.perception_state == 'healthy' and state['raw'].get('capture_id'):
                 began = f.clock()
                 try:
                     regions = f._text_regions(handle)
-                    import novnc
-                    semantic = extras.pop('_semantic', None)
-                    if novnc.detect(semantic):
+                    if is_novnc:
                         # noVNC in a tab (#56): the drawn labels are pressed through the bound tab's viewport; refuse here when they could not be placed or a password is asked for.
-                        extras['surface'] = 'novnc'
-                        if novnc.password_prompt(semantic, [r['text'] for r in regions]):
+                        if 'refusal' in extras or novnc.password_prompt(semantic, [r['text'] for r in regions]):
                             extras['refusal'] = {'reason': 'credentials_required', 'hint': novnc.CREDENTIALS_HINT}
                             regions = []
                         else:
-                            try:novnc.mapping(f, state)
+                            try:regions = novnc.in_viewport(novnc.mapping(f, state), regions)  # the tab strip and address bar are in the capture too: not the remote desktop
                             except Gap as gap:
                                 extras['refusal'] = {'reason': 'viewport_mapping_unavailable', 'hint': str(gap)}
                                 regions = []
