@@ -641,7 +641,7 @@
     },
     "nav_goto_look_plan": {
       "max_total_bytes": {
-        "value": 5100,
+        "value": 5166,
         "changed_by": "CE-FACADE-011"
       },
       "max_call_bytes": {
@@ -669,7 +669,7 @@
     },
     "onboarding_first_do_goto": {
       "max_total_bytes": {
-        "value": 5100,
+        "value": 5166,
         "changed_by": "CE-FACADE-011"
       },
       "max_call_bytes": {
@@ -683,7 +683,7 @@
     },
     "nav_open_tab_read_close": {
       "max_total_bytes": {
-        "value": 4623,
+        "value": 4689,
         "changed_by": "CE-FACADE-011"
       },
       "max_call_bytes": {
@@ -697,11 +697,11 @@
     },
     "nav_permission_required_stop": {
       "max_total_bytes": {
-        "value": 984,
+        "value": 1133,
         "changed_by": "CE-FACADE-011"
       },
       "max_call_bytes": {
-        "value": 984,
+        "value": 1133,
         "changed_by": "CE-FACADE-011"
       },
       "max_wait_s": {
@@ -711,11 +711,11 @@
     },
     "nav_read_pages_3": {
       "max_total_bytes": {
-        "value": 4705,
+        "value": 4855,
         "changed_by": "CE-FACADE-011"
       },
       "max_call_bytes": {
-        "value": 4705,
+        "value": 4855,
         "changed_by": "CE-FACADE-011"
       },
       "max_wait_s": {
@@ -725,11 +725,11 @@
     },
     "nav_read_pages_one_fails": {
       "max_total_bytes": {
-        "value": 3978,
+        "value": 4129,
         "changed_by": "CE-FACADE-011"
       },
       "max_call_bytes": {
-        "value": 3978,
+        "value": 4129,
         "changed_by": "CE-FACADE-011"
       },
       "max_wait_s": {

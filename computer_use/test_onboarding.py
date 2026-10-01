@@ -488,6 +488,40 @@ class FirstCallNeedsNoTitle(unittest.TestCase):
         self.assertTrue(r['summary']['title'])
         self.assertEqual(d.called('browser_navigate')[0]['url'], tb.BOOKING)
 
+    def named(self, d):
+        """A real Driver's window list: the agent browser's window (1, 2) and its title."""
+        real = d.call
+        d.call = lambda tool, args, timeout=20: ({'windows': [{'pid': 1, 'window_id': 2, 'title': 'Clinic Slots dbg20'}]} if tool == 'list_windows' else real(tool, args, timeout))
+
+    def test_a_titleless_goto_without_expect_answers_with_the_window_title_and_a_navigation_hint(self):
+        # Wrong patch (live 2026-09-30, #64): summary only when an observation was taken, so the unverified answer had no title; the hint spoke of a click.
+        f, d = self.facade(self.Window())
+        self.named(d)
+        r = f.do('Open the booking page', expect=None, steps=[{'do': 'goto', 'url': tb.BOOKING, 'expect': None}])
+        self.assertEqual(r['status'], 'delivered_unverified', r)
+        self.assertEqual(r['summary']['title'], 'Clinic Slots dbg20')
+        self.assertEqual(r['summary']['window'], {'pid': 1, 'window_id': 2})
+        self.assertEqual(r['steps'][0]['page']['url'], tb.BOOKING)
+        self.assertIn('look(title="Clinic Slots dbg20")', r['hint'])
+        self.assertNotIn('click', r['hint'].lower())
+
+    def test_a_titleless_goto_that_stops_still_names_the_window(self):
+        f, d = self.facade(self.Window())
+        self.named(d)
+        d.landed = {'url': 'https://ads.example/promo', 'title': 'Promo'}
+        r = f.do('Open the booking page', expect=None, steps=[self.GOTO])
+        self.assertEqual(r['steps'][0]['reason'], 'navigated_elsewhere', r)
+        self.assertEqual(r['summary']['title'], 'Clinic Slots dbg20')
+
+    def test_a_goto_with_a_title_given_also_answers_with_summary_title(self):
+        # Wrong patch: add summary only on done.
+        f, d = self.facade(self.Window())
+        self.named(d)
+        r = f.do('x', expect=None, title='Demo', steps=[{'do': 'goto', 'url': tb.BOOKING, 'expect': None}])
+        self.assertEqual(r['status'], 'delivered_unverified', r)
+        self.assertTrue(r['summary']['title'])
+        self.assertNotIn('click', r['hint'].lower())
+
     def test_everything_else_still_names_its_window(self):
         # Wrong patch: drop the title requirement for every plan (a press or a user-profile goto would act on no named window).
         f, _ = self.facade(self.Window())
