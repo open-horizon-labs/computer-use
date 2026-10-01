@@ -459,6 +459,22 @@ def _summary(f, pid, window_id):
     return {'title': state['raw'].get('window_title'), 'text': texts[:6], 'controls': controls[:12]}
 
 
+def _nav_summary(f, ctx, summary):
+    """A navigation plan's answer always names the window it ended on (the caller of a title-less goto has no other way to learn it), even when no observation was taken (expect null)."""
+    summary = dict(summary or {})
+    summary['window'] = {'pid': ctx['pid'], 'window_id': ctx['window_id']}
+    if not summary.get('title'):
+        try:
+            found = [w for w in f.windows()['windows'] if w.get('pid') == ctx['pid'] and w.get('window_id') == ctx['window_id']]
+        except Exception:  # the title is a convenience here: never turn a delivered navigation into an error
+            found = []
+        if found:
+            summary['title'] = found[0]['title']
+    summary.setdefault('text', [])
+    summary.setdefault('controls', [])
+    return summary
+
+
 def _abort_hit(f, pid, window_id, abort_if, since):
     """abort_if in the fresh observation: text-bearing non-control content nodes only (a button label never counts)."""
     state = f.snapshots.get(f.latest.get((pid, window_id)))
@@ -719,14 +735,21 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         status = 'stopped'
     response = {'status': status, **({'failed_step': failed['n'], 'reason': failed['reason']} if failed else {}), 'steps': entries,
                 'delivery': delivery, 'follow_up_needed': status not in ('done', 'observed')}
+    navigates = plan_steps[0].get('do') in ('goto', 'open_tab', 'read_pages')
     if ctx['pid'] is not None:
         summary = _summary(f, ctx['pid'], ctx['window_id'])
+        if navigates:
+            summary = _nav_summary(f, ctx, summary)
         if summary:
             response['summary'] = summary
     if failed:
         response['hint'] = hint_for(failed['reason'], failed['n'], delivery == 'delivered')
         if failed['reason'] == 'abort_if_matched':
             response['hint'] = 'abort_if text appeared after step %d, so the plan stopped; steps up to it ran. Report it to the user or call look to see the page.' % failed['n']
+    elif status == 'delivered_unverified' and entries[-1]['do'] in ('goto', 'open_tab'):
+        title = (response.get('summary') or {}).get('title')
+        named = 'title=<summary.title>' if not title else 'title=%s' % json.dumps(title)
+        response['hint'] = 'The navigation was delivered and the page loaded, but no expect was given, so nothing was checked. Call look(%s) to see it, or call do(%s, steps=[{do:"verify", expect:<page text that should be visible now>}]) to check. Do not repeat the goto.' % (named, named)
     elif status == 'delivered_unverified':
         response['hint'] = 'The last click was delivered but no expect was given, so nothing was checked. Do not click again. To check, call do with steps=[{do:"verify", expect:<page text that should be visible now>}].'
     if status == 'failed':
