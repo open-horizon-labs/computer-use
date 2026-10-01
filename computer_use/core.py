@@ -56,6 +56,17 @@ class Gap(ValueError):
     """An observation/authority gap; must not authorize execution."""
 
 
+class WindowRefusal(Gap):
+    """window_ambiguous / window_not_found: the candidates (title and app, up to 8, current Space first) travel in the response so the agent's next call is look(title=<one of them>)."""
+    def __init__(self, reason, message, candidates, total):
+        super().__init__(message)
+        self.reason, self.candidates, self.total = reason, candidates, total
+
+    @property
+    def extra(self):
+        return {'candidates': self.candidates, 'candidates_total': self.total}
+
+
 class StaleUI(Gap):
     """act() refused: the bound observation changed before delivery. Nothing was clicked.
     Typed, so do recovers from it without matching on message text."""
@@ -192,6 +203,7 @@ class Facade:
         self.reported = {}  # (pid, window_id, title) -> {text, controls} the LLM was last shown for that page (look or do summary): a do summary carries only what is new
         self._notice_sent = False;self._notice_windows = set()  # see _notice_needed
         self._settled_titles = {}  # (pid, window_id) -> window title of the last settled look (see SETTLE_DELAY_S)
+        self.fg_grants = {}  # (pid, window_id, title) -> True: windows the user let the server front, for this session only (foreground_for)
         self.foreground_ok = False  # per call/step: allow_foreground; a background pixel click cannot reach a canvas (see act)
         self.factories = {'generic': generic_factory, 'reader': reader_factory,
                           'spans': spans_factory, 'visual': visual_factory}
@@ -275,10 +287,62 @@ class Facade:
             self.driver.call('start_session', {'session': self.session})
             self.started = True
         result = self._read('list_windows', lambda: self.driver.call('list_windows', {'session': self.session}))
-        raws = [w for w in result.get('windows', []) if w.get('title') and (title is None or w['title']==title)]
+        titled = [w for w in result.get('windows', []) if w.get('title')]
+        self.titled_raw = titled  # resolve_window ranks by layer and Space, which the listing below does not carry
+        raws = [w for w in titled if title is None or w['title']==title]
         listed = [{k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w} for w in raws]
         self.agent.observed([{**w, 'bundle_id': raw.get('bundle_id'), 'bounds': raw.get('bounds')} for w, raw in zip(listed, raws)])
         return {'route': 'driver_inventory', 'windows': listed}
+
+    WINDOW_CANDIDATES = 8
+
+    def foreground_for(self, pid, window_id, explicit=False):
+        """May this call or step front THIS window? True for an explicit allow_foreground (the grant is then remembered for exactly this pid+window_id+title,
+        for the rest of the session) and for a window granted earlier; never for any other window. Sets foreground_ok for the rest of the call/step."""
+        title = next((w.get('title') for w in getattr(self, 'titled_raw', []) if w.get('pid') == pid and w.get('window_id') == window_id), None)
+        key = (pid, window_id, title)
+        if (explicit or self.foreground_ok) and title is not None:self.fg_grants[key] = True
+        allowed = bool(explicit or self.foreground_ok or (title is not None and key in self.fg_grants))
+        if allowed:self.foreground_ok = True
+        return allowed
+
+    def resolve_window(self, title):
+        """The one window `title` names, or a typed refusal with candidates (never a guess between several). In order: the exact window title; a unique
+        window whose title contains it (case-insensitive); the app name ("Chrome", "Google Chrome") when that app has exactly ONE titled layer-0 window
+        on the current Space. Several of any kind is window_ambiguous, none is window_not_found; both list up to 8 {title, app} (current Space first)."""
+        listed = self.windows()['windows']
+        raw = {(w.get('pid'), w.get('window_id')): w for w in self.titled_raw}
+        norm = lambda text: ' '.join(str(text or '').lower().split())
+        def key(w):return (w.get('pid'), w.get('window_id'))
+        def layer0(w):return raw.get(key(w), {}).get('layer', 0) == 0
+        def current(w):
+            r = raw.get(key(w), {})
+            return r.get('on_current_space', r.get('is_on_screen')) is not False
+        pool = [w for w in listed if layer0(w)]
+        want = norm(title)
+        def bind(w, how):
+            self.event('window_resolved', by=how)
+            return w
+        exact = [w for w in pool if w['title'] == title]
+        if len(exact) == 1:return bind(exact[0], 'exact')
+        many = exact
+        if not exact:
+            sub = [w for w in pool if want and want in norm(w['title'])]
+            if len(sub) == 1:return bind(sub[0], 'title_contains')
+            many = sub
+            apps = [w for w in pool if want and (norm(w.get('app_name')) == want or want in norm(w.get('app_name')))]
+            here = [w for w in apps if current(w)]
+            if len(here) == 1 or (not here and len(apps) == 1):return bind((here or apps)[0], 'app_name')
+            if len(apps) > 1 and not many:many = here or apps
+        order = lambda ws: sorted(ws, key=lambda w: not current(w))
+        def cards(ws, with_ids=False):
+            return [{'title': w['title'], 'app': w.get('app_name'), **({'pid': w['pid'], 'window_id': w['window_id']} if with_ids else {})} for w in order(ws)[:self.WINDOW_CANDIDATES]]
+        if many:
+            same = len({w['title'] for w in many}) < len(many)  # equal titles cannot be told apart by title: say which ids
+            raise WindowRefusal('window_ambiguous', 'window_ambiguous: %d windows match %r; candidates: %s' % (len(many), title, '; '.join('%s (%s)' % (c['title'], c['app']) for c in cards(many))),
+                                cards(many, same), len(many))
+        raise WindowRefusal('window_not_found', 'window_not_found: no window matches %r; open windows: %s' % (title, '; '.join('%s (%s)' % (c['title'], c['app']) for c in cards(pool)) or 'none'),
+                            cards(pool), len(pool))
 
     def window_created(self, window_id, title=None, bounds=None):
         """Every path that makes a NEW WINDOW calls this right after it exists and before the first look or act on it (#60)."""
@@ -403,6 +467,42 @@ class Facade:
             below += len(frontier)
         return below <= THIN_PAGE_NODES
 
+    @staticmethod
+    def _unresolved(raw):
+        """The Driver's evidence that it cannot read this window in the background (exact_window status other than matched, or the route refusal
+        off_space_or_ax_unresolved) while the answer carries no elements; None when the window is readable."""
+        background = raw.get('background_input') or {}
+        status = (background.get('exact_window') or {}).get('status')
+        routes = background.get('routes') or []
+        routes = list(routes.values()) if isinstance(routes, dict) else routes
+        refused = sorted({r.get('reason') for r in routes if isinstance(r, dict) and r.get('status') == 'refused' and isinstance(r.get('reason'), str)})
+        if raw.get('elements') or (status in (None, 'matched') and 'off_space_or_ax_unresolved' not in refused):return None
+        return {'exact_window_status': status, 'refused_routes': refused[:4]}
+
+    def _reread_unresolved(self, pid, window_id, raw, read):
+        """Cua Driver's Space view can be stale (trycua/cua#4437: a visible window listed off screen, minutes later fine). So an unresolved window is
+        re-read first, read-only and bounded by OBSERVE_RETRY_DELAYS: start_session, list_windows, get_window_state. Still unresolved: window_ax_unresolved with
+        the Driver's own evidence, who=user, never a claim about what the user's screen shows."""
+        evidence = self._unresolved(raw)
+        for delay in OBSERVE_RETRY_DELAYS:
+            if not evidence:break
+            self.sleep(delay)
+            try:self.driver.call('start_session', {'session': self.session})
+            except Gap:pass
+            self.windows()
+            raw = read()
+            evidence = self._unresolved(raw)
+            self.event('observe_retry', reason='window_ax_unresolved', ready=evidence is None)
+        if evidence:
+            mine = next((w for w in self.titled_raw if w.get('pid') == pid and w.get('window_id') == window_id), {})
+            title = mine.get('title') or raw.get('window_title') or 'untitled'
+            seen = {k: mine[k] for k in ('is_on_screen', 'current_space_id', 'space_ids', 'on_current_space') if k in mine}
+            gap = Gap('window_ax_unresolved: Cua Driver cannot reach the window titled %r right now (its Space view may be stale); nothing was done. '
+                      'Ask the user to bring it forward once, or approve one foreground step (allow_foreground=true)' % title)
+            gap.extra = {'driver_evidence': {**evidence, **seen}}
+            raise gap
+        return raw
+
     def _observe_once(self, pid, window_id, timeout=None):
         if not self.started:
             self.windows()
@@ -411,6 +511,8 @@ class Facade:
         if self.driver_version is not None and self.driver_version >= TIMEOUT_MS_SINCE:
             args = [20 if timeout is None else timeout, min(DRIVER_LAUNCH_WAIT_MS, int((20 if timeout is None else timeout) * 1000))]
         raw = self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *args))
+        read = lambda: self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *args))
+        raw = self._reread_unresolved(pid, window_id, raw, read)
         if not raw.get('snapshot_id') or raw.get('pid', pid) != pid or raw.get('window_id', window_id) != window_id:
             # A vague message here just makes the agent guess three times. Say
             # whether the window is gone or the Driver degraded/refused instead.
@@ -1950,9 +2052,15 @@ class Facade:
             counts[name] = counts.get(name, 0) + 1
         return [{'id': 'e' + str(i), 'name': name, **({'count': counts[name]} if counts[name] > 1 else {})} for i, name in order[:cap]]
 
-    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60, device=None):
+    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60, device=None, url=None):
         """Read-only, deterministic look at the strings the page displays (no click, no window move, no model unless `fields`)."""
         import look as lookmod
+        if url is not None:
+            with self.lock:
+                bound = self._by_url('look', url, title, pid, window_id, device)
+                if 'status' in bound:return bound
+                result = self.mark(lookmod.run_look(self, None, bound['pid'], bound['window_id'], fields, max_records, max_bytes, focus, max_lines, line_chars), 'look')
+                return self._named(result, bound)
         if device is not None:
             import mobile as mobilemod
             if title is not None or pid is not None or window_id is not None:return self.mark({'status': 'refused', 'reason': 'bad_request', 'message': 'bad_request: give device, or title or pid+window_id, not both'}, 'look')
@@ -1961,15 +2069,44 @@ class Facade:
 
     def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
            expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None,
-           steps=None, look_id=None, abort_if=None, allow_foreground=None, device=None):
+           steps=None, look_id=None, abort_if=None, allow_foreground=None, device=None, url=None):
         """One call runs observe -> read -> same-record filter -> (chooser only if several) -> bind -> act -> verify,
         recovering deterministically (bounded) and deferring to the caller only where guessing would be worse.
         Composes observe/read/choose/act/verify; owns no selection policy. Never retries a click.
         With `steps` it runs a validated PLAN instead (plan.py): each step is this same pipeline on a fresh observation."""
+        if url is not None:
+            with self.lock:
+                bound = self._by_url('do', url, title, pid, window_id, device)
+                if 'status' in bound:return bound
+                return self._named(self.do(goal, None, bound['pid'], bound['window_id'], records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground), bound)
         if device is not None:  # a phone or emulator through mobile-mcp: same plan contract, its own observation and delivery (mobile.py, CE-FACADE-008)
             import mobile as mobilemod
             with self.lock:return self.mark(mobilemod.do(self, goal, device, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if), 'do')
         return self.mark(self._do_entry(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground), 'do')
+
+    def _by_url(self, tool, url, title, pid, window_id, device):
+        """url=<domain or part of a page url> -> {pid, window_id, title} of the one window showing it (pageurl.py), or the refused answer to return."""
+        import pageurl
+        if title is not None or pid is not None or window_id is not None or device is not None:
+            return self.mark({'status': 'refused', 'reason': 'bad_request', 'message': 'bad_request: give url, or title, or pid+window_id, or device; one target'}, tool)
+        try:return pageurl.resolve(self, url)
+        except Gap as gap:
+            reason = self._do_reason(str(gap))
+            return self.mark({'status': 'refused', 'reason': reason, 'message': str(gap)[:600], 'delivery': 'none', **getattr(gap, 'extra', {})}, tool)
+
+    @staticmethod
+    def _named(result, bound):
+        """Once a url resolved, the answer names the window it bound so later calls can pass that title (or the look_id) without a lookup."""
+        if isinstance(result, dict) and result.get('status') != 'refused':result.setdefault('window', {'title': bound['title']})
+        return result
+
+    def _owner(self, result):
+        """`who` on every answer that is not done: "agent" = follow the hint and retry (a few times at most), "user" = stop and ask the user. A setup block that
+        needs the user wins (the agent cannot fix what the block names)."""
+        import plan as planmod
+        if result.get('status') in ('done', 'observed', 'ok', 'delivered_unverified') or result.get('who'):return
+        reasons = [r for r in (result.get('reason'), *(s.get('reason') for s in result.get('steps') or [] if isinstance(s, dict) and s.get('status') != 'done')) if isinstance(r, str)]
+        result['who'] = 'user' if any(s.get('who') == 'user' for s in result.get('setup') or [] if isinstance(s, dict)) else planmod.who_of(reasons[0]) if reasons else 'agent'
 
     def mark(self, result, tool=None):
         """Every do response can carry page-derived strings (summary.text, dialog.lines, evidence, found, descriptions): say so, with the fixed sentence.
@@ -1981,10 +2118,13 @@ class Facade:
             if tool == 'do' and self.first_do is None and onboarding.is_verified_do(result):
                 self.first_do = {'calls': self.tool_calls, 'seconds': round(self.clock() - self.started_at, 1)}
                 self.event('time_to_first_verified_do', **self.first_do)
-            if tool:onboarding.setup_for(self, result)
+            if tool:
+                onboarding.setup_for(self, result)
+                self._owner(result)
             report = self.agent.take_report()
             if report.get('parked'):result['agent_display'] = {'id': self.agent.display, 'parked': True}
             if report.get('note'):result['agent_display_note'] = report['note']
+            if self.fg_grants:result['foreground_granted_for'] = [k[2] for k in self.fg_grants][:4]  # the windows the user already let this session front: no second ask
             result['untrusted_page_text'] = True  # the flag is on every response; the fixed sentence only where it is news (CE-FACADE-011)
             if self._notice_needed(result):result['notice'] = lookmod.NOTICE
             else:result.pop('notice', None)
@@ -2044,6 +2184,7 @@ class Facade:
             if ctx['pid'] is not None:
                 observation = self._do_observation(ctx['pid'], ctx['window_id'])
                 if observation:result['observation'] = observation
+            if keep.get('bound_title'):result['window'] = {'title': keep['bound_title']}  # the window a looser `title` resolved to: pass this title next
             if keep.get('audit') is not None and status != 'refused':result['evidence'] = {**result.get('evidence', {}), 'excluded_values': keep['audit']}
             self.event('do', stage=ctx['stage'], status=status, delivery=ctx['delivery'], passes=ctx['pass'],
                        attempts=len(attempts), calls_by_route=dict(calls), reason=extra.get('reason'))
@@ -2542,12 +2683,12 @@ class Facade:
             ctx['stage'] = 'window';began = self.clock()
             if title is not None:
                 if pid is not None or window_id is not None:raise Gap('bad_request: give title or pid+window_id, not both')
-                found = guarded('window', lambda: self.windows(title))['windows']
-                if len(found) != 1:
-                    raise Gap('window_%s: %d windows match the exact title; check the exact window title' % ('not_found' if not found else 'ambiguous', len(found)))
-                ctx.update(pid=found[0]['pid'], window_id=found[0]['window_id'])
+                found = guarded('window', lambda: self.resolve_window(title))
+                ctx.update(pid=found['pid'], window_id=found['window_id'])
+                if found['title'] != title:keep['bound_title'] = found['title']
             elif pid is None or window_id is None:raise Gap('bad_request: supply title, or pid and window_id')
             count('window', 'driver_inventory')
+            self.foreground_for(ctx['pid'], ctx['window_id'])
             if plan is not None:plan['pid'], plan['window_id'] = ctx['pid'], ctx['window_id']
             if lines_where:
                 lines_where['look'] = self.looks.get((ctx['pid'], ctx['window_id'], lines_where['look_id']))
@@ -2573,7 +2714,7 @@ class Facade:
             return finish('deferred', reason='records_ambiguous', message=str(gap))
         except Gap as gap:
             import look as lookmod
-            return finish('refused', reason=self._do_reason(str(gap)), message=lookmod.safe_message(self._do_reason(str(gap)), str(gap)))
+            return finish('refused', reason=self._do_reason(str(gap)), message=lookmod.safe_message(self._do_reason(str(gap)), str(gap)), **getattr(gap, 'extra', {}))
         except (ValueError, RuntimeError, TimeoutError, OSError) as error:
             return finish('failed', reason='provider_failure', error_type=type(error).__name__, attempts=tries.get(ctx['stage'], 1),
                           retryable=ctx['delivery'] == 'none')
@@ -2591,6 +2732,7 @@ class Facade:
             except Exception:self.event('cleanup',status='worker_close_failed')
         self.providers.clear()
         if self._mobile is not None:self._mobile.close()  # stops the mobile-mcp child process; the next device call starts a fresh one
+        self.fg_grants.clear()
         self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear();self.looks.clear()
         return {'status':'closed','trace':self.events,'driver_version':self.driver_version,'driver_version_state':self.driver_version_state,
                 'perception_version':self.perception_version,'perception_state':self.perception_state,'time_to_first_verified_do':self.first_do}

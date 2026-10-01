@@ -755,6 +755,31 @@ MUTATIONS = {
         'the AX-window wait also applies to the observation an action revalidates on',
         [('core.py', "self._observe_resolved(pid, window_id, timeout, began) if wait_ready else self._observe_once(pid, window_id, timeout)", "self._observe_resolved(pid, window_id, timeout, began)")],
         ['test_look.AxWindowNotYetResolved.test_an_action_observation_never_waits_for_the_ax_window']),
+    'app_name_with_several_windows_binds_the_first': (
+        'an app name ("Chrome") with several windows resolves to the first one instead of refusing with candidates',
+        [('core.py', "            if len(here) == 1 or (not here and len(apps) == 1):return bind((here or apps)[0], 'app_name')", "            if apps:return bind((here or apps)[0], 'app_name')")],
+        ['test_who.TitleResolution.test_an_app_name_with_several_windows_is_ambiguous_with_candidates_and_binds_none']),
+    'catalog_reason_without_who': (
+        'a reason of the mobile catalog and the reasons raised outside the catalogs are left out of the who table',
+        [('plan.py', "for reason in sorted({*HINTS, *mobile.DEVICE_HINTS, *EXTRA_REASONS})}", "for reason in sorted({*HINTS})}")],
+        ['test_who.WhoFixesIt.test_every_catalog_reason_has_a_who']),
+    'refusal_answer_without_who': (
+        'the answers carry a reason and a hint but nobody is named to act on them',
+        [('core.py', "                self._owner(result)\n", "                pass\n")],
+        ['test_who.WhoFixesIt.test_refused_stopped_failed_and_deferred_answers_carry_who_and_done_ones_do_not']),
+    'foreground_grant_leaks_to_other_windows': (
+        'remember "foreground is allowed" for the session instead of for the one window the user approved',
+        [('core.py', "(title is not None and key in self.fg_grants))", "bool(self.fg_grants))")],
+        ['test_who.ForegroundGrantIsPerWindow.test_the_grant_never_extends_to_another_window']),
+    'several_matching_tabs_bind_the_first': (
+        'url=... with several matching tabs binds the first match instead of refusing window_ambiguous',
+        [('pageurl.py', "    if len(matches) > 1:", "    if False:")],
+        ['test_who.TargetByUrl.test_several_matching_tabs_are_ambiguous_with_titles_and_urls_and_never_the_first',
+         'test_who.TargetByUrl.test_two_matching_tabs_of_one_window_are_ambiguous_too']),
+    'unresolved_window_is_not_reread': (
+        'ask the user on the first unresolved answer of a window whose Space view may be stale',
+        [('core.py', "        for delay in OBSERVE_RETRY_DELAYS:\n            if not evidence:break", "        for delay in ():\n            if not evidence:break")],
+        ['test_who.UnresolvedWindow.test_a_stale_space_view_that_clears_on_the_second_read_proceeds_without_asking']),
 }
 
 

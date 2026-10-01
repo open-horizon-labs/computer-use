@@ -478,10 +478,8 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         if title is not None:
             if pid is not None or window_id is not None:
                 raise Gap('bad_request: give title or pid+window_id, not both')
-            found = f.windows(title)['windows']
-            if len(found) != 1:
-                raise Gap('window_%s: %d windows match the exact title; check the exact window title' % ('not_found' if not found else 'ambiguous', len(found)))
-            pid, window_id = found[0]['pid'], found[0]['window_id']
+            found = f.resolve_window(title)
+            pid, window_id = found['pid'], found['window_id']
         elif pid is None or window_id is None:
             raise Gap('bad_request: supply title, or pid and window_id')
         stage('window', began)
@@ -599,4 +597,6 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                 'detail': f._failure_detail(gap), 'hint': 'The Driver call failed before anything was clicked. Call `look` once more; if it fails again the daemon is probably down: a setup block says how to start it, otherwise tell the user. Do not loop.'}
     except Gap as gap:
         reason = f._do_reason(str(gap))
-        return {'status': 'refused', 'reason': reason, 'message': safe_message(reason, str(gap)), 'ms_by_stage': ms}
+        from plan import HINTS
+        return {'status': 'refused', 'reason': reason, 'message': safe_message(reason, str(gap)), 'ms_by_stage': ms, **getattr(gap, 'extra', {}),
+                **({'hint': HINTS[reason]} if reason in ('window_not_found', 'window_ambiguous') else {})}

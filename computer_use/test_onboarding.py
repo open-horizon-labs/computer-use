@@ -284,7 +284,7 @@ SOURCES = ('core', 'plan', 'browser', 'mobile', 'agent_browser', 'agent_display'
 # Raised through a format string the scanner cannot read, or returned as a reason without a Gap: still reach responses.
 REACH_ALSO = {'foreground_required', 'window_not_found', 'window_ambiguous', 'driver_call_failed', 'provider_failure', 'budget_exceeded', 'permission_required',
               'agent_browser_unavailable', 'agent_display_unavailable', 'mobile_backend_unavailable', 'mobile_device_agent_missing'}
-STOP_AND_ASK = {'no_actionable_controls', 'mobile_backend_unavailable', 'mobile_device_agent_missing'}  # nothing a call can change: say who and the retry rule
+STOP_AND_ASK = {'window_ax_unresolved', 'no_actionable_controls', 'mobile_backend_unavailable', 'mobile_device_agent_missing'}  # nothing a call can change: say who and the retry rule
 CALL_NAMES = {name for name in (set(inspect.signature(__import__('server').do).parameters) | set(inspect.signature(__import__('server').look).parameters)
                                 | set(__import__('server').PlanStep.model_fields) | set(__import__('server').StepWhere.model_fields))}
 GENERIC = {'do', 'text', 'goal', 'lines', 'pid'}
