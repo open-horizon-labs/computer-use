@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "cua-driver": {
+      "command": "/Users/muness1/.local/bin/cua-driver",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}

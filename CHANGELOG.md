@@ -2,7 +2,9 @@
 
 Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may still change in minor releases.
 
-## 0.1.2 (unreleased)
+## 0.1.2 (2026-10-01)
+
+- Benchmark: nine everyday jobs (web, a real page, a Mac app, Android, iOS) against vanilla computer use and the stock Cua Driver tools: computer-use 9 of 9 correct, 86 turns, $1.95, off your screen ([docs/BENCHMARK.md](docs/BENCHMARK.md), harness in `experiments/surfaces-ab`).
 
 - The agent browser gives focus back to the app you were in once its window is up (measured: Chrome took focus on launch and kept it for the whole run; now about 3.5 s, until the window is listed). Launching without activation is tracked separately.
 - Select: when the Driver's set_value fails on a closed Chrome select (live: it exposes no options), the step re-reads the select and, only if it is unchanged, opens it and presses the option under it, in the background; verified by the shown value. A set that landed is never pressed again. Verified live on Chrome for Testing 154 with the checkbox step.

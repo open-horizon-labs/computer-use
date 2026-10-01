@@ -4,6 +4,17 @@
 
 Why this exists: [WHY.md](WHY.md).
 
+**Nine everyday jobs, three ways** (Claude Sonnet 5.5, one run per job, 2026-10-01; [details](docs/BENCHMARK.md)):
+
+| | Vanilla computer use | Stock Cua Driver tools | computer-use |
+|---|---|---|---|
+| Correct | 7 of 9 | 8 of 9 | **9 of 9** |
+| Turns | 156 | 154 | **86** |
+| Output tokens | 23.5k | 35.8k | **20.2k** |
+| Wall time | **483 s** | 643 s | 529 s |
+| Cost | $2.70 | $7.16 | **$1.95** |
+| Where it runs | your screen, your mouse and keyboard | agent display, background input | agent display, background input |
+
 A companion to stock computer-use tools and skills. The stock driver observes and executes; this repository supplies typed request guidance, capability routing, evidence matching, bounded semantic recovery, and a CESS simulation loop.
 
 The driving LLM describes intent and evidence requirements. Dispatcher code follows the sketch to choose providers. Models return evidence or an offered ID; the controller retains executable arguments, validates the current binding, and independently verifies progress.
@@ -68,9 +79,7 @@ Full version (NuExtract, staleness and recovery): [docs/PLAN-B.md#sequence](docs
 
 NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosing steps. The primitive tools (`observe`, `choose`, `act`, ...) are hidden unless `CUA_TASK_ADVANCED=1`. The agent tool of option D is experimental and not merged.
 
-**Evidence so far (n=1 per cell, Sonnet 5.5, real Chrome, directional only, two independent runs that agree):**
-- Fixture pages, 3 tasks: the stack cost $0.90 against $2.69 for native Cua Driver tools (about 3x less). Booking and ax_dup were correct on both arms with no wrong clicks; canvas_regions failed on both: the background pixel click was delivered at the canvas centre, not at the button (see point 4 above), and both arms reported it as unverifiable rather than wrong. Turns and wall time were about equal.
-- Real retailer search pages (T-Dongle S3 on Amazon, eBay, Mouser, DigiKey; read-only): the stack cost $1.13 against $3.42 for native (about 3x less), with the same answers on the pages both read (Amazon listings and prices, "no results" on Mouser and DigiKey). The stack read no prices on eBay (a known gap: price text is not inside the record) where native did.
+**Benchmark:** see the table at the top and [docs/BENCHMARK.md](docs/BENCHMARK.md) (per-job results, method, limits).
 - Method and preregistered rules: [experiments/facade-vs-native](experiments/facade-vs-native/PREREGISTRATION.md).
 
 **Minimal check (offline, no desktop, no GPU):**
