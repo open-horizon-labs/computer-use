@@ -705,6 +705,43 @@ MUTATIONS = {
         'upload step (#5): name the offending file by its full path in the refusal',
         [('browser.py', "        name = os.path.basename(path)[:80] or 'file %d' % index", "        name = path if isinstance(path, str) and path else 'file %d' % index")],
         ['test_upload.FilesAreChecked.test_a_symlink_is_refused_even_to_a_real_file', 'test_upload.FilesAreChecked.test_the_message_names_the_basename_only']),
+    'checkbox_done_without_the_state_flipping': (
+        'a checkbox press is reported done because it was delivered (or its label is still on the page), not because its checked state flipped',
+        [('forms.py', "        return {'final': marker == want, 'state': marker, 'gone': False}", "        return {'final': True, 'state': marker, 'gone': False}")],
+        ['test_forms.Checkbox.test_the_label_still_on_the_page_is_not_proof_the_state_is']),
+    'checkbox_pressed_when_already_in_the_wanted_state': (
+        'press the checkbox whenever asked: a box already ticked is unticked by the "tick" step',
+        [('forms.py', "    if want == before:\n        return _result('done', route='already_in_state'", "    if False:\n        return _result('done', route='already_in_state'")],
+        ['test_forms.Checkbox.test_a_box_already_in_the_wanted_state_is_not_pressed_because_a_press_would_undo_it']),
+    'select_done_when_the_displayed_value_differs': (
+        'a select step is reported done when the Driver answered ok, whatever the select displays on a fresh read',
+        [('forms.py', "        return {'final': shown == label, 'shown': shown, 'gone': False}", "        return {'final': True, 'shown': shown, 'gone': False}")],
+        ['test_forms.Select.test_the_proof_is_a_fresh_read_not_the_drivers_answer', 'test_forms.Select.test_a_different_displayed_value_is_never_done']),
+    'select_option_matched_loosely': (
+        'accept the option the Driver picked case-insensitively: "billing" is not the exact visible label "Billing"',
+        [('forms.py', "        return {'final': shown == label, 'shown': shown, 'gone': False}", "        return {'final': (shown or '').casefold() == label.casefold(), 'shown': shown, 'gone': False}")],
+        ['test_forms.Select.test_a_different_displayed_value_is_never_done']),
+    'select_opened_as_a_native_popup': (
+        'press the select to open its popup instead of setting its value',
+        [('forms.py', "        answer = f.driver.call('set_value', args)", "        answer = f.driver.call('click', {k: v for k, v in args.items() if k != 'value'})")],
+        ['test_forms.Select.test_the_option_is_chosen_by_its_exact_label_without_opening_the_popup_and_proved_by_the_displayed_value']),
+    'unresolved_ax_window_gives_up_at_once': (
+        'a listed window without an AX window yet is refused on the first poll (what the look did before)',
+        [('core.py', "                if n == len(AX_WINDOW_RETRY_DELAYS) or not str(error).startswith('driver_snapshot_unavailable'):", "                if True:")],
+        ['test_look.AxWindowNotYetResolved.test_a_window_that_resolves_on_the_second_poll_is_looked_at_after_one_bounded_wait',
+         'test_look.AxWindowNotYetResolved.test_a_window_that_resolves_on_the_third_poll_is_looked_at_too']),
+    'unresolved_ax_window_waits_without_a_bound': (
+        'raise the AX-window delays (and the clock guard never trips on a fake clock) so a window that never resolves is waited for a long time',
+        [('core.py', "AX_WINDOW_RETRY_DELAYS = (0.5, 1.0, 1.5)", "AX_WINDOW_RETRY_DELAYS = (0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0)")],
+        ['test_look.AxWindowNotYetResolved.test_a_window_that_never_resolves_ends_in_the_same_typed_refusal_after_a_few_bounded_seconds']),
+    'unresolved_ax_window_ignores_the_look_bound': (
+        'drop the LOOK_WAIT_MAX_S clock guard: every poll waits in the Driver and the retries run past the look bound',
+        [('core.py', "                if self.clock() - began + delay + 2 * DRIVER_LAUNCH_WAIT_MS / 1000 > LOOK_WAIT_MAX_S:\n                    raise\n                self.sleep(delay)", "                self.sleep(delay)")],
+        ['test_look.AxWindowNotYetResolved.test_the_wait_never_passes_the_look_bound_even_when_every_poll_waits_in_the_driver']),
+    'actions_wait_for_the_ax_window': (
+        'the AX-window wait also applies to the observation an action revalidates on',
+        [('core.py', "self._observe_resolved(pid, window_id, timeout, began) if wait_ready else self._observe_once(pid, window_id, timeout)", "self._observe_resolved(pid, window_id, timeout, began)")],
+        ['test_look.AxWindowNotYetResolved.test_an_action_observation_never_waits_for_the_ax_window']),
 }
 
 
