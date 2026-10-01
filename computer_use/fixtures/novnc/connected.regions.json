@@ -1,0 +1,186 @@
+{
+ "regions": [
+  {
+   "bounds": {
+    "height": 27,
+    "width": 34,
+    "x": 60,
+    "y": 1
+   },
+   "confidence": 0.36621829867362976,
+   "id": "text-5",
+   "interactive": false,
+   "kind": "text",
+   "text": "or"
+  },
+  {
+   "bounds": {
+    "height": 24,
+    "width": 165,
+    "x": 87,
+    "y": 2
+   },
+   "confidence": 0.6395196318626404,
+   "id": "text-7",
+   "interactive": false,
+   "kind": "text",
+   "text": "coder-muness-cu-novnc-5"
+  },
+  {
+   "bounds": {
+    "height": 27,
+    "width": 294,
+    "x": 80,
+    "y": 31
+   },
+   "confidence": 0.31889429688453674,
+   "id": "text-16",
+   "interactive": false,
+   "kind": "text",
+   "text": "2.0.."
+  },
+  {
+   "bounds": {
+    "height": 23,
+    "width": 23,
+    "x": 1227,
+    "y": 32
+   },
+   "confidence": 0.2503747344017029,
+   "id": "text-18",
+   "interactive": false,
+   "kind": "text",
+   "text": "\u2461"
+  },
+  {
+   "bounds": {
+    "height": 17,
+    "width": 16,
+    "x": 56,
+    "y": 35
+   },
+   "confidence": 0.7738088965415955,
+   "id": "text-19",
+   "interactive": false,
+   "kind": "text",
+   "text": "C"
+  },
+  {
+   "bounds": {
+    "height": 13,
+    "width": 12,
+    "x": 1257,
+    "y": 36
+   },
+   "confidence": 0.5856585502624512,
+   "id": "text-20",
+   "interactive": false,
+   "kind": "text",
+   "text": ":"
+  },
+  {
+   "bounds": {
+    "height": 11,
+    "width": 13,
+    "x": 7,
+    "y": 38
+   },
+   "confidence": 0.5630650520324707,
+   "id": "text-21",
+   "interactive": false,
+   "kind": "text",
+   "text": "\u2190"
+  },
+  {
+   "bounds": {
+    "height": 23,
+    "width": 87,
+    "x": 1186,
+    "y": 69
+   },
+   "confidence": 0.893114447593689,
+   "id": "text-22",
+   "interactive": false,
+   "kind": "text",
+   "text": "Download Chrome"
+  },
+  {
+   "bounds": {
+    "height": 18,
+    "width": 638,
+    "x": 315,
+    "y": 72
+   },
+   "confidence": 0.2174227237701416,
+   "id": "text-23",
+   "interactive": false,
+   "kind": "text",
+   "text": "ms"
+  },
+  {
+   "bounds": {
+    "height": 41,
+    "width": 15,
+    "x": 0,
+    "y": 327
+   },
+   "confidence": 0.11953327804803848,
+   "id": "text-26",
+   "interactive": false,
+   "kind": "text",
+   "text": "B"
+  },
+  {
+   "bounds": {
+    "height": 36,
+    "width": 268,
+    "x": 476,
+    "y": 330
+   },
+   "confidence": 0.7979452610015869,
+   "id": "text-27",
+   "interactive": false,
+   "kind": "text",
+   "text": "Deploy build 42 to production?"
+  },
+  {
+   "bounds": {
+    "height": 34,
+    "width": 85,
+    "x": 433,
+    "y": 384
+   },
+   "confidence": 0.9349045753479004,
+   "id": "text-31",
+   "interactive": false,
+   "kind": "text",
+   "text": "Approve"
+  },
+  {
+   "bounds": {
+    "height": 34,
+    "width": 92,
+    "x": 698,
+    "y": 384
+   },
+   "confidence": 0.8700680136680603,
+   "id": "text-32",
+   "interactive": false,
+   "kind": "text",
+   "text": "Postpone"
+  },
+  {
+   "bounds": {
+    "height": 29,
+    "width": 74,
+    "x": 573,
+    "y": 386
+   },
+   "confidence": 0.9356986880302428,
+   "id": "text-33",
+   "interactive": false,
+   "kind": "text",
+   "text": "Decline"
+  }
+ ]
+}

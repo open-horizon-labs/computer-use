@@ -68,7 +68,8 @@ lazily at the first window it needs to park, keeps it for the server's lifetime 
 
 `goto`, `open_tab` and `read_pages` default to the **agent browser**: one Chrome for Testing process with a profile folder the
 server owns (`~/.cache/computer-use/agent-profile`), started only when no agent browser window exists and then kept and reused for
-the server's lifetime (new tabs or navigation in that window, never a new window per task). Its window is launched inside the agent
+the server's lifetime (new tabs or navigation in that window, never a new window per task). The profile holds a lock file (`computer-use.owner`: owner pid, start time, command line); a second server whose
+lock names a live owner never kills that browser and uses `agent-profile-<pid>` instead (#91). Its window is launched inside the agent
 display. Chrome restores the window placement saved in the profile over `--window-position` (measured live 2026-09-30: with a
 saved `browser.window_placement` of (10,37) it opened on the built-in screen and the follow-up park failed, because AX did not yet
 list the new process's window). So the launch is guarded three ways, and the user's screen is never the fallback:

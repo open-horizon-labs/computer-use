@@ -417,6 +417,7 @@ HINTS = {
     'read_budget': 'These records were already read twice for this observation; nothing was clicked. Judge the strings you have, or call `look` for a fresh observation if the page changed.',
     'needs_foreground': 'The window is on another Space or its controls cannot be resolved in the background. Stop and ask the user; only if they allow it call do with allow_foreground=true on that step.',
     'pointer_not_deliverable_in_background': 'A background click on a drawn surface lands at its centre, not on the control; nothing was clicked by step %(n)d. Stop and ask the user; only if they allow it, call do with allow_foreground=true.',
+    'novnc_background_click_unavailable': 'The Driver cannot click a drawn label in the background here; nothing was clicked by step %(n)d. Ask the user; only if they allow it, call do with allow_foreground=true.',
     'foreground_required': 'This window cannot open a tab without being fronted briefly; nothing was opened. Stop and ask the user; only if they allow it call `do` again with allow_foreground=true on that step.',
     'agent_browser_unavailable': 'The server\'s own browser could not start; nothing was opened. Run the setup block\'s fix if who=agent, else tell the user; then call do once more. Never use profile="user" or another browser.',
     'agent_display_unavailable': 'The agent display cannot start, so nothing was opened. Tell the user (the setup block names the fix); only they can set CUA_AGENT_DISPLAY=off. Do not retry `do` until it is fixed.',

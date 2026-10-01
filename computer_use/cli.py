@@ -26,6 +26,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SERVER = ROOT / 'computer_use' / 'server.py'
+NAME = 'computer-use-oh'  # Claude Code reserves "computer-use"
 OK, WARN, BLOCKER, SKIPPED = 'ok', 'warn', 'blocker', 'skipped'
 CMD_TIMEOUT = 10
 HTTP_TIMEOUT = 5
@@ -453,15 +454,17 @@ def check_providers(env):
 def check_mcp_registration(env):
     data, err = load_json(env, env.claude_json)
     if data is None:
-        return result('mcp.registration', WARN, '~/.claude.json %s; other clients (codex) are not inspected' % err, 'claude mcp add computer-use -- <venv python> %s' % SERVER)
+        return result('mcp.registration', WARN, '~/.claude.json %s; other clients (codex) are not inspected' % err, 'claude mcp add computer-use-oh -- <venv python> %s' % SERVER)
     servers = data.get('mcpServers') if isinstance(data, dict) else None
     servers = servers if isinstance(servers, dict) else {}
-    entry = servers.get('computer-use')
+    entry = servers.get(NAME)
+    if 'computer-use' in servers:
+        return result('mcp.registration', BLOCKER, 'server key `computer-use` is a reserved name in Claude Code and is not loaded: no look/do tools', 'reserved name in Claude Code; run bootstrap --yes to rename it to `%s`' % NAME)
     if entry is None and 'cua-task' not in servers:
-        return result('mcp.registration', WARN, 'no `computer-use` MCP server registered in ~/.claude.json', 'python -m computer_use bootstrap --yes (or: claude mcp add computer-use -- <venv python> %s)' % SERVER)
+        return result('mcp.registration', WARN, 'no `%s` MCP server registered in ~/.claude.json' % NAME, 'python -m computer_use bootstrap --yes (or: claude mcp add %s -- <venv python> %s)' % (NAME, SERVER))
     problems = []
     if 'cua-task' in servers:
-        problems.append('stale server key `cua-task` (renamed to `computer-use`)')
+        problems.append('stale server key `cua-task` (reserved/renamed; use `%s`)' % NAME)
     if entry is not None:
         args = [str(a) for a in (entry.get('args') or [])]
         server_args = [a for a in args if a.endswith('server.py')]
@@ -471,7 +474,7 @@ def check_mcp_registration(env):
             problems.append('args path does not exist: %s' % server_args[0])
     if problems:
         return result('mcp.registration', WARN, '; '.join(problems), 'python -m computer_use bootstrap --yes')
-    return result('mcp.registration', OK, 'server computer-use -> %s' % server_args[0])
+    return result('mcp.registration', OK, 'server %s -> %s' % (NAME, server_args[0]))
 
 
 def check_skill(env):
@@ -545,26 +548,27 @@ def doctor(env, as_json=False, probe=False, out=None, probes=None):
 # ---- bootstrap ----------------------------------------------------------------------------------------------------------------------------------
 
 def register_mcp(env, yes):
-    """Rename a stale `cua-task` key and point args at this checkout's server. Only with yes; the backup is written first."""
+    """Rename a stale `computer-use` or `cua-task` key and point args at this checkout's server. Only with yes; the backup is written first."""
     path = env.claude_json
     data, err = load_json(env, path)
     if not isinstance(data, dict):
-        return result('bootstrap.mcp', SKIPPED, '~/.claude.json %s; nothing to edit' % (err or 'is not an object'), 'claude mcp add computer-use -- <venv python> %s' % (env.root / 'computer_use/server.py'))
+        return result('bootstrap.mcp', SKIPPED, '~/.claude.json %s; nothing to edit' % (err or 'is not an object'), 'claude mcp add computer-use-oh -- <venv python> %s' % (env.root / 'computer_use/server.py'))
     servers = data.setdefault('mcpServers', {})
     if not isinstance(servers, dict):
         return result('bootstrap.mcp', SKIPPED, 'mcpServers in ~/.claude.json is not an object; not touching it')
     server = str(env.root / 'computer_use/server.py')
-    entry = servers.get('computer-use') or servers.get('cua-task')
+    entry = servers.get(NAME) or servers.get('computer-use') or servers.get('cua-task')
     new = dict(entry) if isinstance(entry, dict) else {'type': 'stdio', 'command': str(env.root / '.venv-facade/bin/python'), 'env': {}}
     new['args'] = [server]
-    if servers.get('computer-use') == new and 'cua-task' not in servers:
+    if servers.get(NAME) == new and 'cua-task' not in servers and 'computer-use' not in servers:
         return result('bootstrap.mcp', OK, 'MCP registration already current')
     if not yes:
-        return result('bootstrap.mcp', SKIPPED, 'would edit ~/.claude.json (rename cua-task, set args to %s); not editing without --yes' % server, 'rerun: python -m computer_use bootstrap --yes')
+        return result('bootstrap.mcp', SKIPPED, 'would edit ~/.claude.json (rename the old key to %s, set args to %s); not editing without --yes' % (NAME, server), 'rerun: python -m computer_use bootstrap --yes')
     backup = path.with_name('.claude.json.bak-%s' % time.strftime('%Y%m%d-%H%M%S'))
     backup.write_text(env.read_text(path))
     servers.pop('cua-task', None)
-    servers['computer-use'] = new
+    servers.pop('computer-use', None)
+    servers[NAME] = new
     path.write_text(json.dumps(data, indent=2) + '\n')
     return result('bootstrap.mcp', OK, 'updated ~/.claude.json (backup: %s)' % backup)
 
