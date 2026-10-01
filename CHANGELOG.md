@@ -40,7 +40,7 @@ First release. `look` then `do` for Mac apps, browser pages, and Android/iOS dev
 - A Driver answer with `effect: "refused"` is a refusal, never `delivered` (#38). A read-only Driver call that fails as if the session were gone is retried once after `start_session`; failures report `{tool, exit_class, session_restart_tried, driver_code}` and no other Driver text (#31; a live check showed a daemon restart does not drop the session, so this is a defence, not the cause of #30).
 - `look` counts only the page, not the browser's menu bar, on windows without a web area, so a drawn canvas such as an Android emulator reaches Perception (#27).
 - Driver 0.31: `timeout_ms` is sent on 0.31+, `ax_app_launching` is a not-ready reason and never something an action clicks against, and the stacked look wait is bounded (#32).
-- Response budgets (CE-FACADE-011, proposed): `computer_use/RESPONSE_BUDGET.json` holds per-scenario byte and wait ceilings checked by `scripts/check_call_budget.py`; `tools/list` went from 32.5 KB to 23.6 KB, responses are 10.7% smaller over the 54 scenarios (the fixed notice sentence comes once per window, hints are at most 240 characters, a plan's summary carries only what is new).
+- Response budgets (CE-FACADE-011, accepted): `computer_use/RESPONSE_BUDGET.json` holds per-scenario byte and wait ceilings checked by `scripts/check_call_budget.py`; `tools/list` went from 32.5 KB to 23.6 KB, responses are 10.7% smaller over the 54 scenarios (the fixed notice sentence comes once per window, hints are at most 240 characters, a plan's summary carries only what is new).
 
 ### Known limits
 - Linux and remote desktops over SSH (#37), the file-picker sheet (upstream trycua/cua#4392, #5) and the cause of #30 are open for 0.2.0.
