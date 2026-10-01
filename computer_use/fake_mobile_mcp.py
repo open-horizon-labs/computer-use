@@ -2,6 +2,8 @@
 
 Configured by environment (all paths are the caller's temp files):
   FAKE_MOBILE_SCREEN     file holding the exact text mobile_list_elements_on_screen answers (the captured fixtures are such files)
+  FAKE_MOBILE_APPS       file holding the exact text mobile_list_apps answers (fixtures/mobile/*_apps.synthetic.txt)
+  FAKE_MOBILE_SCREEN_AFTER  optional: once a launch or a swipe was received, mobile_list_elements_on_screen answers this file instead (the screen moved)
   FAKE_MOBILE_LOG        every tool call received is appended as one JSON line {"tool", "args", "pid"}; also {"env": {...}} once at start
   FAKE_MOBILE_DIE_AFTER  answer N calls, then exit abruptly (as a crashed node process would) on the next one received by THIS process; 0 = the first
 """
@@ -39,7 +41,8 @@ def mobile_list_available_devices() -> str:
 @mcp.tool()
 def mobile_list_elements_on_screen(device: str, format: str = 'text') -> str:
     note('mobile_list_elements_on_screen', {'device': device, 'format': format})
-    return open(os.environ['FAKE_MOBILE_SCREEN']).read()
+    after = os.environ.get('FAKE_MOBILE_SCREEN_AFTER')
+    return open(after if after and seen.get('moved') else os.environ['FAKE_MOBILE_SCREEN']).read()
 
 
 @mcp.tool()
@@ -58,6 +61,28 @@ def mobile_type_keys(device: str, text: str, submit: bool) -> str:
 def mobile_open_url(device: str, url: str) -> str:
     note('mobile_open_url', {'device': device, 'url': url})
     return 'Opened URL: ' + url
+
+
+@mcp.tool()
+def mobile_list_apps(device: str) -> str:
+    note('mobile_list_apps', {'device': device})
+    return open(os.environ['FAKE_MOBILE_APPS']).read()
+
+
+@mcp.tool()
+def mobile_launch_app(device: str, packageName: str, locale: str | None = None) -> str:
+    note('mobile_launch_app', {'device': device, 'packageName': packageName})
+    seen['moved'] = True
+    return 'Launched app ' + packageName
+
+
+@mcp.tool()
+def mobile_swipe_on_screen(device: str, direction: str, x: float | None = None, y: float | None = None, distance: float | None = None) -> str:
+    note('mobile_swipe_on_screen', {'device': device, 'direction': direction, 'x': x, 'y': y, 'distance': distance})
+    seen['moved'] = True
+    if x is not None and y is not None:
+        return 'Swiped %s%s from coordinates: %s, %s' % (direction, (' %s pixels' % distance) if distance else '', x, y)
+    return 'Swiped %s on screen' % direction
 
 
 if __name__ == '__main__':

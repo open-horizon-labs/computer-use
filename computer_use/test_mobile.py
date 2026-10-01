@@ -51,6 +51,8 @@ ANR = raw('android_anr_dialog.synthetic.elements.txt')          # SYNTHETIC dial
 IOS = raw('ios_settings.synthetic.elements.txt')                # SYNTHETIC iOS shapes
 IOS_HOME = raw('ios_home.elements.txt')                         # REAL: the iPhone 17 Pro simulator's home screen, read after the agent bootstrap
 LAUNCHER = raw('android_launcher.elements.txt')                # REAL: the emulator's home screen
+ANDROID_APPS = (FIX / 'android_apps.synthetic.txt').read_text()  # SYNTHETIC: mobile_list_apps' 1.0.6 text ("Found these apps on device: Name (package), ...") over typical apps
+IOS_APPS = (FIX / 'ios_apps.synthetic.txt').read_text()         # SYNTHETIC: the same text with bundle ids
 
 
 def networks_screen():
@@ -134,6 +136,9 @@ class FakeBackend:
         self.fail = {}      # tool -> text returned instead (an ActionableError is plain text in mobile-mcp)
         self.on_type = None
         self.lists = 0
+        self.apps = {EMULATOR: ANDROID_APPS, SIMULATOR: IOS_APPS}
+        self.launched, self.swiped = [], []
+        self.drop_swipes = False
 
     def names(self):
         return [t for t in self.calls]
@@ -195,13 +200,28 @@ class FakeBackend:
             if ('url', args['url']) in self.moves:
                 self.current = self.moves[('url', args['url'])]
             return 'Opened URL: ' + args['url'], False
+        if tool == 'mobile_list_apps':
+            assert not mutating and args.get('device'), args
+            return self.apps[args['device']], False
+        if tool == 'mobile_launch_app':
+            assert mutating
+            self.launched.append(args['packageName'])
+            if ('launch', args['packageName']) in self.moves:
+                self.current = self.moves[('launch', args['packageName'])]
+            return 'Launched app ' + args['packageName'], False
+        if tool == 'mobile_swipe_on_screen':
+            assert mutating and args['direction'] in ('up', 'down', 'left', 'right'), args
+            self.swiped.append({k: v for k, v in args.items() if k != 'device'})
+            if not self.drop_swipes and ('swipe', args['direction']) in self.moves:
+                self.current = self.moves[('swipe', args['direction'])]
+            return ('Swiped %s on screen' % args['direction']) if args.get('x') is None else 'Swiped %s from coordinates: %s, %s' % (args['direction'], args['x'], args['y']), False
         raise AssertionError('unexpected tool %s' % tool)
 
     def close(self):
         self.closed += 1
 
     def actions(self):
-        return [c for c in self.calls if c[0] in ('mobile_click_on_screen_at_coordinates', 'mobile_type_keys', 'mobile_open_url')]
+        return [c for c in self.calls if c[0] in ('mobile_click_on_screen_at_coordinates', 'mobile_type_keys', 'mobile_open_url', 'mobile_launch_app', 'mobile_swipe_on_screen')]
 
 
 def never_install(device):
@@ -975,6 +995,226 @@ class RecordsOnDevices(unittest.TestCase):
         self.assertGreater(r['truncated']['bytes'], 0)
 
 
+def android_settings_screen():
+    """The Settings app after a launch (synthetic content on the real system bars of the launcher tree)."""
+    bars = [e for e in LAUNCHER if e['coordinates']['y'] >= 2208 or e['coordinates']['y'] < 150]
+    return bars + [el('android.widget.TextView', 'Settings', rect=(44, 192, 400, 82)), el('android.widget.TextView', 'Network & internet', rect=(44, 400, 900, 100))]
+
+
+def ios_settings_landing():
+    """The iOS Settings app after a launch (synthetic, shapes as in ios_settings.synthetic.elements.txt)."""
+    return [el('StaticText', 'Settings', rect=(150, 66, 102, 42)), el('Cell', 'Airplane Mode', rect=(16, 190, 370, 52))]
+
+
+def ios_next_page(screen):
+    """The next home-screen page: the icons are other apps (synthetic content on the real home-screen element shapes)."""
+    out = copy.deepcopy(screen)
+    for e in out:
+        if e['type'] == 'Icon' and e['coordinates']['y'] < 700:
+            e['name'] = 'Page two ' + (e.get('name') or e.get('label') or '')
+            e['label'] = e['name']
+    return out
+
+
+def scroll_area(first, rows=('Home Wi-Fi', 'Office', 'Guest'), name='Network list'):
+    """A scroll area named by its content description (synthetic, real Android shapes) holding the rows starting at `first`: swiping moves them."""
+    out = [el('android.widget.ScrollView', '', label=name, ident='com.example:id/scroll', rect=(0, 300, 1080, 1200))]
+    for n, title in enumerate(rows[first:] + rows[:first]):
+        out.append(el('android.widget.TextView', title, rect=(44, 320 + 160 * n, 500, 60)))
+    return out
+
+
+class DoLaunch(unittest.TestCase):
+    def setUp(self):
+        self.backend = FakeBackend({'home': LAUNCHER, 'settings': android_settings_screen(), 'ios_home': IOS_HOME, 'ios_settings': ios_settings_landing()}, 'home',
+                                   {('launch', 'com.android.settings'): 'settings', ('launch', 'com.apple.Preferences'): 'ios_settings'})
+        self.f = facade_for(self.backend)
+
+    def launch(self, app, expect='Network & internet', device=EMULATOR, **more):
+        return self.f.do('Open %s' % app, device=device, expect=None, steps=[{'do': 'launch', 'app': app, 'expect': expect, **more}])
+
+    def test_an_app_is_launched_by_its_name_and_done_only_when_a_fresh_screen_shows_expect(self):
+        # wrong patch: done because mobile-mcp said "Launched app", the screen never read
+        r = self.launch('Settings')
+        self.assertEqual((r['status'], self.backend.launched), ('done', ['com.android.settings']))
+        self.assertEqual(r['steps'][0]['verification']['status'], 'satisfied')
+        self.assertEqual(r['steps'][0]['selected']['description'], 'app: Settings (com.android.settings)')
+        order = [c[0] for c in self.backend.calls]
+        self.assertEqual(order[:3], ['mobile_list_elements_on_screen', 'mobile_list_apps', 'mobile_launch_app'])
+        self.assertEqual(order[-1], 'mobile_list_elements_on_screen')
+        self.assertEqual(self.backend.actions()[0][1], {'device': EMULATOR, 'packageName': 'com.android.settings'})
+
+    def test_launch_never_reports_done_on_expect_text_that_was_already_there(self):
+        r = self.launch('Settings', expect='Wednesday, Sep 30')   # on the home screen before the launch: proves nothing
+        self.assertEqual((r['status'], r.get('reason')), ('stopped', 'delivery_unverified'))
+
+    def test_the_exact_name_beats_a_longer_name_that_starts_with_it_and_a_package_is_exact(self):
+        self.assertEqual(self.launch('settings')['status'], 'done')   # "Settings Services" also starts with it; the exact name decides, case-insensitively
+        self.assertEqual(self.backend.launched, ['com.android.settings'])
+        self.backend.launched.clear()
+        self.backend.current = 'home'
+        self.assertEqual(self.launch('com.android.settings')['status'], 'done')
+        self.assertEqual(self.backend.launched, ['com.android.settings'])
+
+    def test_the_app_list_parses_to_name_and_package_even_for_a_name_with_parentheses(self):
+        apps = mobile.parse_apps(ANDROID_APPS)
+        self.assertIn({'name': 'Phone (Beta)', 'package': 'com.example.phonebeta'}, apps)
+        self.assertEqual(len(apps), 11)
+        self.assertEqual(mobile.parse_apps('Found these apps on device: '), [])
+        apps, problem = mobile.resolve_app(apps, 'Phone (Beta)')
+        self.assertEqual((apps['package'], problem), ('com.example.phonebeta', None))
+
+    def test_several_apps_with_the_name_are_refused_with_the_candidates_and_nothing_is_launched(self):
+        # wrong patch: launch the first of several matching apps
+        for wanted in ('Files', 'Google'):
+            r = self.launch(wanted)
+            self.assertEqual((r['status'], r['reason'], r['steps'][0]['reason'], r['delivery']), ('refused', 'app_ambiguous', 'app_ambiguous', 'none'), wanted)
+            self.assertEqual(len(r['steps'][0]['found']['apps']), 2)
+            self.assertTrue(all('(' in a for a in r['steps'][0]['found']['apps']))
+        self.assertEqual((self.backend.launched, self.backend.actions()), ([], []))
+        self.assertIn('com.google.android.documentsui', ' '.join(self.launch('Files')['steps'][0]['found']['apps']))
+
+    def test_an_unknown_app_lists_near_matches_else_the_installed_apps_and_launches_nothing(self):
+        r = self.launch('Wallet')
+        self.assertEqual((r['status'], r['reason']), ('refused', 'app_not_found'))
+        self.assertEqual(len(r['steps'][0]['found']['apps']), 11)   # no near match: the installed apps (at most FOUND_MAX)
+        near = self.launch('Photos')   # contained in a name but neither exact nor a prefix: offered, never launched
+        self.assertEqual((near['reason'], near['steps'][0]['found']['apps']), ('app_not_found', ['Google Photos (com.google.android.apps.photos)']))
+        self.assertEqual(self.backend.actions(), [])
+
+    def test_a_launch_that_changes_nothing_is_screen_unchanged_not_done(self):
+        backend = FakeBackend({'home': LAUNCHER}, 'home')   # the launch is accepted and the screen stays the home screen
+        r = facade_for(backend).do('x', device=EMULATOR, expect=None, steps=[{'do': 'launch', 'app': 'Settings', 'expect': 'Network & internet'}])
+        self.assertEqual((r['status'], r.get('reason'), r['delivery']), ('stopped', 'screen_unchanged_after_action', 'uncertain'))
+        self.assertEqual(backend.launched, ['com.android.settings'])
+
+    def test_expect_is_needed_unless_the_launch_is_the_last_step(self):
+        r = self.f.do('x', device=EMULATOR, expect=None, steps=[{'do': 'launch', 'app': 'Settings', 'expect': None}, {'do': 'verify', 'expect': 'Network & internet'}])
+        self.assertEqual((r['status'], r.get('reason')), ('refused', 'expect_required'))
+        self.assertEqual(self.backend.calls, [])
+        r = self.launch('Settings', expect=None)
+        self.assertEqual((r['status'], r['delivery']), ('delivered_unverified', 'delivered'))
+        self.assertLessEqual(len(r['hint']), 240)
+
+    def test_ios_launches_by_name_and_by_bundle_id(self):
+        for wanted in ('Settings', 'com.apple.Preferences'):
+            self.backend.current = 'ios_home'
+            self.backend.launched.clear()
+            r = self.launch(wanted, expect='Settings', device=SIMULATOR)
+            self.assertEqual((r['status'], self.backend.launched), ('done', ['com.apple.Preferences']), wanted)
+            self.assertEqual(r['steps'][0]['selected']['description'], 'app: Settings (com.apple.Preferences)')
+
+    def test_the_step_is_validated_before_anything_is_read_and_a_mac_window_refuses_it(self):
+        for step in ({'do': 'launch', 'expect': None}, {'do': 'launch', 'app': '  ', 'expect': None}, {'do': 'launch', 'app': 'Settings', 'control': 'x', 'expect': None},
+                     {'do': 'launch', 'app': 'Settings', 'direction': 'up', 'expect': None}, {'do': 'launch', 'app': 'x' * 201, 'expect': None}):
+            r = self.f.do('x', device=EMULATOR, expect=None, steps=[step])
+            self.assertEqual((r['status'], r['reason']), ('refused', 'bad_request'), step)
+        self.assertEqual(self.backend.calls, [])
+        for step in ({'do': 'launch', 'app': 'Settings', 'expect': None}, {'do': 'swipe', 'direction': 'up'}):
+            r = self.f.do('x', title='Demo', expect=None, steps=[step])
+            self.assertEqual((r['status'], r['reason']), ('refused', 'not_supported_on_window'), step)
+        self.assertEqual(self.backend.calls, [])
+
+    def test_a_backend_that_will_not_list_apps_is_a_typed_stop_and_nothing_is_launched(self):
+        self.backend.fail['mobile_list_apps'] = 'Error: /private/var/secret/path exploded'
+        r = self.launch('Settings')
+        self.assertEqual((r['status'], r['steps'][0]['reason']), ('failed', 'mobile_observation_failed'))
+        self.assertNotIn('/private', json.dumps(r))
+        self.assertEqual(self.backend.launched, [])
+
+
+class DoSwipe(unittest.TestCase):
+    def setUp(self):
+        self.backend = FakeBackend({'a': scroll_area(0), 'b': scroll_area(1), 'c': scroll_area(2)}, 'a', {('swipe', 'up'): 'b', ('swipe', 'left'): 'c'})
+        self.f = facade_for(self.backend)
+
+    def swipe(self, direction='up', device=EMULATOR, expect=None, **more):
+        return self.f.do('Scroll', device=device, expect=None, steps=[{'do': 'swipe', 'direction': direction, 'expect': expect, **more}])
+
+    def test_a_swipe_from_the_centre_is_done_when_the_fresh_list_changed(self):
+        r = self.swipe('up')
+        self.assertEqual((r['status'], r['delivery']), ('done', 'delivered'))
+        self.assertEqual(r['steps'][0]['verification'], {'status': 'satisfied', 'route': 'device_list_changed'})
+        self.assertEqual(self.backend.swiped, [{'direction': 'up'}])      # no coordinates: mobile-mcp swipes from the centre of the screen
+
+    def test_a_swipe_that_changed_nothing_is_screen_unchanged_not_done(self):
+        # wrong patch: report the swipe done because mobile-mcp said "Swiped"
+        self.backend.drop_swipes = True
+        r = self.swipe('up')
+        self.assertEqual((r['status'], r.get('reason'), r['delivery']), ('stopped', 'screen_unchanged_after_action', 'uncertain'))
+        self.assertEqual(r['steps'][0]['status'], 'stopped')
+        self.assertLessEqual(len(r['hint']), 240)
+        self.assertIn('look', r['hint'])
+        self.assertEqual(len(self.backend.swiped), 1)    # observed again, never swiped again
+        again = self.swipe('up', expect='Guest')
+        self.assertEqual((again['status'], again.get('reason')), ('stopped', 'screen_unchanged_after_action'))
+
+    def test_a_named_container_is_swiped_from_its_centre_by_half_its_extent(self):
+        r = self.swipe('up', within='Network list')
+        self.assertEqual(r['status'], 'done')
+        self.assertEqual(self.backend.swiped, [{'direction': 'up', 'x': 540, 'y': 900, 'distance': 600}])
+        self.backend.current = 'b'
+        self.backend.swiped.clear()
+        self.assertEqual(self.swipe('left', within='Network list')['status'], 'done')
+        self.assertEqual(self.backend.swiped, [{'direction': 'left', 'x': 540, 'y': 900, 'distance': 540}])
+
+    def test_a_missing_or_ambiguous_container_swipes_nothing(self):
+        r = self.swipe('up', within='Photos grid')
+        self.assertEqual((r['status'], r['reason']), ('refused', 'within_not_found'))
+        self.assertIn('Network list', r['steps'][0]['found']['containers'])
+        twin = scroll_area(0) + scroll_area(0)[:1]
+        twin[-1]['coordinates']['y'] = 1600
+        self.backend.screens['twin'], self.backend.current = twin, 'twin'
+        r = self.swipe('up', within='Network list')
+        self.assertEqual((r['status'], r['reason']), ('refused', 'within_ambiguous'))
+        self.assertEqual(self.backend.swiped, [])
+
+    def test_with_expect_it_is_done_only_when_the_new_text_is_seen(self):
+        rows = ('Home Wi-Fi', 'Office', 'Guest')
+        backend = FakeBackend({'a': scroll_area(0), 'b': scroll_area(0) + [el('android.widget.TextView', 'Cafe', rect=(44, 1000, 500, 60))]}, 'a', {('swipe', 'up'): 'b'})
+        r = facade_for(backend).do('x', device=EMULATOR, expect=None, steps=[{'do': 'swipe', 'direction': 'up', 'expect': 'Cafe'}])
+        self.assertEqual(r['status'], 'done')
+        backend.current = 'a'
+        r = facade_for(backend).do('x', device=EMULATOR, expect=None, steps=[{'do': 'swipe', 'direction': 'up', 'expect': 'Wallet'}])
+        self.assertEqual((r['status'], r['reason']), ('stopped', 'delivery_unverified'))
+        backend.current = 'a'
+        r = facade_for(backend).do('x', device=EMULATOR, expect=None, steps=[{'do': 'swipe', 'direction': 'up', 'expect': rows[0]}])   # already on screen before: proves nothing
+        self.assertEqual(r['status'], 'stopped')
+
+    def test_ios_swipes_too(self):
+        backend = FakeBackend({'ios_home': IOS_HOME, 'ios_page2': ios_next_page(IOS_HOME)}, 'ios_home', {('swipe', 'left'): 'ios_page2'})
+        r = facade_for(backend).do('Next page', device=SIMULATOR, expect=None, steps=[{'do': 'swipe', 'direction': 'left'}])
+        self.assertEqual((r['status'], backend.swiped), ('done', [{'direction': 'left'}]))
+
+    def test_the_step_is_validated_before_anything_is_read(self):
+        for step in ({'do': 'swipe'}, {'do': 'swipe', 'direction': 'sideways'}, {'do': 'swipe', 'direction': 'Up'}, {'do': 'swipe', 'direction': 'up', 'within': ''},
+                     {'do': 'swipe', 'direction': 'up', 'control': 'x'}, {'do': 'swipe', 'direction': 'up', 'x': 5}, {'do': 'swipe', 'direction': 'up', 'app': 'x'}):
+            r = self.f.do('x', device=EMULATOR, expect=None, steps=[step])
+            self.assertEqual((r['status'], r['reason']), ('refused', 'bad_request'), step)
+        self.assertEqual(self.backend.calls, [])
+
+    def test_a_swipe_needs_no_expect_mid_plan_and_a_failed_swipe_stops_the_plan(self):
+        r = self.f.do('x', device=EMULATOR, expect=None, steps=[{'do': 'swipe', 'direction': 'up'}, {'do': 'verify', 'expect': 'Home Wi-Fi'}])
+        self.assertEqual([s['status'] for s in r['steps']], ['done', 'observed'])
+        self.backend.current, self.backend.drop_swipes = 'a', True
+        r = self.f.do('x', device=EMULATOR, expect=None, steps=[{'do': 'swipe', 'direction': 'up'}, {'do': 'swipe', 'direction': 'up'}])
+        self.assertEqual((len(r['steps']), r['failed_step']), (1, 1))
+
+    def test_a_failed_swipe_call_is_typed_and_uncertain_and_carries_no_raw_text(self):
+        self.backend.fail['mobile_swipe_on_screen'] = 'Error: boom /private/x'
+        r = self.swipe('up')
+        self.assertEqual((r['status'], r['steps'][0]['reason'], r['delivery']), ('failed', 'mobile_action_failed', 'uncertain'))
+        self.assertNotIn('/private', json.dumps(r))
+
+
+class DeviceStepHints(unittest.TestCase):
+    def test_every_device_step_hint_is_short_and_names_the_next_call(self):
+        for reason in ('app_ambiguous', 'app_not_found', 'within_not_found', 'within_ambiguous', 'screen_unchanged_after_action'):
+            text = mobile.DEVICE_HINTS[reason] % {'n': 2}
+            self.assertLessEqual(len(text), 240, reason)
+            self.assertRegex(text, r'\b(do|look)\b', reason)
+
+
 class Lifecycle(unittest.TestCase):
     """The real stdio client against fake_mobile_mcp.py (mobile-mcp's tool names and answer texts): bootstrap, reuse, restart once, shutdown."""
     def setUp(self):
@@ -1052,6 +1292,22 @@ class Lifecycle(unittest.TestCase):
         self.assertEqual(b.starts, 2)  # one start and exactly one restart
         d = f.do('x', device=EMULATOR, expect=None, steps=[{'do': 'press', 'control': 'Refresh connection', 'expect': None}])
         self.assertEqual((d['status'], d.get('reason'), d['delivery']), ('refused', 'mobile_backend_unavailable', 'none'))
+
+    def test_launch_and_swipe_reach_mobile_mcp_with_its_exact_tool_names_and_arguments(self):
+        # wrong patch: a tool name or argument mobile-mcp 1.0.6 does not have (packageName, direction, x, y, distance)
+        apps, after = self.dir / 'apps.txt', self.dir / 'after.txt'
+        apps.write_text(ANDROID_APPS)
+        after.write_text(mobile.ELEMENTS_PREFIX + json.dumps(android_settings_screen()))
+        f = Facade(mobile=mobile.Mobile(self.backend(FAKE_MOBILE_APPS=str(apps), FAKE_MOBILE_SCREEN_AFTER=str(after))), sleep=lambda s: None)
+        self.screen.write_text(mobile.ELEMENTS_PREFIX + json.dumps(LAUNCHER))
+        r = f.do('Open Settings', device=EMULATOR, expect=None, steps=[{'do': 'launch', 'app': 'Settings', 'expect': 'Network & internet'}])
+        self.assertEqual(r['status'], 'done')
+        self.assertEqual([c['args'] for c in self.calls('mobile_launch_app')], [{'device': EMULATOR, 'packageName': 'com.android.settings'}])
+        self.assertEqual(len(self.calls('mobile_list_apps')), 1)
+        r = f.do('Scroll', device=EMULATOR, expect=None, steps=[{'do': 'swipe', 'direction': 'down', 'within': 'Network & internet'}])
+        self.assertEqual(r['status'], 'stopped')   # the fake screen no longer changes: unchanged is typed, not done
+        self.assertEqual(r['reason'], 'screen_unchanged_after_action')
+        self.assertEqual([c['args'] for c in self.calls('mobile_swipe_on_screen')], [{'device': EMULATOR, 'direction': 'down', 'x': 494, 'y': 450, 'distance': 50}])
 
     def test_an_action_is_never_re_sent_when_the_child_dies_under_it(self):
         # wrong patch: retry the tap on the restarted child (it may already have landed). The child answers the list, then dies on the tap
