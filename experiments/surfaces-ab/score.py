@@ -102,6 +102,22 @@ def load_timeline(path):
     return [json.loads(line) for line in p.read_text().splitlines() if line.strip()]
 
 
+# Apps a run itself starts or drives. Only their focus changes and windows count against an arm: Cua Driver routes input
+# in the background, so anything else that appears or takes focus during a run is the user's own activity (measured
+# 2026-10-01: every new_user_window in the computer-use rerun belonged to Zoom, Discord, Slack, Chrome, 1Password ...).
+AGENT_APPS = ('Google Chrome for Testing', 'Calculator', 'TextEdit', 'qemu-system-aarch64', 'qemu-system-x86_64', 'Emulator',
+              'Android Emulator', 'Simulator', 'Cua Driver', 'CuaDriver')
+
+
+def attributed(timeline):
+    """Interruptions caused by the run's own apps: focus taken by one, and its windows appearing on the user's screens."""
+    mine = lambda name: any(a.lower() in (name or '').lower() for a in AGENT_APPS)
+    focus = [e for e in timeline if e.get('kind') == 'focus_change' and mine(e.get('to_app'))]
+    wins = [e for e in timeline if e.get('kind') == 'new_user_window' and mine(e.get('app') or e.get('owner'))]
+    return {'agent_focus_steals': len(focus), 'agent_windows_on_user_screens': len(wins),
+            'agent_apps_seen': sorted({e.get('to_app') or e.get('app') or e.get('owner') for e in focus + wins})}
+
+
 def score_run(run, events_path, base):
     """One result row for a manifest record. Paths in the record are relative to `base`."""
     trace = scan_transcript(base / run['transcript'])
@@ -117,6 +133,7 @@ def score_run(run, events_path, base):
         'interruptions': {k: mon.get(k) for k in ('focus_changes', 'focus_steals', 'new_user_windows', 'windows_to_user_display',
                                                   'overlay_windows', 'cursor_move_samples', 'cursor_bursts', 'cursor_px',
                                                   'cursor_moves_on_agent_display', 'new_agent_windows', 'monitor_ok')},
+        'attributed': attributed(timeline),
         'annoyances': monitor.annoyances(timeline, mon),
         'final_text': trace['final_text'][:300], 'truth': run.get('truth'),
     }

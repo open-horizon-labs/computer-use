@@ -41,6 +41,9 @@ func windows() -> [[String: Any]] {
 
 setvbuf(stdout, nil, _IOLBF, 0)
 while true {
+    // A CLI has no run loop, so NSWorkspace.frontmostApplication never updates (measured 2026-10-01: 0 focus changes in 38 runs).
+    // Spin the run loop briefly each tick so it does.
+    RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.01))
     let app = NSWorkspace.shared.frontmostApplication
     let cursor = CGEvent(source: nil)?.location ?? CGPoint.zero
     let sample: [String: Any] = [
