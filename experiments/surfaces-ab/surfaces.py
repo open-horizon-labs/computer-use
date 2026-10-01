@@ -315,6 +315,13 @@ def _open_surface(s, task, arm, run_id, base_url, workdir, ios_udid=None):
     if surface == 'android':
         if sh(['adb', 'devices']).stdout.count('emulator-'):
             raise RuntimeError('an Android emulator is already running: the harness only runs its own; stop it and rerun')
+        if arm == 'native':  # the emulator restores its window from emulator-user.ini: put it on the agent display, restore the file after
+            ini = Path.home() / '.android/avd' / ('%s.avd' % tasks.ANDROID_AVD) / 'emulator-user.ini'
+            saved = ini.read_text() if ini.exists() else None
+            r = agent_rect()
+            lines = [l for l in (saved or '').splitlines() if not l.startswith(('window.x', 'window.y'))]
+            ini.write_text('\n'.join(['window.x = %d' % (r['x'] + 60), 'window.y = %d' % (r['y'] + 60)] + lines) + '\n')
+            s.on_close(lambda ini=ini, saved=saved: ini.write_text(saved) if saved is not None else ini.unlink(missing_ok=True))
         proc = subprocess.Popen(emulator_argv(tasks.ANDROID_AVD, headless=(arm == 'computer-use')), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
         s.on_close(lambda: kill_pids([proc.pid] + [p for p, c in processes() if tasks.ANDROID_AVD in c]))  # first, so a failed boot still cleans up
         serial = wait_android_boot(proc)
