@@ -532,6 +532,77 @@ class LaunchingApp(lv.LiveBase):
         self.assertEqual(r['elements'], [])
 
 
+class AxWindowNotYetResolved(lv.LiveBase):
+    """Live 2026-10-01: `look` on Calculator right after `open -g -a Calculator` answered driver_snapshot_unavailable twice (the window was listed, the Driver
+    had no AX window for it yet) and the agent gave up; in an earlier run it worked. The Driver's answer for that is a snapshot with NO snapshot_id (the shape
+    test_core.FakeDriver.no_snapshot serves), not an empty tree and not ax_app_launching."""
+    def unresolved(self, polls):
+        """The first `polls` observations have no AX window; later ones are the captured Calculator-less page (the live booking tree)."""
+        real = self.driver.observe
+        self.polls = 0
+        def observe(*args):
+            self.polls += 1
+            raw = real(*args)
+            if self.polls <= polls:
+                raw = {k: v for k, v in raw.items() if k not in ('snapshot_id', 'elements')}
+                raw.update(refusal={'code': 'ax_window_unresolved'}, degraded_reason='ax_window_unresolved')
+            return raw
+        self.driver.observe = observe
+
+    def test_a_window_that_resolves_on_the_second_poll_is_looked_at_after_one_bounded_wait(self):
+        # Wrong patch: refuse the first unavailable observation (what the look did: it gave up after OBSERVE_RETRY_DELAYS' two waits at best).
+        self.unresolved(1)
+        r = self.f.look('Demo')
+        self.assertEqual((r.get('status'), (r.get('counts') or {}).get('records')), ('ok', 12), r)
+        self.assertEqual(self.naps[:1], [core.AX_WINDOW_RETRY_DELAYS[0]])
+        self.assertEqual([e['reason'] for e in self.f.events if e['operation'] == 'observe_retry'], ['ax_window_unresolved'])
+
+    def test_a_window_that_resolves_on_the_third_poll_is_looked_at_too(self):
+        self.unresolved(2)
+        r = self.f.look('Demo')
+        self.assertEqual(r.get('status'), 'ok', r)
+        self.assertEqual(self.naps[:2], list(core.AX_WINDOW_RETRY_DELAYS[:2]))
+        self.assertEqual(self.polls >= 3, True)
+
+    def test_a_window_that_never_resolves_ends_in_the_same_typed_refusal_after_a_few_bounded_seconds(self):
+        # Wrong patch: wait without a bound, or turn the refusal into something else.
+        self.unresolved(99)
+        r = self.f.look('Demo')
+        self.assertEqual((r.get('status'), r.get('reason')), ('refused', 'driver_snapshot_unavailable'), r)
+        self.assertEqual(self.naps, list(core.AX_WINDOW_RETRY_DELAYS))
+        self.assertEqual(self.polls, len(core.AX_WINDOW_RETRY_DELAYS) + 1)
+        self.assertLessEqual(sum(self.naps), 3.0)
+        self.assertEqual(self.driver.executed, [])
+
+    def test_the_wait_never_passes_the_look_bound_even_when_every_poll_waits_in_the_driver(self):
+        # The Driver may wait inside every poll (twice DRIVER_LAUNCH_WAIT_MS); the clock guard stops the retries before LOOK_WAIT_MAX_S.
+        self.unresolved(99)
+        clock = [0.0]
+        self.f.clock = lambda: clock[0]
+        self.f.sleep = lambda s: clock.__setitem__(0, clock[0] + s)
+        real = self.driver.observe
+        def slow(*args):
+            clock[0] += 2 * core.DRIVER_LAUNCH_WAIT_MS / 1000
+            return real(*args)
+        self.driver.observe = slow
+        r = self.f.look('Demo')
+        self.assertEqual(r.get('reason'), 'driver_snapshot_unavailable')
+        self.assertLessEqual(clock[0], core.LOOK_WAIT_MAX_S)
+
+    def test_a_window_that_closed_meanwhile_is_not_waited_for(self):
+        self.unresolved(99);self.driver.window_open = False
+        r = self.f.look('Demo')
+        self.assertEqual(self.naps, [])
+        self.assertEqual(r.get('status'), 'refused')
+
+    def test_an_action_observation_never_waits_for_the_ax_window(self):
+        # Wrong patch: put the wait in observe() for everyone: an action revalidating its click must refuse at once (see LaunchingApp).
+        self.unresolved(99)
+        with self.assertRaisesRegex(core.Gap, 'driver_snapshot_unavailable'):
+            self.f.observe(1, 2)
+        self.assertEqual((self.naps, self.polls), ([], 1))
+
+
 class LookWaitIsBounded(lv.LiveBase):
     def test_total_look_wait_stays_under_the_documented_bound(self):
         # Wrong patch: raise the Driver wait or the delays without re-deriving the sum (the Driver waits inside EVERY attempt, then walks).
