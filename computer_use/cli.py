@@ -249,7 +249,7 @@ def check_adb(env):
         return result('adb', SKIPPED, 'adb not installed (only needed for Android devices)', 'install Android platform-tools to use Android targets')
     devices = [l.split()[0] for l in out.splitlines()[1:] if l.strip().endswith('device')]
     if not devices:
-        return result('adb', WARN, 'adb present, no device or emulator attached', 'start an emulator or attach a device with USB debugging')
+        return result('adb', WARN, 'adb present, no device or emulator attached', 'start an emulator (headless, nothing on your screen: emulator -avd <name> -no-window) or attach a device with USB debugging')
     return result('adb', OK, 'adb devices: ' + ', '.join(devices))
 
 

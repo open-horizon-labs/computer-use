@@ -1,6 +1,6 @@
 """Devices (CE-FACADE-008): Android and iOS through mobile-mcp, behind the same look/do contract as a Mac window.
 
-A device is addressed by `device` (an adb id such as emulator-5554, or an iOS simulator UDID) instead of title or pid+window_id. The facade starts
+A device is addressed by `device` (exactly the id `look(device="list")` shows: an emulator's AVD name, a phone's adb serial, or an iOS simulator UDID) instead of title or pid+window_id. The facade starts
 mobile-mcp itself, as a child MCP client over stdio (StdioBackend), the first time a look or do targets a device: there is no setup step, and
 when Node.js is missing the answer is a typed refusal (mobile_backend_unavailable) naming what to install, never a crash.
 
@@ -483,7 +483,7 @@ def record_row(r):
 
 def check_device(device):
     if not isinstance(device, str) or not DEVICE_ID.fullmatch(device):
-        raise Gap('bad_request: device is the id `look`(device="list") shows (an adb id such as emulator-5554, or an iOS simulator UDID)')
+        raise Gap('bad_request: device is the id `look`(device="list") shows (an emulator\'s AVD name, a phone\'s adb serial, or an iOS simulator UDID)')
 
 
 # -- discovery ---------------------------------------------------------------------------------------------------------------------------
