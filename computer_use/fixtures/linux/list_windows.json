@@ -1,0 +1,22 @@
+{
+  "windows": [
+    {
+      "app_name": "Chromium-browser",
+      "bounds": {
+        "height": 700,
+        "width": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "height": 700,
+      "is_on_screen": true,
+      "pid": 9258,
+      "title": "Clinic Slots default - Google Chrome for Testing",
+      "width": 1100,
+      "window_id": 2097155,
+      "x": 20,
+      "y": 20,
+      "z_index": 0
+    }
+  ]
+}

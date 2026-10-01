@@ -2,6 +2,10 @@
 
 Semantic versioning, independent of Cua Driver. Before 1.0 the tool surface may still change in minor releases.
 
+## 0.1.2 (unreleased)
+
+- Linux: first real captures (Chrome for Testing 154 on Xvfb, Cua Driver 0.31.0 `linux-x86_64`): `computer_use/fixtures/linux/` and the measured role, action, web-root and geometry facts with exact commands in `docs/LINUX.md`. Capture and docs only; no runtime change (#37).
+
 ## 0.1.1 (2026-10-01)
 
 - Android emulator verified live on a headless emulator (`emulator -avd <name> -no-window`): `look`, a verified press and a verified back through `device=<AVD name>`. Docs and the `bad_request` message now say a running emulator is addressed by its AVD name as `look(device="list")` shows it, not by its adb serial; `doctor` suggests the headless start.

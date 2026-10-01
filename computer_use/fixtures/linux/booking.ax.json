@@ -1,0 +1,3179 @@
+{
+  "_note": "Prefer `elements` \u2014 `tree_markdown` will continue to work but new fields will only be added to the structured side. Use `max_elements` / `max_depth` to bound the AT-SPI walk on apps with very large trees.",
+  "app_name": "Chromium-browser",
+  "bounds_complete": true,
+  "capture_id": "capture_df9d09dfea9f4f33aeb7a7a52f00c447_0000000000000000",
+  "coordinate_frame": "window",
+  "element_count": 122,
+  "elements": [
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 0,
+      "element_index": 0,
+      "element_token": "s00000001:0",
+      "enabled": true,
+      "frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "Clinic Slots default - Google Chrome for Testing",
+      "role": "frame",
+      "screenshot_frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 1,
+      "element_index": 1,
+      "element_token": "s00000001:1",
+      "enabled": true,
+      "frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc",
+      "parent_index": 0,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 2,
+      "element_index": 2,
+      "element_token": "s00000001:2",
+      "enabled": true,
+      "frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 1,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 3,
+      "element_index": 3,
+      "element_token": "s00000001:3",
+      "enabled": true,
+      "frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 2,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 700,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 4,
+      "element_token": "s00000001:4",
+      "enabled": true,
+      "frame": {
+        "h": 47,
+        "w": 1100,
+        "x": 20,
+        "y": 60
+      },
+      "label": "\ufffc\ufffc\ufffc",
+      "parent_index": 3,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 47,
+        "w": 1100,
+        "x": 0,
+        "y": 40
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 5,
+      "element_token": "s00000001:5",
+      "enabled": true,
+      "frame": {
+        "h": 46,
+        "w": 1100,
+        "x": 20,
+        "y": 60
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 4,
+      "role": "tool bar",
+      "screenshot_frame": {
+        "h": 46,
+        "w": 1100,
+        "x": 0,
+        "y": 40
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 6,
+      "element_token": "s00000001:6",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 5,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 7,
+      "element_token": "s00000001:7",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 6,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 8,
+      "element_token": "s00000001:8",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 7,
+      "role": "tool bar",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 9,
+      "element_token": "s00000001:9",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 8,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 10,
+      "description": "Reload this page",
+      "element_index": 10,
+      "element_token": "s00000001:10",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "Reload",
+      "parent_index": 9,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 11,
+      "element_index": 11,
+      "element_token": "s00000001:11",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 94,
+        "y": 66
+      },
+      "label": "\ufffc",
+      "parent_index": 10,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 74,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 12,
+      "element_index": 12,
+      "element_token": "s00000001:12",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 20,
+        "x": 101,
+        "y": 73
+      },
+      "parent_index": 11,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 20,
+        "w": 20,
+        "x": 81,
+        "y": 53
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 13,
+      "element_token": "s00000001:13",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 898,
+        "x": 137,
+        "y": 66
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 5,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 898,
+        "x": 117,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 14,
+      "element_token": "s00000001:14",
+      "enabled": true,
+      "frame": {
+        "h": 24,
+        "w": 24,
+        "x": 142,
+        "y": 71
+      },
+      "label": "View site information",
+      "parent_index": 13,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 24,
+        "w": 24,
+        "x": 122,
+        "y": 51
+      }
+    },
+    {
+      "actions": [
+        "activate",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 15,
+      "element_token": "s00000001:15",
+      "enabled": true,
+      "frame": {
+        "h": 24,
+        "w": 817,
+        "x": 174,
+        "y": 71
+      },
+      "label": "Address and search bar",
+      "parent_index": 13,
+      "role": "entry",
+      "screenshot_frame": {
+        "h": 24,
+        "w": 817,
+        "x": 154,
+        "y": 51
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 16,
+      "element_token": "s00000001:16",
+      "enabled": true,
+      "frame": {
+        "h": 24,
+        "w": 24,
+        "x": 999,
+        "y": 71
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 13,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 24,
+        "w": 24,
+        "x": 979,
+        "y": 51
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 17,
+      "element_token": "s00000001:17",
+      "enabled": true,
+      "frame": {
+        "h": 24,
+        "w": 24,
+        "x": 999,
+        "y": 71
+      },
+      "label": "Bookmark this tab",
+      "parent_index": 16,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 24,
+        "w": 24,
+        "x": 979,
+        "y": 51
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 18,
+      "element_token": "s00000001:18",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 1044,
+        "y": 66
+      },
+      "label": "You",
+      "parent_index": 5,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 1024,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "open",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "description": "Customize and control Chromium",
+      "element_index": 19,
+      "element_token": "s00000001:19",
+      "enabled": true,
+      "frame": {
+        "h": 34,
+        "w": 34,
+        "x": 1080,
+        "y": 66
+      },
+      "label": "Chromium",
+      "parent_index": 5,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 34,
+        "w": 34,
+        "x": 1060,
+        "y": 46
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 21,
+      "element_token": "s00000001:21",
+      "enabled": true,
+      "frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 3,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 22,
+      "element_token": "s00000001:22",
+      "enabled": true,
+      "frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 21,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu",
+        "scrollBackward",
+        "scrollDown",
+        "scrollForward",
+        "scrollLeft",
+        "scrollRight",
+        "scrollUp"
+      ],
+      "depth": 6,
+      "element_index": 24,
+      "element_token": "s00000001:24",
+      "enabled": true,
+      "frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "label": "Clinic Slots default",
+      "parent_index": 22,
+      "role": "document web",
+      "screenshot_frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 25,
+      "element_token": "s00000001:25",
+      "enabled": true,
+      "frame": {
+        "h": 37,
+        "w": 641,
+        "x": 242,
+        "y": 195
+      },
+      "in_web_content": true,
+      "label": "Clinic Slots default",
+      "parent_index": 24,
+      "role": "heading",
+      "screenshot_frame": {
+        "h": 37,
+        "w": 641,
+        "x": 222,
+        "y": 175
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 26,
+      "element_token": "s00000001:26",
+      "enabled": true,
+      "frame": {
+        "h": 1553,
+        "w": 641,
+        "x": 242,
+        "y": 253
+      },
+      "in_web_content": true,
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 24,
+      "role": "list",
+      "screenshot_frame": {
+        "h": 1553,
+        "w": 641,
+        "x": 222,
+        "y": 233
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 27,
+      "element_token": "s00000001:27",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 253
+      },
+      "in_web_content": true,
+      "label": "Slot s01",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 233
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 28,
+      "element_token": "s00000001:28",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 266
+      },
+      "in_web_content": true,
+      "label": "Dr. Morgan Reyes",
+      "parent_index": 27,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 246
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 29,
+      "element_token": "s00000001:29",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 284
+      },
+      "in_web_content": true,
+      "label": "Consultation",
+      "parent_index": 27,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 264
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 30,
+      "element_token": "s00000001:30",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 302
+      },
+      "in_web_content": true,
+      "label": "60 min",
+      "parent_index": 27,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 282
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 31,
+      "element_token": "s00000001:31",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 320
+      },
+      "in_web_content": true,
+      "label": "Starts 1:30 PM",
+      "parent_index": 27,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 300
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 32,
+      "element_token": "s00000001:32",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 338
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 27,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 318
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 33,
+      "element_token": "s00000001:33",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 380
+      },
+      "in_web_content": true,
+      "label": "Slot s02",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 360
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 34,
+      "element_token": "s00000001:34",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 393
+      },
+      "in_web_content": true,
+      "label": "Morgan Lee, NP",
+      "parent_index": 33,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 373
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 35,
+      "element_token": "s00000001:35",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 411
+      },
+      "in_web_content": true,
+      "label": "Follow-up",
+      "parent_index": 33,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 391
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 36,
+      "element_token": "s00000001:36",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 429
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 33,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 409
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 37,
+      "element_token": "s00000001:37",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 447
+      },
+      "in_web_content": true,
+      "label": "Starts 2:00 PM",
+      "parent_index": 33,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 427
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 38,
+      "element_token": "s00000001:38",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 465
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 33,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 445
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 39,
+      "element_token": "s00000001:39",
+      "enabled": true,
+      "frame": {
+        "h": 138,
+        "w": 601,
+        "x": 282,
+        "y": 507
+      },
+      "in_web_content": true,
+      "label": "Slot s03",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 138,
+        "w": 601,
+        "x": 262,
+        "y": 487
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 40,
+      "element_token": "s00000001:40",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 520
+      },
+      "in_web_content": true,
+      "label": "Dr. Priya Shah",
+      "parent_index": 39,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 500
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 41,
+      "element_token": "s00000001:41",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 538
+      },
+      "in_web_content": true,
+      "label": "Follow-up",
+      "parent_index": 39,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 518
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 42,
+      "element_token": "s00000001:42",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 556
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 39,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 536
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 43,
+      "element_token": "s00000001:43",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 574
+      },
+      "in_web_content": true,
+      "label": "Starts 2:15 PM",
+      "parent_index": 39,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 554
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 44,
+      "element_token": "s00000001:44",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 592
+      },
+      "in_web_content": true,
+      "label": "Covering for Dr. Morgan Reyes",
+      "parent_index": 39,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 572
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 45,
+      "element_token": "s00000001:45",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 610
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 39,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 590
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 46,
+      "element_token": "s00000001:46",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 652
+      },
+      "in_web_content": true,
+      "label": "Slot s04",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 632
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 47,
+      "element_token": "s00000001:47",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 665
+      },
+      "in_web_content": true,
+      "label": "Dr. Morgan Reyes",
+      "parent_index": 46,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 645
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 48,
+      "element_token": "s00000001:48",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 683
+      },
+      "in_web_content": true,
+      "label": "Consultation",
+      "parent_index": 46,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 663
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 49,
+      "element_token": "s00000001:49",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 701
+      },
+      "in_web_content": true,
+      "label": "45 min",
+      "parent_index": 46,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 681
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "element_index": 50,
+      "element_token": "s00000001:50",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 719
+      },
+      "in_web_content": true,
+      "label": "Starts 2:30 PM",
+      "parent_index": 46,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 699
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 51,
+      "element_token": "s00000001:51",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 737
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 46,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 717
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 52,
+      "element_token": "s00000001:52",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 779
+      },
+      "in_web_content": true,
+      "label": "Slot s05",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 759
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 53,
+      "element_token": "s00000001:53",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 792
+      },
+      "in_web_content": true,
+      "label": "Dr. Morgan Reyes",
+      "parent_index": 52,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 772
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 54,
+      "element_token": "s00000001:54",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 810
+      },
+      "in_web_content": true,
+      "label": "Follow-up",
+      "parent_index": 52,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 790
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 55,
+      "element_token": "s00000001:55",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 828
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 52,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 808
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 56,
+      "element_token": "s00000001:56",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 846
+      },
+      "in_web_content": true,
+      "label": "Starts 1:45 PM",
+      "parent_index": 52,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 826
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 57,
+      "element_token": "s00000001:57",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 864
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 52,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 844
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 58,
+      "element_token": "s00000001:58",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 906
+      },
+      "in_web_content": true,
+      "label": "Slot s06",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 886
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 59,
+      "element_token": "s00000001:59",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 919
+      },
+      "in_web_content": true,
+      "label": "Dr. Morgan Reyesford",
+      "parent_index": 58,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 899
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 60,
+      "element_token": "s00000001:60",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 937
+      },
+      "in_web_content": true,
+      "label": "Follow-up",
+      "parent_index": 58,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 917
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 61,
+      "element_token": "s00000001:61",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 955
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 58,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 935
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 62,
+      "element_token": "s00000001:62",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 973
+      },
+      "in_web_content": true,
+      "label": "Starts 2:45 PM",
+      "parent_index": 58,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 953
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 63,
+      "element_token": "s00000001:63",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 991
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 58,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 971
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 64,
+      "element_token": "s00000001:64",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 1033
+      },
+      "in_web_content": true,
+      "label": "Slot s07",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 1013
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 65,
+      "element_token": "s00000001:65",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1046
+      },
+      "in_web_content": true,
+      "label": "Dr. Morgan Reyes",
+      "parent_index": 64,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1026
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 66,
+      "element_token": "s00000001:66",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1064
+      },
+      "in_web_content": true,
+      "label": "Follow-up",
+      "parent_index": 64,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1044
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 67,
+      "element_token": "s00000001:67",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1082
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 64,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1062
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 68,
+      "element_token": "s00000001:68",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1100
+      },
+      "in_web_content": true,
+      "label": "Starts 3:15 PM",
+      "parent_index": 64,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1080
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 69,
+      "element_token": "s00000001:69",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 1118
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 64,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 1098
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 70,
+      "element_token": "s00000001:70",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 1160
+      },
+      "in_web_content": true,
+      "label": "Slot s08",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 1140
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 71,
+      "element_token": "s00000001:71",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1173
+      },
+      "in_web_content": true,
+      "label": "Dr. Morgan Reyes",
+      "parent_index": 70,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1153
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 72,
+      "element_token": "s00000001:72",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1191
+      },
+      "in_web_content": true,
+      "label": "Follow-up",
+      "parent_index": 70,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1171
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 73,
+      "element_token": "s00000001:73",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1209
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 70,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1189
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 74,
+      "element_token": "s00000001:74",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1227
+      },
+      "in_web_content": true,
+      "label": "Starts 4:00 PM",
+      "parent_index": 70,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1207
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 75,
+      "element_token": "s00000001:75",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 1245
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 70,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 1225
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 76,
+      "element_token": "s00000001:76",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 1287
+      },
+      "in_web_content": true,
+      "label": "Slot s09",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 1267
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 77,
+      "element_token": "s00000001:77",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1300
+      },
+      "in_web_content": true,
+      "label": "Dr. Alan Morgan",
+      "parent_index": 76,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1280
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 78,
+      "element_token": "s00000001:78",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1318
+      },
+      "in_web_content": true,
+      "label": "Follow-up",
+      "parent_index": 76,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1298
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 79,
+      "element_token": "s00000001:79",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1336
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 76,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1316
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 80,
+      "element_token": "s00000001:80",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1354
+      },
+      "in_web_content": true,
+      "label": "Starts 2:05 PM",
+      "parent_index": 76,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1334
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 81,
+      "element_token": "s00000001:81",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 1372
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 76,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 1352
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 82,
+      "element_token": "s00000001:82",
+      "enabled": true,
+      "frame": {
+        "h": 138,
+        "w": 601,
+        "x": 282,
+        "y": 1414
+      },
+      "in_web_content": true,
+      "label": "Slot s10",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 138,
+        "w": 601,
+        "x": 262,
+        "y": 1394
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 83,
+      "element_token": "s00000001:83",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1427
+      },
+      "in_web_content": true,
+      "label": "Dr. Morgan Reyes",
+      "parent_index": 82,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1407
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 84,
+      "element_token": "s00000001:84",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1445
+      },
+      "in_web_content": true,
+      "label": "Telehealth",
+      "parent_index": 82,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1425
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 85,
+      "element_token": "s00000001:85",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1463
+      },
+      "in_web_content": true,
+      "label": "half-hour",
+      "parent_index": 82,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1443
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 86,
+      "element_token": "s00000001:86",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1481
+      },
+      "in_web_content": true,
+      "label": "Starts 3:00 PM",
+      "parent_index": 82,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1461
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 87,
+      "element_token": "s00000001:87",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1499
+      },
+      "in_web_content": true,
+      "label": "Video visit",
+      "parent_index": 82,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1479
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 88,
+      "element_token": "s00000001:88",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 1517
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 82,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 1497
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 89,
+      "element_token": "s00000001:89",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 1559
+      },
+      "in_web_content": true,
+      "label": "Slot s11",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 1539
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 90,
+      "element_token": "s00000001:90",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1572
+      },
+      "in_web_content": true,
+      "label": "Dr. Morgan Reyes",
+      "parent_index": 89,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1552
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 91,
+      "element_token": "s00000001:91",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1590
+      },
+      "in_web_content": true,
+      "label": "Follow-up",
+      "parent_index": 89,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1570
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 92,
+      "element_token": "s00000001:92",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1608
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 89,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1588
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 93,
+      "element_token": "s00000001:93",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1626
+      },
+      "in_web_content": true,
+      "label": "Starts 11:00 AM",
+      "parent_index": 89,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1606
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 94,
+      "element_token": "s00000001:94",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 1644
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 89,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 1624
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 95,
+      "element_token": "s00000001:95",
+      "enabled": true,
+      "frame": {
+        "h": 120,
+        "w": 601,
+        "x": 282,
+        "y": 1686
+      },
+      "in_web_content": true,
+      "label": "Slot s12",
+      "parent_index": 26,
+      "role": "list item",
+      "screenshot_frame": {
+        "h": 120,
+        "w": 601,
+        "x": 262,
+        "y": 1666
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 96,
+      "element_token": "s00000001:96",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1699
+      },
+      "in_web_content": true,
+      "label": "Dr. Kim Ortega",
+      "parent_index": 95,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1679
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 97,
+      "element_token": "s00000001:97",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1717
+      },
+      "in_web_content": true,
+      "label": "Consultation",
+      "parent_index": 95,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1697
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 98,
+      "element_token": "s00000001:98",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1735
+      },
+      "in_web_content": true,
+      "label": "30 min",
+      "parent_index": 95,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1715
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 99,
+      "element_token": "s00000001:99",
+      "enabled": true,
+      "frame": {
+        "h": 19,
+        "w": 575,
+        "x": 295,
+        "y": 1753
+      },
+      "in_web_content": true,
+      "label": "Starts 2:20 PM",
+      "parent_index": 95,
+      "role": "section",
+      "screenshot_frame": {
+        "h": 19,
+        "w": 575,
+        "x": 275,
+        "y": 1733
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 9,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 100,
+      "element_token": "s00000001:100",
+      "enabled": true,
+      "frame": {
+        "h": 22,
+        "w": 47,
+        "x": 303,
+        "y": 1771
+      },
+      "in_web_content": true,
+      "label": "Book",
+      "parent_index": 95,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 22,
+        "w": 47,
+        "x": 283,
+        "y": 1751
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 102,
+      "element_token": "s00000001:102",
+      "enabled": true,
+      "frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "parent_index": 22,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 557,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 103,
+      "element_token": "s00000001:103",
+      "enabled": true,
+      "frame": {
+        "h": 56,
+        "w": 1100,
+        "x": 20,
+        "y": 107
+      },
+      "label": "Infobar Container",
+      "parent_index": 3,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 56,
+        "w": 1100,
+        "x": 0,
+        "y": 87
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 104,
+      "element_token": "s00000001:104",
+      "enabled": true,
+      "frame": {
+        "h": 56,
+        "w": 1100,
+        "x": 20,
+        "y": 107
+      },
+      "label": "Infobar",
+      "parent_index": 103,
+      "role": "alert",
+      "screenshot_frame": {
+        "h": 56,
+        "w": 1100,
+        "x": 0,
+        "y": 87
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 105,
+      "element_token": "s00000001:105",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 937,
+        "x": 36,
+        "y": 125
+      },
+      "label": "Chrome for Testing v154.0.8037.92 is only for automated testing. For regular browsing, use a standard version of Chrome that updates automatically.",
+      "parent_index": 104,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 20,
+        "w": 937,
+        "x": 16,
+        "y": 105
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 106,
+      "element_token": "s00000001:106",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 131,
+        "x": 973,
+        "y": 125
+      },
+      "label": "\ufffc",
+      "parent_index": 104,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 20,
+        "w": 131,
+        "x": 953,
+        "y": 105
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 107,
+      "element_token": "s00000001:107",
+      "enabled": true,
+      "frame": {
+        "h": 20,
+        "w": 131,
+        "x": 973,
+        "y": 125
+      },
+      "label": "Download Chrome",
+      "parent_index": 106,
+      "role": "link",
+      "screenshot_frame": {
+        "h": 20,
+        "w": 131,
+        "x": 953,
+        "y": 105
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 108,
+      "element_token": "s00000001:108",
+      "enabled": true,
+      "frame": {
+        "h": 14,
+        "w": 1100,
+        "x": 20,
+        "y": 163
+      },
+      "parent_index": 103,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 14,
+        "w": 1100,
+        "x": 0,
+        "y": 143
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 109,
+      "element_token": "s00000001:109",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 1100,
+        "x": 20,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc\ufffc\ufffc\ufffc",
+      "parent_index": 3,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 1100,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 110,
+      "element_token": "s00000001:110",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 28,
+        "x": 26,
+        "y": 20
+      },
+      "label": "\ufffc",
+      "parent_index": 109,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 28,
+        "x": 6,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "open",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 111,
+      "element_token": "s00000001:111",
+      "enabled": true,
+      "frame": {
+        "h": 28,
+        "w": 28,
+        "x": 26,
+        "y": 26
+      },
+      "label": "Tab search",
+      "parent_index": 110,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 28,
+        "w": 28,
+        "x": 6,
+        "y": 6
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 112,
+      "element_token": "s00000001:112",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 494,
+        "x": 48,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc",
+      "parent_index": 109,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 494,
+        "x": 28,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 113,
+      "element_token": "s00000001:113",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 494,
+        "x": 48,
+        "y": 20
+      },
+      "label": "\ufffc\ufffc\ufffc",
+      "parent_index": 112,
+      "role": "page tab list",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 494,
+        "x": 28,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 114,
+      "element_token": "s00000001:114",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 256,
+        "x": 48,
+        "y": 20
+      },
+      "label": "Clinic Slots default",
+      "parent_index": 113,
+      "role": "page tab",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 256,
+        "x": 28,
+        "y": 0
+      },
+      "selected": false
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 115,
+      "element_token": "s00000001:115",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 26,
+        "x": 264,
+        "y": 27
+      },
+      "label": "Close",
+      "parent_index": 114,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 26,
+        "w": 26,
+        "x": 244,
+        "y": 7
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "element_index": 116,
+      "element_token": "s00000001:116",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 256,
+        "x": 286,
+        "y": 20
+      },
+      "label": "Clinic Slots default",
+      "parent_index": 113,
+      "role": "page tab",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 256,
+        "x": 266,
+        "y": 0
+      },
+      "selected": true
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 8,
+      "element_index": 117,
+      "element_token": "s00000001:117",
+      "enabled": true,
+      "frame": {
+        "h": 26,
+        "w": 26,
+        "x": 502,
+        "y": 27
+      },
+      "label": "Close",
+      "parent_index": 116,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 26,
+        "w": 26,
+        "x": 482,
+        "y": 7
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 118,
+      "element_token": "s00000001:118",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 494,
+        "x": 48,
+        "y": 20
+      },
+      "parent_index": 112,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 494,
+        "x": 28,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "press",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "description": "New tab",
+      "element_index": 119,
+      "element_token": "s00000001:119",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 28,
+        "x": 536,
+        "y": 20
+      },
+      "label": "New Tab",
+      "parent_index": 109,
+      "role": "push button",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 28,
+        "x": 516,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 120,
+      "element_token": "s00000001:120",
+      "enabled": true,
+      "frame": {
+        "h": 41,
+        "w": 544,
+        "x": 576,
+        "y": 20
+      },
+      "parent_index": 109,
+      "role": "panel",
+      "screenshot_frame": {
+        "h": 41,
+        "w": 544,
+        "x": 556,
+        "y": 0
+      }
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 5,
+      "element_index": 20,
+      "element_token": "s00000001:20",
+      "enabled": true,
+      "parent_index": 4,
+      "role": "panel"
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 6,
+      "element_index": 23,
+      "element_token": "s00000001:23",
+      "enabled": true,
+      "parent_index": 22,
+      "role": "panel"
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 7,
+      "description": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "element_index": 101,
+      "element_token": "s00000001:101",
+      "enabled": true,
+      "in_web_content": true,
+      "label": "off-screen: scroll it into view before a pixel action; element actions still reach it",
+      "parent_index": 24,
+      "role": "statusbar"
+    },
+    {
+      "actions": [
+        "doDefault",
+        "showContextMenu"
+      ],
+      "depth": 4,
+      "element_index": 121,
+      "element_token": "s00000001:121",
+      "enabled": true,
+      "parent_index": 3,
+      "role": "panel"
+    }
+  ],
+  "elements_complete": true,
+  "frame_note": "x/y for click / double_click / right_click / drag / scroll on this window are pixels of THIS screenshot (window-local, 0..screenshot_width x 0..screenshot_height), as are the element frames; the screenshot is kept at or below 1.15 megapixels so the image you read is the image these pixels index (frame_scale < 1 says the window was downsized to it). window_bounds is where it sits on the screen. Pass scope:\"desktop\" only for get_desktop_state pixels.",
+  "nodes_pending": 0,
+  "nodes_visited": 122,
+  "pid": 9258,
+  "returned_element_count": 122,
+  "screenshot_frame_valid": true,
+  "screenshot_height": 700,
+  "screenshot_mime_type": "image/png",
+  "screenshot_png_b64": "<removed: base64 PNG screenshot, 135388 chars>",
+  "screenshot_width": 1100,
+  "snapshot_id": "s00000001",
+  "timeout_ms": 1000,
+  "total_element_count": 122,
+  "tree_markdown": "- [0] frame \"Clinic Slots default - Google Chrome for Testing\" [actions=[doDefault,showContextMenu]]\n  - [1] panel \"\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n    - [2] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n      - [3] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n        - [4] panel \"\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n          - [5] tool bar \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n            - push button = \"Back\" (disabled)\n            - push button = \"Forward\" (disabled)\n            - [6] panel \"\ufffc\" [actions=[doDefault,showContextMenu]]\n              - [7] section \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                - [8] tool bar \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                  - [9] section \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                    - [10] push button \"Reload\" (description \"Reload this page\") [actions=[press,showContextMenu]]\n                      - [11] section \"\ufffc\" [actions=[doDefault,showContextMenu]]\n                        - [12] section \"\" [actions=[doDefault,showContextMenu]]\n            - [13] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n              - [14] push button \"View site information\" [actions=[press,showContextMenu]]\n              - [15] entry \"Address and search bar\" [actions=[activate,showContextMenu]]\n              - [16] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n                - [17] push button \"Bookmark this tab\" [actions=[press,showContextMenu]]\n            - [18] push button \"You\" [actions=[press,showContextMenu]]\n            - [19] push button \"Chromium\" (description \"Customize and control Chromium\") [actions=[open,showContextMenu]]\n          - [20] panel \"\" [actions=[doDefault,showContextMenu]]\n        - [21] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n          - [22] panel \"\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n            - [23] panel \"\" [actions=[doDefault,showContextMenu]]\n            - [24] document web \"Clinic Slots default\" [actions=[doDefault,showContextMenu,scrollBackward,scrollDown,scrollForward,scrollLeft,scrollRight,scrollUp]]\n              - [25] heading \"Clinic Slots default\" [actions=[doDefault,showContextMenu]]\n                - static = \"Clinic Slots default\"\n              - [26] list \"\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n                - [27] list item \"Slot s01\" [actions=[doDefault,showContextMenu]]\n                  - [28] section \"Dr. Morgan Reyes\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Morgan Reyes\"\n                  - [29] section \"Consultation\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Consultation\"\n                  - [30] section \"60 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"60 min\"\n                  - [31] section \"Starts 1:30 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 1:30 PM\"\n                  - [32] push button \"Book\" [actions=[press,showContextMenu]]\n                - [33] list item \"Slot s02\" [actions=[doDefault,showContextMenu]]\n                  - [34] section \"Morgan Lee, NP\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Morgan Lee, NP\"\n                  - [35] section \"Follow-up\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Follow-up\"\n                  - [36] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [37] section \"Starts 2:00 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 2:00 PM\"\n                  - [38] push button \"Book\" [actions=[press,showContextMenu]]\n                - [39] list item \"Slot s03\" [actions=[doDefault,showContextMenu]]\n                  - [40] section \"Dr. Priya Shah\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Priya Shah\"\n                  - [41] section \"Follow-up\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Follow-up\"\n                  - [42] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [43] section \"Starts 2:15 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 2:15 PM\"\n                  - [44] section \"Covering for Dr. Morgan Reyes\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Covering for Dr. Morgan Reyes\"\n                  - [45] push button \"Book\" [actions=[press,showContextMenu]]\n                - [46] list item \"Slot s04\" [actions=[doDefault,showContextMenu]]\n                  - [47] section \"Dr. Morgan Reyes\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Morgan Reyes\"\n                  - [48] section \"Consultation\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Consultation\"\n                  - [49] section \"45 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"45 min\"\n                  - [50] section \"Starts 2:30 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 2:30 PM\"\n                  - [51] push button \"Book\" [actions=[press,showContextMenu]]\n                - [52] list item \"Slot s05\" [actions=[doDefault,showContextMenu]]\n                  - [53] section \"Dr. Morgan Reyes\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Morgan Reyes\"\n                  - [54] section \"Follow-up\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Follow-up\"\n                  - [55] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [56] section \"Starts 1:45 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 1:45 PM\"\n                  - [57] push button \"Book\" [actions=[press,showContextMenu]]\n                - [58] list item \"Slot s06\" [actions=[doDefault,showContextMenu]]\n                  - [59] section \"Dr. Morgan Reyesford\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Morgan Reyesford\"\n                  - [60] section \"Follow-up\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Follow-up\"\n                  - [61] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [62] section \"Starts 2:45 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 2:45 PM\"\n                  - [63] push button \"Book\" [actions=[press,showContextMenu]]\n                - [64] list item \"Slot s07\" [actions=[doDefault,showContextMenu]]\n                  - [65] section \"Dr. Morgan Reyes\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Morgan Reyes\"\n                  - [66] section \"Follow-up\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Follow-up\"\n                  - [67] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [68] section \"Starts 3:15 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 3:15 PM\"\n                  - [69] push button \"Book\" [actions=[press,showContextMenu]]\n                - [70] list item \"Slot s08\" [actions=[doDefault,showContextMenu]]\n                  - [71] section \"Dr. Morgan Reyes\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Morgan Reyes\"\n                  - [72] section \"Follow-up\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Follow-up\"\n                  - [73] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [74] section \"Starts 4:00 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 4:00 PM\"\n                  - [75] push button \"Book\" [actions=[press,showContextMenu]]\n                - [76] list item \"Slot s09\" [actions=[doDefault,showContextMenu]]\n                  - [77] section \"Dr. Alan Morgan\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Alan Morgan\"\n                  - [78] section \"Follow-up\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Follow-up\"\n                  - [79] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [80] section \"Starts 2:05 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 2:05 PM\"\n                  - [81] push button \"Book\" [actions=[press,showContextMenu]]\n                - [82] list item \"Slot s10\" [actions=[doDefault,showContextMenu]]\n                  - [83] section \"Dr. Morgan Reyes\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Morgan Reyes\"\n                  - [84] section \"Telehealth\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Telehealth\"\n                  - [85] section \"half-hour\" [actions=[doDefault,showContextMenu]]\n                    - static = \"half-hour\"\n                  - [86] section \"Starts 3:00 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 3:00 PM\"\n                  - [87] section \"Video visit\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Video visit\"\n                  - [88] push button \"Book\" [actions=[press,showContextMenu]]\n                - [89] list item \"Slot s11\" [actions=[doDefault,showContextMenu]]\n                  - [90] section \"Dr. Morgan Reyes\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Morgan Reyes\"\n                  - [91] section \"Follow-up\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Follow-up\"\n                  - [92] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [93] section \"Starts 11:00 AM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 11:00 AM\"\n                  - [94] push button \"Book\" [actions=[press,showContextMenu]]\n                - [95] list item \"Slot s12\" [actions=[doDefault,showContextMenu]]\n                  - [96] section \"Dr. Kim Ortega\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Dr. Kim Ortega\"\n                  - [97] section \"Consultation\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Consultation\"\n                  - [98] section \"30 min\" [actions=[doDefault,showContextMenu]]\n                    - static = \"30 min\"\n                  - [99] section \"Starts 2:20 PM\" [actions=[doDefault,showContextMenu]]\n                    - static = \"Starts 2:20 PM\"\n                  - [100] push button \"Book\" [actions=[press,showContextMenu]]\n              - [101] statusbar \"\" [actions=[doDefault,showContextMenu]]\n            - [102] panel \"\" [actions=[doDefault,showContextMenu]]\n        - [103] panel \"Infobar Container\" [actions=[doDefault,showContextMenu]]\n          - [104] alert \"Infobar\" [actions=[doDefault,showContextMenu]]\n            - [105] panel \"Chrome for Testing v154.0.8037.92 is only for automated testing. For regular browsing, use a standard version of Chrome that updates automatically.\" [actions=[doDefault,showContextMenu]]\n              - static = \"Chrome for Testing v154.0.8037.92 is only for automated testing. For regular browsing, use a standard version of Chrome that updates automatically.\"\n            - [106] panel \"\ufffc\" [actions=[doDefault,showContextMenu]]\n              - [107] link \"Download Chrome\" [actions=[doDefault,showContextMenu]]\n          - [108] panel \"\" [actions=[doDefault,showContextMenu]]\n        - [109] panel \"\ufffc\ufffc\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n          - [110] panel \"\ufffc\" [actions=[doDefault,showContextMenu]]\n            - [111] push button \"Tab search\" [actions=[open,showContextMenu]]\n          - [112] panel \"\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n            - [113] page tab list \"\ufffc\ufffc\ufffc\" [actions=[doDefault,showContextMenu]]\n              - [114] page tab \"Clinic Slots default\" [actions=[doDefault,showContextMenu]]\n                - [115] push button \"Close\" [actions=[press,showContextMenu]]\n              - [116] page tab \"Clinic Slots default\" [actions=[doDefault,showContextMenu]]\n                - [117] push button \"Close\" [actions=[press,showContextMenu]]\n            - [118] panel \"\" [actions=[doDefault,showContextMenu]]\n          - [119] push button \"New Tab\" (description \"New tab\") [actions=[press,showContextMenu]]\n          - [120] panel \"\" [actions=[doDefault,showContextMenu]]\n        - [121] panel \"\" [actions=[doDefault,showContextMenu]]\n",
+  "truncated": false,
+  "walk_elapsed_ms": 307,
+  "window_bounds": {
+    "height": 700,
+    "width": 1100,
+    "x": 20,
+    "y": 20
+  },
+  "window_id": 2097155,
+  "window_title": "Clinic Slots default - Google Chrome for Testing"
+}
