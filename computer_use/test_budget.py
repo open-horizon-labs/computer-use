@@ -66,13 +66,15 @@ class SkillLint(unittest.TestCase):
 
     def test_reintroducing_the_chain_in_prose_fails(self):
         # Wrong patch: instruct observe -> read -> choose -> act -> verify as the normal path.
-        chain = self.TEXT.replace('## Explicit capabilities', 'Then call `observe`, `read`, `choose`, `act` and `verify` in turn.\n\n## Advanced primitives', 1)
+        section = cb.default_workflow_section(self.TEXT)
+        chain = self.TEXT.replace(section, section + 'Then call `observe`, `read`, `choose`, `act` and `verify` in turn.\n', 1)
         self.assertTrue(any('chain' in v or 'names' in v for v in cb.skill_violations(chain)))
 
     def test_leading_with_a_primitive_fails(self):
-        led = self.TEXT.replace('Call `look` first when', 'Call `windows`, then `do`, and `look` when', 1)
+        section = cb.default_workflow_section(self.TEXT)
+        led = self.TEXT.replace(section, 'Call `windows`, then `do`, and `look`.\n', 1)
         self.assertTrue(any('first' in v or 'other than' in v for v in cb.skill_violations(led)))
-        do_first = self.TEXT.replace('## Default workflow\n\nCall `look` first', '## Default workflow\n\nCall `do`, or call `look` first', 1)
+        do_first = self.TEXT.replace(section, 'Call `do`, then `look`.\n', 1)
         self.assertTrue(any('look first' in v for v in cb.skill_violations(do_first)))
 
     def test_missing_section_fails(self):
