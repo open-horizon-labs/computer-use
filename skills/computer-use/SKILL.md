@@ -11,6 +11,8 @@ Read [setup](references/setup.md) first to locate or install the runtime and con
 
 ## First five minutes for an agent
 
+When AX/DOM misses drawn content, use `look(screen=True, title=...)` (or `url`, `pid`+`window_id`, `device`). It returns an image from the exact browser viewport, native window or device without AX or an extraction model; read it directly. It preserves task context and never activates a window. Missing/blank captures cannot be repaired by NuExtract or OCR. Screen evidence supplies no `where.lines` look_id or executable coordinates: use fresh `do` bindings and independent verification. The existing NuExtract adapter reads text records, despite NuExtract3 itself supporting images. Default text `look` remains cheaper; request pixels only when useful.
+
 The same 20% as the server's welcome screen (its MCP instructions); nothing else is needed to get a first verified result.
 
 1. `look` reads what the target displays (records, controls, text) and returns a `look_id`; it never clicks. Skip it only for one obvious control.

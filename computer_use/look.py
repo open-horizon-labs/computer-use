@@ -558,7 +558,10 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                     extras['notes'].append('this page has no pressable controls and its drawn text could not be read (the perception parse failed); call `look` once more, and if it fails again tell the user')
                 stage('perception', began)
             else:
-                extras['notes'].append('this page has no pressable controls; with Cua Perception healthy canvas.text_regions would list its drawn texts (the control values for `do`), but it is %s: run `python scripts/install_perception.py` (an agent can; a setup block says so when a call is refused), then call `look` again' % f.perception_state)
+                if f.perception_state == 'healthy':
+                    extras['notes'].append('No Driver capture_id is available for Perception. Call look(screen=true) to read target-bound pixels without AX.')
+                else:
+                    extras['notes'].append('this page has no pressable controls; with Cua Perception healthy canvas.text_regions would list its drawn texts (the control values for `do`), but it is %s: run `python scripts/install_perception.py` (an agent can; a setup block says so when a call is refused), then call `look` again' % f.perception_state)
         response, shown = assemble(f, state, analysis, rows, max_bytes, extras)
         extraction = None
         if fields is not None and shown:

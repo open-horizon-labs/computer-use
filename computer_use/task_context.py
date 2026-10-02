@@ -85,7 +85,11 @@ class Contexts:
             with task.facade.lock:
                 result = getattr(task.facade, tool)(**args)
             if result.get('status') in ('ok', 'done', 'observed', 'delivered_unverified'):
-                if args.get('device') and args['device'] != 'list':
+                if result.get('screen') and result['screen'].get('action_binding') is False:
+                    window = result['window']
+                    task.target = ({'device': window['device']} if window.get('device') else
+                                   {'pid': window['pid'], 'window_id': window['window_id']})
+                elif args.get('device') and args['device'] != 'list':
                     task.target = {'device': args['device']}
                 else:
                     # Latest observation is authoritative even when two windows

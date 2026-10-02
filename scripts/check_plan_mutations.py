@@ -827,6 +827,31 @@ MUTATIONS.update({
 })
 
 
+
+# CE-FACADE-014: screenshot evidence must keep target, authority and transport boundaries.
+MUTATIONS.update({
+    'screen_wrong_browser_target': (
+        'accept pixels from a different tab because the image looks plausible',
+        [('screen.py', "if any(result.get(k) != v for k, v in target.items()):", "if False:")],
+        ['test_screen.ScreenTests.test_wrong_tab_or_target_never_returns_pixels_or_falls_back']),
+    'screen_wrong_window_owner': (
+        'accept native pixels without checking the owning window',
+        [('screen.py', "if result.get('pid') != pid or result.get('window_id') != window_id:", "if False:")],
+        ['test_screen.ScreenTests.test_native_capture_only_and_wrong_owner_refuses']),
+    'screen_blank_is_readable': (
+        'send an all-black or white image to inference as normal evidence',
+        [('screen.py', "if all(low == high for low, high in ImageStat.Stat(rgb.convert('RGB'), mask=alpha).extrema):", "if False:")],
+        ['test_screen.ScreenTests.test_blank_corrupt_and_oversize_images_do_not_reach_model']),
+    'screen_creates_action_authority': (
+        'treat a screenshot as a bound action target',
+        [('screen.py', "'action_binding': False", "'action_binding': True")],
+        ['test_screen.ScreenTests.test_captured_browser_pixels_without_ax_or_model_or_action_handles']),
+    'mobile_drops_screenshot_image': (
+        'keep only text blocks from every mobile tool',
+        [('mobile.py', "if tool == 'mobile_take_screenshot':", "if False:")],
+        ['test_screen.ScreenTests.test_mobile_stdio_preserves_image_content_and_drops_mapping_text']),
+})
+
 def stage(tmp):
     shutil.copytree(ROOT / 'computer_use', tmp / 'computer_use', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     shutil.copytree(ROOT / 'scripts', tmp / 'scripts', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))  # a copy: a patch must never reach the real file through a symlink

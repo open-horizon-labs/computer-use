@@ -1,0 +1,46 @@
+{
+  "mode": "snapshot",
+  "page": {
+    "title": "Clinic Slots default",
+    "url": "http://127.0.0.1:8935/booking"
+  },
+  "screenshot": {
+    "coordinate_space": "viewport_css_px",
+    "height": 857,
+    "mime_type": "image/png",
+    "pixel_to_css_scale_x": 1.0,
+    "pixel_to_css_scale_y": 1.0,
+    "scope": "viewport",
+    "source": "cdp_tab",
+    "tab_activation": "not_requested",
+    "viewport_css_height": 857.0,
+    "viewport_css_width": 1840.0,
+    "width": 1840,
+    "window_foregrounding": "not_requested"
+  },
+  "screenshot_height": 857,
+  "screenshot_mime_type": "image/png",
+  "screenshot_width": 1840,
+  "snapshot": {
+    "complete": true,
+    "continuation": null,
+    "format": "semantic_v2",
+    "id": "p412",
+    "node_budget": 300,
+    "omitted": {
+      "budget": 0,
+      "css_hidden": 0,
+      "no_layout": 1,
+      "offscreen": 0,
+      "page_occluded": 0,
+      "unknown": 0,
+      "unprovable_frame": 0
+    },
+    "scope": "viewport",
+    "selected_nodes": 128,
+    "total_nodes": 128
+  },
+  "status": "ok",
+  "tab_id": "tab-dbeb8664-84d8-4eb4-9c9d-04dfa8719401",
+  "target_id": "bt-34707652-a55d-4220-879a-089d4f5b4127"
+}

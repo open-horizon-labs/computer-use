@@ -175,12 +175,14 @@ def do(goal:str,expect:Annotated[str|None,Field(description="With steps, pass nu
     return contexts.call(facade, 'do', args, context.model_dump() if context else None, context_id)
 
 @mcp.tool(annotations=READ)
-def look(title:str|None=None,pid:int|None=None,window_id:int|None=None,fields:dict[str,ReadField]|None=None,max_records:int=40,max_bytes:int=6000,focus:str|list[str]|None=None,max_lines:int=6,line_chars:int=60,device:str|None=None,url:str|None=None,context:TaskContext|None=None,context_id:str|None=None) -> dict:
+def look(title:str|None=None,pid:int|None=None,window_id:int|None=None,fields:dict[str,ReadField]|None=None,max_records:int=40,max_bytes:int=6000,focus:str|list[str]|None=None,max_lines:int=6,line_chars:int=60,device:str|None=None,url:str|None=None,context:TaskContext|None=None,context_id:str|None=None,screen:bool=False) -> dict:
     """Look at the page before you plan. Call `look` first when the page has lists or you do not know the strings it displays; then `do`. Read-only: it never clicks and never moves one of your windows, and by default it calls no model.
 
     context creates a task; context_id resumes it. Use context={session:"user"} for OBO; presentation defaults visible. look stays read-only.
 
-    Target by url (a domain such as myworkday.com, or part of a page url), else title (exact, a unique part of it, or an app name with one window) or pid+window_id; several matches are refused window_ambiguous with candidates. It returns the strings the page DISPLAYS, so you write your plan against what is really there (a duration may read "half-hour"): record_kind (flat-list, table-rows, cards, single, none); records=[{r, controls, lines}]; text (headings and status lines); dialogs; controls (outside the records); inputs; header; counts; look_id, a hash of the displayed record lines (pass it to `do` for where.lines; if the page changed since, the plan stops page_changed_since_look before clicking). On a pixel-only page canvas.text_regions lists the drawn texts to use as control (with near when a text repeats). When AX is unavailable, an already-authorized exact browser binding can supply complete DOM evidence and scoped action refs; fresh verification still follows delivery. In a browser window the page text is also read from the semantic snapshot (bounded, never a failure): what the accessibility tree omits (a price) appears as dom_lines on its record or dom_unplaced, as evidence only (where.lines cannot match it); if that read fails the look says degraded=semantic_timeout (or semantic_not_prepared, semantic_refused, semantic_failed, semantic_empty).
+    screen=true returns a fresh target-bound image without AX or model extraction (browser viewport, native window, or device). Read it directly; no filterable look_id or click coordinates are granted. fields/focus are incompatible; max_bytes bounds text looks, not images. Blank captures refuse.
+
+    Target by url (a domain such as myworkday.com, or part of a page url), else title (exact, a unique part of it, or an app name with one window) or pid+window_id; several matches are refused window_ambiguous with candidates. Returns displayed strings: records=[{r,controls,lines}], text, dialogs, controls, inputs, header, counts, record_kind and look_id. Pass look_id to do for where.lines; changed evidence stops before clicking. On a pixel-only page canvas.text_regions lists the drawn texts to use as control (with near when a text repeats). When AX is unavailable, an already-authorized exact browser binding can supply complete DOM evidence and scoped action refs; fresh verification still follows delivery. In a browser window the page text is also read from the semantic snapshot (bounded, never a failure): what the accessibility tree omits (a price) appears as dom_lines on its record or dom_unplaced, as evidence only (where.lines cannot match it); if that read fails the look says degraded=semantic_timeout (or semantic_not_prepared, semantic_refused, semantic_failed, semantic_empty).
 
     DEVICE: look(device="list") lists the phones and emulators mobile-mcp sees (id, platform, name) beside the Mac windows; look(device=<id>) reads that screen into the same shape. An iOS device needs mobile-mcp's on-device agent, installed once automatically (else refused mobile_device_agent_missing naming the command).
 
@@ -189,7 +191,13 @@ def look(title:str|None=None,pid:int|None=None,window_id:int|None=None,fields:di
                 fields={k:v.model_dump(exclude_none=True) for k,v in fields.items()} if fields else None,
                 max_records=max_records, max_bytes=max_bytes, focus=focus, max_lines=max_lines,
                 line_chars=line_chars, device=device, url=url)
-    return contexts.call(facade, 'look', args, context.model_dump() if context else None, context_id)
+    if screen:args['screen'] = True
+    result = contexts.call(facade, 'look', args, context.model_dump() if context else None, context_id)
+    pixels = result.pop('_screen_image', None)
+    if pixels:
+        return CallToolResult(content=[TextContent(type='text', text=json.dumps(result)),
+            ImageContent(type='image', **pixels)], structuredContent=result)
+    return result
 
 def register_advanced():
     """The eight primitives, registered only when CUA_TASK_ADVANCED=1 (documented in docs/FACADE.md)."""

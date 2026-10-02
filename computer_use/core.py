@@ -2098,9 +2098,19 @@ class Facade:
             counts[name] = counts.get(name, 0) + 1
         return [{'id': 'e' + str(i), 'name': name, **({'count': counts[name]} if counts[name] > 1 else {})} for i, name in order[:cap]]
 
-    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60, device=None, url=None):
+    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60, device=None, url=None, screen=False):
         """Read-only, deterministic look at the strings the page displays (no click, no window move, no model unless `fields`)."""
         import look as lookmod
+        if screen:
+            import screen as screenmod
+            with self.lock:
+                if fields is not None or focus is not None:
+                    return self.mark({'status': 'refused', 'reason': 'bad_request', 'message': 'screen returns pixels; fields and focus apply to ordinary text looks'}, 'look')
+                if url is not None:
+                    bound = self._by_url('look', url, title, pid, window_id, device)
+                    if 'status' in bound:return bound
+                    pid, window_id = bound['pid'], bound['window_id']
+                return self.mark(screenmod.look(self, title, pid, window_id, device), 'look')
         if url is not None:
             with self.lock:
                 bound = self._by_url('look', url, title, pid, window_id, device)

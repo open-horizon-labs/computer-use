@@ -685,5 +685,19 @@
    "note": "Default look/do counts unchanged; no new tool or mandatory caller step."
   },
   "status_note": "Live isolated fixture test verifies booking server event; user requested skipping OBO live tests on locked screen. Browser synthetic delivery still requires postcondition verification."
+ },
+ {
+  "id": "CE-FACADE-014",
+  "status": "approved",
+  "authority": "User requested fact-checking, solution exploration and execution for screen reading without AX across drivers; OBO live tests remain skipped.",
+  "classification": "Read-only facade observation projection; controlling-model visual interpretation is already an explicit sketch path. No selection or action-policy change.",
+  "input_and_actual": "Driver offers exact browser/native screenshots and mobile-mcp emits image blocks, but default look exposes only AX/DOM text and the mobile transport discards images. Browser native AX/captures can be unavailable while CDP returns readable pixels. A healthy Perception missing capture_id was incorrectly reported as an installation problem.",
+  "corrected_behavior": "Optional look(screen=True) returns target-bound pixels in an MCP image block without AX, model startup, profile setup, tab activation or foregrounding. Browser CDP falls back only to the same native window; mismatched target responses refuse. Native owner mismatch, invalid/blank/excessive images and mobile image errors refuse. Screen evidence has no filterable look_id, controls or executable coordinates. Context retains exact capture target. Ordinary look/do routes and counts remain unchanged.",
+  "tempting_wrong_repair": "Pass OCR corruption into verbatim text fields; pretend the text-only NuExtract endpoint supports screenshots; print base64 as text; accept other-target pixels; create a look_id from screenshot transcription; pay screenshot costs on every look.",
+  "regression": "computer_use/test_screen.py uses real Driver 0.31.0 booking pixels plus adversarial target/blank/transport cases; default call budget and existing action mutation checks; live isolated virtual-display probe.",
+  "call_budget": {
+   "note": "No new tool, mandatory step or default CALL_BUDGET number changes. Tool description remains within its existing response budget."
+  },
+  "status_note": "NuExtract3 image capability verified from official model documentation, but this configured extraction endpoint remains text-only. No live OBO/mobile success or image extraction accuracy claimed."
  }
 ]

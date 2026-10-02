@@ -236,13 +236,18 @@ class StdioBackend:
         except Exception as error:  # noqa: BLE001
             if type(error).__name__ == 'McpError' and 'closed' in str(error).lower():
                 raise _Died()
-            raise MobileGap('mobile_observation_failed' if tool.startswith(('mobile_list', 'mobile_get')) else 'mobile_action_failed',
-                            'mobile-mcp answered an error to %s (%s)' % (tool, type(error).__name__), 'none' if tool.startswith(('mobile_list', 'mobile_get')) else 'uncertain')
+            raise MobileGap('mobile_observation_failed' if tool.startswith(('mobile_list', 'mobile_get', 'mobile_take_screenshot')) else 'mobile_action_failed',
+                            'mobile-mcp answered an error to %s (%s)' % (tool, type(error).__name__), 'none' if tool.startswith(('mobile_list', 'mobile_get', 'mobile_take_screenshot')) else 'uncertain')
+        if tool == 'mobile_take_screenshot':
+            images = [c for c in (result.content or []) if getattr(c, 'type', '') == 'image']
+            if getattr(result, 'isError', False) or len(images) != 1:
+                raise MobileGap('screen_capture_unavailable', 'mobile-mcp did not return one screenshot')
+            return {'data': images[0].data, 'mimeType': images[0].mimeType}, False
         text = '\n'.join(getattr(c, 'text', '') for c in (result.content or []) if getattr(c, 'type', '') == 'text')
         return text, bool(getattr(result, 'isError', False))
 
     def call(self, tool, args, mutating=False, timeout=CALL_TIMEOUT_S):
-        """(text, is_error). Raises MobileGap. A dead process is restarted ONCE and a read-only call re-sent; an action is never re-sent."""
+        """(text, is_error), or (image dict, is_error) for screenshots. A dead process is restarted ONCE for reads only."""
         with self._lock:
             if not self._alive():
                 self._teardown()
@@ -549,6 +554,13 @@ class Mobile:
     def _read(self, device):
         text, error = self._backend().call('mobile_list_elements_on_screen', {'device': device, 'format': 'json'})
         return parse_elements(text)
+
+    def screenshot(self, device):
+        """Capture only: no element enumeration or automatic device-agent install."""
+        payload, error = self._backend().call('mobile_take_screenshot', {'device': device, 'maxSize': 2048})
+        if error or not isinstance(payload, dict) or set(payload) != {'data', 'mimeType'}:
+            raise MobileGap('screen_capture_unavailable', 'mobile-mcp did not return one screenshot')
+        return payload
 
     def elements(self, device):
         """A fresh element list. A refusal mobile_device_agent_missing installs the on-device agent ONCE and retries the read ONCE (never a loop): a failed
