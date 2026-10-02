@@ -1,0 +1,11 @@
+{
+  "passed_gui": true,
+  "tools": 3,
+  "initial_schema_bytes": 3085,
+  "discovery_calls": 6,
+  "discovery_response_bytes": 16488,
+  "mcp_calls": 22,
+  "all_response_bytes": 45840,
+  "wall_s": 3.486,
+  "model_tokens": null
+}

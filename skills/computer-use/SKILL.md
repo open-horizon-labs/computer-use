@@ -13,6 +13,8 @@ Call `look` first when planning from visible strings, then `do`. This two-tool w
 
 ## Explicit capabilities
 
+For explicitly requested Cua Spaces isolation, use the separate three-tool `cua-spaces` server and its [progressive discovery guide](references/spaces.md). This does not select Spaces for ordinary tasks or change OH routing.
+
 Mobile: pass capability="mobile" and a concrete device ID. Discovery uses device="list"; discovery does not select a device. Read exact controls with look, then submit steps with independent visible outcomes. Launch uses a concrete app identifier. A switch requires expect="checked" or "unchecked"; absent state is unknown, never assumed false. Custom provider commands and credentials remain external configuration.
 
 Off-screen: start with do(capability="off_screen", goal="Open isolated browser", steps=[{do:"open_tab", url:"https://example.com", expect:null}]). Reuse its context_id for look and subsequent do calls. Only one off-screen context is active per server. The browser uses an owned profile with no user logins and requires a verified virtual display. Display/browser failure returns a typed refusal; it must never fall back to the user's screen or browser. Legacy environment settings cannot select user mode through this facade.
