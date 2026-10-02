@@ -852,6 +852,35 @@ MUTATIONS.update({
         ['test_screen.ScreenTests.test_mobile_stdio_preserves_image_content_and_drops_mapping_text']),
 })
 
+
+# CE-FACADE-015: PTY evidence must remain current, owned, and independently verified.
+MUTATIONS.update({
+    'terminal_ignore_stale_screen': (
+        'send a key after the rendered grid or cursor changed',
+        [('terminal.py', "if look_id and self.looks[look_id][1] != state['fingerprint']:", "if False:")],
+        ['test_terminal.TerminalTests.test_changed_text_style_or_cursor_prevents_input']),
+    'terminal_ignore_ansi_style': (
+        'hash plain text and lose color-only selection changes',
+        [('terminal.py', "json.dumps(snapshot, sort_keys=True)", "json.dumps({k:v for k,v in snapshot.items() if k != 'ansi_rows'}, sort_keys=True)")],
+        ['test_terminal.TerminalTests.test_changed_text_style_or_cursor_prevents_input']),
+    'terminal_accept_delayed_echo': (
+        'treat late input echo after Enter as a successful postcondition',
+        [('terminal.py', "and not echo and not preexisting", "and not preexisting")],
+        ['test_terminal.TerminalTests.test_delayed_echo_after_enter_is_not_task_success']),
+    'terminal_accept_old_text': (
+        'use a preexisting READY label to prove Enter was consumed',
+        [('terminal.py', "and not echo and not preexisting", "and not echo")],
+        ['test_terminal.TerminalTests.test_preexisting_or_echoed_text_is_not_success_and_stops_chain']),
+    'terminal_skip_post_action_read': (
+        'reuse the state from before delivery and miss the resulting screen',
+        [('terminal.py', "                while True:\n                    state = self.read(name, deadline)", "                while True:\n                    if state is None:state = self.read(name, deadline)")],
+        ['test_terminal.TerminalTests.test_new_postcondition_requires_independent_read']),
+    'terminal_shell_expansion': (
+        'expand semicolons and substitutions in caller arguments',
+        [('terminal.py', "term='xterm-256color', shell=False", "term='xterm-256color', shell=True")],
+        ['test_terminal.TerminalTests.test_launch_passes_literal_argv_and_cwd_without_shell']),
+})
+
 def stage(tmp):
     shutil.copytree(ROOT / 'computer_use', tmp / 'computer_use', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     shutil.copytree(ROOT / 'scripts', tmp / 'scripts', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))  # a copy: a patch must never reach the real file through a symlink

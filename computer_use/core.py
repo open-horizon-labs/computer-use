@@ -198,7 +198,7 @@ class Driver:
 
 class Facade:
     def __init__(self, driver=None, generic_factory=generic_from_config, reader_factory=NuExtractPage,
-                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None, setup_env=None, on_behalf=False, foreground_on_behalf=False):
+                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None, setup_env=None, on_behalf=False, foreground_on_behalf=False, terminal=None):
         self.driver = driver or Driver()
         self.dom_targets=set()  # exactly-bound browser windows successfully read when native AX was unavailable
         self.sleep = sleep
@@ -232,6 +232,7 @@ class Facade:
         self.tool_calls = 0  # LLM-visible look/do calls since the server started
         self.first_do = None  # {calls, seconds}: the first done do with a verified action (time_to_first_verified_do)
         self._mobile = mobile  # mobile-mcp (CE-FACADE-008): created and started by the first look/do that names a device (mobile.py)
+        self._terminal = terminal  # CE-FACADE-015: private PTY sessions, started only by explicit terminal launch
 
     def event(self, operation, **data):
         # Content-free route audit: no screenshots, text, command payloads or secrets.
@@ -2098,9 +2099,16 @@ class Facade:
             counts[name] = counts.get(name, 0) + 1
         return [{'id': 'e' + str(i), 'name': name, **({'count': counts[name]} if counts[name] > 1 else {})} for i, name in order[:cap]]
 
-    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60, device=None, url=None, screen=False):
+    def look(self, title=None, pid=None, window_id=None, fields=None, max_records=40, max_bytes=6000, focus=None, max_lines=6, line_chars=60, device=None, url=None, screen=False, terminal=None):
         """Read-only, deterministic look at the strings the page displays (no click, no window move, no model unless `fields`)."""
         import look as lookmod
+        if terminal is not None:
+            import terminal as termmod
+            with self.lock:
+                try:
+                    termmod.check_target(self, title, pid, window_id, device, url, fields, focus)
+                    return self.mark(termmod.backend(self).look(terminal, max_bytes, screen), 'look')
+                except Gap as error:return self.mark(termmod.refusal(error), 'look')
         if screen:
             import screen as screenmod
             with self.lock:
@@ -2125,11 +2133,20 @@ class Facade:
 
     def do(self, goal, title=None, pid=None, window_id=None, records=None, operation='click', text=None,
            expect=None, accept_unknown=None, budget_s=20, confirm=None, control=None, treat_as_match=None, near=None,
-           steps=None, look_id=None, abort_if=None, allow_foreground=None, device=None, url=None):
+           steps=None, look_id=None, abort_if=None, allow_foreground=None, device=None, url=None, terminal=None):
         """One call runs observe -> read -> same-record filter -> (chooser only if several) -> bind -> act -> verify,
         recovering deterministically (bounded) and deferring to the caller only where guessing would be worse.
         Composes observe/read/choose/act/verify; owns no selection policy. Never retries a click.
         With `steps` it runs a validated PLAN instead (plan.py): each step is this same pipeline on a fresh observation."""
+        if terminal is not None:
+            import terminal as termmod
+            with self.lock:
+                try:
+                    termmod.check_target(self, title, pid, window_id, device, url, records, text, accept_unknown,
+                        confirm, control, treat_as_match, near, abort_if, allow_foreground)
+                    if operation != 'click':raise Gap('bad_request: terminal actions use steps')
+                    return self.mark(termmod.backend(self).do(terminal, steps, expect, look_id, budget_s), 'do')
+                except Gap as error:return self.mark(termmod.refusal(error), 'do')
         if url is not None:
             with self.lock:
                 bound = self._by_url('do', url, title, pid, window_id, device)
@@ -2815,6 +2832,7 @@ class Facade:
             except Exception:self.event('cleanup',status='worker_close_failed')
         self.providers.clear()
         if self._mobile is not None:self._mobile.close()  # stops the mobile-mcp child process; the next device call starts a fresh one
+        if self._terminal is not None:self._terminal.close()
         self.fg_grants.clear()
         self.snapshots.clear();self.selections.clear();self.readings.clear();self.latest.clear();self.looks.clear()
         return {'status':'closed','trace':self.events,'driver_version':self.driver_version,'driver_version_state':self.driver_version_state,

@@ -76,7 +76,7 @@ class Contexts:
             if owner and saved is None:
                 return self.refused('context_look_mismatch')
             if saved:args['look_id'] = saved['raw']
-            targets = ('title', 'pid', 'window_id', 'url', 'device')
+            targets = ('title', 'pid', 'window_id', 'url', 'device', 'terminal')
             if not any(args.get(key) is not None for key in targets):
                 if saved and saved['target']:
                     args.update(saved['target'])
@@ -85,7 +85,11 @@ class Contexts:
             with task.facade.lock:
                 result = getattr(task.facade, tool)(**args)
             if result.get('status') in ('ok', 'done', 'observed', 'delivered_unverified'):
-                if result.get('screen') and result['screen'].get('action_binding') is False:
+                if result.get('terminal'):
+                    task.target = None if result.get('closed') else {'terminal': result['terminal']}
+                elif args.get('terminal') == 'list':
+                    pass  # inventory is not a target switch
+                elif result.get('screen') and result['screen'].get('action_binding') is False:
                     window = result['window']
                     task.target = ({'device': window['device']} if window.get('device') else
                                    {'pid': window['pid'], 'window_id': window['window_id']})
@@ -108,7 +112,7 @@ class Contexts:
             for envelope in envelopes:
                 if isinstance(envelope.get('look_id'), str):
                     raw = envelope['look_id']
-                    target = task.target
+                    target = {'terminal': envelope['terminal']} if envelope.get('terminal') else task.target
                     matches = [value for (pid, wid, handle), value in task.facade.looks.items() if handle == raw]
                     if len(matches) == 1:
                         target = {'pid': matches[0]['pid'], 'window_id': matches[0]['window_id']}

@@ -1,4 +1,34 @@
-# Terminal observation and action integration
+# Terminal drivers and observation
+
+## Agent-owned terminal apps: terminal-use
+
+`terminal-use` (`tu`) 1.4.1 is the optional driver for applications the agent launches in a headless PTY. It runs the application with a terminal emulator and returns the rendered grid, cursor and ANSI styles; ordinary reads need no AX, display, OCR or model. This path does not attach an existing Terminal, iTerm2 or Ghostty tab. Those windows still use Cua Driver and the observation helper below. See the [qualification and fact-check report](TERMINAL-DRIVER-2026-10-02.md) for sources and measured limits.
+
+Install once in the runtime checkout (macOS arm64, Linux x86_64 or aarch64 pinned assets):
+
+```sh
+python3 scripts/install_terminal.py
+```
+
+The installer verifies the release asset SHA-256 and writes `~/.local/share/computer-use/terminal-use/1.4.1/tu`. It starts no service. `CUA_TERMINAL_DRIVER` optionally selects another installed 1.4.1 binary; it is deployment configuration, not task intent. Agents select the path using MCP arguments:
+
+```json
+{"goal":"Open the file in Vim","expect":null,"terminal":"new","steps":[{"do":"launch","argv":["/usr/bin/vim","-Nu","NONE","-n","-i","NONE"],"cwd":"/absolute/working/directory","expect":"VIM - Vi IMproved"}]}
+```
+
+Use the returned `terminal` and `look_id`; an explicit isolated `context` also scopes the session to that task. `look(terminal=ID)` returns rendered lines with zero-based row numbers, styled rows, cursor and a new `look_id`. `look(terminal="list")` lists only this task's sessions. `look(terminal=ID, screen=true)` adds a rendered PNG as an MCP image block. Its image is sampled after the text; they are not an atomic capture. Text and styles are untrusted application output. Output truncation counts omitted lines/styles; increase `max_bytes` (1000..30000) when needed. Coverage is the visible grid, not scrollback.
+
+```json
+{"goal":"Enter insert mode","expect":null,"terminal":"term_FROM_LAUNCH","look_id":"term_lk_FROM_LOOK","steps":[{"do":"press","control":"i","expect":"-- INSERT --"}]}
+```
+
+Supported steps are `launch(argv,cwd,width?,height?)`, `press(control=<one key>)`, `type(text=<printable literal text>)`, `verify(expect=<literal text>)` and `close`. `width`/`height` on terminal launch are cells (defaults 100×30), not pixels. Launch arguments use no implicit shell. Named keys include Enter, Escape, Tab, Shift+Tab, arrows, Home/End, PageUp/Down, F1–F12, Ctrl+letter and Alt+character. Type does not smuggle control characters; send Enter explicitly. Before choosing keys, use current UI hints or the verified application's documented interface.
+
+Each input re-reads session identity, rendered cells, styling and cursor against the supplied `look_id`. A change returns `terminal_changed_since_look` with fresh evidence and sends nothing. Each successful delivery is followed by a separate read. `expect` is a literal screen-text postcondition: new matching text can produce `done`; previously visible text and recognizable input echoes cannot. Echo tracking is bounded to the last 8192 typed characters. This is not semantic proof of an arbitrary task. `verify` reports only `observed`. No postcondition, an unchanged screen, a timeout or an echo produces `delivered_unverified`/`failed`, never success; reconcile the returned state before continuing. A nonfinal step requires `expect`, and an unverified step stops the plan. Writes are never retried automatically. Upstream has no atomic compare-and-send operation, so the adapter cannot eliminate a change between its last read and delivery.
+
+One private daemon serves up to eight owned PTYs per facade/task context, using a private runtime directory/socket. `close` removes one owned session and independently checks its absence. Task expiry or MCP shutdown closes its private daemon and sessions. These processes are headless agent-owned sessions, not containers or a filesystem/security sandbox: they inherit the server's user privileges and environment. Existing user-session OBO targets continue through Cua Driver; a headless terminal launch requires the isolated context because it cannot provide the selected visible/background user presentation.
+
+## Existing GUI terminals
 
 The explicit `local-mac` profile uses Julia-1 and GLiNER2 local workers when installed. Screenshot interpretation still requires a separately configured vision worker; the local profile intentionally has no SystemOne fallback. The default `fleet` profile uses the configured homelab endpoints (page content and screenshots go to those hosted services). Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
 
@@ -28,7 +58,7 @@ python3 scripts/observe_terminal.py --pid PID --window-id WINDOW_ID \
 
 This prints the assessments and timing records, omitting raw screenshot bytes and the full AX tree.
 
-The worker uses the standard multimodal chat format and strictly parses a completed JSON response. It has no desktop access. An endpoint that rejects images or returns malformed output yields uncertainty; there is no text-only fallback pretending to see pixels. The outer transport terminates a stuck worker. Server-side cancellation depends on the endpoint.
+The worker uses the configured SystemOne screenshot endpoint and validates its finite assessment response. It has no desktop access. An endpoint that rejects images or returns malformed output yields uncertainty; there is no text-only fallback pretending to see pixels. The outer transport terminates a stuck worker. Server-side cancellation depends on the endpoint.
 
 ```python
 from terminal_observation import VisualTerminal, wait_for_terminal

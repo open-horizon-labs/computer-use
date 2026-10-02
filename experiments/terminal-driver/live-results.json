@@ -1,0 +1,412 @@
+{
+  "date": "2026-10-02",
+  "driver": "terminal-use 1.4.1",
+  "transport": "real MCP stdio and private PTY daemon",
+  "environment": "macOS arm64, no GUI/display/AX/model calls",
+  "limitations": "Synthetic menu and Vim only; not an agent bakeoff or general TUI accuracy/race/latency claim. Startup included in launch. PNG measured separately. Text postconditions are observations, not arbitrary semantic verification.",
+  "scenarios": [
+    {
+      "name": "styled_menu",
+      "trial": 1,
+      "calls": 5,
+      "wall_tool_ms": 131.0,
+      "ground_truth": {
+        "selected": "Beta",
+        "keys": [
+          "1b4f42",
+          "0d"
+        ],
+        "argv": [
+          "$(literal);not-a-shell"
+        ]
+      }
+    },
+    {
+      "name": "terminal_png",
+      "status": "passed",
+      "width": 510,
+      "height": 404
+    },
+    {
+      "name": "styled_menu",
+      "trial": 2,
+      "calls": 5,
+      "wall_tool_ms": 131.5,
+      "ground_truth": {
+        "selected": "Beta",
+        "keys": [
+          "1b4f42",
+          "0d"
+        ],
+        "argv": [
+          "$(literal);not-a-shell"
+        ]
+      }
+    },
+    {
+      "name": "styled_menu",
+      "trial": 3,
+      "calls": 5,
+      "wall_tool_ms": 128.47,
+      "ground_truth": {
+        "selected": "Beta",
+        "keys": [
+          "1b4f42",
+          "0d"
+        ],
+        "argv": [
+          "$(literal);not-a-shell"
+        ]
+      }
+    },
+    {
+      "name": "styled_menu",
+      "trial": 4,
+      "calls": 5,
+      "wall_tool_ms": 121.47,
+      "ground_truth": {
+        "selected": "Beta",
+        "keys": [
+          "1b4f42",
+          "0d"
+        ],
+        "argv": [
+          "$(literal);not-a-shell"
+        ]
+      }
+    },
+    {
+      "name": "styled_menu",
+      "trial": 5,
+      "calls": 5,
+      "wall_tool_ms": 118.78,
+      "ground_truth": {
+        "selected": "Beta",
+        "keys": [
+          "1b4f42",
+          "0d"
+        ],
+        "argv": [
+          "$(literal);not-a-shell"
+        ]
+      }
+    },
+    {
+      "name": "vim_save",
+      "status": "passed",
+      "independent_file_contents_match": true
+    },
+    {
+      "name": "private_daemon_isolation",
+      "status": "passed",
+      "closing_one_preserves_other": true
+    }
+  ],
+  "tool_latency_ms": {
+    "median": 1.79,
+    "max": 115.78
+  },
+  "calls": [
+    {
+      "tool": "do",
+      "ms": 114.56,
+      "response_text_bytes": 1035,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.3,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 1.77,
+      "response_text_bytes": 1112,
+      "status": "delivered_unverified"
+    },
+    {
+      "tool": "look",
+      "ms": 1.41,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 11.96,
+      "response_text_bytes": 904,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 30.6,
+      "response_text_bytes": 758,
+      "status": "ok"
+    },
+    {
+      "tool": "look",
+      "ms": 1.4,
+      "response_text_bytes": 806,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 111.73,
+      "response_text_bytes": 222,
+      "status": "done"
+    },
+    {
+      "tool": "do",
+      "ms": 64.98,
+      "response_text_bytes": 897,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.54,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 1.81,
+      "response_text_bytes": 1112,
+      "status": "delivered_unverified"
+    },
+    {
+      "tool": "look",
+      "ms": 1.31,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 61.86,
+      "response_text_bytes": 904,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.84,
+      "response_text_bytes": 806,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 111.62,
+      "response_text_bytes": 222,
+      "status": "done"
+    },
+    {
+      "tool": "do",
+      "ms": 55.4,
+      "response_text_bytes": 897,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.62,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 1.47,
+      "response_text_bytes": 854,
+      "status": "delivered_unverified"
+    },
+    {
+      "tool": "look",
+      "ms": 1.32,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 68.66,
+      "response_text_bytes": 904,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.37,
+      "response_text_bytes": 806,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 106.85,
+      "response_text_bytes": 222,
+      "status": "done"
+    },
+    {
+      "tool": "do",
+      "ms": 63.37,
+      "response_text_bytes": 897,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.49,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 2.03,
+      "response_text_bytes": 1112,
+      "status": "delivered_unverified"
+    },
+    {
+      "tool": "look",
+      "ms": 1.59,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 52.99,
+      "response_text_bytes": 904,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.2,
+      "response_text_bytes": 806,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 102.09,
+      "response_text_bytes": 222,
+      "status": "done"
+    },
+    {
+      "tool": "do",
+      "ms": 58.62,
+      "response_text_bytes": 897,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 2.15,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 2.18,
+      "response_text_bytes": 1112,
+      "status": "delivered_unverified"
+    },
+    {
+      "tool": "look",
+      "ms": 1.54,
+      "response_text_bytes": 798,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 54.29,
+      "response_text_bytes": 904,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 2.57,
+      "response_text_bytes": 806,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 115.78,
+      "response_text_bytes": 222,
+      "status": "done"
+    },
+    {
+      "tool": "do",
+      "ms": 60.04,
+      "response_text_bytes": 4946,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.2,
+      "response_text_bytes": 4847,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 1.73,
+      "response_text_bytes": 5044,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 0.98,
+      "response_text_bytes": 4946,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 1.63,
+      "response_text_bytes": 5335,
+      "status": "delivered_unverified"
+    },
+    {
+      "tool": "look",
+      "ms": 1.12,
+      "response_text_bytes": 5022,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 1.66,
+      "response_text_bytes": 5336,
+      "status": "delivered_unverified"
+    },
+    {
+      "tool": "look",
+      "ms": 1.04,
+      "response_text_bytes": 5022,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 1.5,
+      "response_text_bytes": 5169,
+      "status": "delivered_unverified"
+    },
+    {
+      "tool": "look",
+      "ms": 1.09,
+      "response_text_bytes": 4856,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 54.01,
+      "response_text_bytes": 4991,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.56,
+      "response_text_bytes": 4893,
+      "status": "ok"
+    },
+    {
+      "tool": "do",
+      "ms": 111.77,
+      "response_text_bytes": 222,
+      "status": "done"
+    },
+    {
+      "tool": "look",
+      "ms": 1.07,
+      "response_text_bytes": 98,
+      "status": "ok"
+    }
+  ],
+  "cleanup": "all 6 MCP sessions closed; empty inventory verified; two independent daemons also closed"
+}

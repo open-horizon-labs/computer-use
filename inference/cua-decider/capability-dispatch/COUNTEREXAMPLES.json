@@ -699,5 +699,19 @@
    "note": "No new tool, mandatory step or default CALL_BUDGET number changes. Tool description remains within its existing response budget."
   },
   "status_note": "NuExtract3 image capability verified from official model documentation, but this configured extraction endpoint remains text-only. No live OBO/mobile success or image extraction accuracy claimed."
+ },
+ {
+  "id": "CE-FACADE-015",
+  "status": "approved",
+  "authority": "User asked to fact-check and execute adding a terminal-oriented driver when agents drive terminal applications (2026-10-02). Existing OBO live tests remain skipped.",
+  "classification": "Optional facade driver for explicitly launched task-owned headless PTYs; preserve default browser/mobile workflow, evidence and action boundaries.",
+  "input_and_actual": "A terminal emulator can render a TUI while its GUI AX tree is empty or unchanged. Screenshot/model polling is unnecessarily expensive when an agent can launch the application in an owned PTY. Plain stdout stripping loses overwritten cells, alternate screens and style-only selection.",
+  "corrected_behavior": "Explicit terminal=new plus launch(argv,cwd) starts a private pinned terminal-use daemon. look reads rendered grid, ANSI styling and cursor with an exact session/PID binding. do revalidates that observation before one delivery, then separately reads the postcondition. Changed text, cursor, styling or identity prevents input. Echoed/reused text and silence do not prove progress. Failed or uncertain delivery is not replayed. GUI terminal windows continue through Cua Driver. Headless sessions use isolated contexts, not an OBO presentation.",
+  "tempting_wrong_repair": "Attach arbitrary GUI terminal tabs; strip stdout as if it were rendered cells; accept another task or changed screen; treat echoed input/unchanged output as success; shell-expand caller argv; retry a timed-out key; start services during offline tests.",
+  "regression": "computer_use/test_terminal.py uses terminal_menu.json captured from terminal-use 1.4.1. Real MCP stdio probe in experiments/terminal-driver/probe.py tests ANSI menu selection, literal argv, PNG and Vim file-save against independent files. Targeted mutations challenge binding, style staleness, echoes and verification; tests reject malformed later steps before any write.",
+  "call_budget": {
+   "note": "No new MCP tool or mandatory default-path step; CALL_BUDGET numbers unchanged. Existing tool schema/description ceilings remain unchanged."
+  },
+  "status_note": "Grid/cursor/status sampling and send are not atomic in upstream. No claim of arbitrary GUI attachment, all-TUI accuracy, locked-desktop OBO success, or measured superiority over tmux/iTerm2."
  }
 ]

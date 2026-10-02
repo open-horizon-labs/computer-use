@@ -112,6 +112,10 @@ Call `Strangler.from_config(providers).decide(request, current_snapshot)`. Befor
 
 The controller must bind and verify: installing this skill alone does not cause tool calls to use the dispatcher. A one-call hosted API is not deployed by this repository.
 
+## Optional headless terminal driver
+
+For agent-owned terminal apps, install the checksum-pinned terminal-use 1.4.1 binary with `python3 scripts/install_terminal.py` in the runtime checkout. No service starts until an explicit MCP `do(terminal="new", steps=[{do:"launch", argv:[...], cwd:"/absolute/path"}], expect=null)`. Resume using `terminal=<id>` on look/do. Existing user GUI terminal windows still use Cua Driver. See `docs/TERMINALS.md` for steps, ownership, verification and limits.
+
 ## 5. Julia and terminal screenshots
 
 For the optional Julia chooser, configure `CUA_GENERIC_PROVIDER=julia-1` and `CUA_JULIA_COMMAND` to a JSON argv array launching `workers/julia_worker.py` with the cached checkpoint directory. Construct the generic provider with `generic_from_config()`, and keep the same Strangler/GLiNER2 bindings. The chooser is `CUA_GENERIC_PROVIDER` if set, else the profile's value (`local-mac` is Julia-1, `fleet` is Jev; checked in `runtime_config.py` and `providers.py` `generic_from_config`), else Jev. Read `docs/PROVIDERS.md` in the runtime checkout for checkpoint digest, runtime dependencies, strict input limits and cleanup. This skill does not install Julia or start a worker.
