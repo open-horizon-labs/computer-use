@@ -1,10 +1,29 @@
-name: offline-gates
+name: optional-adapter-gates
 
 # Offline only: fakes and fixtures. No secrets, no models or GPUs, no desktop, no network beyond pip.
 on:
+  workflow_dispatch:
   pull_request:
+    paths:
+      - 'computer_use/**'
+      - 'inference/**'
+      - 'experiments/**'
+      - 'scripts/**'
+      - '!scripts/install_smart_defaults.py'
+      - '!scripts/test_install_smart_defaults.py'
+      - 'skills/computer-use/references/sketch.md'
+      - '.github/workflows/offline-gates.yml'
   push:
     branches: [main]
+    paths:
+      - 'computer_use/**'
+      - 'inference/**'
+      - 'experiments/**'
+      - 'scripts/**'
+      - '!scripts/install_smart_defaults.py'
+      - '!scripts/test_install_smart_defaults.py'
+      - 'skills/computer-use/references/sketch.md'
+      - '.github/workflows/offline-gates.yml'
 
 permissions:
   contents: read
