@@ -1,0 +1,222 @@
+[
+  {
+    "run_id": "orders.stack.haiku.r0.s20260928",
+    "arm": "stack",
+    "task": "orders",
+    "tags": [
+      "table",
+      "confirm-dialog",
+      "decoys",
+      "dom"
+    ],
+    "model": "claude-haiku-4-5-20251001",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": 11,
+    "mcp_calls": 10,
+    "wall_s": 49.23746175004635,
+    "cost_usd": 0.05380990000000001,
+    "tokens": {
+      "input": 90,
+      "output": 3035,
+      "cache_read": 177749,
+      "cache_write": 13352
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "orders.native.haiku.r0.s20260928",
+    "arm": "native",
+    "task": "orders",
+    "tags": [
+      "table",
+      "confirm-dialog",
+      "decoys",
+      "dom"
+    ],
+    "model": "claude-haiku-4-5-20251001",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": 13,
+    "mcp_calls": 12,
+    "wall_s": 47.362133166985586,
+    "cost_usd": 0.10389580000000002,
+    "tokens": {
+      "input": 106,
+      "output": 3806,
+      "cache_read": 517363,
+      "cache_write": 23213
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "orders.stack.sonnet.r0.s20260928",
+    "arm": "stack",
+    "task": "orders",
+    "tags": [
+      "table",
+      "confirm-dialog",
+      "decoys",
+      "dom"
+    ],
+    "model": "claude-sonnet-5-5",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": 12,
+    "mcp_calls": 11,
+    "wall_s": 53.75735191698186,
+    "cost_usd": 0.22394559999999997,
+    "tokens": {
+      "input": 24,
+      "output": 3321,
+      "cache_read": 258868,
+      "cache_write": 17185
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "orders.native.sonnet.r0.s20260928",
+    "arm": "native",
+    "task": "orders",
+    "tags": [
+      "table",
+      "confirm-dialog",
+      "decoys",
+      "dom"
+    ],
+    "model": "claude-sonnet-5-5",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": 15,
+    "mcp_calls": 14,
+    "wall_s": 53.7749424999929,
+    "cost_usd": 0.4563900000000001,
+    "tokens": {
+      "input": 30,
+      "output": 3849,
+      "cache_read": 826085,
+      "cache_write": 38929
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "ax_dup.native.haiku.r0.s20260928",
+    "arm": "native",
+    "task": "ax_dup",
+    "tags": [
+      "duplicate-labels",
+      "ax-tree",
+      "dom"
+    ],
+    "model": "claude-haiku-4-5-20251001",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": 12,
+    "mcp_calls": 11,
+    "wall_s": 31.237700375029817,
+    "cost_usd": 0.08247005,
+    "tokens": {
+      "input": 98,
+      "output": 2791,
+      "cache_read": 453833,
+      "cache_write": 15232
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "ax_dup.stack.haiku.r0.s20260928",
+    "arm": "stack",
+    "task": "ax_dup",
+    "tags": [
+      "duplicate-labels",
+      "ax-tree",
+      "dom"
+    ],
+    "model": "claude-haiku-4-5-20251001",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": 8,
+    "mcp_calls": 7,
+    "wall_s": 46.08848041697638,
+    "cost_usd": 0.04032269999999999,
+    "tokens": {
+      "input": 66,
+      "output": 2136,
+      "cache_read": 119897,
+      "cache_write": 10817
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "ax_dup.native.sonnet.r0.s20260928",
+    "arm": "native",
+    "task": "ax_dup",
+    "tags": [
+      "duplicate-labels",
+      "ax-tree",
+      "dom"
+    ],
+    "model": "claude-sonnet-5-5",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "wrong",
+    "wrong_clicks": 1,
+    "turns": 16,
+    "mcp_calls": 15,
+    "wall_s": 53.56852758297464,
+    "cost_usd": 0.45904019999999995,
+    "tokens": {
+      "input": 32,
+      "output": 4304,
+      "cache_read": 903281,
+      "cache_write": 34564
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "ax_dup.stack.sonnet.r0.s20260928",
+    "arm": "stack",
+    "task": "ax_dup",
+    "tags": [
+      "duplicate-labels",
+      "ax-tree",
+      "dom"
+    ],
+    "model": "claude-sonnet-5-5",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": 6,
+    "mcp_calls": 5,
+    "wall_s": 30.48377187497681,
+    "cost_usd": 0.1239902,
+    "tokens": {
+      "input": 12,
+      "output": 1378,
+      "cache_read": 109396,
+      "cache_write": 10970
+    },
+    "synthetic": false,
+    "invalid": false
+  }
+]

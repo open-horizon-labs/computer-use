@@ -514,7 +514,7 @@ MUTATIONS = {
     # CE-FACADE-008 (#54): a device is look, then do through mobile-mcp. Each wrong patch below is a tempting shortcut of that contract.
     'device_tap_on_the_looks_stale_list': (
         'reuse the element list the look read (cheaper): after any layout change the ref or bounds point at another control',
-        [('mobile.py', "        return parse_elements(text)\n", "        return self.__dict__.setdefault('_stale', {}).setdefault(device, parse_elements(text))\n")],
+        [('mobile.py', "        return elements\n", "        return self.__dict__.setdefault('_stale', {}).setdefault(device, elements)\n")],
         ['test_mobile.DoPress.test_a_press_taps_the_fresh_element_not_what_the_look_showed', 'test_mobile.DoPress.test_a_two_step_plan_reads_fresh_for_every_step']),
     'device_first_of_several_matches': (
         'tap the first of several elements that carry the label instead of refusing',
@@ -522,7 +522,7 @@ MUTATIONS = {
         ['test_mobile.DoPress.test_several_matching_elements_are_never_guessed']),
     'device_trust_the_taps_ok': (
         "call a tap done because mobile-mcp answered \"Clicked on\" (a locked phone drops taps silently: upstream found exactly that)",
-        [('mobile.py', "    return x.settle(step, before, TAP_DELAYS, extra={'selected': selected})", "    return {'status': 'done', 'delivery': 'delivered', 'selected': selected}")],
+        [('mobile.py', "    return x.settle(step, before, TAP_DELAYS, target=target, extra={'selected': selected})", "    return {'status': 'done', 'delivery': 'delivered', 'selected': selected}")],
         ['test_mobile.DoPress.test_a_tap_the_device_did_not_act_on_is_never_done',
          'test_mobile.DoPress.test_a_tap_that_changed_the_screen_but_not_as_expected_is_unverified_not_done',
          'test_mobile.DoPress.test_no_expect_on_the_last_step_ends_delivered_unverified_never_done']),
@@ -755,8 +755,154 @@ MUTATIONS = {
         'the AX-window wait also applies to the observation an action revalidates on',
         [('core.py', "self._observe_resolved(pid, window_id, timeout, began) if wait_ready else self._observe_once(pid, window_id, timeout)", "self._observe_resolved(pid, window_id, timeout, began)")],
         ['test_look.AxWindowNotYetResolved.test_an_action_observation_never_waits_for_the_ax_window']),
+    'app_name_with_several_windows_binds_the_first': (
+        'an app name ("Chrome") with several windows resolves to the first one instead of refusing with candidates',
+        [('core.py', "            if len(here) == 1 or (not here and len(apps) == 1):return bind((here or apps)[0], 'app_name')", "            if apps:return bind((here or apps)[0], 'app_name')")],
+        ['test_who.TitleResolution.test_an_app_name_with_several_windows_is_ambiguous_with_candidates_and_binds_none']),
+    'catalog_reason_without_who': (
+        'a reason of the mobile catalog and the reasons raised outside the catalogs are left out of the who table',
+        [('plan.py', "for reason in sorted({*HINTS, *mobile.DEVICE_HINTS, *EXTRA_REASONS})}", "for reason in sorted({*HINTS})}")],
+        ['test_who.WhoFixesIt.test_every_catalog_reason_has_a_who']),
+    'refusal_answer_without_who': (
+        'the answers carry a reason and a hint but nobody is named to act on them',
+        [('core.py', "                self._owner(result)\n", "                pass\n")],
+        ['test_who.WhoFixesIt.test_refused_stopped_failed_and_deferred_answers_carry_who_and_done_ones_do_not']),
+    'foreground_grant_leaks_to_other_windows': (
+        'remember "foreground is allowed" for the session instead of for the one window the user approved',
+        [('core.py', "(title is not None and key in self.fg_grants))", "bool(self.fg_grants))")],
+        ['test_who.ForegroundGrantIsPerWindow.test_the_grant_never_extends_to_another_window']),
+    'several_matching_tabs_bind_the_first': (
+        'url=... with several matching tabs binds the first match instead of refusing window_ambiguous',
+        [('pageurl.py', "    if len(matches) > 1:", "    if False:")],
+        ['test_who.TargetByUrl.test_several_matching_tabs_are_ambiguous_with_titles_and_urls_and_never_the_first',
+         'test_who.TargetByUrl.test_two_matching_tabs_of_one_window_are_ambiguous_too']),
+    'unresolved_window_is_not_reread': (
+        'ask the user on the first unresolved answer of a window whose Space view may be stale',
+        [('core.py', "        for delay in OBSERVE_RETRY_DELAYS:\n            if not evidence:break", "        for delay in ():\n            if not evidence:break")],
+        ['test_who.UnresolvedWindow.test_a_stale_space_view_that_clears_on_the_second_read_proceeds_without_asking']),
 }
 
+
+MUTATIONS.update({
+    'dom_browser_identity_ignored': (
+        'let identical content in another browser target, tab or URL reuse evidence',
+        [('dom_bound.py', "    return value['target_id'],value['tab_id'],value.get('page',{}).get('url')", "    return None")],
+        ['test_dom_bound.BoundDomTests.test_identical_content_in_another_tab_or_url_invalidates_look_and_selection']),
+    'dom_detached_node_truncates_record': (
+        'stop the record at a detached shadow node, hiding later real fields',
+        [('dom_bound.py', "    out=[root]\n    for i in range(root+1,len(nodes)):\n        parent=nodes[i]['parent']\n        while parent is not None and parent!=root:parent=nodes[parent]['parent']\n        if parent==root:out.append(i)", "    out=[]\n    for i in range(root,len(nodes)):\n        if i>root and nodes[i]['depth']<=nodes[root]['depth']:break\n        out.append(i)")],
+        ['test_dom_bound.BoundDomTests.test_missing_parent_tail_cannot_hide_later_real_field_changes']),
+    'isolated_url_searches_user_chrome': (
+        'search every browser profile before the isolated browser exists',
+        [('pageurl.py', "    if getattr(f,'context_session',None)=='isolated':", "    if False:")],
+        ['test_task_context.ContextTests.test_isolated_url_look_never_attaches_to_user_browser_and_returns_navigation_hint']),
+    'url_look_prepares_browser': (
+        'attach to a user profile from a read-only URL lookup',
+        [('pageurl.py', "browser.tab_state(f, w['pid'], w['window_id'], prepare=False)", "browser.tab_state(f, w['pid'], w['window_id'])")],
+        ['test_who.TargetByUrl.test_a_window_the_driver_will_not_attach_to_is_skipped_but_all_refused_is_permission_required']),
+    'dom_unparsed_scope_accepted': (
+        'drop unparsed scoped lines without reporting missing evidence',
+        [('dom_bound.py', "    if len([line for line in outline.splitlines() if line.strip()])!=len(nodes):", "    if False:")],
+        ['test_dom_bound.BoundDomTests.test_captured_settings_scopes_preserve_fields_without_inventing_shadow_ancestry']),
+    'dom_partial_scope_accepted': (
+        'treat a partial semantic snapshot as complete',
+        [('dom_bound.py', "    if snap.get('complete') is not True or snap.get('continuation'):", "    if False:")],
+        ['test_dom_bound.BoundDomTests.test_partial_and_omitted_competitors_refuse']),
+    'dom_changed_scoped_record_accepted': (
+        'resolve the label without proving the same observed record unchanged',
+        [('dom_bound.py', "        if len(matches)!=1 or signature(parsed,matches[0])!=signature(data['parsed'],anchor):", "        if False:")],
+        ['test_dom_bound.BoundDomTests.test_changed_scoped_record_and_duplicate_control_refuse']),
+    'dom_duplicate_scoped_control_accepted': (
+        'click the first scoped control with the requested label',
+        [('dom_bound.py', "        if len(candidates)!=1:raise gap('the scoped control is ambiguous or missing')", "        if not candidates:raise gap('the scoped control is missing')")],
+        ['test_dom_bound.BoundDomTests.test_changed_scoped_record_and_duplicate_control_refuse']),
+    'dom_wrong_tab_scope_accepted': (
+        'accept a scoped snapshot from a different tab',
+        [('dom_bound.py', "        if scoped.get('target_id')!=value['target_id'] or scoped.get('tab_id')!=value['tab_id']:\n            raise gap('the scoped snapshot belongs to another tab')", "        if False:\n            raise gap('the scoped snapshot belongs to another tab')")],
+        ['test_dom_bound.BoundDomTests.test_changed_scoped_record_and_duplicate_control_refuse']),
+    'dom_first_action_rebound_instead_of_selection': (
+        'rebind the first offered action instead of the selected action',
+        [('core.py', "                action=next(a for a in request['actions'] if a['id']==item['decision']['action_id'])", "                action=request['actions'][0]")],
+        ['test_dom_bound.DialogDispatch.test_only_selected_dialog_action_is_rebound_from_multiple_candidates']),
+})
+
+
+
+# CE-FACADE-014: screenshot evidence must keep target, authority and transport boundaries.
+MUTATIONS.update({
+    'screen_wrong_browser_target': (
+        'accept pixels from a different tab because the image looks plausible',
+        [('screen.py', "if any(result.get(k) != v for k, v in target.items()):", "if False:")],
+        ['test_screen.ScreenTests.test_wrong_tab_or_target_never_returns_pixels_or_falls_back']),
+    'screen_wrong_window_owner': (
+        'accept native pixels without checking the owning window',
+        [('screen.py', "if result.get('pid') != pid or result.get('window_id') != window_id:", "if False:")],
+        ['test_screen.ScreenTests.test_native_capture_only_and_wrong_owner_refuses']),
+    'screen_blank_is_readable': (
+        'send an all-black or white image to inference as normal evidence',
+        [('screen.py', "if all(low == high for low, high in ImageStat.Stat(rgb.convert('RGB'), mask=alpha).extrema):", "if False:")],
+        ['test_screen.ScreenTests.test_blank_corrupt_and_oversize_images_do_not_reach_model']),
+    'screen_creates_action_authority': (
+        'treat a screenshot as a bound action target',
+        [('screen.py', "'action_binding': False", "'action_binding': True")],
+        ['test_screen.ScreenTests.test_captured_browser_pixels_without_ax_or_model_or_action_handles']),
+    'mobile_drops_screenshot_image': (
+        'keep only text blocks from every mobile tool',
+        [('mobile.py', "if tool == 'mobile_take_screenshot':", "if False:")],
+        ['test_screen.ScreenTests.test_mobile_stdio_preserves_image_content_and_drops_mapping_text']),
+})
+
+
+# Terminal mutations are archived with CE-FACADE-015 on a531b43.
+
+MUTATIONS.update({
+    'ios_tap_labeled_parent': (
+        'discard observed actionable child and tap wide label-row center',
+        [('mobile.py', "activation = element.get('activation') or element", "activation = element")],
+        ['test_mobile_hierarchy.Hierarchy.test_real_child_not_label_row_center']),
+    'ios_first_competing_child': (
+        'choose the first switch child despite multiple competitors',
+        [('mobile_hierarchy.py', 'valid = len(candidates) == 1', 'valid = bool(candidates)')],
+        ['test_mobile_hierarchy.Hierarchy.test_ambiguous_or_conflicting_children_refuse']),
+    'ios_ignore_child_state': (
+        'bind a child reporting a conflicting state',
+        [('mobile_hierarchy.py', "and toggle_state(e) is not None and toggle_state(child) == toggle_state(e)", 'and True')],
+        ['test_mobile_hierarchy.Hierarchy.test_ambiguous_or_conflicting_children_refuse']),
+    'ios_unchecked_without_value': (
+        'missing switch value is treated as unchecked',
+        [('mobile.py', "    return value_state or flag_state\n", "    return value_state or flag_state or 'unchecked'\n")],
+        ['test_mobile_hierarchy.Hierarchy.test_independent_toggle_state_not_tap_ack_or_other_switch']),
+})
+
+# Retired surface checks are preserved on a531b43. Current routing gets its
+# own adversarial mutations; historical projection checks remain unchanged.
+for retired in ('primitives_visible_by_default','onboarding_windows_notes_not_merged',
+                'response_every_schema_title_stripped','response_do_description_repeats_the_schema'):
+    MUTATIONS.pop(retired)
+MUTATIONS['look_hidden_in_advanced_mode']=(
+    'remove observation from the active surface',
+    [('server.py',"@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True,destructiveHint=False,idempotentHint=True))\ndef look(","def look(")],
+    ['test_budget.ToolSurface.test_surface_is_clean'])
+MUTATIONS.update({
+    'native_default_starts_mobile': ('route ordinary calls into a provider',
+        [('server.py',"if capability is None:\n        return native()","if capability is None:\n        capability='mobile'")],
+        ['test_native_first.NativeFirst.test_native_default_does_no_observation_or_input_even_with_device']),
+    'off_screen_second_context': ('let a new task navigate the first task tab',
+        [('server.py',"if context_id is None and any(","if False and any(")],
+        ['test_native_first.NativeFirst.test_off_screen_needs_owned_session_and_one_context']),
+    'off_screen_ignores_handle_target': ('check the latest target instead of the saved handle',
+        [('server.py',"target=(task.handles.get(args.get('look_id')) or {}).get('target') or task.target","target=task.target")],
+        ['test_native_first.NativeFirst.test_actual_handle_target_must_match_owned_browser_even_when_latest_target_matches']),
+    'native_vnc_revived': ('allow a recognized VNC surface to continue',
+        [('server.py',"if surface is not None:","if False:")],
+        ['test_native_first.NativeFirst.test_vnc_and_model_routes_are_disabled']),
+    'native_schema_accepts_archived_fields': ('ignore or accept caller profile/foreground fields',
+        [('server.py',"class Step(BaseModel):\n    model_config = ConfigDict(extra='forbid')","class Step(BaseModel):\n    model_config = ConfigDict(extra='allow')")],
+        ['test_native_first.NativeFirst.test_schema_rejects_archived_fields_steps_and_observation_targets']),
+    'off_screen_environment_user_fallback': ('honor user-browser fallback configuration',
+        [('server.py', 'AgentBrowser(mode="auto")', 'AgentBrowser()')],
+        ['test_native_first.NativeFirst.test_policy_empty_allowlist_and_legacy_env_cannot_revive_routes']),
+})
 
 def stage(tmp):
     shutil.copytree(ROOT / 'computer_use', tmp / 'computer_use', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
@@ -788,8 +934,9 @@ def main():
                     print('%s: patch target not found exactly once in %s: %r' % (name, filename, old[:60]));bad += 1;break
                 path.write_text(text.replace(old, new))
             else:
-                modules = sorted({e.split('.')[0] for e in expected})
-                code, failed, errored, text = run_tests(tmp, modules)
+                # The full baseline suite runs separately. Each mutant must fail
+                # its named adversarial checks, not merely an unrelated test.
+                code, failed, errored, text = run_tests(tmp, expected)
                 got = {}
                 for e in expected:
                     module, rest = e.split('.', 1);cls, test = rest.rsplit('.', 1)

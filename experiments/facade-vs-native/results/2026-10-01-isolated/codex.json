@@ -1,0 +1,166 @@
+[
+  {
+    "run_id": "booking.stack.codex-default.r0.s20260928",
+    "arm": "stack",
+    "task": "booking",
+    "tags": [
+      "list-select",
+      "decoys",
+      "dom"
+    ],
+    "model": "codex-default",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": null,
+    "mcp_calls": 4,
+    "wall_s": 62.49420608399669,
+    "cost_usd": null,
+    "tokens": {
+      "input": 141323,
+      "output": 582,
+      "cache_read": 116480,
+      "cache_write": null
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "booking.native.codex-default.r0.s20260928",
+    "arm": "native",
+    "task": "booking",
+    "tags": [
+      "list-select",
+      "decoys",
+      "dom"
+    ],
+    "model": "codex-default",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": null,
+    "mcp_calls": 11,
+    "wall_s": 92.00228054198669,
+    "cost_usd": null,
+    "tokens": {
+      "input": 674312,
+      "output": 796,
+      "cache_read": 616064,
+      "cache_write": null
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "orders.stack.codex-default.r0.s20260928",
+    "arm": "stack",
+    "task": "orders",
+    "tags": [
+      "table",
+      "confirm-dialog",
+      "decoys",
+      "dom"
+    ],
+    "model": "codex-default",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": null,
+    "mcp_calls": 5,
+    "wall_s": 69.09904695797013,
+    "cost_usd": null,
+    "tokens": {
+      "input": 246743,
+      "output": 713,
+      "cache_read": 215296,
+      "cache_write": null
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "orders.native.codex-default.r0.s20260928",
+    "arm": "native",
+    "task": "orders",
+    "tags": [
+      "table",
+      "confirm-dialog",
+      "decoys",
+      "dom"
+    ],
+    "model": "codex-default",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": null,
+    "mcp_calls": 12,
+    "wall_s": 85.23694133298704,
+    "cost_usd": null,
+    "tokens": {
+      "input": 678337,
+      "output": 1304,
+      "cache_read": 625920,
+      "cache_write": null
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "ax_dup.stack.codex-default.r0.s20260928",
+    "arm": "stack",
+    "task": "ax_dup",
+    "tags": [
+      "duplicate-labels",
+      "ax-tree",
+      "dom"
+    ],
+    "model": "codex-default",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": null,
+    "mcp_calls": 4,
+    "wall_s": 63.470294125028886,
+    "cost_usd": null,
+    "tokens": {
+      "input": 165948,
+      "output": 485,
+      "cache_read": 146176,
+      "cache_write": null
+    },
+    "synthetic": false,
+    "invalid": false
+  },
+  {
+    "run_id": "ax_dup.native.codex-default.r0.s20260928",
+    "arm": "native",
+    "task": "ax_dup",
+    "tags": [
+      "duplicate-labels",
+      "ax-tree",
+      "dom"
+    ],
+    "model": "codex-default",
+    "rep": 0,
+    "seed": 20260928,
+    "outcome": "correct",
+    "wrong_clicks": 0,
+    "turns": null,
+    "mcp_calls": 11,
+    "wall_s": 150.54712391702924,
+    "cost_usd": null,
+    "tokens": {
+      "input": 398301,
+      "output": 1080,
+      "cache_read": 370816,
+      "cache_write": null
+    },
+    "synthetic": false,
+    "invalid": false
+  }
+]

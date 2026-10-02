@@ -1,0 +1,233 @@
+{
+  "content_refs": [
+    {
+      "actions": [],
+      "frame": "main",
+      "name": "Shipping address",
+      "ref": "p287:3",
+      "role": "group",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [],
+      "frame": "main",
+      "name": null,
+      "ref": "p287:4",
+      "role": "legend",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [],
+      "frame": "main",
+      "name": "Shipping address",
+      "ref": "p287:5",
+      "role": "statictext",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [],
+      "frame": "main",
+      "name": null,
+      "ref": "p287:6",
+      "role": "paragraph",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [],
+      "frame": "main",
+      "name": null,
+      "ref": "p287:7",
+      "role": "labeltext",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [],
+      "frame": "main",
+      "name": "Street",
+      "ref": "p287:8",
+      "role": "statictext",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [],
+      "frame": "main",
+      "name": null,
+      "ref": "p287:9",
+      "role": "paragraph",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [],
+      "frame": "main",
+      "name": null,
+      "ref": "p287:10",
+      "role": "labeltext",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [],
+      "frame": "main",
+      "name": "City",
+      "ref": "p287:11",
+      "role": "statictext",
+      "states": {},
+      "value": null,
+      "visibility": "in_viewport"
+    }
+  ],
+  "mode": "snapshot",
+  "oopif": {
+    "frames": 0,
+    "status": "attached"
+  },
+  "outline": "- form\n  - group \"Shipping address\"\n    - legend\n      - statictext \"Shipping address\"\n    - paragraph\n      - labeltext\n        - statictext \"Street\"\n        - textbox \"Street\": 14 Elm Street [editable=\"plaintext\",focusable=true,required=false]\n    - paragraph\n      - labeltext\n        - statictext \"City\"\n        - textbox \"City\": Springfield [editable=\"plaintext\",focusable=true,required=false]\n    - button \"Save\" [focusable=true]\n          - generic [editable=\"plaintext\"]\n          - generic [editable=\"plaintext\"]\n            - statictext \"14 Elm Street\" [editable=\"plaintext\"]\n            - statictext \"Springfield\" [editable=\"plaintext\"]",
+  "page": {
+    "title": "Settings probe-scope",
+    "url": "http://127.0.0.1:8935/settings?run=fixture"
+  },
+  "refs": [
+    {
+      "actions": [
+        "type",
+        "pointer"
+      ],
+      "frame": "main",
+      "name": "Street",
+      "ref": "p287:0",
+      "role": "textbox",
+      "states": {
+        "editable": "plaintext",
+        "focusable": true,
+        "required": false
+      },
+      "value": "14 Elm Street",
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [
+        "type",
+        "pointer"
+      ],
+      "frame": "main",
+      "name": "City",
+      "ref": "p287:1",
+      "role": "textbox",
+      "states": {
+        "editable": "plaintext",
+        "focusable": true,
+        "required": false
+      },
+      "value": "Springfield",
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [
+        "click",
+        "pointer"
+      ],
+      "frame": "main",
+      "name": "Save",
+      "ref": "p287:2",
+      "role": "button",
+      "states": {
+        "focusable": true
+      },
+      "value": null,
+      "visibility": "in_viewport"
+    },
+    {
+      "actions": [
+        "type"
+      ],
+      "frame": "main",
+      "name": null,
+      "ref": "p287:12",
+      "role": "generic",
+      "states": {
+        "editable": "plaintext"
+      },
+      "value": null,
+      "visibility": "unknown"
+    },
+    {
+      "actions": [
+        "type"
+      ],
+      "frame": "main",
+      "name": null,
+      "ref": "p287:13",
+      "role": "generic",
+      "states": {
+        "editable": "plaintext"
+      },
+      "value": null,
+      "visibility": "unknown"
+    },
+    {
+      "actions": [
+        "type"
+      ],
+      "frame": "main",
+      "name": "14 Elm Street",
+      "ref": "p287:14",
+      "role": "statictext",
+      "states": {
+        "editable": "plaintext"
+      },
+      "value": null,
+      "visibility": "unknown"
+    },
+    {
+      "actions": [
+        "type"
+      ],
+      "frame": "main",
+      "name": "Springfield",
+      "ref": "p287:15",
+      "role": "statictext",
+      "states": {
+        "editable": "plaintext"
+      },
+      "value": null,
+      "visibility": "unknown"
+    }
+  ],
+  "snapshot": {
+    "complete": true,
+    "continuation": null,
+    "format": "semantic_v2",
+    "id": "p287",
+    "node_budget": 300,
+    "omitted": {
+      "budget": 0,
+      "css_hidden": 0,
+      "no_layout": 1,
+      "offscreen": 0,
+      "page_occluded": 0,
+      "unknown": 4,
+      "unprovable_frame": 0
+    },
+    "scope": "subtree",
+    "selected_nodes": 16,
+    "total_nodes": 16
+  },
+  "status": "ok",
+  "tab_id": "tab_fixture",
+  "target_id": "bt_fixture"
+}

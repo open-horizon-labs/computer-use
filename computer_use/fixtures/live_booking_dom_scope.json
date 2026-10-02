@@ -1,0 +1,163 @@
+{
+ "content_refs": [
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s10",
+   "ref": "p12:1",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p12:2",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyes",
+   "ref": "p12:3",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p12:4",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Telehealth",
+   "ref": "p12:5",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p12:6",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "half-hour",
+   "ref": "p12:7",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p12:8",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 3:00 PM",
+   "ref": "p12:9",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p12:10",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Video visit",
+   "ref": "p12:11",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  }
+ ],
+ "mode": "snapshot",
+ "oopif": {
+  "frames": 0,
+  "status": "attached"
+ },
+ "outline": "- list\n  - listitem \"Slot s10\"\n    - generic\n      - statictext \"Dr. Morgan Reyes\"\n    - generic\n      - statictext \"Telehealth\"\n    - generic\n      - statictext \"half-hour\"\n    - generic\n      - statictext \"Starts 3:00 PM\"\n    - generic\n      - statictext \"Video visit\"\n    - button \"Book\" [focusable=true]",
+ "page": {
+  "title": "Clinic Slots dom-scope",
+  "url": "http://127.0.0.1:8935/booking?run=dom-fixture"
+ },
+ "refs": [
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p12:0",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  }
+ ],
+ "snapshot": {
+  "complete": true,
+  "continuation": null,
+  "format": "semantic_v2",
+  "id": "p12",
+  "node_budget": 300,
+  "omitted": {
+   "budget": 0,
+   "css_hidden": 0,
+   "no_layout": 1,
+   "offscreen": 0,
+   "page_occluded": 0,
+   "unknown": 0,
+   "unprovable_frame": 0
+  },
+  "scope": "subtree",
+  "selected_nodes": 12,
+  "total_nodes": 12
+ },
+ "status": "ok",
+ "tab_id": "tab_fixture",
+ "target_id": "bt_fixture"
+}

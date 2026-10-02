@@ -1,3 +1,5 @@
+> Historical full-facade material. The active MCP is native-first with explicit mobile/off-screen capabilities only. Reproduce the broad benchmark using archive commit a531b43; these historical recipes are not active routing instructions.
+
 # Option B: look, then plan once (CE-FACADE-005, proposed)
 
 Status: implemented on branch `plan-b`, offline only. Proposed CE, pending user approval. **Nothing here has run against a live desktop and the central claim (below) is not verified.**

@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "seed": 20260928,
+  "client": "claude",
+  "session_mode": "isolated",
+  "interrupted": false,
+  "stopped": null,
+  "runs": [
+    {
+      "run_id": "orders.stack.haiku.r0.s20260928",
+      "arm": "stack",
+      "task": "orders",
+      "model": "claude-haiku-4-5-20251001",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790911990.613211,
+      "ended": 1790912040.86046,
+      "returncode": 0,
+      "mcp_connected": true,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "orders.native.haiku.r0.s20260928",
+      "arm": "native",
+      "task": "orders",
+      "model": "claude-haiku-4-5-20251001",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912040.860954,
+      "ended": 1790912089.2271318,
+      "returncode": 0,
+      "mcp_connected": true,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "orders.stack.sonnet.r0.s20260928",
+      "arm": "stack",
+      "task": "orders",
+      "model": "claude-sonnet-5-5",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912089.227489,
+      "ended": 1790912143.99012,
+      "returncode": 0,
+      "mcp_connected": true,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "orders.native.sonnet.r0.s20260928",
+      "arm": "native",
+      "task": "orders",
+      "model": "claude-sonnet-5-5",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912143.990626,
+      "ended": 1790912198.777787,
+      "returncode": 0,
+      "mcp_connected": true,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "ax_dup.native.haiku.r0.s20260928",
+      "arm": "native",
+      "task": "ax_dup",
+      "model": "claude-haiku-4-5-20251001",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912198.778202,
+      "ended": 1790912231.0241559,
+      "returncode": 0,
+      "mcp_connected": true,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "ax_dup.stack.haiku.r0.s20260928",
+      "arm": "stack",
+      "task": "ax_dup",
+      "model": "claude-haiku-4-5-20251001",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912231.024478,
+      "ended": 1790912278.116288,
+      "returncode": 0,
+      "mcp_connected": true,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "ax_dup.native.sonnet.r0.s20260928",
+      "arm": "native",
+      "task": "ax_dup",
+      "model": "claude-sonnet-5-5",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912278.116708,
+      "ended": 1790912332.692696,
+      "returncode": 0,
+      "mcp_connected": true,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "ax_dup.stack.sonnet.r0.s20260928",
+      "arm": "stack",
+      "task": "ax_dup",
+      "model": "claude-sonnet-5-5",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912332.693133,
+      "ended": 1790912364.18591,
+      "returncode": 0,
+      "mcp_connected": true,
+      "session_mode": "isolated"
+    }
+  ]
+}

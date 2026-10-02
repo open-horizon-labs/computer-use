@@ -64,7 +64,13 @@ def starts_on_agent_browser(f, steps):
     """#64: the first step navigates the server's own browser, whose window is chosen (and opened when needed) by that step, so the caller has no title yet."""
     first = steps[0] if isinstance(steps, list) and steps and isinstance(steps[0], dict) else {}
     browser = getattr(f, 'agent_browser', None)
-    return first.get('do') in ('goto', 'open_tab', 'read_pages', 'resize') and browser is not None and (first.get('profile') == 'agent' or (first.get('profile') is None and browser.mode == 'auto'))
+    return first.get('do') in ('goto', 'open_tab', 'read_pages', 'resize') and browser is not None and (first.get('profile') == 'agent' or (first.get('profile') is None and (browser.mode == 'auto' or getattr(f, 'context_session', None) == 'isolated') and not f.on_behalf))
+
+
+def starts_on_user_browser(f, steps):
+    """OBO navigation can start in the user's already-open browser without first requiring its window title."""
+    initial = steps[0] if isinstance(steps, list) and steps and isinstance(steps[0], dict) else {}
+    return bool(getattr(f, 'on_behalf', False) and initial.get('do') in ('goto', 'open_tab', 'read_pages') and initial.get('profile') != 'agent')
 
 
 def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect, single):
@@ -83,7 +89,7 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         raise _gap('bad_request: with steps, expect belongs on each step; pass expect=null at the top level')
     if title is not None and (pid is not None or window_id is not None):
         raise _gap('bad_request: give title or pid+window_id, not both')
-    if title is None and (pid is None or window_id is None) and not starts_on_agent_browser(f, steps):
+    if title is None and (pid is None or window_id is None) and not starts_on_agent_browser(f, steps) and not starts_on_user_browser(f, steps):
         raise _gap('bad_request: supply title, or pid and window_id (a plan whose first step is goto, open_tab or read_pages on the agent browser needs neither: its answer carries summary.title)')
     if not isinstance(budget_s, (int, float)) or isinstance(budget_s, bool) or budget_s <= 0:
         raise _gap('bad_request: budget_s must be positive seconds')
@@ -111,6 +117,8 @@ def validate(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             raise _gap('bad_request: %s accept_hidden_text is true (an explicit acknowledgement) or absent' % at)
         if 'allow_foreground' in step and step['allow_foreground'] is not True:
             raise _gap('bad_request: %s allow_foreground is true (an explicit permission to front the window briefly) or absent' % at)
+        if getattr(f, 'on_behalf', False) and not getattr(f, 'foreground_on_behalf', False) and step.get('allow_foreground') is True:
+            raise _gap('presentation_conflict: %s background presentation cannot request activation of the user’s active Space' % at)
         if kind == 'confirm':
             declared = step.get('dialog_text')
             if not isinstance(declared, list) or not declared or not all(isinstance(x, str) and x.strip() for x in declared) or len(declared) > 20:
@@ -433,8 +441,12 @@ HINTS = {
     'bad_request': 'The call is malformed in the way its message says; nothing was done. Correct that field and call `do` again.',
     'expect_required': 'A press, type or confirm step has no expect (only the last step may omit it); nothing was done. Give that step expect=<text that will be visible once it worked>, then call `do` again.',
     'look_window_mismatch': 'That look_id belongs to another window or device; nothing was done. Call `look` on the target you mean and pass the look_id it returns to `do`.',
-    'window_not_found': 'No window has exactly the title you gave; nothing was done. Pass the exact title of one open window (or pid and window_id) to `look` and `do`; to open a web page start with a goto step.',
-    'window_ambiguous': 'Several windows carry that title; nothing was done. Pass pid and window_id to `look` and `do` for the one you mean.',
+    'window_not_found': 'No window or open page matches; nothing was done. Call `look` again with title=<one of candidates[].title> or url=<a candidates[].url domain>, or open a web page with a goto step.',
+    'window_ambiguous': 'Several windows or pages match; nothing was guessed or done. Call `look` with title=<one of candidates[].title> (equal titles: pid and window_id) or a longer url, then `do` the same.',
+    'browser_not_prepared': 'The read-only lookup cannot bind this browser yet. Call `do` with an authorized goto or open_tab step to prepare the chosen profile; `look` never attaches or changes it.',
+    'dom_binding_unavailable': 'Call look for fresh complete browser evidence. A missing or ambiguous Driver ref cannot authorize a click; do not infer refs from order or use coordinates.',
+    'window_ax_unresolved': 'Cua Driver cannot reach the window right now; nothing was done. Stop and ask the user, quoting message: bring it forward once, or approve one foreground step. Do not retry until they answer.',
+    'tab_not_active': 'That page is a background tab of the window titled in candidates[0].title; nothing was done. Call `look` with that title to read its active tab, or open the page with a goto or open_tab step.',
     'window_closed': 'The target window is gone; nothing was done. If it is open again call `look` with its exact title; for a web page start a new one with a goto step in `do`.',
     'driver_snapshot_unavailable': 'The Driver could not read the window (see message); nothing was clicked. Call `look` once more; if it fails again tell the user (the setup block says what is down).',
     'capture_expired': 'The drawn-text capture expired; nothing was clicked. Call `look` for a fresh one, then `do` with control=<the exact drawn text>.',
@@ -447,6 +459,9 @@ HINTS = {
     'agent_browser_unavailable': 'The server\'s own browser could not start; nothing was opened. Run the setup block\'s fix if who=agent, else tell the user; then call do once more. Never use profile="user" or another browser.',
     'agent_display_unavailable': 'The agent display cannot start, so nothing was opened. Tell the user (the setup block names the fix); only they can set CUA_AGENT_DISPLAY=off. Do not retry `do` until it is fixed.',
     'agent_browser_misplaced': 'The agent browser opened outside the agent display, so it was quit at once and nothing was navigated. Tell the user what the message says; do not switch to profile="user" or retry in a loop.',
+    'presentation_conflict': 'This route would change the active Space. Call look to find a supported control route that preserves placement, or report the conflict; do not repeat the failed do blindly.',
+    'on_behalf_driver_too_old': 'Visible user context needs the verified foreground tools in the current Cua Driver. Upgrade it, then retry with `do`.',
+    'foreground_activation_unverified': 'The Driver did not verify this exact window in front, so no action was sent. Check the Driver grant and target window, then retry with `do`.',
     'permission_required': 'The Driver has no access to that browser profile; Stop and ask the user to grant it (see setup), then call do once more. Never reroute to another browser or profile.',
     'perception_not_available': "This page is drawn pixels and Cua Perception is not healthy; nothing was clicked. Run the setup block's fix if who=agent, else tell the user; then call look again.",
     'resize_not_agent_window': 'resize only works on the agent browser window; nothing was resized. Call `do` with a resize step and no profile (or profile="agent"), or tell the user their own windows are never resized.',
@@ -478,6 +493,27 @@ HINTS = {
     'not_supported_on_window': 'launch and swipe are for phones and emulators; nothing was done. Call `look` with device="list", then `do` with device=<id> from it, or drop the step.',
     'where_not_supported_on_device': 'where is for Mac windows; nothing was done on the device. Call `do` with control=<the exact label from `look`(device=<id>)> instead.',
 }
+# Who can fix a refusal or stop (the `who` of every refused, stopped, failed or deferred answer): "agent" follows the hint and retries (a few times at
+# most), "user" must be asked. Every reason of HINTS and mobile.DEVICE_HINTS has an entry (test_who.py); one that is not listed is "user", never a guess.
+WHO_USER = frozenset({
+    'permission_required', 'foreground_required', 'needs_foreground', 'pointer_not_deliverable_in_background', 'novnc_background_click_unavailable',
+    'element_outside_target_window', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'destructive_control', 'login_wall', 'credentials_required',
+    'captcha', 'window_ax_unresolved', 'agent_display_unavailable', 'agent_browser_misplaced', 'browser_tab_ambiguous', 'no_actionable_controls', 'upload_no_file_input',
+    'mobile_backend_unavailable', 'mobile_device_agent_missing', 'navigated_elsewhere', 'navigate_refused', 'resize_refused',
+    })
+EXTRA_REASONS = ('credentials_required', 'captcha', 'viewport_mapping_unavailable', 'abort_if_matched', 'refused')  # reasons raised outside the two hint catalogs
+
+
+def who_table():
+    import mobile
+    return {reason: ('user' if reason in WHO_USER else 'agent') for reason in sorted({*HINTS, *mobile.DEVICE_HINTS, *EXTRA_REASONS})}
+
+
+def who_of(reason):
+    """'agent' or 'user' for a reason; a reason outside the catalog is 'user' (stop and ask), never a retry on a guess."""
+    return who_table().get(reason, 'user')
+
+
 GENERIC_HINT = 'Step %(n)d stopped and nothing further ran. Call look to see the page now, then do with the remaining steps (the earlier steps are already done; do not repeat them).'
 
 
@@ -591,17 +627,17 @@ def resolve_browser_window(f, step, ctx, title):
     """goto/open_tab/read_pages default to the AGENT browser (one window, reused, parked on the agent display); profile "user" (or no agent
     browser configured) uses the window the caller named, as before. Later steps act on the window this one chose. Raises core.Gap."""
     from core import Gap
-    use_agent = f.agent_browser is not None and (step.get('profile') == 'agent' or (step.get('profile') is None and f.agent_browser.mode == 'auto'))
+    use_agent = f.agent_browser is not None and (step.get('profile') == 'agent' or (step.get('profile') is None and (f.agent_browser.mode == 'auto' or getattr(f, 'context_session', None) == 'isolated') and not f.on_behalf))
     if use_agent:
         ctx['pid'], ctx['window_id'] = f.agent_browser.window(f)
         ctx['agent'] = True
         return
     if ctx.get('agent') or ctx['pid'] is None:  # a user-profile step after an agent step goes back to the window the caller named
         ctx['agent'] = False
-        found = f.windows(title)['windows']
-        if len(found) != 1:
-            raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
-        ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+        found = f.resolve_window(title or 'Google Chrome')
+        ctx['pid'], ctx['window_id'] = found['pid'], found['window_id']
+    if not ctx.get('agent'):
+        f.front_window(ctx['pid'], ctx['window_id'])
 
 
 def form_candidate(kind, step):
@@ -718,7 +754,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                 else:
                     resolve_browser_window(f, step, ctx, title)
                 if kind == 'close_tab':
-                    browser.close_tab(f, ctx['pid'], ctx['window_id'], allow_foreground=step.get('allow_foreground') is True)
+                    browser.close_tab(f, ctx['pid'], ctx['window_id'], allow_foreground=f.foreground_for(ctx['pid'], ctx['window_id'], step.get('allow_foreground') is True))
                     page = {'url': '', 'title': ''}
                 elif kind == 'upload':
                     # Only this step's own `files` are sent (never a path read from the page). Done only when the expect is seen on a fresh read.
@@ -743,7 +779,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             for key in ('reason', 'page'):
                 if result.get(key):entry[key] = result[key]
             if result.get('verification'):
-                entry['verification'] = {k: result['verification'].get(k) for k in ('status', 'route')}
+                entry['verification'] = {k: result['verification'][k] for k in ('status', 'route', 'reason') if k in result['verification']}
             if result.get('delivery') not in (None, 'none'):
                 delivery = 'delivered'
             ok = status in ('done', 'observed') or (status == 'delivered_unverified' and n == len(plan_steps))
@@ -760,14 +796,13 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             # through the Driver's invoke_menu (same window, observed path, needs allow_foreground). See menu.py.
             import menu
             from core import Gap, DriverCallFailed
-            f.foreground_ok = step.get('allow_foreground') is True  # this step only
+            f.foreground_ok = (f.on_behalf and f.foreground_on_behalf) or step.get('allow_foreground') is True  # this step only
             result = {'status': 'failed', 'delivery': 'none'}
             try:
                 if ctx['pid'] is None:
-                    found = f.windows(title)['windows']
-                    if len(found) != 1:
-                        raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
-                    ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+                    found = f.resolve_window(title)
+                    ctx['pid'], ctx['window_id'] = found['pid'], found['window_id']
+                f.foreground_for(ctx['pid'], ctx['window_id'])
                 done = menu.press(f, ctx['pid'], ctx['window_id'], step['menu'], spec['goal'], step.get('allow_destructive'))
                 result = {'status': 'delivered_unverified', 'delivery': 'delivered', 'route': done['route'], 'selected': {'description': 'menu item (%d levels)' % done['depth'], 'route': done['route']}}
                 if step.get('expect'):
@@ -811,11 +846,10 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             from core import Gap
             try:
                 if ctx['pid'] is None:
-                    found = f.windows(title)['windows']
-                    if len(found) != 1:
-                        raise Gap('window_%s: %d windows match the exact title' % ('not_found' if not found else 'ambiguous', len(found)))
-                    ctx['pid'], ctx['window_id'] = found[0]['pid'], found[0]['window_id']
+                    found = f.resolve_window(title)
+                    ctx['pid'], ctx['window_id'] = found['pid'], found['window_id']
                     window = {'pid': ctx['pid'], 'window_id': ctx['window_id']}
+                f.foreground_for(ctx['pid'], ctx['window_id'])
                 form = (forms.select(f, ctx['pid'], ctx['window_id'], step['control'], step.get('text'))
                         if kind == 'type' else forms.toggle(f, ctx['pid'], ctx['window_id'], step['control'], step.get('expect'), spec['goal'], look_id))
             except Gap as gap:
@@ -841,7 +875,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
                     break
                 continue
         f.prefix_control = step.get('control_match') == 'prefix'
-        f.foreground_ok = step.get('allow_foreground') is True  # this step only
+        f.foreground_ok = (f.on_behalf and f.foreground_on_behalf) or step.get('allow_foreground') is True  # this step only
         try:
             result = f._do(spec['goal'], window.get('title'), window.get('pid'), window.get('window_id'), spec['records'], spec['operation'], spec['text'],
                        spec['expect'], spec['accept_unknown'], max(0.5, min(budget_s, remaining / 3)), None, spec['control'], spec['treat_as_match'], spec['near'], plan=channel)
@@ -856,7 +890,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         if result.get('selected'):
             entry['selected'] = {'description': result['selected'].get('description', '')[:120]}
         if result.get('verification'):
-            entry['verification'] = {k: result['verification'].get(k) for k in ('status', 'route')}
+            entry['verification'] = {k: result['verification'][k] for k in ('status', 'route', 'reason') if k in result['verification']}
         if result.get('delivery_detail'):
             entry['delivery_detail'] = result['delivery_detail']
         if result.get('delivery') and result['delivery'] != 'none':
@@ -865,7 +899,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         if not ok:
             if status == 'refused':
                 entry['message'] = lk.safe_message(result.get('reason'), result.get('message'))
-            for key in ('found', 'dialog', 'unknown_ids', 'evidence', 'excluded_count', 'missing_fields', 'control_count', 'identity_shown', 'identity_not_shown', 'disabled_count', 'missing_count', 'matches'):
+            for key in ('found', 'dialog', 'unknown_ids', 'evidence', 'excluded_count', 'missing_fields', 'control_count', 'identity_shown', 'identity_not_shown', 'disabled_count', 'missing_count', 'matches', 'candidates', 'candidates_total'):
                 if key in result:
                     entry[key] = result[key]
             failed = {'n': n, 'reason': result.get('reason') or status, 'status': status}
@@ -902,6 +936,8 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         if summary:
             response['summary'] = summary
     if failed:
+        for key in ('candidates', 'candidates_total'):  # window_ambiguous / window_not_found: the choices belong at the top, not in the step
+            if key in entries[-1]:response[key] = entries[-1].pop(key)
         response['hint'] = hint_for(failed['reason'], failed['n'], delivery == 'delivered')
         if failed['reason'] == 'abort_if_matched':
             response['hint'] = 'abort_if text appeared after step %d, so the plan stopped; steps up to it ran. Report it to the user or call look to see the page.' % failed['n']

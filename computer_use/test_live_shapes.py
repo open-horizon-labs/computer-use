@@ -291,18 +291,14 @@ class Hints(LiveBase):
 
 @unittest.skipUnless(importlib.util.find_spec('mcp'), 'needs mcp')
 class Schema(unittest.TestCase):
-    def test_expect_is_a_required_nullable_parameter_and_the_description_never_invites_skipping_it(self):
-        # F3. Wrong patch: keep expect optional (the live LLM never passed it, so every result was unverified).
-        import asyncio
-        import server
-        tool = next(t for t in asyncio.run(server.mcp.list_tools()) if t.name == 'do')
-        self.assertIn('expect', tool.inputSchema['required']);self.assertIn('goal', tool.inputSchema['required'])
-        kinds = [x.get('type') for x in tool.inputSchema['properties']['expect'].get('anyOf', [])]
-        self.assertIn('null', kinds);self.assertIn('string', kinds)
-        doc = tool.description.lower()
-        self.assertIn('required', doc);self.assertIn('e.g. "booked:"', doc)
-        self.assertNotRegex(doc, r'expect (?:is )?optional|may omit|can omit|skip expect|optionally pass expect')
-        self.assertEqual([t.name for t in asyncio.run(server.mcp.list_tools())], ['do', 'look'])  # look, then do (CE-FACADE-005)
+    def test_step_expect_is_nullable_but_never_claims_unverified_delivery_as_done(self):
+        import asyncio,server
+        tool=next(t for t in asyncio.run(server.mcp.list_tools()) if t.name=='do')
+        self.assertEqual(set(tool.inputSchema['required']),{'goal','steps'})
+        expect=tool.inputSchema['$defs']['Step']['properties']['expect']
+        self.assertEqual({x.get('type') for x in expect['anyOf']},{'null','string'})
+        self.assertIn('unverified',expect['description'])
+        self.assertEqual([t.name for t in asyncio.run(server.mcp.list_tools())],['do','look'])
 
 
 

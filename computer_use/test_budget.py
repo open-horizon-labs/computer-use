@@ -1,7 +1,7 @@
 """Architectural guardrails: the default path is look then do, two tools and a measured number of LLM-visible calls (CALL_BUDGET.json, CE-FACADE-003/005).
 
 The facade once drifted into eight tools the driving LLM mediated hop by hop (9 calls for a clean booking, native
-about 5) and nothing noticed. These tests drive the REAL server tool functions through a counting harness and lint
+about 5) and nothing noticed. These tests drive retained historical Facade functions through a counting harness and lint
 the tool surface and the skill. Each names the tempting wrong patch it fails; the mutation tests prove the guards bite.
 """
 import copy
@@ -37,75 +37,22 @@ class Provenance(unittest.TestCase):
 class ToolSurface(unittest.TestCase):
     def test_surface_is_clean(self):
         self.assertEqual(cb.surface_violations(SERVER_SOURCE), [])
+        self.assertEqual([n for n,_,_ in cb.tool_surface(SERVER_SOURCE)],['do','look'])
 
-    def test_do_then_look_first_and_every_other_tool_is_opt_in_and_advanced(self):
-        tools = cb.tool_surface(SERVER_SOURCE)
-        self.assertEqual([t[0] for t in tools[:2]], ['do', 'look']);self.assertEqual(BUDGET['default_path_tools']['value'], ['do', 'look'])
-        self.assertEqual(BUDGET['default_path_tools']['changed_by'], 'CE-FACADE-005')
-        self.assertFalse(tools[0][2] or tools[1][2]);self.assertFalse(tools[1][1].startswith('Advanced'))
-        self.assertTrue(all(doc.startswith('Advanced') and nested for _, doc, nested in tools[2:]))
-        self.assertLessEqual(len(tools), BUDGET['max_tool_count']['value'])
+    def test_extra_visible_tool_and_missing_look_fail(self):
+        added=SERVER_SOURCE+ '\n@mcp.tool()\ndef extra():\n    """Peek."""\n    return {}\n'
+        self.assertTrue(any('registered by default' in v for v in cb.surface_violations(added)))
+        missing=SERVER_SOURCE.replace('def look(', 'def gone(')
+        self.assertTrue(cb.surface_violations(missing))
 
-    def test_a_third_default_tool_or_a_look_hidden_behind_advanced_fails(self):
-        # Wrong patch: nest look inside register_advanced (the default path would lose its sight), or add a third visible tool.
-        hidden = SERVER_SOURCE.replace('@mcp.tool(annotations=READ)\ndef look(', 'def look_gone(', 1)
-        self.assertTrue(cb.surface_violations(hidden))
-        third = SERVER_SOURCE.replace('def register_advanced():', '@mcp.tool(annotations=READ)\ndef cua_extra() -> dict:\n    """Peek."""\n    return {}\n\ndef register_advanced():', 1)
-        self.assertTrue(any('registered by default' in v for v in cb.surface_violations(third)), cb.surface_violations(third))
-        swapped = SERVER_SOURCE
-        i, j = swapped.index('@mcp.tool(annotations=ACT)\ndef do'), swapped.index('@mcp.tool(annotations=READ)\ndef look')
-        look_first = swapped[:i] + swapped[j:swapped.index('def register_advanced')] + swapped[i:j] + swapped[swapped.index('def register_advanced'):]
-        self.assertTrue(any('registered first' in v for v in cb.surface_violations(look_first)), cb.surface_violations(look_first))
+    def test_advanced_revival_needs_guard_and_markers(self):
+        extra='\ndef register_advanced():\n    @mcp.tool()\n    def extra():\n        """Peek."""\n        return {}\nregister_advanced()\n'
+        bad=cb.surface_violations(SERVER_SOURCE+extra)
+        self.assertTrue(any('Advanced' in v for v in bad))
+        self.assertTrue(any('CUA_TASK_ADVANCED' in v for v in bad))
 
-    def test_a_new_unmarked_tool_fails(self):
-        # Wrong patch: add a mandatory read/choose/verify tool to the default path.
-        added = SERVER_SOURCE.replace('    @mcp.tool(annotations=READ)\n    def trace', '    @mcp.tool(annotations=READ)\n    def cua_confirm() -> dict:\n        """Confirm the last action."""\n        return {}\n\n    @mcp.tool(annotations=READ)\n    def trace')
-        self.assertNotEqual(added, SERVER_SOURCE)
-        found = cb.surface_violations(added)
-        self.assertTrue(any('cua_confirm' in v and 'Advanced' in v for v in found), found)
-
-    def test_a_top_level_tool_is_visible_by_default_and_fails(self):
-        # Wrong patch: a mandatory extra tool beside do (the live run: eight visible tools made the LLM mediate every hop).
-        top = SERVER_SOURCE.replace('def register_advanced():', '@mcp.tool(annotations=READ)\ndef verify_now() -> dict:\n    """Advanced: check the window."""\n    return {}\n\ndef register_advanced():', 1)
-        self.assertTrue(any('registered by default' in v for v in cb.surface_violations(top)), cb.surface_violations(top))
-
-    def test_primitives_registered_by_default_fail(self):
-        # Wrong patch: drop the CUA_TASK_ADVANCED guard so all eight primitives are visible again.
-        for unguarded in (SERVER_SOURCE.replace('if ADVANCED:register_advanced()', 'register_advanced()'),
-                          SERVER_SOURCE.replace("ADVANCED=os.environ.get('CUA_TASK_ADVANCED')=='1'", 'ADVANCED=True')):
-            self.assertNotEqual(unguarded, SERVER_SOURCE)
-            self.assertTrue(any('CUA_TASK_ADVANCED' in v for v in cb.surface_violations(unguarded)))
-
-    def test_registering_another_tool_before_do_fails(self):
-        moved = SERVER_SOURCE.replace('@mcp.tool(annotations=ACT)\ndef do', '@mcp.tool(annotations=READ)\ndef cua_pre() -> dict:\n    """Advanced: x."""\n    return {}\n\n@mcp.tool(annotations=ACT)\ndef do', 1)
-        self.assertTrue(any('registered first' in v for v in cb.surface_violations(moved)))
-
-    def test_too_many_tools_fails(self):
-        extra = ''.join('\n    @mcp.tool(annotations=READ)\n    def cua_extra%d() -> dict:\n        """Advanced: x."""\n        return {}\n' % i for i in range(3))
-        grown = SERVER_SOURCE.replace('\nif ADVANCED:register_advanced()', extra + '\nif ADVANCED:register_advanced()')
-        self.assertTrue(any('max_tool_count' in v for v in cb.surface_violations(grown)))
-
-    def test_advanced_marker_on_the_default_tool_fails(self):
-        marked = SERVER_SOURCE.replace('"""Default path.', '"""Advanced: Default path.')
-        self.assertTrue(any('marked Advanced' in v for v in cb.surface_violations(marked)))
-
-    @unittest.skipUnless(HAVE_SERVER, 'needs mcp')
-    def test_default_surface_is_exactly_do_and_advanced_mode_adds_the_documented_primitives(self):
-        import asyncio
-        default = [t.name for t in asyncio.run(server.mcp.list_tools())]
-        self.assertEqual(default, ['do', 'look'])
-        advanced = cb.advanced_tool_names()
-        self.assertEqual(advanced, [name for name, _, _ in cb.tool_surface(SERVER_SOURCE)])
-        self.assertEqual(advanced[:2], ['do', 'look']);self.assertEqual(len(advanced), 10)
-        docs = dict((n, d) for n, d, _ in cb.tool_surface(SERVER_SOURCE))
-        self.assertTrue(all(docs[n].startswith('Advanced') for n in advanced[2:]))
-
-    @unittest.skipUnless(HAVE_SERVER, 'needs mcp')
-    def test_the_mcp_instructions_describe_only_look_then_do(self):
-        # Wrong patch: instructions that still walk the LLM through windows -> observe -> read, or that never mention the look.
-        instructions = server.mcp.instructions
-        self.assertIn('do', instructions);self.assertIn('look', instructions);self.assertLess(instructions.index('`look`'), instructions.index('`do`'))
-        self.assertFalse(__import__('re').search(r'(?:call|use|then)\s+`?(?:windows|observe|read|choose|act|verify|trace|finish)\b', instructions), instructions)
+    def test_legacy_advanced_env_adds_nothing(self):
+        self.assertEqual(cb.advanced_tool_names(),['do','look'])
 
 
 class SkillLint(unittest.TestCase):
@@ -119,13 +66,15 @@ class SkillLint(unittest.TestCase):
 
     def test_reintroducing_the_chain_in_prose_fails(self):
         # Wrong patch: instruct observe -> read -> choose -> act -> verify as the normal path.
-        chain = self.TEXT.replace('## Advanced primitives', 'Then call `observe`, `read`, `choose`, `act` and `verify` in turn.\n\n## Advanced primitives', 1)
+        section = cb.default_workflow_section(self.TEXT)
+        chain = self.TEXT.replace(section, section + 'Then call `observe`, `read`, `choose`, `act` and `verify` in turn.\n', 1)
         self.assertTrue(any('chain' in v or 'names' in v for v in cb.skill_violations(chain)))
 
     def test_leading_with_a_primitive_fails(self):
-        led = self.TEXT.replace('Call `look` first when', 'Call `windows`, then `do`, and `look` when', 1)
+        section = cb.default_workflow_section(self.TEXT)
+        led = self.TEXT.replace(section, 'Call `windows`, then `do`, and `look`.\n', 1)
         self.assertTrue(any('first' in v or 'other than' in v for v in cb.skill_violations(led)))
-        do_first = self.TEXT.replace('## Default workflow\n\nCall `look` first', '## Default workflow\n\nCall `do`, or call `look` first', 1)
+        do_first = self.TEXT.replace(section, 'Call `do`, then `look`.\n', 1)
         self.assertTrue(any('look first' in v for v in cb.skill_violations(do_first)))
 
     def test_missing_section_fails(self):
@@ -156,7 +105,7 @@ class Measure(unittest.TestCase):
 
 @unittest.skipUnless(HAVE_SERVER, 'needs mcp: run with .venv-facade or after pip install -r computer_use/requirements.txt')
 class DefaultPathBudget(unittest.TestCase):
-    """The real server tools, fake fixtures. Wrong patches: a mandatory read/choose/verify hop on the default path,
+    """Retained historical shared projection, fake fixtures. Wrong patches: a mandatory read/choose/verify hop on the default path,
     the chooser for a grounded singleton, a second reader call per cycle, a response that dumps the observation."""
     @classmethod
     def setUpClass(cls):
@@ -333,7 +282,7 @@ class DefaultPathBudget(unittest.TestCase):
         real = Facade.do
         def hands_back(self, *a, **k):
             r = real(self, *a, **k)
-            return {**r, 'status': 'stopped', 'reason': 'control_needed'} if k.get('steps') is None and len(a) > 14 and a[14] and r['status'] == 'done' else r
+            return {**r, 'status': 'stopped', 'reason': 'control_needed'} if (k.get('steps') or (len(a) > 14 and a[14])) and r['status'] == 'done' else r
         with mock.patch.object(Facade, 'do', hands_back):
             rows, problems = cb.table(BUDGET, cb.measure_scenarios())
         self.assertTrue(any(p.startswith('plan_booking_look_do') for p in problems), problems)
@@ -364,23 +313,13 @@ class DefaultPathBudget(unittest.TestCase):
             m = cb.measure_scenarios()['booking_list']
         self.assertTrue(any('chooser 1' in v for v in cb.over_budget(m, BUDGET['scenarios']['booking_list'])), m)
 
-    def test_the_counting_harness_sees_every_tool_call(self):
-        # Wrong patch: a harness that counts only do would hide a hand-driven chain. Run in advanced mode, where the chain exists.
-        names = cb.advanced_run("""
-import asyncio, json, server, call_budget as cb
-from core import Facade
-from test_core import FakeVision
-import test_do as fx
-server.facade = Facade(fx.FlatDriver(), reader_factory=fx.LineReader, generic_factory=fx.NamedChooser, visual_factory=FakeVision, sleep=lambda s: None)
-names = []
-def call(name, **kw):
-    names.append(name);return json.loads(cb.result_text(asyncio.run(server.mcp.call_tool(name, kw))))
-obs = call('observe', pid=1, window_id=2)
-call('read', snapshot=obs['snapshot'], task='t', fields={'provider': {'description': 'p'}}, record_ids=['e5'])
-print(json.dumps(names))
-""")
-        self.assertEqual(names, ['observe', 'read'])
-        self.assertEqual(cb.over_budget({'calls': 5, 'reader': 1, 'chooser': 1}, BUDGET['scenarios']['booking_list'])[0][:7], 'calls 5')
+    def test_the_counting_harness_sees_even_retired_primitives(self):
+        seen=cb.new_seen()
+        cb.tally(seen,'observe',json.dumps({'status':'ok'}))
+        cb.tally(seen,'read',json.dumps({'status':'ok'}))
+        self.assertEqual(seen['tools'],['observe','read'])
+        self.assertEqual(seen['calls'],2)
+        self.assertTrue(set(seen['tools'])-set(BUDGET['default_path_tools']['value']))
 
 
 if __name__ == '__main__':unittest.main()

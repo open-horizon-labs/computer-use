@@ -115,6 +115,8 @@ window not wholly inside the display is parked (a window that merely straddles i
   step is refused `agent_browser_unavailable`, naming that command.
 - A step says `profile: "user"` to use your own browser window instead (it still needs existing-profile access, else
   `permission_required`); `profile: "agent"` forces the agent browser under `CUA_AGENT_BROWSER=user`. `look` by title works on either.
+
+Pass `context={"session":"user"}` to `look` or `do` for delegated work in the user’s apps and logins; visible presentation is the OBO default. Add `"presentation":"background"` to preserve the current Space. Reuse the returned `context_id` on subsequent calls; a returned `look_id` also carries its context. Calls without context default to non-OBO with the isolated browser. No environment change, restart, or setup call is required. Context state and foreground grants are separate across tasks; contexts expire after one hour idle. `look` remains read-only. Visible actions may front the exact bound target without another approval. Background actions use supported routes that preserve placement; a route requiring an active-Space change reports a conflict. Existing OS grants remain necessary.
   Later steps of a plan act on the window the `goto` chose.
 - The Driver binds the agent browser with `browser_prepare` (`existing_profile`), which the running Driver must be allowed
   (`serve --grant existing-profile`); the profile folder is ours, so no Full Disk Access is needed. Measured live 2026-09-30 (Driver

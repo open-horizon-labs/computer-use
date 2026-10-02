@@ -60,7 +60,7 @@
   "status": "accepted",
   "classification": "projection defect",
   "authority": "Existing user-governed sketch authorizes implementation repair; assistant conformance review, not new user policy approval.",
-  "sketch_clause": "S4.2.3–4",
+  "sketch_clause": "S4.2.3\u20134",
   "input_and_actual": "NaN confidence bypassed threshold comparisons.",
   "corrected_behavior": "Require finite probability in [0,1].",
   "sketch_change": "None: repair projection to existing clause",
@@ -75,7 +75,7 @@
   "status": "accepted",
   "classification": "projection defect",
   "authority": "Existing user-governed sketch authorizes implementation repair; assistant conformance review, not new user policy approval.",
-  "sketch_clause": "S4.2.4–5",
+  "sketch_clause": "S4.2.4\u20135",
   "input_and_actual": "Ordering-only request was rejected for lacking predicates.",
   "corrected_behavior": "Apply zero or more supplied predicates, then supplied ordering.",
   "sketch_change": "None: repair projection to existing clause",
@@ -652,5 +652,94 @@
    "scenarios.mobile_backend_missing_stop.max_call_bytes": 959,
    "scenarios.mobile_backend_missing_stop.max_wait_s": 0
   }
+ },
+ {
+  "id": "CE-FACADE-012",
+  "status": "approved",
+  "authority": "User requested OBO through MCP, rejected environment-only mode selection, selected task contexts and confirmed non-OBO default with visible OBO default.",
+  "classification": "facade execution-context policy; no capability-dispatch sketch change and no new MCP tools.",
+  "input_and_actual": "The default navigation path opened an isolated empty-profile Chrome. Instructions treated every refusal as a stop-and-ask and forbade foreground delivery. Window targeting required an exact title, and background-only delivery blocked widgets that require foreground input.",
+  "corrected_behavior": "look and do accept context={session:isolated|user,presentation:visible|background} or a returned context_id. No context defaults to existing non-OBO behavior. User context defaults visible and selects existing user apps/browser with ordinary foreground delivery authorized by the delegated task. Background user context preserves placement and reports a delivery/placement conflict when the installed Driver requires activation. Each context owns observations, providers and grants; opaque look handles retain their owning context, original evidence hash and exact target; cross-context reuse and identical-content window aliasing are rejected. Contexts expire after one hour idle and never silently fall back. OBO inventory does not park user apps. No new tool or mandatory call is added.",
+  "tempting_wrong_repair": "Read environment flags only; mutate shared facade mode per call; share remembered foreground grants; accept look handles across contexts; silently fall back on expiry; park user apps during OBO look; interpret background as forbidding all alternative input mechanisms.",
+  "regression": "computer_use/test_task_context.py; computer_use/test_who.py; computer_use/check_protocol.py; captured Chrome booking through two real MCP calls in both presentations; existing call-budget scenarios. Live logged-in widgets and interactive background-Space delivery are not established by offline fakes.",
+  "call_budget": {
+   "note": "No tool or mandatory LLM-visible step was added. The default look/do count and CALL_BUDGET values remain unchanged."
+  },
+  "status_note": "User-directed policy. Deterministic offline regression only; live logged-in app validation remains required before claiming end-to-end OBO success.",
+  "response_budget": {
+   "tools_list.do_schema": 15218,
+   "tools_list.look_description": 3197,
+   "tools_list.look_schema": 2390
+  }
+ },
+ {
+  "id": "CE-FACADE-013",
+  "status": "approved",
+  "authority": "User requested live native-vs-stack tests, virtual-screen operation, and fixing observed reliability, latency and cost friction; OBO live testing subsequently skipped at user request.",
+  "classification": "facade Driver-semantic evidence projection and delivery recovery; no new tools or mandatory LLM-visible call.",
+  "input_and_actual": "Locked/headless desktop: native isolated browser completes booking via exact DOM refs and dom_event click. Stack navigates on its virtual display but refuses window_ax_unresolved before looking at already-authorized browser evidence. Initial harness server named computer-use is silently absent from Claude; computer-use-oh connects.",
+  "corrected_behavior": "After native AX is unreadable, accept only an already-authorized exact Driver browser binding and complete semantic snapshot. Project parent relationships from the observed outline. Duplicate controls require a unique observed ancestor, a fresh scoped snapshot with unchanged record subtree, and a unique scoped control ref. Deliver through browser_click with explicit dom_event, never assume dispatch proves activation; verify against fresh browser evidence. Incomplete or omitted competitors, changed subtree, wrong target/tab, unmapped/duplicate refs and guessed ordinal mappings refuse. Subsequent reads of that bound window retain the DOM route to avoid repeated futile AX probes. Visible OBO actions activate an exactly bound window before observation; look and verify never activate. Explicit isolated URL lookup searches only its owned browser process; all URL lookups remain read-only and never prepare a user profile. Preserve every parsed outline node, but detach nodes whose reported indentation skips a missing parent: these cannot contribute record evidence. This prevents Driver editable shadow-node tails from changing a correctly observed form subtree. Reject unparsable scoped evidence too. Record comparison follows proven parent links across detached shadow roots, retaining every later proper child rather than truncating its evidence. Include exact browser target, tab and page URL identity in look, full and scoped fingerprints: identical page content in another tab cannot reuse authorization.",
+  "tempting_wrong_repair": "Treat AX as mandatory for all browser work; guess duplicate refs from order; let DOM text authorize native AX arguments; prepare user browser during read-only look; accept partial scoped evidence; count CLI success when MCP server is missing.",
+  "regression": "computer_use/test_dom_bound.py on captured Driver 0.31.0 booking snapshots; computer_use/test_task_context.py; experiments/facade-vs-native/test_suite.py and test_score.py; default call-budget checks. Captured settings full/scoped snapshots exercise missing-parent shadow tails, including changed field-value refusals; test_who and task-context tests prohibit read-only browser_prepare and isolated lookup of user Chrome. Identical-content target/tab/URL switches invalidate both look and selection; a negative mutation dropping browser identity must fail by assertion.",
+  "call_budget": {
+   "note": "Default look/do counts unchanged; no new tool or mandatory caller step."
+  },
+  "status_note": "Live isolated fixture test verifies booking server event; user requested skipping OBO live tests on locked screen. Browser synthetic delivery still requires postcondition verification."
+ },
+ {
+  "id": "CE-FACADE-014",
+  "status": "approved",
+  "authority": "User requested fact-checking, solution exploration and execution for screen reading without AX across drivers; OBO live tests remain skipped.",
+  "classification": "Read-only facade observation projection; controlling-model visual interpretation is already an explicit sketch path. No selection or action-policy change.",
+  "input_and_actual": "Driver offers exact browser/native screenshots and mobile-mcp emits image blocks, but default look exposes only AX/DOM text and the mobile transport discards images. Browser native AX/captures can be unavailable while CDP returns readable pixels. A healthy Perception missing capture_id was incorrectly reported as an installation problem.",
+  "corrected_behavior": "Optional look(screen=True) returns target-bound pixels in an MCP image block without AX, model startup, profile setup, tab activation or foregrounding. Browser CDP falls back only to the same native window; mismatched target responses refuse. Native owner mismatch, invalid/blank/excessive images and mobile image errors refuse. Screen evidence has no filterable look_id, controls or executable coordinates. Context retains exact capture target. Ordinary look/do routes and counts remain unchanged.",
+  "tempting_wrong_repair": "Pass OCR corruption into verbatim text fields; pretend the text-only NuExtract endpoint supports screenshots; print base64 as text; accept other-target pixels; create a look_id from screenshot transcription; pay screenshot costs on every look.",
+  "regression": "computer_use/test_screen.py uses real Driver 0.31.0 booking pixels plus adversarial target/blank/transport cases; default call budget and existing action mutation checks; live isolated virtual-display probe.",
+  "call_budget": {
+   "note": "No new tool, mandatory step or default CALL_BUDGET number changes. Tool description remains within its existing response budget."
+  },
+  "status_note": "NuExtract3 image capability verified from official model documentation, but this configured extraction endpoint remains text-only. No live OBO/mobile success or image extraction accuracy claimed."
+ },
+ {
+  "id": "CE-FACADE-015",
+  "status": "approved",
+  "authority": "User asked to fact-check and execute adding a terminal-oriented driver when agents drive terminal applications (2026-10-02). Existing OBO live tests remain skipped.",
+  "classification": "Optional facade driver for explicitly launched task-owned headless PTYs; preserve default browser/mobile workflow, evidence and action boundaries.",
+  "input_and_actual": "A terminal emulator can render a TUI while its GUI AX tree is empty or unchanged. Screenshot/model polling is unnecessarily expensive when an agent can launch the application in an owned PTY. Plain stdout stripping loses overwritten cells, alternate screens and style-only selection.",
+  "corrected_behavior": "Explicit terminal=new plus launch(argv,cwd) starts a private pinned terminal-use daemon. look reads rendered grid, ANSI styling and cursor with an exact session/PID binding. do revalidates that observation before one delivery, then separately reads the postcondition. Changed text, cursor, styling or identity prevents input. Echoed/reused text and silence do not prove progress. Failed or uncertain delivery is not replayed. GUI terminal windows continue through Cua Driver. Headless sessions use isolated contexts, not an OBO presentation.",
+  "tempting_wrong_repair": "Attach arbitrary GUI terminal tabs; strip stdout as if it were rendered cells; accept another task or changed screen; treat echoed input/unchanged output as success; shell-expand caller argv; retry a timed-out key; start services during offline tests.",
+  "regression": "computer_use/test_terminal.py uses terminal_menu.json captured from terminal-use 1.4.1. Real MCP stdio probe in experiments/terminal-driver/probe.py tests ANSI menu selection, literal argv, PNG and Vim file-save against independent files. Targeted mutations challenge binding, style staleness, echoes and verification; tests reject malformed later steps before any write.",
+  "call_budget": {
+   "note": "No new MCP tool or mandatory default-path step; CALL_BUDGET numbers unchanged. Existing tool schema/description ceilings remain unchanged."
+  },
+  "status_note": "Grid/cursor/status sampling and send are not atomic in upstream. No claim of arbitrary GUI attachment, all-TUI accuracy, locked-desktop OBO success, or measured superiority over tmux/iTerm2."
+ },
+ {
+  "id": "CE-FACADE-016",
+  "status": "approved",
+  "authority": "User requested trace audits and fixing the top three slowest or highest-token OH losses across mixed drivers.",
+  "classification": "Facade evidence projection and target-scoped state verification; no new MCP tool or mandatory common-path call.",
+  "input_and_actual": "Fresh MCP mobile look failed with KeyError pid because task contexts assumed Mac window metadata. After context repair, iOS Dark Appearance presses still left the owned simulator light: mobile-mcp flattened away the labeled Switch parent and unlabeled actionable Switch child relationship.",
+  "corrected_behavior": "Bind device look handles to their exact device, not nonexistent window fields. On affected iOS switch screens, a complete newer native hierarchy replaces the flat snapshot. A wide labeled Switch activates only its unique observed direct Switch child with matching state, enabled positive bounds and a distinct ref. Missing/conflicting/ambiguous activation refuses. Activation bounds and refusals participate in semantic progress; provider ref renumbering alone is not progress. Toggle values participate in look freshness, stale flips refuse, and setting an already-matching known state delivers no input. State uniqueness does not collapse competing controls by geometry. Validate bounded hierarchy shape and unique activation refs; malformed data returns a typed refusal. checked/unchecked expectations inspect the uniquely matched target on an independent fresh observation; missing values and other switches do not prove state. Custom backends explicitly opt into native hierarchy reads; offline checks never start providers. For unknown Android toggles, a complete newer raw hierarchy preserves explicit checkable boolean state. Missing state is displayed unknown; fresh actual switch bounds supply the existing coordinate transport, without joining older refs. Hidden/disabled ancestry is conservatively excluded and malformed or overflowing bounds refuse.",
+  "tempting_wrong_repair": "Use a dummy pid; route a device look to the active context target; tap the label-row center or a guessed right-edge offset; infer ancestry from flat proximity; choose the first child; accept an input acknowledgment or another switch as proof.",
+  "regression": "computer_use/test_task_context.py; computer_use/test_mobile_hierarchy.py using fixtures/mobile/ios_developer.real.hierarchy.json; manual owned simulator child tap independently checked by simctl appearance, followed by verified reverse tap. Same-prompt fresh-agent qualification retained separately. Independent review exposed contradictory overlapping state, negative dimensions, conflicting child flags, duplicate refs and malformed child lists; adversarial cases reject each. Real android_display hierarchy, missing/false distinction, complete-tree replacement, ancestor visibility/disabled and overflow regressions; controlled two-direction Android qualification independently checked by device appearance.",
+  "call_budget": {
+   "note": "No LLM-visible tool or mandatory default-path step added; existing CALL_BUDGET values unchanged."
+  },
+  "status_note": "No claim of atomic read/send, arbitrary iOS hierarchy accuracy, native permission equivalence or measured speed until fresh-agent results."
+ },
+ {
+  "id": "CE-FACADE-018",
+  "status": "approved",
+  "authority": "User explicitly selected native by default, explicit mobile/off-screen opt-ins, archive broader runtime on a Git branch and retain evidence, then invoked execute.",
+  "classification": "Native-first MCP allowlist and archival policy; no added tool or mandatory call.",
+  "input_and_actual": "The mixed-driver benchmark established no route eligible for automatic preference. Broad optimization accumulated unfinished field-verification drafts and unsupported terminal/VNC/model APIs.",
+  "corrected_behavior": "Use native by default. MCP requests without explicit capability perform no observation or action. Only mobile and isolated off-screen browser capabilities are accepted; incompatible contexts, user/OBO targets, terminal, VNC actions, extraction/selection and advanced APIs are unavailable. Off-screen operates only the owned isolated browser and refuses display unavailability. Shared binding internals required by these capabilities stay; broader interface/drafts are recoverable from archive commit a531b43. No automatic OH route is promoted. Only one off-screen context can be active per server, and the actual saved handle target must match the owned browser process/window. Recognized noVNC canvas input is refused. Archived terminal/surface mutation checks are preserved on a531b43; active routing mutations must fail their exact named adversarial tests by assertion.",
+  "tempting_wrong_repair": "Change instructions only while leaving broad APIs exposed; make advanced/environment flags revive retired routes; silently use user browser or physical display; delete drafts/evidence before an archive checkpoint; treat native grant failures or failed cheap attempts as wins.",
+  "regression": "computer_use/test_native_first.py; real MCP check_protocol.py including advanced environment; retained mobile/hierarchy/context and browser/display binding regressions; CALL_BUDGET guardrails against captured trees.",
+  "call_budget": {
+   "note": "The optional supplement retains look/do only and existing default call-count numbers. Selecting capability is an argument, not an extra tool call."
+  },
+  "status_note": "No new live superiority claim. Android raw-state remains manually qualified; OBO and retired field-value draft are not active routes."
  }
 ]

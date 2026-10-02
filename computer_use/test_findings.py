@@ -278,14 +278,16 @@ class CanvasForeground(CanvasRegions):
         self.assertEqual(d.executed[0].get('target', {}).get('kind'), 'window')
         self.assertNotIn('pid', d.executed[0]);self.assertNotIn('window_id', d.executed[0])
 
-    def test_permission_does_not_outlive_the_call(self):
-        # Wrong patch: a facade-level flag that stays set (the next caller's canvas click would front the window unasked).
+    def test_permission_does_not_outlive_the_call_except_for_the_window_it_was_given_for(self):
+        # Wrong patch: a facade-level flag that stays set (the next caller's canvas click would front ANOTHER window unasked). The window the user approved keeps its
+        # grant for the session (no second ask, and the answer says so); no other window shares it (test_who.ForegroundGrantIsPerWindow).
         driver = sh.ShapeDriver(sh.canvas());driver.perception_payload = {'installed': True, 'healthy': True, 'active_version': '0.2.1'};driver.capture_id = 'cap'
         driver.parse_result = regions(*self.ONE)
         f = Facade(driver, generic_factory=FakeChooser, reader_factory=lambda: LiveReader({}), visual_factory=UnknownVision, sleep=lambda s: None)
         first = f.do('Press the Export button', title='Demo', expect=None, control='Export', allow_foreground=True)
         second = f.do('Press the Export button', title='Demo', expect=None, control='Export')
-        self.assertEqual((first['status'], second['status'], second['reason'], len(driver.executed)), ('delivered_unverified', 'refused', 'pointer_not_deliverable_in_background', 1))
+        self.assertEqual((first['status'], second['status'], len(driver.executed)), ('delivered_unverified', 'delivered_unverified', 2))
+        self.assertEqual(second['foreground_granted_for'], ['Demo'])
 
     def test_permission_does_not_leak_into_the_primitive_path(self):
         # Wrong patch: set the flag for the call and never clear it (a later choose/act on a canvas would front the window unasked).

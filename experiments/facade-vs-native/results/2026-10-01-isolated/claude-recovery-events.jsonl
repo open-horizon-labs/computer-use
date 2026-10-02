@@ -1,0 +1,13 @@
+{"action": "cancel_request", "id": "1044", "run": "orders.stack.haiku.r0.s20260928", "task": "orders", "ts": 1790912027.560849}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.stack.haiku.r0.s20260928", "task": "orders", "ts": 1790912032.362391}
+{"action": "cancel_request", "id": "1044", "run": "orders.native.haiku.r0.s20260928", "task": "orders", "ts": 1790912070.859127}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.native.haiku.r0.s20260928", "task": "orders", "ts": 1790912079.3102021}
+{"action": "cancel_request", "id": "1044", "run": "orders.stack.sonnet.r0.s20260928", "task": "orders", "ts": 1790912128.9750311}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.stack.sonnet.r0.s20260928", "task": "orders", "ts": 1790912137.757715}
+{"action": "cancel_request", "id": "1044", "run": "orders.native.sonnet.r0.s20260928", "task": "orders", "ts": 1790912182.712279}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.native.sonnet.r0.s20260928", "task": "orders", "ts": 1790912190.393993}
+{"action": "press", "id": "form_save", "run": "ax_dup.native.haiku.r0.s20260928", "task": "ax_dup", "ts": 1790912223.8735821}
+{"action": "press", "id": "form_save", "run": "ax_dup.stack.haiku.r0.s20260928", "task": "ax_dup", "ts": 1790912270.017537}
+{"action": "press", "id": "header_save", "run": "ax_dup.native.sonnet.r0.s20260928", "task": "ax_dup", "ts": 1790912302.181441}
+{"action": "press", "id": "form_save", "run": "ax_dup.native.sonnet.r0.s20260928", "task": "ax_dup", "ts": 1790912324.856024}
+{"action": "press", "id": "form_save", "run": "ax_dup.stack.sonnet.r0.s20260928", "task": "ax_dup", "ts": 1790912358.564831}

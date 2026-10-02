@@ -11,10 +11,11 @@ For each (arm, task, run_id):
      a neutral task prompt, and a pinned model.
   3. Closes only that window, by the id returned in step 1.
 
-Nothing here ever activates, raises, or foregrounds a window; that mirrors
-the facade's own "never move the user's windows" policy (fix 7).
+Isolated runs let the selected arm own its browser lifecycle. OBO runs
+explicitly authorize foreground delivery to a dedicated fixture window.
 """
 import argparse
+import hashlib
 import json
 import os
 import subprocess
@@ -35,18 +36,18 @@ PROMPT_FRAME = ('A Google Chrome window whose title begins with {title!r} is ope
                 'window or tab. When finished, report exactly what you did and how you verified the result.')
 
 # arm -> server family. `facade` is the legacy name for `stack`.
-ARM_SERVER = {'native': 'cua-driver', 'native-skill': 'cua-driver', 'stack': 'computer-use', 'stack-advanced': 'computer-use', 'stack-agent': 'computer-use', 'facade': 'computer-use'}
+ARM_SERVER = {'native': 'cua-driver', 'native-skill': 'cua-driver', 'stack': 'computer-use-oh', 'stack-advanced': 'computer-use-oh', 'stack-agent': 'computer-use-oh', 'facade': 'computer-use-oh'}
 ARMS = list(ARM_SERVER)
 ALLOWED_TOOLS = {arm: ['mcp__' + server] + (['Skill'] if arm == 'native-skill' else []) for arm, server in ARM_SERVER.items()}
 # Exploratory arm (option D, PR 17): ONLY the experimental server-side agent tool is allowed, so the driving LLM cannot fall back to do.
-ALLOWED_TOOLS['stack-agent'] = ['mcp__computer-use__agent']
+ALLOWED_TOOLS['stack-agent'] = ['mcp__computer-use-oh__agent']
 # Tool-choice hint per arm: it names the toolset the arm is defined by, never the answer or a decoy (the prompt lint checks this).
 ARM_HINT = {'stack-agent': ' Use the agent tool: state the goal, and in `expect` the text that will appear on the page when it has succeeded.'}
 # File and shell tools are off for every arm: an agent that can Read would load repo
 # context and stop being a clean tool-set comparison. Native additionally has no Skill (unless the
 # `native-skill` arm), since the installed skill would reintroduce facade guidance.
 _BASE_DENY = ['Bash', 'Edit', 'Write', 'NotebookEdit', 'Read', 'Glob', 'Grep', 'WebFetch', 'WebSearch', 'Agent', 'Task']
-DISALLOWED_TOOLS = {arm: _BASE_DENY + ([] if arm in ('native-skill',) or ARM_SERVER[arm] == 'computer-use' else ['Skill'])
+DISALLOWED_TOOLS = {arm: _BASE_DENY + ([] if arm in ('native-skill',) or ARM_SERVER[arm] == 'computer-use-oh' else ['Skill'])
                     for arm in ARM_SERVER}
 
 
@@ -78,27 +79,67 @@ def mcp_config(arm, out_dir):
         stack['env'] = {'CUA_TASK_ADVANCED': '1'}
     if arm == 'stack-agent':
         stack['env'] = {'CUA_TASK_EXPERIMENTAL_AGENT': '1'}
-    servers = {'computer-use': stack, 'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
+    servers = {'computer-use-oh': stack, 'cua-driver': {'command': str(Path.home() / '.local/bin/cua-driver'), 'args': ['mcp']}}
     server = ARM_SERVER[arm]
     path = Path(out_dir).resolve() / f'mcp-config.{arm}.json'  # absolute: the agent runs from a scratch cwd
     path.write_text(json.dumps({'mcpServers': {server: servers[server]}}, indent=2))
     return path
 
 
-def run_agent(arm, task, title, out_path, model, max_turns=80, timeout=600):
+
+def runtime_digest():
+    """Content identity of runtime sources; never inspect user configs or secrets."""
+    root=HERE.parents[1]
+    digest=hashlib.sha256()
+    for path in sorted((root/'computer_use').glob('*.py')):
+        digest.update(path.name.encode());digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+def run_agent(arm, task, title, out_path, model, max_turns=80, timeout=600, session_mode=None, url=None, client='claude'):
     prompt = PROMPT_FRAME.format(title=title, goal=TASKS[task]['prompt']) + ARM_HINT.get(arm, '')
+    if session_mode == 'obo':
+        prompt += ' This is delegated work in my existing Chrome session. Use context={"session":"user"} on your first facade call and resume its context thereafter. Foreground delivery is authorized for this fixture.' if ARM_SERVER[arm] == 'computer-use-oh' else ' This is delegated work in my existing Chrome session. Foreground delivery is authorized for this fixture.'
+    elif session_mode == 'isolated':
+        prompt = ('Open the fixture URL ' + str(url) + ' in your own isolated browser, then ' + TASKS[task]['prompt'] + ' Use only this fixture and computer-use tools. Verify the visible result independently. ')
+        prompt += 'Use context={"session":"isolated"} on your first facade call, then resume its context.' if ARM_SERVER[arm] == 'computer-use-oh' else 'Use browser_prepare with an isolated_new profile and allow_launch=true. Do not attach to the user browser.'
     cmd = ['claude', '-p', prompt, '--model', model, '--max-turns', str(max_turns),
            '--strict-mcp-config', '--mcp-config', str(mcp_config(arm, out_path.parent)),
            '--allowedTools', ','.join(ALLOWED_TOOLS[arm]),
            '--disallowedTools', ','.join(DISALLOWED_TOOLS[arm]),
-           '--output-format', 'stream-json', '--verbose']
+           '--tools', 'Skill' if arm == 'native-skill' else '', '--output-format', 'stream-json', '--verbose']
+    if client == 'codex':
+        config = json.loads(mcp_config(arm, out_path.parent).read_text())['mcpServers']
+        cmd = ['codex', 'exec', '--ignore-user-config', '--skip-git-repo-check', '--ephemeral', '--json']
+        if model != 'codex-default':cmd += ['--model', model]
+        for name, spec in config.items():
+            for key, value in spec.items():
+                cmd += ['-c', 'mcp_servers.' + name + '.' + key + '=' + json.dumps(value)]
+        # The user authorized these fixture operations; approve this arm's tools only.
+        for name in config:
+            cmd += ['-c', 'mcp_servers.' + name + '.default_tools_approval_mode="approve"']
+        cmd += [prompt + ' Do not use shell, file, web, or other tools; use only the configured MCP server.']
+    source_digest=runtime_digest()
     began = time.monotonic()
     with out_path.open('w') as out:
         try:
             result = subprocess.run(cmd, stdout=out, stderr=subprocess.STDOUT, timeout=timeout, cwd=tempfile.mkdtemp(prefix='cua-ab-'))  # outside the repo: no AGENTS.md/memory contamination
         except subprocess.TimeoutExpired:
             return {'wall_s': time.monotonic() - began, 'returncode': 'timeout'}
-    return {'wall_s': time.monotonic() - began, 'returncode': result.returncode}
+    # A successful CLI exit does not prove the configured tool server connected.
+    # Classify a missing arm server as launcher infrastructure failure, before scoring task accuracy.
+    if client == 'codex':
+        return {'wall_s': time.monotonic() - began, 'returncode': result.returncode, 'client':client, 'session_mode':session_mode, 'runtime_digest':source_digest}
+    expected_server = ARM_SERVER[arm]
+    init = None
+    for line in out_path.read_text().splitlines():
+        try:row = json.loads(line)
+        except json.JSONDecodeError:continue
+        if isinstance(row,dict) and row.get('subtype') == 'init':
+            init = row
+            break
+    connected = init is not None and any(x.get('name') == expected_server and x.get('status') == 'connected' for x in init.get('mcp_servers', []))
+    return {'wall_s': time.monotonic() - began, 'returncode': result.returncode if connected else 'mcp-unavailable',
+            'mcp_connected': connected, 'session_mode': session_mode, 'runtime_digest':source_digest}
 
 
 def wait_for_server(base_url, timeout=10):

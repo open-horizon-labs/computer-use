@@ -1,0 +1,715 @@
+{
+ "content_refs": [
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Orders orders.native.sonnet.r0.s20260928",
+   "ref": "p43:0",
+   "role": "rootwebarea",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Orders orders.native.sonnet.r0.s20260928",
+   "ref": "p43:1",
+   "role": "heading",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:2",
+   "role": "table",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:3",
+   "role": "row",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Order",
+   "ref": "p43:4",
+   "role": "columnheader",
+   "states": {
+    "required": false
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Item",
+   "ref": "p43:5",
+   "role": "columnheader",
+   "states": {
+    "required": false
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:6",
+   "role": "row",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "#1041",
+   "ref": "p43:7",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Walnut desk lamp",
+   "ref": "p43:8",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:9",
+   "role": "row",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "#1042",
+   "ref": "p43:10",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Walnut floor lamp",
+   "ref": "p43:11",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:12",
+   "role": "row",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "#1043",
+   "ref": "p43:13",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Brass desk lamp",
+   "ref": "p43:14",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:15",
+   "role": "row",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "#1044",
+   "ref": "p43:16",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Walnut desk lamp",
+   "ref": "p43:17",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:18",
+   "role": "row",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "#1045",
+   "ref": "p43:19",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Walnut desk organizer",
+   "ref": "p43:20",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:21",
+   "role": "row",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "#1046",
+   "ref": "p43:22",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Walnut desk lamp shade (replacement)",
+   "ref": "p43:23",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:24",
+   "role": "row",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "#1047",
+   "ref": "p43:25",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Walnut desk lamp",
+   "ref": "p43:26",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Status",
+   "ref": "p43:41",
+   "role": "columnheader",
+   "states": {
+    "required": false
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Actions",
+   "ref": "p43:42",
+   "role": "columnheader",
+   "states": {
+    "required": false
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Shipped",
+   "ref": "p43:43",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Track Cancel",
+   "ref": "p43:44",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Processing",
+   "ref": "p43:45",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Track Cancel",
+   "ref": "p43:46",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Processing",
+   "ref": "p43:47",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Track Cancel",
+   "ref": "p43:48",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Processing",
+   "ref": "p43:49",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Track Cancel",
+   "ref": "p43:50",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Processing",
+   "ref": "p43:51",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Track Cancel",
+   "ref": "p43:52",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Processing",
+   "ref": "p43:53",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Track Cancel",
+   "ref": "p43:54",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Delivered",
+   "ref": "p43:55",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Track Cancel",
+   "ref": "p43:56",
+   "role": "cell",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p43:57",
+   "role": "status",
+   "states": {},
+   "value": null,
+   "visibility": "no_layout"
+  }
+ ],
+ "mode": "snapshot",
+ "oopif": {
+  "frames": 0,
+  "status": "attached"
+ },
+ "outline": "- heading \"Orders orders.native.sonnet.r0.s20260928\"\n- table\n- row\n  - columnheader \"Order\" [required=false]\n  - columnheader \"Item\" [required=false]\n  - columnheader \"Status\" [required=false]\n  - columnheader \"Actions\" [required=false]\n- row\n  - cell \"#1041\"\n  - cell \"Walnut desk lamp\"\n  - cell \"Shipped\"\n  - cell \"Track Cancel\"\n    - button \"Track\" [focusable=true]\n    - button \"Cancel\" [focusable=true]\n- row\n  - cell \"#1042\"\n  - cell \"Walnut floor lamp\"\n  - cell \"Processing\"\n  - cell \"Track Cancel\"\n    - button \"Track\" [focusable=true]\n    - button \"Cancel\" [focusable=true]\n- row\n  - cell \"#1043\"\n  - cell \"Brass desk lamp\"\n  - cell \"Processing\"\n  - cell \"Track Cancel\"\n    - button \"Track\" [focusable=true]\n    - button \"Cancel\" [focusable=true]\n- row\n  - cell \"#1044\"\n  - cell \"Walnut desk lamp\"\n  - cell \"Processing\"\n  - cell \"Track Cancel\"\n    - button \"Track\" [focusable=true]\n    - button \"Cancel\" [focusable=true]\n- row\n  - cell \"#1045\"\n  - cell \"Walnut desk organizer\"\n  - cell \"Processing\"\n  - cell \"Track Cancel\"\n    - button \"Track\" [focusable=true]\n    - button \"Cancel\" [focusable=true]\n- row\n  - cell \"#1046\"\n  - cell \"Walnut desk lamp shade (replacement)\"\n  - cell \"Processing\"\n  - cell \"Track Cancel\"\n    - button \"Track\" [focusable=true]\n    - button \"Cancel\" [focusable=true]\n- row\n  - cell \"#1047\"\n  - cell \"Walnut desk lamp\"\n  - cell \"Delivered\"\n  - cell \"Track Cancel\"\n    - button \"Track\" [focusable=true]\n    - button \"Cancel\" [focusable=true]\n- status",
+ "page": {
+  "title": "Orders orders.native.sonnet.r0.s20260928",
+  "url": "http://127.0.0.1:8934/orders?run=orders.native.sonnet.r0.s20260928"
+ },
+ "refs": [
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Track",
+   "ref": "p43:27",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Cancel",
+   "ref": "p43:28",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Track",
+   "ref": "p43:29",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Cancel",
+   "ref": "p43:30",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Track",
+   "ref": "p43:31",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Cancel",
+   "ref": "p43:32",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Track",
+   "ref": "p43:33",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Cancel",
+   "ref": "p43:34",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Track",
+   "ref": "p43:35",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Cancel",
+   "ref": "p43:36",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Track",
+   "ref": "p43:37",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Cancel",
+   "ref": "p43:38",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Track",
+   "ref": "p43:39",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Cancel",
+   "ref": "p43:40",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  }
+ ],
+ "screenshot": {
+  "coordinate_space": "viewport_css_px",
+  "height": 2358,
+  "mime_type": "image/png",
+  "pixel_to_css_scale_x": 0.5,
+  "pixel_to_css_scale_y": 0.5,
+  "scope": "viewport",
+  "source": "cdp_tab",
+  "tab_activation": "not_requested",
+  "viewport_css_height": 1179,
+  "viewport_css_width": 1200,
+  "width": 2400,
+  "window_foregrounding": "not_requested"
+ },
+ "screenshot_height": 2358,
+ "screenshot_mime_type": "image/png",
+ "screenshot_width": 2400,
+ "snapshot": {
+  "complete": true,
+  "continuation": null,
+  "format": "semantic_v2",
+  "id": "p43",
+  "node_budget": 300,
+  "omitted": {
+   "budget": 0,
+   "css_hidden": 0,
+   "no_layout": 1,
+   "offscreen": 0,
+   "page_occluded": 0,
+   "unknown": 0,
+   "unprovable_frame": 0
+  },
+  "scope": "viewport",
+  "selected_nodes": 58,
+  "total_nodes": 58
+ },
+ "status": "ok",
+ "tab_id": "tab_fixture",
+ "target_id": "bt_fixture"
+}

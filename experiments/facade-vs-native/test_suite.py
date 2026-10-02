@@ -354,9 +354,9 @@ class Safety(unittest.TestCase):
         # Exploratory arm (option D). Wrong patches: leave do reachable (the LLM falls back to it and the arm
         # measures do), forget the experimental flag (the tool is absent), let it decide the preregistered claim.
         with tempfile.TemporaryDirectory() as d:
-            agent = json.loads(runner.mcp_config('stack-agent', d).read_text())['mcpServers']['computer-use']
+            agent = json.loads(runner.mcp_config('stack-agent', d).read_text())['mcpServers']['computer-use-oh']
         self.assertEqual(agent['env'], {'CUA_TASK_EXPERIMENTAL_AGENT': '1'})
-        self.assertEqual(runner.ALLOWED_TOOLS['stack-agent'], ['mcp__computer-use__agent'])
+        self.assertEqual(runner.ALLOWED_TOOLS['stack-agent'], ['mcp__computer-use-oh__agent'])
         self.assertIn('agent', runner.ARM_HINT['stack-agent'])
         self.assertNotIn('stack-agent', metrics.verdict.__defaults__[0])
         self.assertIn('stack-agent', runner.ARMS)
@@ -370,8 +370,8 @@ class Safety(unittest.TestCase):
 
     def test_stack_advanced_sets_env_and_arms_differ(self):
         with tempfile.TemporaryDirectory() as d:
-            adv = json.loads(runner.mcp_config('stack-advanced', d).read_text())['mcpServers']['computer-use']
-            base = json.loads(runner.mcp_config('stack', d).read_text())['mcpServers']['computer-use']
+            adv = json.loads(runner.mcp_config('stack-advanced', d).read_text())['mcpServers']['computer-use-oh']
+            base = json.loads(runner.mcp_config('stack', d).read_text())['mcpServers']['computer-use-oh']
             nat = json.loads(runner.mcp_config('native', d).read_text())['mcpServers']
         self.assertEqual(adv['env'], {'CUA_TASK_ADVANCED': '1'})
         self.assertNotIn('env', base)

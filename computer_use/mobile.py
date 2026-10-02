@@ -236,13 +236,18 @@ class StdioBackend:
         except Exception as error:  # noqa: BLE001
             if type(error).__name__ == 'McpError' and 'closed' in str(error).lower():
                 raise _Died()
-            raise MobileGap('mobile_observation_failed' if tool.startswith(('mobile_list', 'mobile_get')) else 'mobile_action_failed',
-                            'mobile-mcp answered an error to %s (%s)' % (tool, type(error).__name__), 'none' if tool.startswith(('mobile_list', 'mobile_get')) else 'uncertain')
+            raise MobileGap('mobile_observation_failed' if tool.startswith(('mobile_list', 'mobile_get', 'mobile_take_screenshot')) else 'mobile_action_failed',
+                            'mobile-mcp answered an error to %s (%s)' % (tool, type(error).__name__), 'none' if tool.startswith(('mobile_list', 'mobile_get', 'mobile_take_screenshot')) else 'uncertain')
+        if tool == 'mobile_take_screenshot':
+            images = [c for c in (result.content or []) if getattr(c, 'type', '') == 'image']
+            if getattr(result, 'isError', False) or len(images) != 1:
+                raise MobileGap('screen_capture_unavailable', 'mobile-mcp did not return one screenshot')
+            return {'data': images[0].data, 'mimeType': images[0].mimeType}, False
         text = '\n'.join(getattr(c, 'text', '') for c in (result.content or []) if getattr(c, 'type', '') == 'text')
         return text, bool(getattr(result, 'isError', False))
 
     def call(self, tool, args, mutating=False, timeout=CALL_TIMEOUT_S):
-        """(text, is_error). Raises MobileGap. A dead process is restarted ONCE and a read-only call re-sent; an action is never re-sent."""
+        """(text, is_error), or (image dict, is_error) for screenshots. A dead process is restarted ONCE for reads only."""
         with self._lock:
             if not self._alive():
                 self._teardown()
@@ -304,7 +309,7 @@ def normalize(raw, index):
     names = list(dict.fromkeys(n for n in (text, label, name) if n))
     return {'i': index, 'ref': raw.get('ref') if isinstance(raw.get('ref'), str) and raw.get('ref') else None, 'type': full, 'kind': kind, 'android': android, 'role': role,
             'text': text, 'label': label, 'name': name, 'value': value, 'id': ident, 'id_tail': tail, 'names': names,
-            'enabled': raw.get('enabled') is not False, 'checked': raw.get('checked') is True, 'selected': raw.get('selected') is True, 'focused': raw.get('focused') is True,
+            'enabled': raw.get('enabled') is not False, 'checked': raw.get('checked') is True, 'checked_known': isinstance(raw.get('checked'), bool), 'selected': raw.get('selected') is True, 'focused': raw.get('focused') is True,
             'toggle': kind in TOGGLE_KINDS, 'secret': kind == 'SecureTextField' or bool(role == 'input' and SECRET.search(tail)),
             'bounds': (_num(box.get('x')), _num(box.get('y')), _num(box.get('width')), _num(box.get('height')))}
 
@@ -464,8 +469,8 @@ def analyze(els):
     controls = list(dict.fromkeys(label_of(e)[:40] for e in rest if e['role'] == 'control' and e['enabled'] and label_of(e) and area(e) > 0))
     disabled = list(dict.fromkeys(label_of(e)[:40] for e in rest if e['role'] == 'control' and not e['enabled'] and label_of(e)))
     inputs = [{'label': (e['label'] or e['name'] or e['id_tail'])[:40], 'value': content_of(e)[:30]} for e in rest if e['role'] == 'input']
-    toggles = [{'label': label_of(e)[:40], 'state': 'checked' if (e['checked'] or e['value'] in ('1', 'true', 'on')) else 'unchecked'} for e in rest if e['role'] == 'control' and e['toggle'] and label_of(e)]
-    state = sorted([e['kind'], label_of(e), str(e['enabled']), str(e['checked']), str(e['selected']), str(e['focused']), content_of(e) if e['role'] == 'input' else ''] for e in els if e['role'] in ('control', 'input'))
+    toggles = [{'label': label_of(e)[:40], 'state': toggle_state(e) or 'unknown'} for e in rest if e['role'] == 'control' and e['toggle'] and label_of(e)]
+    state = sorted([e['kind'], label_of(e), str(e['enabled']), str(e['checked']), str(e['selected']), str(e['focused']), content_of(e) if e['role'] == 'input' else str(toggle_state(e)) if e['toggle'] else ''] for e in els if e['role'] in ('control', 'input'))
     return {'dialogs': dialogs, 'text': text, 'controls': controls, 'disabled': disabled, 'inputs': inputs, 'toggles': toggles, 'control_state': state,
             'records': derive_records(rest), 'headings': [],
             'counts': {'elements': len(els), 'controls': sum(1 for e in els if e['role'] == 'control')}}
@@ -473,7 +478,9 @@ def analyze(els):
 
 def signature(els):
     """The screen as it reads: a change in any element's name, content, state or place changes it."""
-    return json.dumps([[e['type'], e['names'], e['value'], e['id'], e['enabled'], e['checked'], e['selected'], e['focused'], e['bounds']] for e in els], ensure_ascii=False, sort_keys=True)
+    # Provider refs may be renumbered without any UI progress. Only the observed
+    # activation geometry/refusal changes this semantic progress signature.
+    return json.dumps([[e['type'], e['names'], e['value'], e['id'], e['enabled'], e['checked'], e['selected'], e['focused'], e['bounds'], (e.get('activation') or {}).get('bounds'), e.get('activation_refusal')] for e in els], ensure_ascii=False, sort_keys=True)
 
 
 NOTE_RECORDS = ('records are derived from element geometry (mobile-mcp lists the screen flat): elements whose vertical extents overlap form one row, and a row '
@@ -504,8 +511,17 @@ def check_device(device):
 
 class Mobile:
     """The facade's view of mobile-mcp: typed reads and actions over any backend with call(tool, args, mutating) -> (text, is_error) and close()."""
-    def __init__(self, backend=None, installer=install_agent, sleep=time.sleep):
+    def __init__(self, backend=None, installer=install_agent, sleep=time.sleep, hierarchy_reader=None, android_hierarchy_reader=None):
         self.backend, self.installer, self.installed, self.sleep = backend, installer, [], sleep
+        # A custom/remote backend must opt in: never start local providers in an offline test.
+        if hierarchy_reader is None and backend is None and not os.environ.get(COMMAND_ENV):
+            from mobile_hierarchy import read
+            hierarchy_reader = read
+        self.hierarchy_reader = hierarchy_reader
+        if android_hierarchy_reader is None and backend is None and not os.environ.get(COMMAND_ENV):
+            from mobile_hierarchy import read_android
+            android_hierarchy_reader = read_android
+        self.android_hierarchy_reader = android_hierarchy_reader
         self.cold_empty = False   # the last devices() answered empty while the backend had only just started
 
     def _backend(self):
@@ -548,7 +564,22 @@ class Mobile:
 
     def _read(self, device):
         text, error = self._backend().call('mobile_list_elements_on_screen', {'device': device, 'format': 'json'})
-        return parse_elements(text)
+        elements = parse_elements(text)
+        if self.android_hierarchy_reader and any(e['android'] and e['toggle'] and toggle_state(e) is None for e in elements):
+            from mobile_hierarchy import normalize_android
+            return normalize_android(self.android_hierarchy_reader(device))
+        if self.hierarchy_reader and any(not e['android'] and e['kind'] == 'Switch' and e['names'] and e['bounds'][2] > 3 * e['bounds'][3] for e in elements):
+            from mobile_hierarchy import normalize_tree
+            # The newer complete tree replaces the flat snapshot; never merge across reads.
+            return normalize_tree(self.hierarchy_reader(device))
+        return elements
+
+    def screenshot(self, device):
+        """Capture only: no element enumeration or automatic device-agent install."""
+        payload, error = self._backend().call('mobile_take_screenshot', {'device': device, 'maxSize': 2048})
+        if error or not isinstance(payload, dict) or set(payload) != {'data', 'mimeType'}:
+            raise MobileGap('screen_capture_unavailable', 'mobile-mcp did not return one screenshot')
+        return payload
 
     def elements(self, device):
         """A fresh element list. A refusal mobile_device_agent_missing installs the on-device agent ONCE and retries the read ONCE (never a loop): a failed
@@ -575,8 +606,11 @@ class Mobile:
 
     def tap(self, device, element):
         """By the ref of the element read a moment ago when mobile-mcp gave one (valid while the screen has not changed), else the centre of its fresh bounds."""
-        x, y, w, h = element['bounds']
-        args = {'device': device, 'ref': element['ref']} if element['ref'] else {'device': device, 'x': x + w // 2, 'y': y + h // 2}
+        if element.get('activation_refusal'):
+            raise MobileGap(element['activation_refusal'], 'no unique actionable switch child was observed; nothing was tapped')
+        activation = element.get('activation') or element
+        x, y, w, h = activation['bounds']
+        args = {'device': device, 'ref': activation['ref']} if activation['ref'] else {'device': device, 'x': x + w // 2, 'y': y + h // 2}
         self._act('mobile_click_on_screen_at_coordinates', args, 'Clicked on')
 
     def apps(self, device):
@@ -680,6 +714,7 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
             response['inputs'] = a['inputs'][:INPUT_MAX]
         if a['toggles']:
             response['toggles'] = a['toggles'][:INPUT_MAX]
+            notes.append('For a switch or checkbox, press its exact label with expect="checked" or "unchecked" to verify its fresh state. A control label or prose such as "X is checked" is not a state expectation.')
         if terms:
             response['focus'] = {'terms': terms[:8], 'matched': len(kept_text) + len(kept_controls) + matched, 'filtered_out': len(shown) - len(kept_text) + len(a['controls']) - len(kept_controls) + len(a['records']) - matched}
         response['counts'] = {'records': len(a['records']), 'controls': a['counts']['controls'], 'page_controls': len(a['controls']), 'non_page_controls': max(0, a['counts']['controls'] - len(a['controls'])), 'elements': a['counts']['elements']}
@@ -705,7 +740,8 @@ def look(f, device, fields=None, max_records=40, max_bytes=6000, focus=None, max
         response['look_id'] = look_id_for(a, shown_rows, device)
         response['truncated'] = {'records': matched - len(rows), 'lines': lost, 'bytes': bytes_cut}
         response['notes'] = notes
-        f.looks[(device, 'device', response['look_id'])] = {'device': device, 'created': f.clock(), 'n': len(shown_rows), 'terms': terms, 'opts': opts, 'records': len(a['records'])}
+        f.looks[(device, 'device', response['look_id'])] = {'device': device, 'created': f.clock(), 'n': len(shown_rows), 'terms': terms, 'opts': opts, 'records': len(a['records']),
+                                                       'toggle_states': [(e['kind'], e['id'], e['names'], toggle_state(e)) for e in els if e['toggle'] and e['names']]}
         while len(f.looks) > 8:
             f.looks.pop(next(iter(f.looks)))
         total = round((f.clock() - t0) * 1000)
@@ -799,11 +835,30 @@ def resolve(els, wanted, prefix, tiers, use_id=False):
     return None, {'reason': 'control_not_found'}
 
 
+def toggle_state(e):
+    value = lk.norm(e['value'])
+    value_state = 'checked' if value in ('1', 'true', 'on') else 'unchecked' if value in ('0', 'false', 'off') else None
+    flag_state = ('checked' if e['checked'] else 'unchecked') if e.get('checked_known') else None
+    if value_state and flag_state and value_state != flag_state:
+        return None
+    return value_state or flag_state
+
+
 def expect_check(after, before, expect, typed=None, target=None):
     """The device twin of Facade._expect_check: case-insensitive exact, else contains, each required in exactly ONE text-bearing NON-control element (static
     text, status text, field content other than the typed target). Absence is unknown, never failed. Presence that proves nothing is `unproven`: the text
     was there before the action, it is the text just typed, or it is a control's label."""
     needle = lk.norm(expect)
+    if target and target['toggle'] and needle in ('checked', 'unchecked'):
+        candidates = [e for e in after if e['toggle'] and e['kind'] == target['kind']
+                      and e['id'] == target['id'] and e['names'] == target['names']]
+        if len(candidates) != 1 or not live(candidates[0]) or candidates[0].get('activation_refusal'):
+            return {'status': 'unknown', 'route': 'device_toggle', 'reason': 'toggle_state_unseen'}
+        e = candidates[0]
+        # Missing/unknown values are not evidence of unchecked.
+        state = toggle_state(e)
+        return {'status': 'satisfied' if state == needle else 'unknown', 'route': 'device_toggle',
+                **({} if state == needle else {'reason': 'toggle_state_unseen' if state is None else 'toggle_state_mismatch'})}
     skip = (target['kind'], target['id'], tuple(target['names'])) if target else None
     def strings(e):
         return [s for s in e['names'] + [e['value'], e['text']] if s]
@@ -962,14 +1017,25 @@ def step_press(x, step):
     refusal = destructive(step, target, step.get('control') or '')
     if refusal:
         return refusal
-    if target['toggle'] and step.get('_look_id') is None:
-        return {'status': 'stopped', 'reason': 'toggle_state_unseen', 'delivery': 'none'}
     selected = {'description': ('%s: %s' % (target['kind'], label_of(target)))[:120]}
+    if target['toggle']:
+        desired = lk.norm(step.get('expect') or '')
+        if toggle_state(target) is None:
+            return {'status': 'stopped', 'reason': 'toggle_state_unseen', 'delivery': 'none'}
+        if desired in ('checked', 'unchecked') and expect_check(before, None, desired, target=target)['status'] == 'satisfied':
+            return {'status': 'done', 'delivery': 'none', 'selected': selected,
+                    'verification': {'status': 'satisfied', 'route': 'device_toggle'}}
+        seen = next((v for k, v in x.f.looks.items() if k[0] == x.device and k[2] == step.get('_look_id')), None)
+        if seen is None:
+            return {'status': 'stopped', 'reason': 'toggle_state_unseen', 'delivery': 'none'}
+        states = [s[3] for s in seen.get('toggle_states', []) if s[:3] == (target['kind'], target['id'], target['names'])]
+        if len(states) != 1 or states[0] != toggle_state(target):
+            return {'status': 'stopped', 'reason': 'page_changed_since_look', 'delivery': 'none'}
     try:
         x.mob.tap(x.device, target)
     except MobileGap as gap:
         return {'status': 'failed', 'reason': gap.reason, 'delivery': gap.delivery, 'message': str(gap), 'selected': selected}
-    return x.settle(step, before, TAP_DELAYS, extra={'selected': selected})
+    return x.settle(step, before, TAP_DELAYS, target=target, extra={'selected': selected})
 
 
 def field_in(els, target):

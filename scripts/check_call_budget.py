@@ -10,13 +10,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'computer_use'))
 
 try:
     import call_budget
-    import server  # noqa: F401  (the real tool functions are what get measured)
+    import server  # noqa: F401  (current schema plus historical shared projection)
 except ImportError as error:
     raise SystemExit('check_call_budget needs the facade requirements (%s); run .venv-facade/bin/python scripts/check_call_budget.py' % error)
 
 
 def main():
     rows, problems, measured, listing = call_budget.all_violations(with_measure=True)
+    print('Historical shared-projection regressions; active MCP routing checked separately by check_protocol.py.')
     width = max(len(r[0]) for r in rows)
     print('%-*s  %5s  %6s  %s' % (width, 'scenario', 'calls', 'budget', 'verdict'))
     for name, calls, limit, verdict, detail in rows:

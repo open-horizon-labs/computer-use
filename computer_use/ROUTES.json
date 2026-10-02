@@ -1,0 +1,10 @@
+{
+  "changed_by": "CE-FACADE-018",
+  "default": "native",
+  "automatic_oh_routes": [],
+  "opt_in": ["mobile", "off_screen"],
+  "archived": ["terminal", "vnc", "user_apps", "semantic_selection", "extraction", "advanced_tools"],
+  "archive_branch": "codex/archive-general-facade-2026-10-02",
+  "archive_commit": "a531b43",
+  "promotion": "A fair same-task comparison must show better completion or efficiency without reducing completion. Missing usage and setup/grant blocks cannot establish superiority."
+}

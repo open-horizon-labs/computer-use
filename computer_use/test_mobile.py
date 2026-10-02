@@ -238,7 +238,7 @@ def overview_backend():
 
 
 def budget_scenarios():
-    """CE-FACADE-008 call-budget scenarios, measured through the REAL server tools (look, then do) on the REAL emulator tree behind the fake backend. The scripted
+    """CE-FACADE-008 call-budget scenarios, measured through the retained shared projection (look, then do) on the REAL emulator tree behind the fake backend. The scripted
     LLM reads the look's strings, writes one step, and stops at a refusal or stop (no retry). Fixture-derived, not a rate. Returns {name: measure}."""
     import asyncio
     import server
@@ -249,7 +249,7 @@ def budget_scenarios():
         f = Facade(mobile=mobile.Mobile(which or backend), sleep=seen['naps'].append)
         server.facade = f
         def call(name, **kw):
-            return tally(seen, name, result_text(asyncio.run(server.mcp.call_tool(name, kw))))
+            return tally(seen, name, json.dumps(getattr(f,name)(**kw)))
         result = policy(call)
         return {**seen_measure(seen), 'status': result['status'],
                 'reader': int('reader' in f.providers), 'chooser': int('generic' in f.providers)}
@@ -1360,17 +1360,6 @@ class Surface(unittest.TestCase):
         for t in tools:
             self.assertIn('device', t.inputSchema['properties'])
             self.assertNotIn('device', t.inputSchema.get('required', []))
-
-    def test_the_server_routes_device_calls_to_the_device_path(self):
-        import asyncio
-        import server
-        backend = overview_backend()
-        server.facade = facade_for(backend)
-        text = asyncio.run(server.mcp.call_tool('look', {'device': EMULATOR}))
-        body = json.loads((text.content if hasattr(text, 'content') else text)[0].text)
-        self.assertEqual((body['status'], body['record_kind']), ('ok', 'rows'))
-        text = asyncio.run(server.mcp.call_tool('do', {'goal': 'Open Networks', 'expect': 'Saved networks', 'device': EMULATOR, 'control': 'Networks'}))
-        self.assertEqual(json.loads((text.content if hasattr(text, 'content') else text)[0].text)['status'], 'done')
 
     def test_closing_the_facade_closes_the_backend(self):
         backend = overview_backend()

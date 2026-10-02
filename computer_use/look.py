@@ -301,17 +301,41 @@ def analyze(f, state):
             other.append(clean(nodes[i]['label']))
     toggles = [{'label': clean(nodes[i].get('label'))[:40], 'state': toggle_marker(nodes[i])} for i in sorted(outside)
                if is_control(i) and nodes[i].get('label') and toggle_marker(nodes[i])]
-    inputs = [{'label': clean(nodes[i].get('label'))[:40], 'value': clean(nodes[i].get('value'))[:30]} for i in sorted(outside)
-              if nodes[i].get('role') in INPUT_ROLES]
+    inputs = []
+    for i in sorted(outside):
+        if nodes[i].get('role') in INPUT_ROLES:
+            value, clipped = cut(clean(nodes[i].get('value')), LINE_MAX_CHARS)
+            inputs.append({'label': clean(nodes[i].get('label'))[:40], 'value': value,
+                           **({'value_truncated': True} if clipped else {})})
+    # Expose the existing select route beside the observed control, so callers do not
+    # press a global option label duplicated by Chrome's native popup mirror.
+    import forms
+    selects = []
+    for i in sorted(outside):
+        if nodes[i].get('role') not in forms.SELECT_ROLES or not nodes[i].get('label') or i in state['aliases']:
+            continue
+        value = forms.shown_of(f, state, i)
+        shown, clipped = cut(value, LINE_MAX_CHARS) if value is not None else (None, False)
+        options = forms.options_of(f, state, i)
+        displayed = [cut(option, LINE_MAX_CHARS) for option in options[:INPUT_LIST_MAX]]
+        selects.append({'label': clean(nodes[i].get('label'))[:40], 'value': shown,
+                        'options': [option for option, _ in displayed],
+                        **({'truncated': True} if clipped or len(options) > INPUT_LIST_MAX or any(c for _, c in displayed) else {})})
+    if selects:
+        notes.append('Select an option with a type step: control is the select label, text is the exact option label; selection is verified by a fresh selected value. A closed select may show only its current option.')
     # A page text can prove an `expect` only when exactly ONE element displays it (Chrome shows a heading twice: the heading and its text child).
     repeated = []
     for line in page_text:
         holders = sum(1 for i in content if nodes[i].get('role') not in f.CONTROL_ROLES and any(norm(nodes[i].get(k)) == norm(line) for k in ('label', 'value')))
         if holders > 1:
             repeated.append(line)
-    return {'records': records, 'kind': kind, 'header': header, 'text': page_text, 'dialogs': dialogs, 'other_controls': other, 'inputs': inputs, 'toggles': toggles,
+    control_state=structural_state(f,state,content)
+    if state['raw'].get('_dom'):
+        import dom_bound
+        control_state.append({'browser_identity':dom_bound.identity(state['raw'])})
+    return {'records': records, 'kind': kind, 'header': header, 'text': page_text, 'dialogs': dialogs, 'other_controls': other, 'inputs': inputs, 'toggles': toggles, 'selects': selects,
             'headings': list(dict.fromkeys(clean(nodes[i].get('label')) or text_of(nodes[i]) for i in sorted(content) if nodes[i].get('role') == 'AXHeading' and (clean(nodes[i].get('label')) or text_of(nodes[i])))),  # a heading's value is its level; its label is the text
-            'control_state': structural_state(f, state, content),
+            'control_state': control_state,
             'page_controls': len(page_controls), 'all_controls': len(all_controls), 'notes': notes, 'ctrl_ids': page_controls, 'repeated_text': repeated}
 
 
@@ -356,6 +380,7 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
         if r.get('dom_lines'):item['dom_lines'] = r['dom_lines']
         return item
     text_lost = max(0, len(analysis['text']) - TEXT_MAX_LINES)
+    text_lost += sum(bool(item.get('value_truncated')) for item in analysis['inputs'][:INPUT_LIST_MAX])
     text = []
     for line in analysis['text'][:TEXT_MAX_LINES]:
         shown, was_cut = cut(line)
@@ -364,6 +389,7 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
                 'dialogs': analysis['dialogs'][:DIALOG_MAX], 'controls': analysis['other_controls'][:CONTROL_LIST_MAX],
                 **({'inputs': analysis['inputs'][:INPUT_LIST_MAX]} if analysis['inputs'] else {}),
                 **({'toggles': analysis['toggles'][:INPUT_LIST_MAX]} if analysis['toggles'] else {}),
+                **({'selects': analysis.get('selects', [])[:INPUT_LIST_MAX]} if analysis.get('selects') else {}),
                 **({'header': analysis['header'][:8]} if analysis['header'] else {}),
                 **({'repeated_text': [cut(t)[0] for t in analysis['repeated_text'][:10]]} if analysis['repeated_text'] else {})}
     if extras.get('canvas') is not None:response['canvas'] = extras['canvas']
@@ -432,6 +458,9 @@ def attach_dom(f, pid, window_id, state, analysis, rows, extras):
     """Read the page text from the browser's semantic snapshot beside the AX tree (bounded, see dom.py) and report, never silently prefer one. On a
     timeout, refusal or failure the look stays AX-only with a note and `degraded`. The AX records, lines and look_id are never changed by it."""
     import dom
+    if state['raw'].get('_dom'):
+        extras['sources']={'ax':False,'dom':True,'dom_complete':True,'dom_omitted':state['raw']['_dom']['value']['snapshot'].get('omitted',{}), 'page':state['raw']['_dom']['value'].get('page',{})}
+        return
     semantic = dom.read(f, pid, window_id)
     if not semantic['ok']:
         if semantic.get('degraded'):
@@ -478,10 +507,8 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
         if title is not None:
             if pid is not None or window_id is not None:
                 raise Gap('bad_request: give title or pid+window_id, not both')
-            found = f.windows(title)['windows']
-            if len(found) != 1:
-                raise Gap('window_%s: %d windows match the exact title; check the exact window title' % ('not_found' if not found else 'ambiguous', len(found)))
-            pid, window_id = found[0]['pid'], found[0]['window_id']
+            found = f.resolve_window(title)
+            pid, window_id = found['pid'], found['window_id']
         elif pid is None or window_id is None:
             raise Gap('bad_request: supply title, or pid and window_id')
         stage('window', began)
@@ -553,7 +580,10 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                     extras['notes'].append('this page has no pressable controls and its drawn text could not be read (the perception parse failed); call `look` once more, and if it fails again tell the user')
                 stage('perception', began)
             else:
-                extras['notes'].append('this page has no pressable controls; with Cua Perception healthy canvas.text_regions would list its drawn texts (the control values for `do`), but it is %s: run `python scripts/install_perception.py` (an agent can; a setup block says so when a call is refused), then call `look` again' % f.perception_state)
+                if f.perception_state == 'healthy':
+                    extras['notes'].append('No Driver capture_id is available for Perception. Call look(screen=true) to read target-bound pixels without AX.')
+                else:
+                    extras['notes'].append('this page has no pressable controls; with Cua Perception healthy canvas.text_regions would list its drawn texts (the control values for `do`), but it is %s: run `python scripts/install_perception.py` (an agent can; a setup block says so when a call is refused), then call `look` again' % f.perception_state)
         response, shown = assemble(f, state, analysis, rows, max_bytes, extras)
         extraction = None
         if fields is not None and shown:
@@ -599,4 +629,6 @@ def run_look(f, title=None, pid=None, window_id=None, fields=None, max_records=4
                 'detail': f._failure_detail(gap), 'hint': 'The Driver call failed before anything was clicked. Call `look` once more; if it fails again the daemon is probably down: a setup block says how to start it, otherwise tell the user. Do not loop.'}
     except Gap as gap:
         reason = f._do_reason(str(gap))
-        return {'status': 'refused', 'reason': reason, 'message': safe_message(reason, str(gap)), 'ms_by_stage': ms}
+        from plan import HINTS
+        return {'status': 'refused', 'reason': reason, 'message': safe_message(reason, str(gap)), 'ms_by_stage': ms, **getattr(gap, 'extra', {}),
+                **({'hint': HINTS[reason]} if reason in ('window_not_found', 'window_ambiguous') else {})}

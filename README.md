@@ -1,210 +1,33 @@
-# Computer-use capability dispatch
+# Computer use: smart defaults
 
-**Current default profile:** `fleet` (user decision 2026-09-30, "Jev is the default"): a clean install with no `runtime.json` uses the Jev chooser with NuExtract3 page reading and the configured screenshot services, **so page content is sent to the hosted services you configure**. `local-mac` (Julia-1 for local finite choices, refusing every hosted route) stays available: select it explicitly with `python3 scripts/set_profile.py local-mac`. An existing configuration that already names Julia-1 and no hosted service keeps `local-mac`. See [provider profiles](docs/PROVIDERS.md#provider-profiles) and the [local Mac support status](docs/LOCAL-MAC.md).
+A skill for choosing the smallest useful computer-use route and completing delegated work reliably.
 
-Why this exists: [WHY.md](WHY.md).
+- **OBO:** native tools in the user's apps and logged-in browser. Routine foreground interaction is part of the delegation; recover from ordinary friction without asking again.
+- **Light off-screen:** an available isolated browser for small tasks without user logins. The retained OH virtual-display browser is an optional fallback when its prerequisites work.
+- **Guest desktop:** Cua Spaces with only three MCP tools and Driver schemas discovered by name.
+- **Mobile:** native support where available; the retained OH adapter is optional.
 
-**Nine everyday jobs, three ways** (Claude Sonnet 5.5, one run per job, 2026-10-01; [details](docs/BENCHMARK.md)):
+Start with [the skill](skills/computer-use/SKILL.md). It loads route-specific guidance only when needed. Native tools remain the overall default; no OH route has earned automatic performance preference. [Why](WHY.md) and [benchmark evidence](docs/BENCHMARK.md) explain the limits.
 
-| | Vanilla computer use | Stock Cua Driver tools | computer-use |
-|---|---|---|---|
-| Correct | 7 of 9 | 8 of 9 | **9 of 9** |
-| Turns | 156 | 154 | **86** |
-| Output tokens | 23.5k | 35.8k | **20.2k** |
-| Wall time | **483 s** | 643 s | 529 s |
-| Cost | $2.70 | $7.16 | **$1.95** |
-| Where it runs | your screen, your mouse and keyboard | agent display, background input | agent display, background input |
+## Install
 
-A companion to stock computer-use tools and skills. The stock driver observes and executes; this repository supplies typed request guidance, capability routing, evidence matching, bounded semantic recovery, and a CESS simulation loop.
-
-The driving LLM describes intent and evidence requirements. Dispatcher code follows the sketch to choose providers. Models return evidence or an offered ID; the controller retains executable arguments, validates the current binding, and independently verifies progress.
-
-## Multiple models, one request
-
-The stock driver supplies current controls. The driving LLM describes the request and required evidence. **Dispatcher code chooses the route**, using rules in the CESS sketch; the skill teaches the LLM how to construct that request. There is no trained router in this version.
-
-| Request / model | What the provider receives | What happens afterward | Current status |
-|---|---|---|---|
-| Exact control / no model | Unique current role/name or ID | Validate and bind the control | Implemented |
-| Simple entities / GLiNER | Record text and simple entity labels | Match extracted values against explicit criteria | Contract tested; live adapter needs qualification |
-| Described fields / GLiNER2 | Per-record text, field descriptions and types | Normalize, compare within the same record, apply caller ordering | Live span adapter and measured examples |
-| Structured, relational or multilingual extraction / GLiNER2.5 | Scoped text and requested schema | Preserve grouping/relations before matching | Provisional routes; structured adapters need qualification |
-| Bounded classification / Decide | Evidence and described categories | Map accepted class to a caller-authorized action | Contract tested; live adapter needs qualification |
-| Semantic choice or recovery / Jev (fleet, the default) or Julia-1 (local-mac) | Goal, current candidate descriptions, constraints and available evidence | Select an offered ID or defer | Live adapters |
-| Escalation / Qwen (fleet only) | Goal and offered candidates via the bounded selector | Handle weak/failed Jev choices; verify after action | Existing selector integration |
-
-For example: the LLM requests provider name, appointment duration and start time, with explicit predicates and ordering. GLiNER2 extracts those fields; code selects the matching record. If an extracted name has an uncertain boundary, the configured generic chooser can recheck it. A selected ID never supplies arbitrary executable arguments. The driver executes the stored current binding and observes the result independently.
-
-CESS preserves the sketch, accepted counterexamples and executable regression checks. A failure either calls for repairing code to existing policy or proposing a policy change. Tests alone do not authorize a new rule.
-
-## Current approach: look, then plan once, execute in code
-
-The driving LLM does not mediate every hop. Measured live, tool time was about 13% of a run and LLM turns about 87%, so the default path minimizes turns and keeps recovery in deterministic code (design: [docs/PLAN-B.md](docs/PLAN-B.md), CE-FACADE-005).
-
-1. `look`: read-only, no model. Returns the page's displayed strings (records, controls, dialogs, canvas texts) and a `look_id`.
-2. `do` with `steps`: the LLM sends ONE small plan from what it saw. The server validates the whole plan, then per step re-observes, binds, acts, verifies `expect`, and recovers from stale state itself (bounded; a click is never retried).
-3. Waits for the page, in code: a look at a page that is not ready (no snapshot, empty or degraded tree, or a thin web area such as a loading page or any site's "checking your browser" holding page) is re-observed after 0.5 s, then 1 s, and then returned as it is. The rule is structural, with no site or phrase list, applies only to looks (never to the observations around an action), and never solves or bypasses a check. LLMs facing a blank or holding page tend to give up and report it unreadable (both arms did in our real-retailer runs); the deterministic path just looks again. It is unit-tested against a fake driver (a thin page that fills in, one that stays thin, a full page). Live, eBay showed a "checking your browser" page that cleared by itself (watched by the user): native got an empty tree and a blank title on that run and read the page fine on the next, which is the case this automates. The facade keeps its events in memory only, so there is no log showing the retry itself firing; add persistent events before quoting a firing rate.
-4. Never clicks where it did not aim: a background pixel click on a drawn surface (canvas) lands at the element's centre, not at the point (live probe on our fixture: aimed at a corner button, the centre button was pressed and reported as success). The stack refuses it before any Driver call and names the one way through, an explicit `allow_foreground` on that call or step, which fronts the window briefly for a real pointer event. Reported upstream as a driver bug.
-5. Guardrails in code: a filter is only allowed against a look the server issued (`look_id`); incomparable values are `unknown`, not a guess; destructive controls and dialogs need explicit, exact authorization; the whole plan has a hard time budget.
-
-```mermaid
-sequenceDiagram
-    participant L as Driving LLM
-    participant S as computer-use server
-    participant D as Cua Driver
-    participant P as Cua Perception (canvas pages)
-    participant N as NuExtract3 (optional)
-    L->>S: look
-    S->>D: observe (read-only)
-    opt page is a canvas / no AX tree
-        S->>P: parse_visual_regions (on-device OCR)
-        P-->>S: text regions, used only as candidate labels
-    end
-    opt fields requested (big or messy page)
-        S->>N: read fields, 10 records per call
-        N-->>S: value strings
-    end
-    S-->>L: displayed strings + look_id
-    Note over L: writes ONE plan
-    L->>S: do(steps, look_id)
-    loop each step, in code
-        S->>D: observe, bind, act
-        S->>D: observe, verify expect
-    end
-    Note over S,N: where.fields in a step also uses NuExtract3
-    S-->>L: done, or stopped at step N
-```
-
-Full version (NuExtract, staleness and recovery): [docs/PLAN-B.md#sequence](docs/PLAN-B.md#sequence).
-
-NuExtract3 is opt-in for big or messy pages; there is no fast-model loop choosing steps. The primitive tools (`observe`, `choose`, `act`, ...) are hidden unless `CUA_TASK_ADVANCED=1`. The agent tool of option D is experimental and not merged.
-
-**Benchmark:** see the table at the top and [docs/BENCHMARK.md](docs/BENCHMARK.md) (per-job results, method, limits).
-- Method and preregistered rules: [experiments/facade-vs-native](experiments/facade-vs-native/PREREGISTRATION.md).
-
-**Minimal check (offline, no desktop, no GPU):**
+Copy skills/computer-use into the client's skill directory (~/.claude/skills for Claude, ~/.agents/skills for Codex). Install Cua CLI separately, then register the slim Spaces profile:
 
 ```sh
-scripts/setup_facade.sh --no-perception
-.venv-facade/bin/python -m unittest discover -s computer_use -p 'test_*.py'   # 1100 tests
-.venv-facade/bin/python scripts/check_call_budget.py
-python3 inference/cua-decider/capability-dispatch/simulation_gate.py
+claude mcp add --scope user cua-spaces -- cua mcp --embedded --permissions spaces:list_spaces,spaces:list_tools,spaces:call_tool
+codex mcp add cua-spaces -- cua mcp --embedded --permissions spaces:list_spaces,spaces:list_tools,spaces:call_tool
 ```
 
-## Agent-facing task tools
+For a local installation of both clients, scripts/install_smart_defaults.py copies the skill, registers slim Spaces and disables/removes only this checkout's default OH adapter registration; --check verifies the result without changing it. It leaves unrelated native servers in place.
 
-Register the local [computer-use MCP facade](docs/FACADE.md) under the server name `computer-use-oh` (Claude Code reserves `computer-use`; the tools are `mcp__computer-use-oh__look` and `mcp__computer-use-oh__do`) to expose observation, NuExtract reading, Jev/Julia/GLiNER2 selection, bound action and verification directly to agents. `scripts/setup_facade.sh` also installs the pinned [Cua Perception](docs/FACADE.md#cua-perception-screenshot-regions) extension by default for on-device screenshot regions (`--no-perception` to skip).
+Reconnect clients. The skill keeps Spaces task-selected even though its three discovery tools are registered. Creation/deletion stays CLI setup. Do not fetch the full Driver catalog. call_tool retains broad upstream authority: fewer tool schemas are not a security boundary. [Setup](skills/computer-use/references/setup.md) covers optional adapters and local paths.
 
-**Phones and emulators.** `look` and `do` also take `device=<id>` instead of a window title: Android (emulators, devices) and iOS (simulators, devices) through [mobile-mcp](https://github.com/mobile-next/mobile-mcp) 1.0.6, the best driver for mobile. The server starts it itself on first use (`npx`, so Node.js 18+ is the only prerequisite; without it the answer is a typed refusal naming what to install), and the same contract holds: a fresh element list before every tap, exact label binding, a verification on another fresh list, no blind coordinates. `look(device="list")` lists the devices. An Android emulator started with `emulator -avd <name> -no-window` runs with no window at all, so nothing ever lands on your screen (verified live: look, verified press and back). See [Phones and emulators](docs/FACADE.md#phones-and-emulators-mobile-mcp).
+## Optional runtime and evidence
 
-**Web form controls.** A `<select>` is chosen with a `type` step on its label (`text` = the exact option label; the Driver sets the value without opening the native popup) and a checkbox with a `press` step (`expect: checked` or `unchecked`); each is done only when a fresh read shows the displayed value or the checked state, not a label on the page.
+computer_use/server.py remains available for explicitly selected mobile and lightweight virtual-display browsing. It exposes look/do, fresh binding, typed refusals and independent verification; it is not registered/enabled by default. It does not perform OBO, terminal, VNC or specialist model orchestration. [Runtime contract](docs/FACADE.md), [salvage](docs/SALVAGE.md) and [routing policy](computer_use/ROUTES.json) govern that adapter.
 
-**File upload.** A web file picker is a native window the Driver cannot act on (#5); the `upload` plan step (`files` = absolute paths, optional `control` = the input's id) assigns your own local files to the page's `<input type=file>` over CDP with no picker, proved by the step's `expect`.
+The full pre-reduction runtime is preserved on codex/archive-general-facade-2026-10-02 at a531b43. Historical fixtures are evidence, not instructions to revive it. Spaces passed a bounded form qualification; this does not prove mobile parity, logged-in teleport, locked-host execution or token superiority. [Progressive Spaces evidence](docs/SPACES-PROGRESSIVE-2026-10-02.md).
 
-**Agent display.** Windows the server creates, and windows of agent-owned apps (the Android emulator, Simulator, Chrome Beta/Canary/Chromium; `CUA_AGENT_APPS`), are parked on a headless virtual display so nothing the agent drives sits on your screen; your own apps are never moved. `CUA_AGENT_DISPLAY=off|auto|required` (default `auto`: park when the helper works, otherwise continue with a note). `goto`, `open_tab` and `read_pages` use an **agent browser** by default: one Chrome for Testing window (installed on demand into `~/.cache/computer-use`, its own profile, `CUA_AGENT_BROWSER=auto|user`, `CUA_AGENT_BROWSER_PATH`) kept on that display and reused, so windows do not pile up; `profile: "user"` on a step uses your own browser. See [SPACES.md](docs/SPACES.md#agent-display-policy-ce-facade-009).
+## Validate
 
-## Install the skill
-
-This repository is public. Clone it over HTTPS or SSH, then:
-
-```sh
-npx skills add open-horizon-labs/computer-use --skill computer-use
-```
-
-For global Codex use, append `--agent codex --global`. The [skills CLI](https://github.com/vercel-labs/skills) installs the skill's **[setup reference](skills/computer-use/references/setup.md)** and bundled sketch. It installs guidance, not model environments or a running dispatcher.
-
-## Set up the runtime
-
-```sh
-gh repo clone open-horizon-labs/computer-use
-cd computer-use
-export CUA_CAPABILITY_ROOT="$PWD"
-python3 inference/cua-decider/capability-dispatch/simulation_gate.py
-```
-
-The offline check needs only Python 3.10+. For real inference, choose a profile and configure its local or hosted workers in `~/.config/computer-use/runtime.json`; see the [setup reference](skills/computer-use/references/setup.md). Installing the skill does not install model environments or modify the standalone Fleet selector.
-
-## Setup: doctor and bootstrap
-
-```bash
-.venv-facade/bin/python -m computer_use doctor [--json] [--probe]   # read-only; exit 1 on any blocker
-.venv-facade/bin/python -m computer_use bootstrap [--yes]           # does the fixable items, prints the rest
-```
-
-`doctor` checks the Cua Driver (version, daemon, socket, `--grant existing-profile`, Accessibility and Screen Recording, signing), Full Disk Access (only `profile: user` needs it; it cannot be read without a prompt, so it is always a manual warning), Cua Perception, Node/npx, adb devices, booted simulators, space-mover (built, trusted; `--probe` also creates and drops a virtual display), the agent browser when that module is present, `runtime.json` and each configured provider endpoint (one bounded HEAD/GET, nothing else is sent), the MCP registration in `~/.claude.json` (server `computer-use`, args `computer_use/server.py`, no stale `cua-task`), the skill under its current name, and the venv. Each line is `ok`, `warn`, `blocker` or `skipped` with a fix hint. `scripts/setup_facade.sh` ends with it.
-
-`bootstrap` builds space-mover, prefetches mobile-mcp, installs Perception, installs Chrome for Testing when the agent browser module is present, and restarts the Driver daemon with `--grant existing-profile`. It edits `~/.claude.json` only with `--yes` (backup first: rename `cua-task` to `computer-use`, point args at this checkout). It then prints the manual System Settings steps (Accessibility, Screen Recording, Full Disk Access, Dock "Assign To"). Tests use fakes: no network, no desktop.
-
-## Alternative Jev API and endpoint setup
-
-Get a TypeSafe API key through your [TypeSafe account](https://console.typesafe.ai) or administrator. Configure it separately from the Qwen fallback:
-
-```sh
-export TYPESAFE_API_KEY_FILE="$HOME/.config/computer-use/jev-api-key"
-export TYPESAFE_BASE_URL='https://api.typesafe.ai'
-export TYPESAFE_DEFAULT_MODEL='jev-latest'
-```
-
-The file must already contain your key. `TYPESAFE_API_KEY` is the direct-environment alternative. Jev's SDK calls `https://api.typesafe.ai/v1/systemone`; the base URL has **no `/v1` suffix**. Qwen instead uses `QWEN_BASE_URL` **with `/v1`**, plus its own `QWEN_API_KEY` or `QWEN_API_KEY_FILE`. Both providers need configuration for the cascade.
-
-See [full key/endpoint setup and Jev-only smoke check](skills/computer-use/references/setup.md#jev-api-key-endpoint-and-model), including secret-file precedence and optional Fleet retrieval. Installing the skill does not create API accounts or credentials.
-
-## Start here
-
-- [Custom skill](skills/computer-use/SKILL.md): request construction and safe integration with stock tools.
-- [Sketch S](inference/cua-decider/capability-dispatch/SKETCH.md): authorized routing and matching policy, including approved boundary recheck.
-- [Counterexamples A](inference/cua-decider/capability-dispatch/COUNTEREXAMPLES.json): accepted failures and their authority.
-- [Projection P](inference/cua-decider/capability-dispatch/dispatch.py): dispatch, matching, recovery and binding.
-- [Decide precision experiments](experiments/decide-precision-2026-09-27/RESULTS.md): six epochs, label descriptions and reviewed hard negatives, with a paired Jev control.
-- [Gradual specialist rollout](docs/SPECIALIST-ROLLOUT.md): shadow Jev, qualify a task contract, then propose selective takeover.
-- [Salvage](docs/SALVAGE.md): what to retain, mistakes to avoid, next experiments.
-- [Evidence](inference/cua-decider/capability-dispatch/simulation/JEV-COMPARISON.md): bounded comparison, not a general CUA benchmark.
-
-## Offline validation
-
-Python 3.10+; no models, credentials, GPU, browser or third-party packages needed:
-
-```sh
-python3 inference/cua-decider/capability-dispatch/simulation_gate.py
-python3 -m unittest discover -s inference/cua-decider -p 'test_*.py'
-```
-
-The facade, its call-budget guardrail and the live scorer's tests need the facade requirements (`scripts/setup_facade.sh`, or `pip install -r computer_use/requirements.txt`); CI runs all of these on every pull request (`.github/workflows/offline-gates.yml`):
-
-```sh
-python3 -m unittest discover -s computer_use -p 'test_*.py'
-(cd inference/cua-decider/capability-dispatch && python3 -m unittest test_dispatch)
-python3 -m unittest discover -s scripts -p 'test_*.py'
-python3 -m unittest discover -s experiments/facade-vs-native -p 'test_*.py'
-python3 scripts/sync_skill_references.py --check
-.venv-facade/bin/python computer_use/check_protocol.py
-.venv-facade/bin/python scripts/check_call_budget.py   # table of scenario, calls, budget, PASS/FAIL; nonzero on failure
-```
-
-`scripts/check_call_budget.py` enforces [computer_use/CALL_BUDGET.json](computer_use/CALL_BUDGET.json): the default path (look, then do: `look` and `do`, the only tools visible unless `CUA_TASK_ADVANCED=1`) stays within its measured LLM-visible calls on the real captured Chrome trees and synthetic wizard, 100-row and canvas shapes; `scripts/check_plan_mutations.py` proves the wrong patches fail by assertion and `scripts/look_compare.py` reports the structure of the look claim (live latency and accuracy are not measured), because the driving LLM's turns were 87% of agent wall time. Adding a tool or a mandatory step to the default path requires a CE and a CALL_BUDGET.json change; see [FACADE.md](docs/FACADE.md#call-budget) and, for look-then-plan, [PLAN-B.md](docs/PLAN-B.md).
-
-The simulation gate checks 28 scenarios, 40 metamorphic variants, 20 unit/contract tests, 35 recorded decisions and seven deliberately wrong repairs. It writes results into the simulation directory. Exact-output checks and capable-model sketch review are separate; retained review is a historical self-review, not fresh independent certification.
-
-## Integration
-
-The installed skill is self-contained guidance; keep a separate runtime checkout for execution. Its bundled sketch is synchronized with `python3 scripts/sync_skill_references.py`; `--check` detects drift. It supplements the stock skill and does not install or replace the driver.
-
-The Python interface is `Engine(providers).decide(request, current_snapshot)`, followed by `execute_bound(request, selection, fresh_snapshot, execute_callback)` only when authorized. `execute_callback` is the stock driver's operation adapter. Observe again to verify the intended postcondition. See the [request example](inference/cua-decider/capability-dispatch/booking-request.json) and [controlled caller examples](inference/cua-decider/capability-dispatch/simulation.py). This is currently a Python component, not a deployed HTTP API.
-
-The CESS strangler wrapper is `Strangler.from_config(providers)`. It retains the qualified GLiNER2 rollout in [ROLLOUT.json](inference/cua-decider/capability-dispatch/ROLLOUT.json). Supply `generic_from_config()` in the compatibility slot `incumbent_jev`; the selected generic implementation comes from the active profile. The slot name does not establish model attribution. `Strangler` never executes; continue to bind current Driver arguments with `execute_bound` and independently verify effects.
-
-Providers are injected callables `(step, request) -> grounded evidence or offered choice`. The included live adapters cover NuExtract page records, Julia finite choice, GLiNER2 spans, SystemOne screenshots, and the Jev→Qwen selector. The opt-in `local-mac` profile does not yet provide local NuExtract or visual workers. Original GLiNER, structured GLiNER2.5 and Decide routes have controlled contract coverage but require qualified live adapters for their respective roles. The span adapter's GLiNER2.5 option is not a structured-record/relationship adapter.
-
-## Live inference configuration
-
-[Provider setup](docs/PROVIDERS.md) explains explicit worker and selector commands. Live inference and live desktop testing are separate from the offline gate. No services are started by the gate.
-
-Historical files retain their original experiment paths, local hardware descriptions, and pre-approval wording where relevant. S4.4 and the accepted archive carry current policy. The original `inference/` layout is retained so captured replays remain resolvable without the homelab repository. Only required fixture code and evidence were extracted; training datasets, deployment infrastructure and credentials stay outside this repo.
-
-No upstream license is inferred for third-party tools or model weights; they remain external dependencies under their own terms.
-
-## Terminal observations and chooser preference
-
-[Terminal integration](docs/TERMINALS.md) combines fresh Driver screenshots and AX observations with explicit quality metadata and a bounded visual postcondition check. An unchanged AX tree is not a stall. These are integration helpers; the stock Driver binary is unchanged.
-
-Jev and its Qwen escalation ([Jev](docs/PROVIDERS.md#jev)) are the generic chooser of the default `fleet` profile; Julia-1 is the opt-in `local-mac` profile's chooser. GLiNER2 extraction and current-snapshot binding are preserved. Julia is not a page reader or vision model.
+Run .github/workflows/offline-gates.yml checks for runtime/projection changes. They use fixtures/fakes, not desktops or GPUs. Retained call budgets apply to the optional OH adapter; Spaces metadata measurements are separate. Verify actual installed MCP schemas and skill routing independently of static lint. Preserve current binding, no blind coordinates, bounded recovery and independent outcome verification.

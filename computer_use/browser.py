@@ -120,7 +120,7 @@ def remembered_tab(f, pid, tabs):
     return None
 
 
-def bind(f, pid, window_id):
+def bind(f, pid, window_id, prepare=True):
     """Exact CDP binding for one native browser window: (target_id, tab_id of its active tab). Prepares the existing-profile endpoint once."""
     from core import Gap as CoreGap
     call = lambda tool, args: _call(f, tool, args)
@@ -130,6 +130,7 @@ def bind(f, pid, window_id):
         code = _refusal_code(error)
         if code is None:
             raise
+        if not prepare:raise _gap('browser_not_prepared: read-only lookup could not bind this browser (%s); use an authorized do navigation to prepare it' % code)
         try:
             call('browser_prepare', {'pid': pid, 'window_id': window_id, 'strategy': {'kind': 'existing_profile'}})
         except CoreGap as prepare_error:
@@ -217,16 +218,16 @@ def _verdict(url, seen):
 NEW_TAB_URLS = ('chrome://newtab/', 'chrome://new-tab-page/', 'about:blank', 'edge://newtab/', 'brave://newtab/', 'chrome-search://local-ntp/local-ntp.html')
 
 
-def tab_state(f, pid, window_id):
+def tab_state(f, pid, window_id, prepare=True):
     """[{position, url, title, active, tab_id (valid for THIS bind only)}] from a fresh exact bind, plus the bind's target_id."""
-    bound = _bound(f, pid, window_id)
+    bound = _bound(f, pid, window_id, prepare=prepare)
     f.native_title = bound.get('native_title') or ''
     tabs = [{'position': i, 'url': t.get('url') or '', 'title': t.get('title') or '', 'active': bool(t.get('active') or t.get('selected')), 'tab_id': t['tab_id']}
             for i, t in enumerate(_tabs(bound))]
     return bound.get('target_id'), tabs
 
 
-def _bound(f, pid, window_id):
+def _bound(f, pid, window_id, prepare=True):
     from core import Gap as CoreGap
     try:
         return _call(f, 'get_browser_state', {'pid': pid, 'window_id': window_id})
@@ -234,6 +235,7 @@ def _bound(f, pid, window_id):
         code = _refusal_code(error)
         if code is None:
             raise
+        if not prepare:raise _gap("browser_not_prepared: read-only lookup cannot bind the browser (%s); use an authorized do navigation" % code)
         bind(f, pid, window_id)  # prepares the existing-profile endpoint or raises permission_required
         return _call(f, 'get_browser_state', {'pid': pid, 'window_id': window_id})
 

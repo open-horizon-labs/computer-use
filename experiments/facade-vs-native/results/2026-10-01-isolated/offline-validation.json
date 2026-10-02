@@ -1,0 +1,19 @@
+{
+  "facade_tests": 1242,
+  "dispatcher_tests": 26,
+  "decider_tests": 15,
+  "script_tests": 22,
+  "harness_tests": 52,
+  "mutation_patches": 189,
+  "mutation_patches_missed": 0,
+  "protocol_modes": [
+    "default",
+    "advanced"
+  ],
+  "call_budget": "passed; unchanged ceilings and two-tool default surface",
+  "simulation_gate": "passed; historical output files restored",
+  "skill_reference_check": "passed",
+  "look_compare": "passed",
+  "obo_live": "skipped at user request",
+  "codex_tool_audit": "passed; selected MCP arm only"
+}

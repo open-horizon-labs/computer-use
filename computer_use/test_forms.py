@@ -234,6 +234,32 @@ class Select(Base):
         self.assertEqual([c['text'] for c in self.driver.executed], ['Dana Whitfield'])
         self.assertNotIn(r.get('status'), ('refused',))
 
+    def test_input_values_are_not_silently_cut_at_thirty_characters(self):
+        # Wrong patch: display a partial field value without saying it was clipped;
+        # a caller may mistake successful entry for missing text and type again.
+        import look as lk
+        def value(text):
+            def page(d, els):
+                self.driver.page(d, els)
+                next(e for e in els if e.get('label') == NAME and e.get('role') == 'AXTextField')['value'] = text
+            self.driver.script = page
+            return next(i for i in self.shown()['inputs'] if i['label'] == NAME)
+        text = 'A field value longer than thirty characters.'
+        self.assertEqual(value(text), {'label': NAME, 'value': text})
+        clipped = value('x' * (lk.LINE_MAX_CHARS + 10))
+        self.assertTrue(clipped['value_truncated'])
+        self.assertTrue(clipped['value'].endswith('…'))
+        self.assertGreaterEqual(self.shown()['truncated']['lines'], 1)
+        self.assertEqual(self.driver.executed, [])
+
+    def test_typed_echo_refusal_keeps_its_cause_in_the_plan(self):
+        # Wrong patch: collapse every failed postcondition to generic unverified,
+        # causing the caller to repeat an impossible presence-based check.
+        r = self.plan([{'do': 'type', 'control': NAME, 'text': 'Dana Whitfield', 'expect': 'Dana Whitfield'}])
+        self.assertEqual(r['status'], 'stopped')
+        self.assertEqual(r['steps'][0]['verification']['reason'], 'expect_echoes_typed_text')
+        self.assertEqual(len(self.driver.executed), 1)
+
     def test_the_form_steps_run_in_one_plan_and_stop_at_the_first_that_is_not_done(self):
         r = self.plan([self.pick(), self.tick()])
         self.assertEqual((r.get('status'), [s['status'] for s in r['steps']]), ('done', ['done', 'done']), r)
@@ -247,6 +273,10 @@ class Select(Base):
         self.assertIn(SELECT, look['controls'])
         self.assertIn({'label': 'Choose one', 'state': 'selected'}, look['toggles'])
         self.assertIn({'label': COPY, 'state': 'unchecked'}, look['toggles'])
+        self.assertEqual(look['selects'], [{'label': SELECT, 'value': 'Choose one', 'options': ['Choose one']}])
+        self.assertTrue(any('type step' in note for note in look['notes']))
+        self.assertEqual(self.driver.sets, [])
+        self.assertEqual(self.driver.clicks, [])
 
 
 class Checkbox(Base):

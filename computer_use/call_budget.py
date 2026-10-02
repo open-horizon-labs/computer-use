@@ -1,6 +1,6 @@
 """Call-budget guardrails: the default path is look, then do (look, do): two tools and a measured, ceilinged number of LLM-visible calls (computer_use/CALL_BUDGET.json).
 
-Measures the REAL server tool functions through a counting harness on fake fixtures (no Driver, model,
+Measures the retained historical shared projection (not the native-first MCP routing) through a counting harness on fake fixtures (no Driver, model,
 desktop or network), and lints the tool surface and the skill's default workflow. Shared by
 computer_use/test_budget.py and scripts/check_call_budget.py.
 """
@@ -130,7 +130,7 @@ def surface_violations(source, budget=None):
         if name not in default and not nested:out.append('%s is registered by default: only %s may be visible without CUA_TASK_ADVANCED=1' % (name, default))
         if name not in default and not doc.startswith('Advanced'):out.append('%s is neither a default-path tool nor marked Advanced' % name)
         if name in default and (doc.startswith('Advanced') or nested):out.append('%s is a default-path tool but is marked Advanced or nested' % name)
-    if not guard_present(source):out.append('register_advanced() must be called only under `if ADVANCED:` where ADVANCED reads CUA_TASK_ADVANCED')
+    if len(tools) > len(default) and not guard_present(source):out.append('extra tools require register_advanced() called only under if ADVANCED with CUA_TASK_ADVANCED')
     return out
 
 
@@ -242,7 +242,7 @@ def scripted_llm(goal_words=()):
 
 
 def measure_scenarios():
-    """Drive the real server tool functions through a counting wrapper under scripted_llm(): call do knowing only goal, expect and the fields
+    """Drive the retained historical Facade functions through a counting wrapper under scripted_llm(): call do knowing only goal, expect and the fields
     and predicates, learn control/identity/labels from each deferral, stop at done, a dead end, no hint to follow, or 5 calls.
     Scenarios run on the REAL captured Chrome trees (computer_use/fixtures/live_*_ax.json) and on the synthetic shapes a review found missing
     (computer_use/shapes.py). No tree from an unrelated real site exists yet (that needs the user's consent), so every number is fixture-derived.
@@ -259,7 +259,7 @@ def measure_scenarios():
         seen = new_seen()  # sleep is recorded, not slept: wait_s is the simulated latency of every settle and idle wait (deterministic)
         server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=vision or lv.UnknownVision, sleep=seen['naps'].append)
         def call(name, **kw):
-            return tally(seen, name, result_text(asyncio.run(server.mcp.call_tool(name, kw))))
+            return tally(seen, name, json.dumps(getattr(server.facade,name)(**kw)))
         current = {'title': 'Demo', **args}
         while True:
             result = call('do', **current)
@@ -377,7 +377,7 @@ def unique_line(look, record):
 
 def measure_plan_scenarios():
     """Option B (CE-FACADE-005): the scripted LLM starts knowing ONLY the goal and expect, calls look, writes its plan from the strings it saw,
-    and reads the plan's deferrals. Every call goes through the REAL server tools; calls, reader and chooser are counted, not assumed.
+    and reads the plan's deferrals. Every historical scenario goes through the retained shared projection; calls, reader and chooser are counted, not assumed.
     Fixture-derived like every number here (real Chrome trees for booking and orders; synthetic shapes for the wizard, the 100-row list and the canvas)."""
     import server
     from core import Facade
@@ -391,7 +391,7 @@ def measure_plan_scenarios():
         seen = new_seen()  # sleep is recorded, not slept: wait_s is the simulated latency of every settle and idle wait (deterministic)
         server.facade = Facade(driver, reader_factory=lambda: reader, generic_factory=lambda: chooser, visual_factory=vision or lv.UnknownVision, sleep=seen['naps'].append)
         def call(name, **kw):
-            return tally(seen, name, result_text(asyncio.run(server.mcp.call_tool(name, kw))))
+            return tally(seen, name, json.dumps(getattr(server.facade,name)(**kw)))
         result = policy(call)
         assert not server.facade.agent.tried, 'CE-FACADE-009: parking is server-side and adds no LLM-visible call; these fixtures hold no created or agent-owned window'
         return {**seen_measure(seen), 'status': result['status'], 'reader': len(reader.requests), 'chooser': len(chooser.requests)}

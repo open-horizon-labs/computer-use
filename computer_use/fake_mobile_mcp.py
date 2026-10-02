@@ -9,6 +9,9 @@ Configured by environment (all paths are the caller's temp files):
 """
 import json
 import os
+import base64
+from pathlib import Path
+from mcp.types import CallToolResult, TextContent, ImageContent
 
 from mcp.server.fastmcp import FastMCP
 
@@ -30,6 +33,13 @@ def note(tool, args):
 if LOG:
     with open(LOG, 'a') as handle:
         handle.write(json.dumps({'env': {k: os.environ.get(k) for k in ('CUA_TEST_MARK', 'MOBILEMCP_DISABLE_TELEMETRY')}, 'pid': os.getpid()}) + '\n')
+
+
+@mcp.tool()
+def mobile_take_screenshot(device: str, maxSize: int = 2048) -> CallToolResult:
+    note('mobile_take_screenshot', {'device': device, 'maxSize': maxSize})
+    data = base64.b64encode((Path(__file__).parent / 'fixtures/live_booking_screen.png').read_bytes()).decode()
+    return CallToolResult(content=[TextContent(type='text', text='Screenshot mapping is untrusted driver output'), ImageContent(type='image', data=data, mimeType='image/png')])
 
 
 @mcp.tool()

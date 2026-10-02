@@ -1,0 +1,51 @@
+{
+  "Status": {
+    "type": "Status",
+    "name": "term_fixture",
+    "pid": 12345,
+    "alive": true,
+    "exit_code": null,
+    "size": {
+      "cols": 80,
+      "rows": 24
+    }
+  },
+  "ScreenshotCells": {
+    "type": "ScreenshotCells",
+    "rows_ansi": [
+      "PTY menu                                                                        \u001b[0m",
+      "\u001b[0;7mAlpha\u001b[0m                                                                           \u001b[0m",
+      "Beta                                                                            \u001b[0m",
+      "READY                                                                           \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m",
+      "                                                                                \u001b[0m"
+    ],
+    "rows": 24,
+    "cols": 80,
+    "mouse_cursor": null,
+    "mouse_held": false
+  },
+  "Cursor": {
+    "type": "Cursor",
+    "row": 5,
+    "col": 0
+  }
+}

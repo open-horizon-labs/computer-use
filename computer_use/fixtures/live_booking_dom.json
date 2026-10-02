@@ -1,0 +1,1380 @@
+{
+ "content_refs": [
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Clinic Slots dom-scope",
+   "ref": "p11:6",
+   "role": "rootwebarea",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Clinic Slots dom-scope",
+   "ref": "p11:7",
+   "role": "heading",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:8",
+   "role": "list",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s01",
+   "ref": "p11:9",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:10",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyes",
+   "ref": "p11:11",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:12",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Consultation",
+   "ref": "p11:13",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:14",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "60 min",
+   "ref": "p11:15",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:16",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 1:30 PM",
+   "ref": "p11:17",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s02",
+   "ref": "p11:18",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:19",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Morgan Lee, NP",
+   "ref": "p11:20",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:21",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Follow-up",
+   "ref": "p11:22",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:23",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:24",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:25",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 2:00 PM",
+   "ref": "p11:26",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s03",
+   "ref": "p11:27",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:28",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Priya Shah",
+   "ref": "p11:29",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:30",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Follow-up",
+   "ref": "p11:31",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:32",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:33",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:34",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 2:15 PM",
+   "ref": "p11:35",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:36",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Covering for Dr. Morgan Reyes",
+   "ref": "p11:37",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s04",
+   "ref": "p11:38",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:39",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyes",
+   "ref": "p11:40",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:41",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Consultation",
+   "ref": "p11:42",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:43",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "45 min",
+   "ref": "p11:44",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:45",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 2:30 PM",
+   "ref": "p11:46",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s05",
+   "ref": "p11:47",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:48",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyes",
+   "ref": "p11:49",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:50",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Follow-up",
+   "ref": "p11:51",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:52",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:53",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:54",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 1:45 PM",
+   "ref": "p11:55",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s06",
+   "ref": "p11:56",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:57",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyesford",
+   "ref": "p11:58",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:59",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Follow-up",
+   "ref": "p11:60",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:61",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:62",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:63",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 2:45 PM",
+   "ref": "p11:64",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s07",
+   "ref": "p11:71",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:72",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyes",
+   "ref": "p11:73",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:74",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Follow-up",
+   "ref": "p11:75",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:76",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:77",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:78",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 3:15 PM",
+   "ref": "p11:79",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s08",
+   "ref": "p11:80",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:81",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyes",
+   "ref": "p11:82",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:83",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Follow-up",
+   "ref": "p11:84",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:85",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:86",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:87",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 4:00 PM",
+   "ref": "p11:88",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s09",
+   "ref": "p11:89",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:90",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Alan Morgan",
+   "ref": "p11:91",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:92",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Follow-up",
+   "ref": "p11:93",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:94",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:95",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:96",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 2:05 PM",
+   "ref": "p11:97",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s10",
+   "ref": "p11:98",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:99",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyes",
+   "ref": "p11:100",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:101",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Telehealth",
+   "ref": "p11:102",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:103",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "half-hour",
+   "ref": "p11:104",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:105",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 3:00 PM",
+   "ref": "p11:106",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:107",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Video visit",
+   "ref": "p11:108",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s11",
+   "ref": "p11:109",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:110",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Morgan Reyes",
+   "ref": "p11:111",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:112",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Follow-up",
+   "ref": "p11:113",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:114",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:115",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:116",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 11:00 AM",
+   "ref": "p11:117",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Slot s12",
+   "ref": "p11:118",
+   "role": "listitem",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:119",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Dr. Kim Ortega",
+   "ref": "p11:120",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:121",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Consultation",
+   "ref": "p11:122",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:123",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "30 min",
+   "ref": "p11:124",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:125",
+   "role": "generic",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Starts 2:20 PM",
+   "ref": "p11:126",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p11:127",
+   "role": "status",
+   "states": {},
+   "value": null,
+   "visibility": "no_layout"
+  }
+ ],
+ "mode": "snapshot",
+ "oopif": {
+  "frames": 0,
+  "status": "attached"
+ },
+ "outline": "- heading \"Clinic Slots dom-scope\"\n- list\n  - listitem \"Slot s01\"\n    - generic\n      - statictext \"Dr. Morgan Reyes\"\n    - generic\n      - statictext \"Consultation\"\n    - generic\n      - statictext \"60 min\"\n    - generic\n      - statictext \"Starts 1:30 PM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s02\"\n    - generic\n      - statictext \"Morgan Lee, NP\"\n    - generic\n      - statictext \"Follow-up\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 2:00 PM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s03\"\n    - generic\n      - statictext \"Dr. Priya Shah\"\n    - generic\n      - statictext \"Follow-up\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 2:15 PM\"\n    - generic\n      - statictext \"Covering for Dr. Morgan Reyes\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s04\"\n    - generic\n      - statictext \"Dr. Morgan Reyes\"\n    - generic\n      - statictext \"Consultation\"\n    - generic\n      - statictext \"45 min\"\n    - generic\n      - statictext \"Starts 2:30 PM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s05\"\n    - generic\n      - statictext \"Dr. Morgan Reyes\"\n    - generic\n      - statictext \"Follow-up\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 1:45 PM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s06\"\n    - generic\n      - statictext \"Dr. Morgan Reyesford\"\n    - generic\n      - statictext \"Follow-up\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 2:45 PM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s07\"\n    - generic\n      - statictext \"Dr. Morgan Reyes\"\n    - generic\n      - statictext \"Follow-up\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 3:15 PM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s08\"\n    - generic\n      - statictext \"Dr. Morgan Reyes\"\n    - generic\n      - statictext \"Follow-up\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 4:00 PM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s09\"\n    - generic\n      - statictext \"Dr. Alan Morgan\"\n    - generic\n      - statictext \"Follow-up\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 2:05 PM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s10\"\n    - generic\n      - statictext \"Dr. Morgan Reyes\"\n    - generic\n      - statictext \"Telehealth\"\n    - generic\n      - statictext \"half-hour\"\n    - generic\n      - statictext \"Starts 3:00 PM\"\n    - generic\n      - statictext \"Video visit\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s11\"\n    - generic\n      - statictext \"Dr. Morgan Reyes\"\n    - generic\n      - statictext \"Follow-up\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 11:00 AM\"\n    - button \"Book\" [focusable=true]\n  - listitem \"Slot s12\"\n    - generic\n      - statictext \"Dr. Kim Ortega\"\n    - generic\n      - statictext \"Consultation\"\n    - generic\n      - statictext \"30 min\"\n    - generic\n      - statictext \"Starts 2:20 PM\"\n    - button \"Book\" [focusable=true]\n- status",
+ "page": {
+  "title": "Clinic Slots dom-scope",
+  "url": "http://127.0.0.1:8935/booking?run=dom-fixture"
+ },
+ "refs": [
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:0",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:1",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:2",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:3",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:4",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:5",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:65",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:66",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:67",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:68",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:69",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Book",
+   "ref": "p11:70",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  }
+ ],
+ "snapshot": {
+  "complete": true,
+  "continuation": null,
+  "format": "semantic_v2",
+  "id": "p11",
+  "node_budget": 300,
+  "omitted": {
+   "budget": 0,
+   "css_hidden": 0,
+   "no_layout": 1,
+   "offscreen": 0,
+   "page_occluded": 0,
+   "unknown": 0,
+   "unprovable_frame": 0
+  },
+  "scope": "viewport",
+  "selected_nodes": 128,
+  "total_nodes": 128
+ },
+ "status": "ok",
+ "tab_id": "tab_fixture",
+ "target_id": "bt_fixture"
+}

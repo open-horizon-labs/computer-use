@@ -1,3 +1,7 @@
+# Active routing notice
+
+Native tools are preferred. Only explicitly selected mobile and isolated off-screen capabilities remain exposed. The specialist model profiles below are historical evidence, recoverable from codex/archive-general-facade-2026-10-02 (a531b43); they are not active MCP routes. Runtime provider commands and secrets remain external configuration.
+
 # Provider configuration
 
 **Current default profile:** `fleet` (user decision 2026-09-30, "Jev is the default"): NuExtract3 page reading, Jev/Qwen choice, GLiNER2 spans, and SystemOne screenshots (the only visual route: without `CUA_SYSTEMONE_URL` the visual provider is unavailable and nothing is sent; there is no chat-completion fallback). **The fleet profile sends page content (record text, screenshots, candidate descriptions) to the hosted services you configure** (`CUA_EXTRACT_URL`, `CUA_SELECTOR_COMMAND`, `CUA_SYSTEMONE_URL`); a clean install configures none, so those routes are unavailable until you do, and nothing is sent. `local-mac`, with Julia-1 as the chooser and no hosted fallback, remains selectable by an explicit profile. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.
@@ -63,3 +67,11 @@ Julia does not read screenshots or extract spans. [Terminal perception](TERMINAL
 ## NuExtract candidate preparation
 
 Set `CUA_PAGE_EXTRACTION=1` and `CUA_EXTRACT_URL` to your deployed `/v1/extract-page` endpoint. `generic_from_config()` wraps the preferred generic provider; only requests with an explicit `page_filter` invoke extraction. See [request shape, bounds and verification](PAGE-CANDIDATES.md). Model deployment and credentials remain external configuration.
+
+### iOS switch ancestry
+
+Mobile MCP 1.0.6 flattens the native hierarchy. For affected wide labeled iOS switches, the default local mobile backend reads a fresh complete hierarchy with pinned mobilecli 1.0.16 and binds only a unique, state-consistent actionable child. Custom mobile backends must explicitly supply a hierarchy reader; a local CLI is never silently attached to a remote or fake backend. Operators can configure `CUA_MOBILECLI_COMMAND` as a literal JSON argv prefix, for example `["/absolute/path/mobilecli"]`; the facade appends `dump ui --device <exact observed device>`. Reads have a timeout, a response-size acceptance limit and bounded tree traversal. The CLI output is buffered before the size check; this is not a streaming memory bound. Missing or malformed hierarchy refuses activation rather than inventing a coordinate offset.
+
+### Android switch state preservation
+
+The pinned mobile-mcp formatter omits false checked state. When an Android toggle has unknown state, the local facade conditionally calls the same literal `CUA_MOBILECLI_COMMAND` prefix with `dump ui --device <exact-device> --format raw` and replaces the complete element list with that fresh raw hierarchy. Explicit boolean state is accepted only on checkable nodes; missing state remains unknown in both look and verification. Observed switch bounds supply the existing mobile coordinate route because the raw tree has no refs. Hidden or disabled ancestry is conservatively refused; this can exclude a descendant that Android independently enables. Custom/remote backends must opt into an `android_hierarchy_reader`; offline tests start no local provider. The existing buffered-output size, timeout and traversal limits apply.
