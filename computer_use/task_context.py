@@ -115,7 +115,9 @@ class Contexts:
                     target = {'terminal': envelope['terminal']} if envelope.get('terminal') else task.target
                     matches = [value for (pid, wid, handle), value in task.facade.looks.items() if handle == raw]
                     if len(matches) == 1:
-                        target = {'pid': matches[0]['pid'], 'window_id': matches[0]['window_id']}
+                        matched = matches[0]
+                        target = ({'device': matched['device']} if matched.get('device') else
+                                  {'pid': matched['pid'], 'window_id': matched['window_id']})
                     handle = context_id + ':' + uuid.uuid4().hex
                     task.handles[handle] = {'raw': raw, 'target': dict(target) if target else None}
                     envelope['look_id'] = handle

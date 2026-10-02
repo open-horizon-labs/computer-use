@@ -46,6 +46,33 @@ class ContextTests(unittest.TestCase):
         self.assertEqual(result['context_id'],seen['context_id'])
         self.assertEqual(result['status'],'observed')
 
+    def test_mobile_look_handle_preserves_device_target_and_context_isolation(self):
+        # Wrong patch: assume every facade.looks entry has Mac pid/window keys,
+        # or resume whichever device the context observed most recently.
+        import test_mobile as tm
+        backends = []
+        def factory(options):
+            backend = tm.FakeBackend({'home': tm.IOS_HOME}, 'home')
+            backends.append(backend)
+            return tm.facade_for(backend)
+        self.registry.factory = factory
+        a = self.registry.call(self.default, 'look', {'device': tm.SIMULATOR}, self.options)
+        self.assertEqual(a['status'], 'ok')
+        self.assertEqual(self.registry.tasks[a['context_id']].handles[a['look_id']]['target'], {'device': tm.SIMULATOR})
+        b = self.registry.call(self.default, 'look', {'device': tm.EMULATOR}, self.options)
+        wrong = self.registry.call(self.default, 'do', {'goal': 'Observe', 'expect': None, 'look_id': a['look_id'],
+                                  'steps': [{'do': 'verify', 'expect': 'missing'}]}, context_id=b['context_id'])
+        self.assertEqual(wrong['reason'], 'context_look_mismatch')
+        again = self.registry.call(self.default, 'look', {}, context_id=a['context_id'])
+        self.assertEqual(again['window']['device'], tm.SIMULATOR)
+        self.assertEqual(backends[0].tapped, [])
+        self.assertEqual(backends[1].tapped, [])
+        self.registry.call(self.default, 'look', {'device': tm.EMULATOR}, context_id=a['context_id'])
+        self.registry.call(self.default, 'do', {'goal': 'Observe', 'expect': None, 'look_id': a['look_id'],
+                           'steps': [{'do': 'verify', 'expect': 'missing'}]})
+        self.assertEqual(backends[0].calls[-1][1]['device'], tm.SIMULATOR,
+                         'an old handle selects its bound device, never the latest context target')
+
     def test_context_resumes_exact_target_without_repeating_its_title(self):
         seen = self.registry.call(self.default,'look',{'title':'Demo'},self.options)
         again = self.registry.call(self.default,'look',{},context_id=seen['context_id'])

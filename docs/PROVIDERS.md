@@ -63,3 +63,7 @@ Julia does not read screenshots or extract spans. [Terminal perception](TERMINAL
 ## NuExtract candidate preparation
 
 Set `CUA_PAGE_EXTRACTION=1` and `CUA_EXTRACT_URL` to your deployed `/v1/extract-page` endpoint. `generic_from_config()` wraps the preferred generic provider; only requests with an explicit `page_filter` invoke extraction. See [request shape, bounds and verification](PAGE-CANDIDATES.md). Model deployment and credentials remain external configuration.
+
+### iOS switch ancestry
+
+Mobile MCP 1.0.6 flattens the native hierarchy. For affected wide labeled iOS switches, the default local mobile backend reads a fresh complete hierarchy with pinned mobilecli 1.0.16 and binds only a unique, state-consistent actionable child. Custom mobile backends must explicitly supply a hierarchy reader; a local CLI is never silently attached to a remote or fake backend. Operators can configure `CUA_MOBILECLI_COMMAND` as a literal JSON argv prefix, for example `["/absolute/path/mobilecli"]`; the facade appends `dump ui --device <exact observed device>`. Reads have a timeout, a response-size acceptance limit and bounded tree traversal. The CLI output is buffered before the size check; this is not a streaming memory bound. Missing or malformed hierarchy refuses activation rather than inventing a coordinate offset.

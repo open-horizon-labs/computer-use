@@ -301,8 +301,28 @@ def analyze(f, state):
             other.append(clean(nodes[i]['label']))
     toggles = [{'label': clean(nodes[i].get('label'))[:40], 'state': toggle_marker(nodes[i])} for i in sorted(outside)
                if is_control(i) and nodes[i].get('label') and toggle_marker(nodes[i])]
-    inputs = [{'label': clean(nodes[i].get('label'))[:40], 'value': clean(nodes[i].get('value'))[:30]} for i in sorted(outside)
-              if nodes[i].get('role') in INPUT_ROLES]
+    inputs = []
+    for i in sorted(outside):
+        if nodes[i].get('role') in INPUT_ROLES:
+            value, clipped = cut(clean(nodes[i].get('value')), LINE_MAX_CHARS)
+            inputs.append({'label': clean(nodes[i].get('label'))[:40], 'value': value,
+                           **({'value_truncated': True} if clipped else {})})
+    # Expose the existing select route beside the observed control, so callers do not
+    # press a global option label duplicated by Chrome's native popup mirror.
+    import forms
+    selects = []
+    for i in sorted(outside):
+        if nodes[i].get('role') not in forms.SELECT_ROLES or not nodes[i].get('label') or i in state['aliases']:
+            continue
+        value = forms.shown_of(f, state, i)
+        shown, clipped = cut(value, LINE_MAX_CHARS) if value is not None else (None, False)
+        options = forms.options_of(f, state, i)
+        displayed = [cut(option, LINE_MAX_CHARS) for option in options[:INPUT_LIST_MAX]]
+        selects.append({'label': clean(nodes[i].get('label'))[:40], 'value': shown,
+                        'options': [option for option, _ in displayed],
+                        **({'truncated': True} if clipped or len(options) > INPUT_LIST_MAX or any(c for _, c in displayed) else {})})
+    if selects:
+        notes.append('Select an option with a type step: control is the select label, text is the exact option label; selection is verified by a fresh selected value. A closed select may show only its current option.')
     # A page text can prove an `expect` only when exactly ONE element displays it (Chrome shows a heading twice: the heading and its text child).
     repeated = []
     for line in page_text:
@@ -313,7 +333,7 @@ def analyze(f, state):
     if state['raw'].get('_dom'):
         import dom_bound
         control_state.append({'browser_identity':dom_bound.identity(state['raw'])})
-    return {'records': records, 'kind': kind, 'header': header, 'text': page_text, 'dialogs': dialogs, 'other_controls': other, 'inputs': inputs, 'toggles': toggles,
+    return {'records': records, 'kind': kind, 'header': header, 'text': page_text, 'dialogs': dialogs, 'other_controls': other, 'inputs': inputs, 'toggles': toggles, 'selects': selects,
             'headings': list(dict.fromkeys(clean(nodes[i].get('label')) or text_of(nodes[i]) for i in sorted(content) if nodes[i].get('role') == 'AXHeading' and (clean(nodes[i].get('label')) or text_of(nodes[i])))),  # a heading's value is its level; its label is the text
             'control_state': control_state,
             'page_controls': len(page_controls), 'all_controls': len(all_controls), 'notes': notes, 'ctrl_ids': page_controls, 'repeated_text': repeated}
@@ -360,6 +380,7 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
         if r.get('dom_lines'):item['dom_lines'] = r['dom_lines']
         return item
     text_lost = max(0, len(analysis['text']) - TEXT_MAX_LINES)
+    text_lost += sum(bool(item.get('value_truncated')) for item in analysis['inputs'][:INPUT_LIST_MAX])
     text = []
     for line in analysis['text'][:TEXT_MAX_LINES]:
         shown, was_cut = cut(line)
@@ -368,6 +389,7 @@ def assemble(f, state, analysis, rows, max_bytes, extras):
                 'dialogs': analysis['dialogs'][:DIALOG_MAX], 'controls': analysis['other_controls'][:CONTROL_LIST_MAX],
                 **({'inputs': analysis['inputs'][:INPUT_LIST_MAX]} if analysis['inputs'] else {}),
                 **({'toggles': analysis['toggles'][:INPUT_LIST_MAX]} if analysis['toggles'] else {}),
+                **({'selects': analysis.get('selects', [])[:INPUT_LIST_MAX]} if analysis.get('selects') else {}),
                 **({'header': analysis['header'][:8]} if analysis['header'] else {}),
                 **({'repeated_text': [cut(t)[0] for t in analysis['repeated_text'][:10]]} if analysis['repeated_text'] else {})}
     if extras.get('canvas') is not None:response['canvas'] = extras['canvas']

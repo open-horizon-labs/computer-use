@@ -713,5 +713,19 @@
    "note": "No new MCP tool or mandatory default-path step; CALL_BUDGET numbers unchanged. Existing tool schema/description ceilings remain unchanged."
   },
   "status_note": "Grid/cursor/status sampling and send are not atomic in upstream. No claim of arbitrary GUI attachment, all-TUI accuracy, locked-desktop OBO success, or measured superiority over tmux/iTerm2."
+ },
+ {
+  "id": "CE-FACADE-016",
+  "status": "approved",
+  "authority": "User requested trace audits and fixing the top three slowest or highest-token OH losses across mixed drivers.",
+  "classification": "Facade evidence projection and target-scoped state verification; no new MCP tool or mandatory common-path call.",
+  "input_and_actual": "Fresh MCP mobile look failed with KeyError pid because task contexts assumed Mac window metadata. After context repair, iOS Dark Appearance presses still left the owned simulator light: mobile-mcp flattened away the labeled Switch parent and unlabeled actionable Switch child relationship.",
+  "corrected_behavior": "Bind device look handles to their exact device, not nonexistent window fields. On affected iOS switch screens, a complete newer native hierarchy replaces the flat snapshot. A wide labeled Switch activates only its unique observed direct Switch child with matching state, enabled positive bounds and a distinct ref. Missing/conflicting/ambiguous activation refuses. Activation bounds and refusals participate in semantic progress; provider ref renumbering alone is not progress. Toggle values participate in look freshness, stale flips refuse, and setting an already-matching known state delivers no input. State uniqueness does not collapse competing controls by geometry. Validate bounded hierarchy shape and unique activation refs; malformed data returns a typed refusal. checked/unchecked expectations inspect the uniquely matched target on an independent fresh observation; missing values and other switches do not prove state. Custom backends explicitly opt into native hierarchy reads; offline checks never start providers.",
+  "tempting_wrong_repair": "Use a dummy pid; route a device look to the active context target; tap the label-row center or a guessed right-edge offset; infer ancestry from flat proximity; choose the first child; accept an input acknowledgment or another switch as proof.",
+  "regression": "computer_use/test_task_context.py; computer_use/test_mobile_hierarchy.py using fixtures/mobile/ios_developer.real.hierarchy.json; manual owned simulator child tap independently checked by simctl appearance, followed by verified reverse tap. Same-prompt fresh-agent qualification retained separately. Independent review exposed contradictory overlapping state, negative dimensions, conflicting child flags, duplicate refs and malformed child lists; adversarial cases reject each.",
+  "call_budget": {
+   "note": "No LLM-visible tool or mandatory default-path step added; existing CALL_BUDGET values unchanged."
+  },
+  "status_note": "No claim of atomic read/send, arbitrary iOS hierarchy accuracy, native permission equivalence or measured speed until fresh-agent results."
  }
 ]

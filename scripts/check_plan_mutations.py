@@ -514,7 +514,7 @@ MUTATIONS = {
     # CE-FACADE-008 (#54): a device is look, then do through mobile-mcp. Each wrong patch below is a tempting shortcut of that contract.
     'device_tap_on_the_looks_stale_list': (
         'reuse the element list the look read (cheaper): after any layout change the ref or bounds point at another control',
-        [('mobile.py', "        return parse_elements(text)\n", "        return self.__dict__.setdefault('_stale', {}).setdefault(device, parse_elements(text))\n")],
+        [('mobile.py', "        return elements\n", "        return self.__dict__.setdefault('_stale', {}).setdefault(device, elements)\n")],
         ['test_mobile.DoPress.test_a_press_taps_the_fresh_element_not_what_the_look_showed', 'test_mobile.DoPress.test_a_two_step_plan_reads_fresh_for_every_step']),
     'device_first_of_several_matches': (
         'tap the first of several elements that carry the label instead of refusing',
@@ -522,7 +522,7 @@ MUTATIONS = {
         ['test_mobile.DoPress.test_several_matching_elements_are_never_guessed']),
     'device_trust_the_taps_ok': (
         "call a tap done because mobile-mcp answered \"Clicked on\" (a locked phone drops taps silently: upstream found exactly that)",
-        [('mobile.py', "    return x.settle(step, before, TAP_DELAYS, extra={'selected': selected})", "    return {'status': 'done', 'delivery': 'delivered', 'selected': selected}")],
+        [('mobile.py', "    return x.settle(step, before, TAP_DELAYS, target=target, extra={'selected': selected})", "    return {'status': 'done', 'delivery': 'delivered', 'selected': selected}")],
         ['test_mobile.DoPress.test_a_tap_the_device_did_not_act_on_is_never_done',
          'test_mobile.DoPress.test_a_tap_that_changed_the_screen_but_not_as_expected_is_unverified_not_done',
          'test_mobile.DoPress.test_no_expect_on_the_last_step_ends_delivered_unverified_never_done']),
@@ -879,6 +879,26 @@ MUTATIONS.update({
         'expand semicolons and substitutions in caller arguments',
         [('terminal.py', "term='xterm-256color', shell=False", "term='xterm-256color', shell=True")],
         ['test_terminal.TerminalTests.test_launch_passes_literal_argv_and_cwd_without_shell']),
+})
+
+
+MUTATIONS.update({
+    'ios_tap_labeled_parent': (
+        'discard observed actionable child and tap wide label-row center',
+        [('mobile.py', "activation = element.get('activation') or element", "activation = element")],
+        ['test_mobile_hierarchy.Hierarchy.test_real_child_not_label_row_center']),
+    'ios_first_competing_child': (
+        'choose the first switch child despite multiple competitors',
+        [('mobile_hierarchy.py', 'valid = len(candidates) == 1', 'valid = bool(candidates)')],
+        ['test_mobile_hierarchy.Hierarchy.test_ambiguous_or_conflicting_children_refuse']),
+    'ios_ignore_child_state': (
+        'bind a child reporting a conflicting state',
+        [('mobile_hierarchy.py', "and toggle_state(e) is not None and toggle_state(child) == toggle_state(e)", 'and True')],
+        ['test_mobile_hierarchy.Hierarchy.test_ambiguous_or_conflicting_children_refuse']),
+    'ios_unchecked_without_value': (
+        'missing switch value is treated as unchecked',
+        [('mobile.py', "    return value_state or flag_state\n", "    return value_state or flag_state or 'unchecked'\n")],
+        ['test_mobile_hierarchy.Hierarchy.test_independent_toggle_state_not_tap_ack_or_other_switch']),
 })
 
 def stage(tmp):

@@ -1,0 +1,1282 @@
+{
+  "status": "ok",
+  "data": {
+    "elements": [
+      {
+        "ref": "@e1",
+        "type": "NavigationBar",
+        "name": "Developer",
+        "identifier": "Developer",
+        "rect": {
+          "x": 0,
+          "y": 62,
+          "width": 402,
+          "height": 54
+        },
+        "children": [
+          {
+            "ref": "@e2",
+            "type": "Button",
+            "label": "Settings",
+            "name": "BackButton",
+            "identifier": "BackButton",
+            "rect": {
+              "x": 16,
+              "y": 62,
+              "width": 44,
+              "height": 44
+            }
+          },
+          {
+            "ref": "@e3",
+            "type": "StaticText",
+            "label": "Developer",
+            "name": "Developer",
+            "rect": {
+              "x": 160,
+              "y": 73,
+              "width": 81,
+              "height": 20
+            }
+          }
+        ]
+      },
+      {
+        "ref": "@e4",
+        "type": "Other",
+        "name": "Appearance",
+        "identifier": "Appearance",
+        "rect": {
+          "x": 0,
+          "y": 116,
+          "width": 402,
+          "height": 55
+        }
+      },
+      {
+        "ref": "@e5",
+        "type": "Cell",
+        "name": "UIAppearanceSettings",
+        "identifier": "UIAppearanceSettings",
+        "rect": {
+          "x": 20,
+          "y": 171,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e6",
+            "type": "Switch",
+            "label": "Dark Appearance",
+            "name": "UIAppearanceSettings",
+            "value": "0",
+            "identifier": "UIAppearanceSettings",
+            "rect": {
+              "x": 36,
+              "y": 184,
+              "width": 330,
+              "height": 28
+            },
+            "children": [
+              {
+                "ref": "@e7",
+                "type": "Button",
+                "label": "Dark Appearance",
+                "name": "UIAppearanceSettings",
+                "identifier": "UIAppearanceSettings",
+                "rect": {
+                  "x": 36,
+                  "y": 187,
+                  "width": 132,
+                  "height": 20
+                }
+              },
+              {
+                "ref": "@e8",
+                "type": "Switch",
+                "value": "0",
+                "rect": {
+                  "x": 305,
+                  "y": 183,
+                  "width": 63,
+                  "height": 28
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "@e9",
+        "type": "Other",
+        "name": "Display Zoom",
+        "identifier": "Display Zoom",
+        "rect": {
+          "x": 0,
+          "y": 241,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e10",
+        "type": "Cell",
+        "label": "View, Default",
+        "name": "MAGNIFY",
+        "identifier": "MAGNIFY",
+        "rect": {
+          "x": 20,
+          "y": 286,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e11",
+            "type": "Button",
+            "label": "View, Default",
+            "name": "MAGNIFY",
+            "identifier": "MAGNIFY",
+            "rect": {
+              "x": 36,
+              "y": 303,
+              "width": 307,
+              "height": 20
+            },
+            "children": [
+              {
+                "ref": "@e12",
+                "type": "StaticText",
+                "label": "View",
+                "name": "View",
+                "rect": {
+                  "x": 36,
+                  "y": 303,
+                  "width": 37,
+                  "height": 20
+                }
+              },
+              {
+                "ref": "@e13",
+                "type": "StaticText",
+                "label": "Default",
+                "name": "Default",
+                "rect": {
+                  "x": 288,
+                  "y": 303,
+                  "width": 55,
+                  "height": 20
+                }
+              }
+            ]
+          },
+          {
+            "ref": "@e14",
+            "type": "Button",
+            "label": "chevron",
+            "name": "chevron",
+            "rect": {
+              "x": 351,
+              "y": 306,
+              "width": 10,
+              "height": 14
+            },
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "ref": "@e15",
+        "type": "Other",
+        "name": "Choose a view for iPhone. Zoomed shows larger controls. Standard shows more content.",
+        "identifier": "Choose a view for iPhone. Zoomed shows larger controls. Standard shows more content.",
+        "rect": {
+          "x": 0,
+          "y": 339,
+          "width": 402,
+          "height": 46
+        }
+      },
+      {
+        "ref": "@e16",
+        "type": "Other",
+        "name": "Paired Devices",
+        "identifier": "Paired Devices",
+        "rect": {
+          "x": 0,
+          "y": 385,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e17",
+        "type": "Cell",
+        "label": "Clear Trusted Computers",
+        "name": "CLEAR_TRUSTED_COMPUTERS",
+        "identifier": "CLEAR_TRUSTED_COMPUTERS",
+        "rect": {
+          "x": 20,
+          "y": 431,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e18",
+            "type": "Button",
+            "label": "Clear Trusted Computers",
+            "name": "CLEAR_TRUSTED_COMPUTERS",
+            "identifier": "CLEAR_TRUSTED_COMPUTERS",
+            "rect": {
+              "x": 36,
+              "y": 447,
+              "width": 191,
+              "height": 20
+            }
+          }
+        ]
+      },
+      {
+        "ref": "@e19",
+        "type": "Other",
+        "name": "Removing trusted computers will delete all of the records of computers that you have paired with previously.",
+        "identifier": "Removing trusted computers will delete all of the records of computers that you have paired with previously.",
+        "rect": {
+          "x": 0,
+          "y": 484,
+          "width": 402,
+          "height": 62
+        }
+      },
+      {
+        "ref": "@e20",
+        "type": "Other",
+        "name": "UI Automation",
+        "identifier": "UI Automation",
+        "rect": {
+          "x": 0,
+          "y": 546,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e21",
+        "type": "Cell",
+        "name": "UIAGroup.0",
+        "identifier": "UIAGroup.0",
+        "rect": {
+          "x": 20,
+          "y": 584,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e22",
+            "type": "Switch",
+            "label": "Enable UI Automation",
+            "name": "UIAGroup.0",
+            "value": "1",
+            "identifier": "UIAGroup.0",
+            "rect": {
+              "x": 36,
+              "y": 597,
+              "width": 330,
+              "height": 28
+            },
+            "checked": true,
+            "children": [
+              {
+                "ref": "@e23",
+                "type": "Button",
+                "label": "Enable UI Automation",
+                "name": "UIAGroup.0",
+                "identifier": "UIAGroup.0",
+                "rect": {
+                  "x": 36,
+                  "y": 600,
+                  "width": 163,
+                  "height": 20
+                }
+              },
+              {
+                "ref": "@e24",
+                "type": "Switch",
+                "value": "1",
+                "rect": {
+                  "x": 305,
+                  "y": 596,
+                  "width": 63,
+                  "height": 28
+                },
+                "checked": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ref": "@e25",
+        "type": "Other",
+        "name": "Performance",
+        "identifier": "Performance",
+        "rect": {
+          "x": 0,
+          "y": 654,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e26",
+        "type": "Cell",
+        "label": "L4S",
+        "name": "L4S_SETTINGS",
+        "identifier": "L4S_SETTINGS",
+        "rect": {
+          "x": 20,
+          "y": 692,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e27",
+            "type": "Button",
+            "label": "L4S",
+            "name": "L4S_SETTINGS",
+            "identifier": "L4S_SETTINGS",
+            "rect": {
+              "x": 36,
+              "y": 708,
+              "width": 30,
+              "height": 20
+            }
+          },
+          {
+            "ref": "@e28",
+            "type": "Button",
+            "label": "chevron",
+            "name": "chevron",
+            "rect": {
+              "x": 351,
+              "y": 711,
+              "width": 10,
+              "height": 14
+            },
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "ref": "@e29",
+        "type": "Other",
+        "name": "Authentication Services Testing",
+        "identifier": "Authentication Services Testing",
+        "rect": {
+          "x": 0,
+          "y": 762,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e30",
+        "type": "Cell",
+        "label": "Open Commit f67c01e",
+        "name": "AUTHENTICATION_SERVICES_QUIRKS_BUTTON",
+        "identifier": "AUTHENTICATION_SERVICES_QUIRKS_BUTTON",
+        "rect": {
+          "x": 20,
+          "y": 800,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e31",
+            "type": "Button",
+            "label": "Open Commit f67c01e",
+            "name": "AUTHENTICATION_SERVICES_QUIRKS_BUTTON",
+            "identifier": "AUTHENTICATION_SERVICES_QUIRKS_BUTTON",
+            "rect": {
+              "x": 36,
+              "y": 817,
+              "width": 170,
+              "height": 20
+            }
+          }
+        ]
+      },
+      {
+        "ref": "@e32",
+        "type": "StaticText",
+        "label": "State Restoration Testing",
+        "name": "State Restoration Testing",
+        "rect": {
+          "x": 0,
+          "y": 949,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e33",
+        "type": "Cell",
+        "name": "STATE_RESTORATION_GROUP.0",
+        "identifier": "STATE_RESTORATION_GROUP.0",
+        "rect": {
+          "x": 20,
+          "y": 995,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e34",
+        "type": "StaticText",
+        "label": "Terminate instead of suspending apps when backgrounded to force apps to be relaunched when they are foregrounded.",
+        "name": "Terminate instead of suspending apps when backgrounded to force apps to be relaunched when they are foregrounded.",
+        "rect": {
+          "x": 0,
+          "y": 995,
+          "width": 402,
+          "height": 62
+        }
+      },
+      {
+        "ref": "@e35",
+        "type": "StaticText",
+        "label": "Wallet Testing",
+        "name": "Wallet Testing",
+        "rect": {
+          "x": 0,
+          "y": 1110,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e36",
+        "type": "Cell",
+        "name": "ADDITIONAL_LOGGING",
+        "identifier": "ADDITIONAL_LOGGING",
+        "rect": {
+          "x": 20,
+          "y": 1148,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e37",
+        "type": "Cell",
+        "name": "ALLOW_HTTP_SERVICES",
+        "identifier": "ALLOW_HTTP_SERVICES",
+        "rect": {
+          "x": 20,
+          "y": 1201,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e38",
+        "type": "Cell",
+        "name": "DISABLE_RATE_LIMITING",
+        "identifier": "DISABLE_RATE_LIMITING",
+        "rect": {
+          "x": 20,
+          "y": 1254,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e39",
+        "type": "Cell",
+        "name": "NFC_PASS_KEY_OPTIONAL",
+        "identifier": "NFC_PASS_KEY_OPTIONAL",
+        "rect": {
+          "x": 20,
+          "y": 1307,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e40",
+        "type": "StaticText",
+        "label": "Media Services Testing",
+        "name": "Media Services Testing",
+        "rect": {
+          "x": 0,
+          "y": 1377,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e41",
+        "type": "Cell",
+        "label": "Reset Media Services",
+        "name": "RESET_MEDIA_SERVICES",
+        "identifier": "RESET_MEDIA_SERVICES",
+        "rect": {
+          "x": 20,
+          "y": 1415,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e42",
+        "type": "StaticText",
+        "label": "News Testing",
+        "name": "News Testing",
+        "rect": {
+          "x": 0,
+          "y": 1485,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e43",
+        "type": "Cell",
+        "name": "RESET_LOCAL_DATA_ON_NEXT_LAUNCH",
+        "identifier": "RESET_LOCAL_DATA_ON_NEXT_LAUNCH",
+        "rect": {
+          "x": 20,
+          "y": 1531,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e44",
+        "type": "StaticText",
+        "label": "Reset layouts, images, and other cached elements. Private data will not be affected.",
+        "name": "Reset layouts, images, and other cached elements. Private data will not be affected.",
+        "rect": {
+          "x": 0,
+          "y": 1531,
+          "width": 402,
+          "height": 46
+        }
+      },
+      {
+        "ref": "@e45",
+        "type": "StaticText",
+        "label": "TV Provider Testing",
+        "name": "TV Provider Testing",
+        "rect": {
+          "x": 0,
+          "y": 1630,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e46",
+        "type": "Cell",
+        "label": "TV Provider",
+        "name": "VideoSubscriberAccountSettings",
+        "identifier": "VideoSubscriberAccountSettings",
+        "rect": {
+          "x": 20,
+          "y": 1668,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e47",
+            "type": "Button",
+            "label": "chevron",
+            "name": "chevron",
+            "rect": {
+              "x": 0,
+              "y": 116,
+              "width": 10,
+              "height": 14
+            },
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "ref": "@e48",
+        "type": "StaticText",
+        "label": "TV App Testing",
+        "name": "TV App Testing",
+        "rect": {
+          "x": 0,
+          "y": 1738,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e49",
+        "type": "Cell",
+        "label": "TV App",
+        "name": "VideoSubscriberAccountTVAppSettings",
+        "identifier": "VideoSubscriberAccountTVAppSettings",
+        "rect": {
+          "x": 20,
+          "y": 1776,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e50",
+            "type": "Button",
+            "label": "chevron",
+            "name": "chevron",
+            "rect": {
+              "x": 0,
+              "y": 116,
+              "width": 10,
+              "height": 14
+            },
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "ref": "@e51",
+        "type": "StaticText",
+        "label": "CoreSpotlight Testing",
+        "name": "CoreSpotlight Testing",
+        "rect": {
+          "x": 0,
+          "y": 1846,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e52",
+        "type": "Cell",
+        "label": "Reindex All Items",
+        "name": "REINDEX_ALL_ITEMS",
+        "identifier": "REINDEX_ALL_ITEMS",
+        "rect": {
+          "x": 20,
+          "y": 1884,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e53",
+        "type": "Cell",
+        "label": "Reindex All Items with Identifiers",
+        "name": "REINDEX_ALL_ITEMS_WITH_IDENTIFIERS",
+        "identifier": "REINDEX_ALL_ITEMS_WITH_IDENTIFIERS",
+        "rect": {
+          "x": 20,
+          "y": 1937,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e54",
+        "type": "StaticText",
+        "label": "Widget Testing",
+        "name": "Widget Testing",
+        "rect": {
+          "x": 0,
+          "y": 2008,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e55",
+        "type": "Cell",
+        "name": "WIDGETKIT_DEVELOPER_MODE_ENABLED",
+        "identifier": "WIDGETKIT_DEVELOPER_MODE_ENABLED",
+        "rect": {
+          "x": 20,
+          "y": 2053,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e56",
+        "type": "StaticText",
+        "label": "When turned on, your widgets will not be subject to the standard WidgetKit constraints to allow for debugging.",
+        "name": "When turned on, your widgets will not be subject to the standard WidgetKit constraints to allow for debugging.",
+        "rect": {
+          "x": 0,
+          "y": 2053,
+          "width": 402,
+          "height": 62
+        }
+      },
+      {
+        "ref": "@e57",
+        "type": "StaticText",
+        "label": "Shortcuts Testing",
+        "name": "Shortcuts Testing",
+        "rect": {
+          "x": 0,
+          "y": 2168,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e58",
+        "type": "Cell",
+        "name": "DISPLAY_DONATIONS_SPOTLIGHT",
+        "identifier": "DISPLAY_DONATIONS_SPOTLIGHT",
+        "rect": {
+          "x": 20,
+          "y": 2213,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e59",
+        "type": "StaticText",
+        "label": "When turned on, the Siri Suggestions Widget & Siri Watch Face show the most recently provided shortcuts rather than current predictions.",
+        "name": "When turned on, the Siri Suggestions Widget & Siri Watch Face show the most recently provided shortcuts rather than current predictions.",
+        "rect": {
+          "x": 0,
+          "y": 2213,
+          "width": 402,
+          "height": 62
+        }
+      },
+      {
+        "ref": "@e60",
+        "type": "Cell",
+        "name": "DISPLAY_UPCOMING_MEDIA",
+        "identifier": "DISPLAY_UPCOMING_MEDIA",
+        "rect": {
+          "x": 20,
+          "y": 2346,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e61",
+        "type": "StaticText",
+        "label": "When turned on, Siri Suggestions in Search will show Upcoming Media Intents donated via INUpcomingMediaManager.",
+        "name": "When turned on, Siri Suggestions in Search will show Upcoming Media Intents donated via INUpcomingMediaManager.",
+        "rect": {
+          "x": 0,
+          "y": 2346,
+          "width": 402,
+          "height": 62
+        }
+      },
+      {
+        "ref": "@e62",
+        "type": "Cell",
+        "name": "DISPLAY_DONATIONS_LOCKSCREEN",
+        "identifier": "DISPLAY_DONATIONS_LOCKSCREEN",
+        "rect": {
+          "x": 20,
+          "y": 2479,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e63",
+        "type": "StaticText",
+        "label": "When turned on, the most recently donated shortcuts will be shown on the Lock Screen.",
+        "name": "When turned on, the most recently donated shortcuts will be shown on the Lock Screen.",
+        "rect": {
+          "x": 0,
+          "y": 2479,
+          "width": 402,
+          "height": 46
+        }
+      },
+      {
+        "ref": "@e64",
+        "type": "Cell",
+        "label": "Force Sync Shortcuts to Watch",
+        "name": "SIRI_ACTIONS_SYNC_WATCHOS",
+        "identifier": "SIRI_ACTIONS_SYNC_WATCHOS",
+        "rect": {
+          "x": 20,
+          "y": 2595,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e65",
+        "type": "StaticText",
+        "label": "To force sync shortcuts, make sure Apple Watch is connected to its charger.",
+        "name": "To force sync shortcuts, make sure Apple Watch is connected to its charger.",
+        "rect": {
+          "x": 0,
+          "y": 2595,
+          "width": 402,
+          "height": 46
+        }
+      },
+      {
+        "ref": "@e66",
+        "type": "StaticText",
+        "label": "Siri Event Suggestions Testing",
+        "name": "Siri Event Suggestions Testing",
+        "rect": {
+          "x": 0,
+          "y": 2694,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e67",
+        "type": "Cell",
+        "name": "SIRI_EVENT_SUGGESTIONS_TESTING_ALLOW_ANY_DOMAIN",
+        "identifier": "SIRI_EVENT_SUGGESTIONS_TESTING_ALLOW_ANY_DOMAIN",
+        "rect": {
+          "x": 20,
+          "y": 2740,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e68",
+        "type": "Cell",
+        "name": "SIRI_EVENT_SUGGESTIONS_TESTING_ALLOW_UNVERIFIED_DOCUMENTS",
+        "identifier": "SIRI_EVENT_SUGGESTIONS_TESTING_ALLOW_UNVERIFIED_DOCUMENTS",
+        "rect": {
+          "x": 20,
+          "y": 2793,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e69",
+        "type": "StaticText",
+        "label": "These settings affect Siri Event Suggestions from Mail and Safari. Enable Allow Any Domain to allow e-mails or web pages which have not yet been approved for Siri Event Suggestions by Apple. Enable Allow Unverified Sources to bypass DKIM or SSL authenticity verification for Siri Event Suggestions in Mail and Safari.",
+        "name": "These settings affect Siri Event Suggestions from Mail and Safari. Enable Allow Any Domain to allow e-mails or web pages which have not yet been approved for Siri Event Suggestions by Apple. Enable Allow Unverified Sources to bypass DKIM or SSL authenticity verification for Siri Event Suggestions in Mail and Safari.",
+        "rect": {
+          "x": 0,
+          "y": 2740,
+          "width": 402,
+          "height": 126
+        }
+      },
+      {
+        "ref": "@e70",
+        "type": "StaticText",
+        "label": "MIDI-CI Testing",
+        "name": "MIDI-CI Testing",
+        "rect": {
+          "x": 0,
+          "y": 2972,
+          "width": 402,
+          "height": 38
+        }
+      },
+      {
+        "ref": "@e71",
+        "type": "Cell",
+        "name": "MIDI_CI_API_BETA_ENABLE",
+        "identifier": "MIDI_CI_API_BETA_ENABLE",
+        "rect": {
+          "x": 20,
+          "y": 3010,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e72",
+        "type": "StaticText",
+        "label": "Metal HUD",
+        "name": "Metal HUD",
+        "rect": {
+          "x": 0,
+          "y": 3080,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e73",
+        "type": "Cell",
+        "label": "Metal HUD",
+        "name": "METAL_HUD_CONFIG",
+        "identifier": "METAL_HUD_CONFIG",
+        "rect": {
+          "x": 20,
+          "y": 3125,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e74",
+            "type": "Button",
+            "label": "chevron",
+            "name": "chevron",
+            "rect": {
+              "x": 0,
+              "y": 116,
+              "width": 10,
+              "height": 14
+            },
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "ref": "@e75",
+        "type": "StaticText",
+        "label": "The Metal performance HUD shows framerate, GPU time, memory usage, and can log performance data for later analysis.",
+        "name": "The Metal performance HUD shows framerate, GPU time, memory usage, and can log performance data for later analysis.",
+        "rect": {
+          "x": 0,
+          "y": 3125,
+          "width": 402,
+          "height": 62
+        }
+      },
+      {
+        "ref": "@e76",
+        "type": "StaticText",
+        "label": "Bluetooth Logging",
+        "name": "Bluetooth Logging",
+        "rect": {
+          "x": 0,
+          "y": 3240,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e77",
+        "type": "Cell",
+        "name": "BLUETOOTH_TESTING_HID_LOGGING_ENABLE",
+        "identifier": "BLUETOOTH_TESTING_HID_LOGGING_ENABLE",
+        "rect": {
+          "x": 20,
+          "y": 3286,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e78",
+        "type": "Cell",
+        "name": "BLUETOOTH_TESTING_HRM_LOGGING_ENABLE",
+        "identifier": "BLUETOOTH_TESTING_HRM_LOGGING_ENABLE",
+        "rect": {
+          "x": 20,
+          "y": 3339,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e79",
+        "type": "StaticText",
+        "label": "Allow additional data exchanged over Bluetooth to be saved in packetlogger file.",
+        "name": "Allow additional data exchanged over Bluetooth to be saved in packetlogger file.",
+        "rect": {
+          "x": 0,
+          "y": 3286,
+          "width": 402,
+          "height": 46
+        }
+      },
+      {
+        "ref": "@e80",
+        "type": "StaticText",
+        "label": "Siri in Bluetooth Car Testing",
+        "name": "Siri in Bluetooth Car Testing",
+        "rect": {
+          "x": 0,
+          "y": 3438,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e81",
+        "type": "Cell",
+        "name": "PREFERRED_AUDIO_ROUTE_TESTING",
+        "identifier": "PREFERRED_AUDIO_ROUTE_TESTING",
+        "rect": {
+          "x": 20,
+          "y": 3483,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e82",
+        "type": "StaticText",
+        "label": "Allow Siri to change audio route in a bluetooth vehicle. Go to Settings -> Siri & Search -> Siri Responses -> \"When Connected to Car Bluetooth\" to change the audio route.",
+        "name": "Allow Siri to change audio route in a bluetooth vehicle. Go to Settings -> Siri & Search -> Siri Responses -> \"When Connected to Car Bluetooth\" to change the audio route.",
+        "rect": {
+          "x": 0,
+          "y": 3483,
+          "width": 402,
+          "height": 78
+        }
+      },
+      {
+        "ref": "@e83",
+        "type": "StaticText",
+        "label": "Sandbox Apple Account",
+        "name": "Sandbox Apple Account",
+        "rect": {
+          "x": 0,
+          "y": 3614,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e84",
+        "type": "Cell",
+        "label": "Sign In",
+        "name": "SANDBOX_ACCOUNT_BUTTON",
+        "identifier": "SANDBOX_ACCOUNT_BUTTON",
+        "rect": {
+          "x": 20,
+          "y": 3659,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e85",
+        "type": "StaticText",
+        "label": "This account will only be used for testing your in-app purchases in sandbox.",
+        "name": "This account will only be used for testing your in-app purchases in sandbox.",
+        "rect": {
+          "x": 0,
+          "y": 3659,
+          "width": 402,
+          "height": 46
+        }
+      },
+      {
+        "ref": "@e86",
+        "type": "StaticText",
+        "label": "Game Center Testing",
+        "name": "Game Center Testing",
+        "rect": {
+          "x": 0,
+          "y": 3758,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e87",
+        "type": "Cell",
+        "name": "NOTIFY_ABOUT_SCORE_SUBMISSIONS_ENABLED",
+        "identifier": "NOTIFY_ABOUT_SCORE_SUBMISSIONS_ENABLED",
+        "rect": {
+          "x": 20,
+          "y": 3804,
+          "width": 362,
+          "height": 53
+        }
+      },
+      {
+        "ref": "@e88",
+        "type": "StaticText",
+        "label": "Display an in-game banner whenever a leaderboard score is submitted.",
+        "name": "Display an in-game banner whenever a leaderboard score is submitted.",
+        "rect": {
+          "x": 0,
+          "y": 3804,
+          "width": 402,
+          "height": 46
+        }
+      },
+      {
+        "ref": "@e89",
+        "type": "StaticText",
+        "label": "Background Assets Testing",
+        "name": "Background Assets Testing",
+        "rect": {
+          "x": 0,
+          "y": 3903,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e90",
+        "type": "Cell",
+        "label": "Development Overrides",
+        "name": "BACKGROUND_ASSETS_DEVELOPMENT_OVERRIDES",
+        "identifier": "BACKGROUND_ASSETS_DEVELOPMENT_OVERRIDES",
+        "rect": {
+          "x": 20,
+          "y": 3948,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e91",
+            "type": "Button",
+            "label": "chevron",
+            "name": "chevron",
+            "rect": {
+              "x": 0,
+              "y": 116,
+              "width": 10,
+              "height": 14
+            },
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "ref": "@e92",
+        "type": "StaticText",
+        "label": "Configure overrides for testing apps that use Managed Background Assets.",
+        "name": "Configure overrides for testing apps that use Managed Background Assets.",
+        "rect": {
+          "x": 0,
+          "y": 3948,
+          "width": 402,
+          "height": 46
+        }
+      },
+      {
+        "ref": "@e93",
+        "type": "StaticText",
+        "label": "HealthKit Testing",
+        "name": "HealthKit Testing",
+        "rect": {
+          "x": 0,
+          "y": 4047,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e94",
+        "type": "Cell",
+        "name": "HEALTHKIT_WORKOUT_SERIES_AGGREGATION_ENABLED",
+        "identifier": "HEALTHKIT_WORKOUT_SERIES_AGGREGATION_ENABLED",
+        "rect": {
+          "x": 20,
+          "y": 4092,
+          "width": 362,
+          "height": 73
+        }
+      },
+      {
+        "ref": "@e95",
+        "type": "StaticText",
+        "label": "Allow workout data to be saved into live series.",
+        "name": "Allow workout data to be saved into live series.",
+        "rect": {
+          "x": 0,
+          "y": 4092,
+          "width": 402,
+          "height": 30
+        }
+      },
+      {
+        "ref": "@e96",
+        "type": "StaticText",
+        "label": "Wireless Insights Testing",
+        "name": "Wireless Insights Testing",
+        "rect": {
+          "x": 0,
+          "y": 4196,
+          "width": 402,
+          "height": 45
+        }
+      },
+      {
+        "ref": "@e97",
+        "type": "Cell",
+        "label": "Wireless Insights",
+        "name": "WIRELESS_INSIGHTS_TESTING.0",
+        "identifier": "WIRELESS_INSIGHTS_TESTING.0",
+        "rect": {
+          "x": 20,
+          "y": 4241,
+          "width": 362,
+          "height": 53
+        },
+        "children": [
+          {
+            "ref": "@e98",
+            "type": "Button",
+            "label": "chevron",
+            "name": "chevron",
+            "rect": {
+              "x": 0,
+              "y": 116,
+              "width": 10,
+              "height": 14
+            },
+            "enabled": false
+          }
+        ]
+      },
+      {
+        "ref": "@e99",
+        "type": "StaticText",
+        "label": "Simulate Wireless Insights Service Predictions.",
+        "name": "Simulate Wireless Insights Service Predictions.",
+        "rect": {
+          "x": 0,
+          "y": 4241,
+          "width": 402,
+          "height": 30
+        }
+      },
+      {
+        "ref": "@e100",
+        "type": "StaticText",
+        "label": "03:10",
+        "name": "03:10",
+        "rect": {
+          "x": 51,
+          "y": 22,
+          "width": 45,
+          "height": 20
+        }
+      },
+      {
+        "ref": "@e101",
+        "type": "Other",
+        "name": "3 of 3 Wi-Fi bars",
+        "value": "SSID, 3 of 3 Wi-Fi bars",
+        "identifier": "3 of 3 Wi-Fi bars",
+        "rect": {
+          "x": 315,
+          "y": 26,
+          "width": 17,
+          "height": 12
+        }
+      }
+    ]
+  }
+}
