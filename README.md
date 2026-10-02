@@ -30,4 +30,6 @@ The full pre-reduction runtime is preserved on codex/archive-general-facade-2026
 
 ## Validate
 
-Run .github/workflows/offline-gates.yml checks for runtime/projection changes. They use fixtures/fakes, not desktops or GPUs. Retained call budgets apply to the optional OH adapter; Spaces metadata measurements are separate. Verify actual installed MCP schemas and skill routing independently of static lint. Preserve current binding, no blind coordinates, bounded recovery and independent outcome verification.
+Skill/setup changes use .github/workflows/skill-checks.yml: isolated installer regressions, valid skill metadata and progressive reference links. Review routing with realistic OBO, lightweight, guest and mobile scenarios. These checks do not claim live computer-use accuracy.
+
+Runtime/projection changes additionally use .github/workflows/offline-gates.yml. Its large legacy suite, simulations and mutation checks cover optional adapters and retained experiments, not the skill product. Path filters keep that suite out of ordinary skill/setup edits; workflow_dispatch allows an intentional full run. Retained call budgets apply to the optional OH adapter; Spaces metadata measurements are separate. Preserve current binding, no blind coordinates, bounded recovery and independent outcome verification.
