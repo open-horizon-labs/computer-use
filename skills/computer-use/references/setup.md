@@ -18,3 +18,5 @@ Mobile defaults to @mobilenext/mobile-mcp@1.0.6; CUA_MOBILE_MCP supplies an exte
 Light off-screen OH needs Cua Driver, an installed Chromium executable and a working virtual display. CUA_AGENT_BROWSER_PATH can supply Chromium. The adapter forces an owned browser and required display; legacy user-profile/fallback settings cannot select the host screen. It does not install Chrome, grant permissions or unlock the Mac automatically. Configuration and credentials are external; never print or commit secrets.
 
 Repository README.md and docs/SALVAGE.md govern runtime projection changes. Historical experiments and the bundled sketch describe retained adapter internals, not automatic routing instructions. Offline tests do not launch desktops, device agents or GPU workers.
+
+Optional adapter refusals use who=agent for supported agent-repairable setup or stale binding and who=user for unavailable grants/credentials the user must supply. These labels do not authorize archived routes. Reuse the returned context_id within a task; native/OBO and Spaces have their own binding contracts.

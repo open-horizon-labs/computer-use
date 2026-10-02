@@ -154,7 +154,8 @@ class WhoFixesIt(unittest.TestCase):
 
     def test_the_skill_limits_recovery_to_supported_routes(self):
         from pathlib import Path
-        text=(Path(__file__).resolve().parents[1]/'skills/computer-use/SKILL.md').read_text()
+        skill=Path(__file__).resolve().parents[1]/'skills/computer-use'
+        text=(skill/'SKILL.md').read_text() + (skill/'references/setup.md').read_text()
         for needle in ('who=agent','who=user','context_id','archived routes'):
             self.assertIn(needle,text)
 
