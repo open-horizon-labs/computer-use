@@ -853,34 +853,7 @@ MUTATIONS.update({
 })
 
 
-# CE-FACADE-015: PTY evidence must remain current, owned, and independently verified.
-MUTATIONS.update({
-    'terminal_ignore_stale_screen': (
-        'send a key after the rendered grid or cursor changed',
-        [('terminal.py', "if look_id and self.looks[look_id][1] != state['fingerprint']:", "if False:")],
-        ['test_terminal.TerminalTests.test_changed_text_style_or_cursor_prevents_input']),
-    'terminal_ignore_ansi_style': (
-        'hash plain text and lose color-only selection changes',
-        [('terminal.py', "json.dumps(snapshot, sort_keys=True)", "json.dumps({k:v for k,v in snapshot.items() if k != 'ansi_rows'}, sort_keys=True)")],
-        ['test_terminal.TerminalTests.test_changed_text_style_or_cursor_prevents_input']),
-    'terminal_accept_delayed_echo': (
-        'treat late input echo after Enter as a successful postcondition',
-        [('terminal.py', "and not echo and not preexisting", "and not preexisting")],
-        ['test_terminal.TerminalTests.test_delayed_echo_after_enter_is_not_task_success']),
-    'terminal_accept_old_text': (
-        'use a preexisting READY label to prove Enter was consumed',
-        [('terminal.py', "and not echo and not preexisting", "and not echo")],
-        ['test_terminal.TerminalTests.test_preexisting_or_echoed_text_is_not_success_and_stops_chain']),
-    'terminal_skip_post_action_read': (
-        'reuse the state from before delivery and miss the resulting screen',
-        [('terminal.py', "                while True:\n                    state = self.read(name, deadline)", "                while True:\n                    if state is None:state = self.read(name, deadline)")],
-        ['test_terminal.TerminalTests.test_new_postcondition_requires_independent_read']),
-    'terminal_shell_expansion': (
-        'expand semicolons and substitutions in caller arguments',
-        [('terminal.py', "term='xterm-256color', shell=False", "term='xterm-256color', shell=True")],
-        ['test_terminal.TerminalTests.test_launch_passes_literal_argv_and_cwd_without_shell']),
-})
-
+# Terminal mutations are archived with CE-FACADE-015 on a531b43.
 
 MUTATIONS.update({
     'ios_tap_labeled_parent': (
@@ -899,6 +872,36 @@ MUTATIONS.update({
         'missing switch value is treated as unchecked',
         [('mobile.py', "    return value_state or flag_state\n", "    return value_state or flag_state or 'unchecked'\n")],
         ['test_mobile_hierarchy.Hierarchy.test_independent_toggle_state_not_tap_ack_or_other_switch']),
+})
+
+# Retired surface checks are preserved on a531b43. Current routing gets its
+# own adversarial mutations; historical projection checks remain unchanged.
+for retired in ('primitives_visible_by_default','onboarding_windows_notes_not_merged',
+                'response_every_schema_title_stripped','response_do_description_repeats_the_schema'):
+    MUTATIONS.pop(retired)
+MUTATIONS['look_hidden_in_advanced_mode']=(
+    'remove observation from the active surface',
+    [('server.py',"@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True,destructiveHint=False,idempotentHint=True))\ndef look(","def look(")],
+    ['test_budget.ToolSurface.test_surface_is_clean'])
+MUTATIONS.update({
+    'native_default_starts_mobile': ('route ordinary calls into a provider',
+        [('server.py',"if capability is None:\n        return native()","if capability is None:\n        capability='mobile'")],
+        ['test_native_first.NativeFirst.test_native_default_does_no_observation_or_input_even_with_device']),
+    'off_screen_second_context': ('let a new task navigate the first task tab',
+        [('server.py',"if context_id is None and any(","if False and any(")],
+        ['test_native_first.NativeFirst.test_off_screen_needs_owned_session_and_one_context']),
+    'off_screen_ignores_handle_target': ('check the latest target instead of the saved handle',
+        [('server.py',"target=(task.handles.get(args.get('look_id')) or {}).get('target') or task.target","target=task.target")],
+        ['test_native_first.NativeFirst.test_actual_handle_target_must_match_owned_browser_even_when_latest_target_matches']),
+    'native_vnc_revived': ('allow a recognized VNC surface to continue',
+        [('server.py',"if surface is not None:","if False:")],
+        ['test_native_first.NativeFirst.test_vnc_and_model_routes_are_disabled']),
+    'native_schema_accepts_archived_fields': ('ignore or accept caller profile/foreground fields',
+        [('server.py',"class Step(BaseModel):\n    model_config = ConfigDict(extra='forbid')","class Step(BaseModel):\n    model_config = ConfigDict(extra='allow')")],
+        ['test_native_first.NativeFirst.test_schema_rejects_archived_fields_steps_and_observation_targets']),
+    'off_screen_environment_user_fallback': ('honor user-browser fallback configuration',
+        [('server.py', 'AgentBrowser(mode="auto")', 'AgentBrowser()')],
+        ['test_native_first.NativeFirst.test_policy_empty_allowlist_and_legacy_env_cannot_revive_routes']),
 })
 
 def stage(tmp):
@@ -931,8 +934,9 @@ def main():
                     print('%s: patch target not found exactly once in %s: %r' % (name, filename, old[:60]));bad += 1;break
                 path.write_text(text.replace(old, new))
             else:
-                modules = sorted({e.split('.')[0] for e in expected})
-                code, failed, errored, text = run_tests(tmp, modules)
+                # The full baseline suite runs separately. Each mutant must fail
+                # its named adversarial checks, not merely an unrelated test.
+                code, failed, errored, text = run_tests(tmp, expected)
                 got = {}
                 for e in expected:
                     module, rest = e.split('.', 1);cls, test = rest.rsplit('.', 1)

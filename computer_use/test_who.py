@@ -152,14 +152,11 @@ class WhoFixesIt(unittest.TestCase):
         r = {'status': 'refused', 'reason': 'perception_not_available', 'setup': [{'check': 'perception', 'status': 'blocker', 'fix': 'install it', 'who': 'user'}]}
         self.assertEqual(f.mark(r, 'look')['who'], 'user')
 
-    def test_the_server_text_and_skill_state_the_rule(self):
-        import server
-        text = server.INSTRUCTIONS
-        for needle in ('who=agent', 'who=user', 'url="myworkday.com"', 'raw Driver'):
-            self.assertIn(needle, text)
-        skill = open(__file__.rsplit('/computer_use/', 1)[0] + '/skills/computer-use/SKILL.md').read()
-        for needle in ('who=agent', 'who=user', 'context_id', 'url="myworkday.com"'):
-            self.assertIn(needle, skill)
+    def test_the_skill_limits_recovery_to_supported_routes(self):
+        from pathlib import Path
+        text=(Path(__file__).resolve().parents[1]/'skills/computer-use/SKILL.md').read_text()
+        for needle in ('who=agent','who=user','context_id','archived routes'):
+            self.assertIn(needle,text)
 
 
 class ForegroundGrantIsPerWindow(unittest.TestCase):

@@ -87,23 +87,15 @@ class HintsAddTheNextCall(unittest.TestCase):
 
 @unittest.skipUnless(HAVE_SERVER, 'needs mcp')
 class ToolListIsBounded(unittest.TestCase):
-    def test_each_parameter_is_documented_once_and_the_docstring_does_not_repeat_the_schema(self):
-        # Wrong patch: copy each plan step field's description into the do docstring as well.
-        tools = {t.name: t for t in asyncio.run(server.mcp.list_tools())}
-        step = tools['do'].inputSchema['$defs']['PlanStep']['properties']
-        self.assertTrue(all(p.get('description') for p in step.values()))
-        for name, prop in step.items():
-            self.assertNotIn(prop['description'][:60], tools['do'].description, name)
-        for tool in ('do', 'look'):  # top-level parameters without a schema description are named in the docstring
-            for name, prop in tools[tool].inputSchema['properties'].items():
-                self.assertTrue(prop.get('description') or name in tools[tool].description or name in ('title', 'pid', 'window_id', 'device'), (tool, name))
-
-    def test_the_generated_schema_titles_are_gone_but_a_property_named_title_stays(self):
-        # Wrong patch: strip every key called title (the window title parameter would vanish).
-        do = next(t for t in asyncio.run(server.mcp.list_tools()) if t.name == 'do').inputSchema
-        self.assertIn('title', do['properties'])
-        self.assertTrue(all(not isinstance(p.get('title'), str) for p in do['properties'].values()))
-        self.assertTrue(all('title' not in d for d in do['$defs'].values()))
+    def test_schema_is_narrow_and_does_not_reintroduce_generated_titles(self):
+        tools={t.name:t for t in asyncio.run(server.mcp.list_tools())}
+        props=tools['do'].inputSchema['$defs']['Step']['properties']
+        self.assertNotIn('profile',props)
+        self.assertNotIn('fields',props)
+        self.assertIn('expect',props)
+        for tool in tools.values():
+            self.assertTrue(all(not isinstance(p.get('title'),str) for p in tool.inputSchema['properties'].values()))
+            self.assertTrue(all('title' not in d for d in tool.inputSchema.get('$defs',{}).values()))
 
     def test_the_default_surface_stays_two_tools_and_under_the_committed_ceiling(self):
         ceiling = cb.load_response_budget()['tools_list']

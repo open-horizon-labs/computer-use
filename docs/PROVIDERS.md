@@ -1,3 +1,7 @@
+# Active routing notice
+
+Native tools are preferred. Only explicitly selected mobile and isolated off-screen capabilities remain exposed. The specialist model profiles below are historical evidence, recoverable from codex/archive-general-facade-2026-10-02 (a531b43); they are not active MCP routes. Runtime provider commands and secrets remain external configuration.
+
 # Provider configuration
 
 **Current default profile:** `fleet` (user decision 2026-09-30, "Jev is the default"): NuExtract3 page reading, Jev/Qwen choice, GLiNER2 spans, and SystemOne screenshots (the only visual route: without `CUA_SYSTEMONE_URL` the visual provider is unavailable and nothing is sent; there is no chat-completion fallback). **The fleet profile sends page content (record text, screenshots, candidate descriptions) to the hosted services you configure** (`CUA_EXTRACT_URL`, `CUA_SELECTOR_COMMAND`, `CUA_SYSTEMONE_URL`); a clean install configures none, so those routes are unavailable until you do, and nothing is sent. `local-mac`, with Julia-1 as the chooser and no hosted fallback, remains selectable by an explicit profile. Runtime helpers load `~/.config/computer-use/runtime.json` automatically.

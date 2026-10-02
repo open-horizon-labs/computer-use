@@ -321,8 +321,6 @@ def analyze(f, state):
         selects.append({'label': clean(nodes[i].get('label'))[:40], 'value': shown,
                         'options': [option for option, _ in displayed],
                         **({'truncated': True} if clipped or len(options) > INPUT_LIST_MAX or any(c for _, c in displayed) else {})})
-    if inputs:
-        notes.append('For a text type step, expect="value" verifies exact fresh contents of that field only. Submission needs a separate press with independent success text; typed echo is not submission proof.')
     if selects:
         notes.append('Select an option with a type step: control is the select label, text is the exact option label; selection is verified by a fresh selected value. A closed select may show only its current option.')
     # A page text can prove an `expect` only when exactly ONE element displays it (Chrome shows a heading twice: the heading and its text child).

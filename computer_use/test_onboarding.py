@@ -183,13 +183,13 @@ class SetupBlock(unittest.TestCase):
         self.assertTrue(all(len(e['fix']) <= onboarding.MAX_FIX_CHARS for e in r['setup']))
         self.assertLess(len(json.dumps(r)), BUDGET['max_response_bytes']['value'])
 
-    def test_the_facade_without_a_setup_env_never_attaches_and_the_server_passes_one(self):
+    def test_the_facade_and_native_first_server_do_not_attach_broad_setup_probe(self):
         # Wrong patch: build a real cli.Env inside every Facade (every existing offline test would run the machine's cua-driver).
         r = self.goto(Facade(tb.BrowserDriver(), sleep=lambda s: None, agent_browser=NoBrowser()))
         self.assertEqual(r['reason'], 'agent_browser_unavailable')
         self.assertNotIn('setup', r)
         source = (HERE / 'server.py').read_text()
-        self.assertRegex(source, r'facade=Facade\([^\n]*setup_env=')
+        self.assertNotIn('setup_env=',source)
 
     def test_a_setup_block_is_traced_content_free(self):
         f = self.facade(fake_env(NOT_GRANTED, files=['/sock']), agent_browser=NoBrowser())
@@ -238,17 +238,6 @@ class EmptyStates(unittest.TestCase):
         self.assertIn('call `windows` again', empty['windows_hint'])
         self.assertIn('without title', onboarding.windows_notes(f, {'windows': []}, 'Nope')['windows_hint'])
 
-    def test_the_advanced_windows_tool_merges_the_notes(self):
-        # Wrong patch: compute the notes but return the bare window list from the tool.
-        ran = cb.advanced_run(
-            "import asyncio, json, server, call_budget as cb\n"
-            "from core import Facade\nfrom test_core import FakeDriver\nfrom agent_browser import AgentBrowser\n"
-            "server.facade = Facade(FakeDriver(), agent_browser=AgentBrowser(mode='auto'))\n"
-            "out = json.loads(cb.result_text(asyncio.run(server.mcp.call_tool('windows', {}))))\n"
-            "print(json.dumps({'keys': sorted(out), 'running': out.get('agent_browser', {}).get('running')}))")
-        self.assertIn('agent_browser', ran['keys'])
-        self.assertIs(ran['running'], False)
-
     def test_a_canvas_look_without_perception_names_the_installer_and_the_retry(self):
         import test_do as fx
         d = fx.FlatDriver()
@@ -285,8 +274,9 @@ SOURCES = ('core', 'plan', 'browser', 'mobile', 'agent_browser', 'agent_display'
 REACH_ALSO = {'foreground_required', 'window_not_found', 'window_ambiguous', 'driver_call_failed', 'provider_failure', 'budget_exceeded', 'permission_required',
               'agent_browser_unavailable', 'agent_display_unavailable', 'mobile_backend_unavailable', 'mobile_device_agent_missing'}
 STOP_AND_ASK = {'window_ax_unresolved', 'no_actionable_controls', 'mobile_backend_unavailable', 'mobile_device_agent_missing'}  # nothing a call can change: say who and the retry rule
-CALL_NAMES = {name for name in (set(inspect.signature(__import__('server').do).parameters) | set(inspect.signature(__import__('server').look).parameters)
-                                | set(__import__('server').PlanStep.model_fields) | set(__import__('server').StepWhere.model_fields))}
+# Historical shared-projection hint catalog, not the active narrowed MCP schema.
+CALL_NAMES=set(inspect.signature(Facade.do).parameters)|set(inspect.signature(Facade.look).parameters)|set(plan.STEP_KEYS)|{'lines','control_match','identity'}
+
 GENERIC = {'do', 'text', 'goal', 'lines', 'pid'}
 
 
@@ -365,28 +355,13 @@ class WelcomeScreen(unittest.TestCase):
         self.server = server
         self.text = server.INSTRUCTIONS
 
-    def test_the_instructions_are_the_welcome_screen_not_the_manual(self):
-        # Wrong patch: paste the whole tool description back into the instructions (they were three times this long).
-        self.assertIs(self.server.mcp.instructions, self.text)
-        self.assertLess(len(self.text), 2300)
-        for part in ('look', 'do', '`expect`', 'look_id', 'The expect is the proof', 'who=user', 'never reroute', 'context_id'):
-            self.assertIn(part, self.text, part)
-        self.assertLess(self.text.index('`look`'), self.text.index('`do`'))
-        self.assertFalse(lv.PRIMITIVES.search(self.text))
-
-    def test_one_worked_example_goto_then_look_then_do(self):
-        example = self.text.split('Example:', 1)[1].split('\n', 1)[0]
-        order = [example.index(x) for x in ('goto', 'look(title', 'do(goal="Book', 'where:', 'expect:"Booked:"')]
-        self.assertEqual(order, sorted(order))
-        self.assertEqual(self.text.count('Example:'), 1)
-
-    def test_the_detail_moved_to_the_tool_descriptions(self):
-        # Wrong patch: delete the paragraphs from the instructions and from the docstrings too.
-        docs = {name: doc for name, doc, _ in cb.tool_surface(cb.SERVER.read_text())}
-        for part in ('CUA_AGENT_DISPLAY=off|auto|required', 'REFUSALS AND SETUP', 'setup=[{check, status, fix, who}]', 'profile="user"', 'read_pages'):
-            self.assertIn(part, docs['do'], part)
-            self.assertNotIn(part, self.text, part)
-        self.assertIn('device="list"', docs['look'])
+    def test_instructions_describe_native_first_opt_in_and_no_automatic_win(self):
+        self.assertIs(self.server.mcp.instructions,self.text)
+        self.assertIn('Use native tools by default',self.text)
+        self.assertIn('capability=mobile',self.text)
+        self.assertIn('capability=off_screen',self.text)
+        self.assertLess(self.text.index('`look`'),self.text.index('`do`'))
+        self.assertLess(len(self.text),2300)
 
     def test_no_notice_is_repeated_beyond_the_untrusted_text_one(self):
         # Wrong patch: add a "remember: look first" notice to every response (the notice is a safety property; nothing else repeats).

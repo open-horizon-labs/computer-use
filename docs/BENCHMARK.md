@@ -39,7 +39,7 @@ Native mixed has two valid completions; the third reached the correct fixture st
 
 Terminal cumulative tokens fell from median 370,875 to 244,079 (34.2%), but wall time did not improve and billed cost is not established. iOS completion improved; baseline usage is unavailable. Android exposed missing false switch state. Two web trials stalled on typed-echo expectations; the third and all mixed web portions failed to create the agent display. Mixed’s shorter partial attempts are not speed wins. Native comparisons remain qualified by grants, discovery and protocol compliance as described below.
 
-Sanitized [candidate rows](../experiments/codex-mixed/post-reviewed-remaining-2026-10-02.jsonl), [call audit](../experiments/codex-mixed/post-reviewed-remaining-audit-2026-10-02.jsonl), and [iOS rows](../experiments/codex-mixed/post-reviewed-ios-2026-10-02.jsonl) preserve failures. Subsequent Android raw-state and explicit field-value drafts were manually/offline qualified only, with no fresh-agent performance claim. They are retained on the full-runtime archive branch.
+Sanitized [candidate rows](../experiments/codex-mixed/post-reviewed-remaining-2026-10-02.jsonl), [call audit](../experiments/codex-mixed/post-reviewed-remaining-audit-2026-10-02.jsonl), and [iOS rows](../experiments/codex-mixed/post-reviewed-ios-2026-10-02.jsonl) preserve failures. The subsequent Android raw-state repair had manual and offline qualification and remains in the opt-in mobile adapter. The explicit field-value draft had offline qualification only and is archived. Neither has a fresh-agent performance claim. The full runtime and both follow-ups are preserved at codex/archive-general-facade-2026-10-02 (a531b43).
 
 ## Product decision
 
@@ -79,6 +79,8 @@ An initial native terminal pilot failed because the CLI’s default read-only sa
 The first workspace-write batch also inherited global `AGENTS.md` guidance: `--ignore-rules` only disables exec-policy rules. It was stopped after 14 complete rows and retained in the [preliminary archive](../experiments/codex-mixed/preliminary-with-host-guidance-2026-10-02.jsonl). The replacement primary batch uses `project_doc_max_bytes=0` in both arms. A live canary confirmed that injected project instructions were absent with that setting. The canary establishes project-document exclusion only; global user guidance remains. A native mixed primary run attempted a missing skill read and is scored protocol-violation despite correct fixture state. Both arms retain the same global setup. These are measurements in the user’s configured Codex environment, not a pristine tool-only comparison.
 
 # Earlier experiment: nine everyday jobs with Claude
+
+Historical evidence for the broader archived runtime. This used a recreated vanilla tool contract, not native Codex, and does not promote an active route.
 
 Run on 2026-10-01 with Claude Sonnet 5.5 (`claude-sonnet-5-5`) on one Mac. Each job ran once per arm. The raw rows are in [experiments/surfaces-ab/results-2026-10-01.jsonl](../experiments/surfaces-ab/results-2026-10-01.jsonl); the harness is [experiments/surfaces-ab](../experiments/surfaces-ab/README.md).
 

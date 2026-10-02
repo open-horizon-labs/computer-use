@@ -188,7 +188,7 @@ class ContextTests(unittest.TestCase):
             grant=f.mark({'status':'refused','reason':'permission_required'},'do')
             self.assertEqual(grant['who'],'user')
 
-    def test_captured_chrome_booking_completes_in_two_mcp_calls_in_both_presentations(self):
+    def test_retained_context_binding_captured_chrome_booking_completes_in_two_calls(self):
         import test_live_shapes as lv
         class Driver(lv.LiveDriver):
             def call(self, tool, args, timeout=20):
@@ -201,8 +201,7 @@ class ContextTests(unittest.TestCase):
             with patch.object(server,'contexts',self.registry), patch.object(server,'facade',self.default):
                 for presentation in ('visible','background'):
                     async def call(tool,args):
-                        response=await server.mcp.call_tool(tool,args)
-                        return response[1] if isinstance(response,tuple) else json.loads(response[0].text)
+                        return self.registry.call(self.default,tool,args,context=args.pop('context',None))
                     seen=await call('look',{'title':'Demo','context':{'session':'user','presentation':presentation}})
                     self.assertEqual(seen['status'],'ok')
                     done=await call('do',{'goal':'Book the Follow-up with Dr. Morgan Reyes at 1:45 PM','expect':None,
@@ -254,17 +253,15 @@ class ContextTests(unittest.TestCase):
         result=self.registry.call(self.default,'do',{'look_id':a['look_id']})
         self.assertEqual(result['target'],[1,2])
 
-    def test_real_mcp_schema_and_dispatch_support_context_and_defaults(self):
+    def test_real_mcp_omits_user_context_and_refuses_by_default(self):
         async def run():
             with patch.object(server,'contexts',self.registry), patch.object(server,'facade',self.default):
-                tools = await server.mcp.list_tools()
+                tools=await server.mcp.list_tools()
                 self.assertEqual([t.name for t in tools],['do','look'])
                 for tool in tools:
-                    self.assertIn('context',tool.inputSchema['properties'])
+                    self.assertNotIn('context',tool.inputSchema['properties'])
+                    self.assertIn('capability',tool.inputSchema['properties'])
                     self.assertIn('context_id',tool.inputSchema['properties'])
-                response = await server.mcp.call_tool('look',{'title':'Demo','context':{'session':'user'}})
-                # FastMCP returns content + structured response.
-                result = response[1] if isinstance(response,tuple) else json.loads(response[0].text)
-                self.assertEqual(result['context'],self.options)
-                self.assertTrue(self.registry.tasks[result['context_id']].facade.foreground_on_behalf)
+                self.assertEqual(server.look()['reason'],'native_default')
+                self.assertFalse(self.registry.tasks)
         asyncio.run(run())

@@ -729,17 +729,17 @@
   "status_note": "No claim of atomic read/send, arbitrary iOS hierarchy accuracy, native permission equivalence or measured speed until fresh-agent results."
  },
  {
-  "id": "CE-FACADE-017",
+  "id": "CE-FACADE-018",
   "status": "approved",
-  "authority": "User requested auditing and addressing slowest/highest-token OH benchmark losses.",
-  "classification": "Explicit field-state postcondition through existing type step; no tool or mandatory LLM-visible call added.",
-  "input_and_actual": "The a156b17 web rerun timed out: multi-field plan used each entered string as page outcome, then split every type into a new model turn. Typed echo cannot prove workflow success, but field contents lacked an explicit local state check.",
-  "corrected_behavior": "For a UI type step only, expect=value requests exact state proof from a separate fresh read of the same uniquely labeled editable field. Missing, competing, disabled, clipped or unequal values remain unknown; acknowledgments never prove it. Verification explicitly reports scope=field_only. Submission still requires independent page outcome. The ordinary typed-echo refusal is unchanged.",
-  "tempting_wrong_repair": "Accept any typed echo as task completion; trust transport acknowledgment; compare clipped/casefolded field values; bind another or duplicate field; silently replay dropped input.",
-  "regression": "computer_use/test_forms.py against real/form_select_checkbox.ax.json: exact local state, unchanged typed-echo guard, missing/duplicate/clipped/wrong-field refusals and no replay. Fresh-agent web/mixed reruns retained separately.",
+  "authority": "User explicitly selected native by default, explicit mobile/off-screen opt-ins, archive broader runtime on a Git branch and retain evidence, then invoked execute.",
+  "classification": "Native-first MCP allowlist and archival policy; no added tool or mandatory call.",
+  "input_and_actual": "The mixed-driver benchmark established no route eligible for automatic preference. Broad optimization accumulated unfinished field-verification drafts and unsupported terminal/VNC/model APIs.",
+  "corrected_behavior": "Use native by default. MCP requests without explicit capability perform no observation or action. Only mobile and isolated off-screen browser capabilities are accepted; incompatible contexts, user/OBO targets, terminal, VNC actions, extraction/selection and advanced APIs are unavailable. Off-screen operates only the owned isolated browser and refuses display unavailability. Shared binding internals required by these capabilities stay; broader interface/drafts are recoverable from archive commit a531b43. No automatic OH route is promoted. Only one off-screen context can be active per server, and the actual saved handle target must match the owned browser process/window. Recognized noVNC canvas input is refused. Archived terminal/surface mutation checks are preserved on a531b43; active routing mutations must fail their exact named adversarial tests by assertion.",
+  "tempting_wrong_repair": "Change instructions only while leaving broad APIs exposed; make advanced/environment flags revive retired routes; silently use user browser or physical display; delete drafts/evidence before an archive checkpoint; treat native grant failures or failed cheap attempts as wins.",
+  "regression": "computer_use/test_native_first.py; real MCP check_protocol.py including advanced environment; retained mobile/hierarchy/context and browser/display binding regressions; CALL_BUDGET guardrails against captured trees.",
   "call_budget": {
-   "note": "No new tools or mandatory steps; default CALL_BUDGET values unchanged."
+   "note": "The optional supplement retains look/do only and existing default call-count numbers. Selecting capability is an argument, not an extra tool call."
   },
-  "status_note": "Field-state verification is not submission/workflow proof. Tiny synthetic benchmark is not general reliability evidence."
+  "status_note": "No new live superiority claim. Android raw-state remains manually qualified; OBO and retired field-value draft are not active routes."
  }
 ]

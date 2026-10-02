@@ -1,3 +1,5 @@
+> Historical full-facade material. The active MCP is native-first with explicit mobile/off-screen capabilities only. Reproduce the broad benchmark using archive commit a531b43; these historical recipes are not active routing instructions.
+
 # Actual Codex mixed-driver benchmark
 
 This harness runs the installed Codex CLI against OpenAI’s bundled `cua_repl` or this checkout’s `computer-use-oh` MCP. Native terminal work uses Codex’s own PTY command/input tools. It does not emulate the native computer-use API or substitute Cua Driver for it.

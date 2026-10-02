@@ -149,7 +149,7 @@ class ScreenTests(unittest.TestCase):
     def test_same_pixels_fresh_capture_identity_context_target_and_no_filter_authority(self):
         f = self.facade()
         contexts = Contexts(lambda _: f)
-        out = contexts.call(f, 'look', {'title': 'Demo', 'screen': True}, {'session': 'user', 'presentation': 'background'})
+        out = contexts.call(f, 'look', {'title':'Demo','screen':True}, {'session': 'user', 'presentation': 'background'})
         repeat = contexts.call(f, 'look', {'screen': True}, context_id=out['context_id'])
         self.assertEqual(repeat['window'], out['window'])
         self.assertNotEqual(repeat['screen']['observation_id'], out['screen']['observation_id'])
@@ -159,8 +159,8 @@ class ScreenTests(unittest.TestCase):
     def test_mcp_returns_image_block_without_base64_in_text(self):
         import server
         f = self.facade()
-        with patch.object(server, 'facade', f):
-            out = server.look(title='Demo', screen=True)
+        with patch.object(server,'dispatch',return_value=f.look(title='Demo',screen=True)):
+            out = server.look(capability='off_screen',screen=True)
             self.assertEqual([c.type for c in out.content], ['text', 'image'])
             self.assertNotIn('_screen_image', out.structuredContent)
             self.assertNotIn('iVBOR', out.content[0].text)
@@ -178,13 +178,13 @@ class ScreenTests(unittest.TestCase):
     def test_real_mcp_serialization_preserves_image(self):
         from mcp import ClientSession, StdioServerParameters
         from mcp.client.stdio import stdio_client
-        code = 'import server; from test_screen import ScreenDriver; server.facade.driver=ScreenDriver(); server.mcp.run()'
+        code = 'import server,mobile,sys; from core import Facade; from pathlib import Path; server.contexts.factory=lambda options: Facade(mobile=mobile.Mobile(mobile.StdioBackend(command=[sys.executable,str(Path("fake_mobile_mcp.py").resolve())]))); server.mcp.run()'
         async def probe():
             params = StdioServerParameters(command=sys.executable, args=['-c', code], cwd=str(Path(__file__).parent))
             async with stdio_client(params) as (r, w):
                 async with ClientSession(r, w) as session:
                     await session.initialize()
-                    result = await session.call_tool('look', {'title': 'Demo', 'screen': True})
+                    result = await session.call_tool('look', {'capability':'mobile','device':'emulator-5554','screen':True})
                     self.assertFalse(result.isError, result)
                     self.assertEqual([c.type for c in result.content], ['text', 'image'])
                     self.assertFalse(result.structuredContent['screen']['action_binding'])

@@ -1808,33 +1808,6 @@ class Facade:
         route = 'dom_expect' if state['raw'].get('_dom') else 'ax_expect'
         norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
         needle = norm(expect)
-        if typed is not None and needle == 'value':
-            # Explicit field-state postcondition, not page-text/workflow proof.
-            # Bind the same uniquely labeled editable field on a separate read.
-            roles = ('AXTextField', 'AXTextArea', 'AXComboBox', 'AXSearchField')
-            import dom_bound
-            def document(tree):
-                return (tree.get('pid'), tree.get('window_id'), dom_bound.identity(tree['raw']),
-                        self.address_fields(tree, self._content_ids(tree)),
-                        [(n.get('role'), n.get('label'), n.get('value'), n.get('identifier'))
-                         for n in tree['nodes'].values() if n.get('role') == 'AXWebArea'])
-            base = {'route': 'field_value', 'scope': 'field_only'}
-            if before is None or document(before) != document(state):
-                return {**base, 'status': 'unknown', 'reason': 'field_value_document_changed', 'unproven': True}
-            label = target.get('label') if target else None
-            eligible = self._content_ids(state)
-            matches = [node for i, node in state['nodes'].items()
-                       if i in eligible and i not in state['aliases']
-                       and target and target.get('role') in roles
-                       and label and node.get('role') == target['role']
-                       and node.get('label') == label
-                       and all(not target.get(k) or node.get(k) == target[k]
-                               for k in ('identifier', 'dom_identifier'))]
-            if len(matches) != 1 or matches[0].get('enabled') is False or matches[0].get('value_truncated'):
-                return {**base, 'status': 'unknown', 'reason': 'field_value_target_unresolved', 'unproven': True}
-            if not isinstance(matches[0].get('value'), str) or matches[0]['value'] != typed:
-                return {**base, 'status': 'unknown', 'reason': 'field_value_not_observed', 'unproven': True}
-            return {**base, 'status': 'satisfied'}
         skip = (target.get('role'), target.get('label')) if target else None
         def bearing(tree):
             content = self._content_ids(tree)
@@ -2684,8 +2657,7 @@ class Facade:
                 target = self.node(before, picked['id']) if operation == 'type_text' and picked['id'] in {'e'+str(i) for i in before['nodes']} else None
                 typed = text if operation == 'type_text' else None
                 # expect FIRST: new text that satisfies it (a success toast, even with an Undo button) is the outcome; dialog detection is skipped.
-                outcome_check = self._expect_check(current, before, expect, target, typed) if expect else None
-                proven = outcome_check and outcome_check['status'] == 'satisfied' and outcome_check.get('scope') != 'field_only'
+                proven = expect and self._expect_check(current, before, expect, target, typed)['status'] == 'satisfied'
                 new_controls, dialog_text, ambiguous = ([], '', False) if proven else self._new_dialog(current, before)
                 if new_controls or ambiguous:
                     early, confirmation = confirm(current, before, new_controls, dialog_text, ambiguous, reading, goal_fields, picked)

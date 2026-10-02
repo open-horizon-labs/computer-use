@@ -1,4 +1,6 @@
-# Computer-use supplement
+# Native-first computer-use supplement
+
+Use native tools by default. OH has an empty automatic allowlist. Only explicitly selected mobile and isolated off-screen capabilities are exposed by server.py; do not revive archived native-app, terminal, VNC or specialist-model routes. The full pre-reduction runtime is on codex/archive-general-facade-2026-10-02 at a531b43. Shared internals and historical fixtures are not an authorization to use archived routes.
 
 Read README.md and docs/SALVAGE.md before changing policy or projection. The authoritative sketch and accepted CEs are in inference/cua-decider/capability-dispatch. Preserve current binding, same-record comparisons, explicit criteria, bounded recovery and independent verification.
 
