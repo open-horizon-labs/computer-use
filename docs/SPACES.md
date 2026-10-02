@@ -1,127 +1,25 @@
-# Parking a window away from the user (space-mover, issue #60)
+# Lightweight virtual display (issue #60)
 
-`computer_use/spaces/space-mover.swift` is a single-file Swift helper (no Xcode project, no dependencies). Build it with
-`scripts/build_space_mover.sh` (output `computer_use/spaces/bin/space-mover`, gitignored); `computer_use/spaces_client.py`
-builds it on demand and wraps it. The server uses it through the agent display policy below.
+This page describes OH's retained optional virtual-display browser, not Cua Spaces. For a separate guest desktop through Cua Spaces, see the skill's [Spaces guide](../skills/computer-use/references/spaces.md).
 
-## Mechanisms
+## Current runtime
 
-1. **Virtual display (primary).** `space-mover display serve` creates a headless 1920x1080 virtual display and blocks
-   until SIGTERM; the display exists only while that process lives, so the client starts it as a child
-   (`ensure_agent_display()`) and stops it on shutdown (`stop()`). `move --window-id W --display D` sets the window's
-   Accessibility position inside that display (public `kAXPositionAttribute`, size kept unless larger than the display)
-   and verifies the new CGWindowList bounds. Nothing is mirrored, so no Screen Recording permission.
-2. **Mission Control drag (fallback, only when `fallback_space` is configured).** `move --window-id W --space N`
-   ports the method of PaperWM.spoon PR #174 (MIT, notice in the source header): open Mission Control, find the
-   window thumbnail by title (middle-ellipsis aware, refuses ambiguity) and the target desktop, post one synthetic drag
-   sharing a single mouse event number, close Mission Control, and verify via the window's Space and on-screen state.
+The optional OH off_screen capability uses an owned Chromium profile on a verified virtual monitor. macOS treats it as another display, so the agent's browser can stay off the physical screen. The server constructs AgentDisplay(mode="required"); AgentDisplay constructs SpaceMover() without fallback_space. If the display cannot be created or the window cannot be placed and verified, the operation refuses. It does not move the window through Mission Control or fall back to the user's physical screen.
 
-Other commands: `trusted [--prompt]`, `spaces`, `displays`. JSON on stdout. Exit codes: 0 ok, 1 move refused or not
-verified (`moved:false`, `code`, `reason`), 2 usage, 3 not trusted for Accessibility, 4 unavailable. Success is never
-reported without verification. Client errors: `space_mover_unavailable`, `space_mover_untrusted`, `window_not_moved`.
+The helper is computer_use/spaces/space-mover.swift, built by scripts/build_space_mover.sh and wrapped by computer_use/spaces_client.py. display serve creates a headless virtual display as a child process; the display exists only while that process runs. move --display positions the exact window through Accessibility and verifies its CoreGraphics bounds. The owned browser is launched with placement seeded to the display's current bounds; a misplaced window is not accepted as isolated.
 
-## Private API (marked in the source)
+The current facade exposes only explicitly selected mobile and off_screen capabilities. It does not expose legacy user-profile/OBO or optional-display fallback settings. OBO uses native tools in the user's actual apps; see the [OBO guide](../skills/computer-use/references/obo.md). The adapter is disabled/unregistered by default; see [setup](../skills/computer-use/references/setup.md).
 
-`display serve` uses the private CoreGraphics classes `CGVirtualDisplayDescriptor`, `CGVirtualDisplayMode`,
-`CGVirtualDisplaySettings`, `CGVirtualDisplay` through the Objective-C runtime (no public headers; same approach as
-DeskPad). Space listing and verification read `CGSCopyManagedDisplaySpaces` and `CGSCopySpacesForWindows`, and
-`_AXUIElementGetWindow` maps an AX window to its CGWindowID; all read-only. Any of these can change between macOS
-releases; the helper fails with a typed error rather than guessing.
+## Attribution and retained fallback
 
-## Grant
+DeskPad's virtual-display approach informed the virtual monitor implementation. The helper uses private CoreGraphics display classes through the Objective-C runtime; this can break across macOS releases. Window positioning needs Accessibility; unavailable prerequisites return typed refusals. Locked-host operation has not been qualified.
 
-Moves need Accessibility for the helper. Check with `space-mover trusted`; it reports `true` when the launching app
-(terminal, agent host) already has the grant, which is inherited. Otherwise add the exact binary path under System
-Settings > Privacy & Security > Accessibility, or run `space-mover trusted --prompt`. `spaces`, `displays` and
-`display serve` need no grant.
+The helper also retains a separate move --space command based on the Mission Control method in Michael Mogenson's PaperWM.spoon PR #174. Its MIT attribution remains in the source. SpaceMover.park can use it only when a caller explicitly supplies fallback_space. The current AgentDisplay/server path does not supply one, so this is retained code, not an active fallback or a current skill feature. Do not credit PaperWM as the mechanism behind the virtual monitor.
 
-## Visible effects
+If called directly, that retained command briefly opens Mission Control and moves the pointer. The virtual-display route does not perform that drag. Creating a virtual monitor still changes macOS's display layout; isolation from the physical screen is not a guarantee of zero host-side effects.
 
-- A virtual display adds a display to the desktop layout for as long as the helper runs (it can change which display is
-  main and where windows land; stop the helper to restore the layout).
-- A Mission Control fallback move shows Mission Control for about a second and moves the pointer; the pointer is
-  restored afterwards.
+## Evidence and limits
 
-## Agent display policy (CE-FACADE-009)
+The virtual-display browser was qualified live on 2026-09-30 with Driver 0.31.0 and Chrome for Testing 154: the window opened on the virtual display, binding was exact and browser navigation worked. That bounded result does not establish locked-host support or comparative speed/token savings. The separate Cua Spaces qualification is in [its report](CUA-SPACES-QUALIFICATION-2026-10-02.md).
 
-`CUA_AGENT_DISPLAY` is `off`, `auto` (default) or `required`. With `auto` and `required` the server starts the agent display
-lazily at the first window it needs to park, keeps it for the server's lifetime and stops it at shutdown (not at `finish`).
-
-- **Windows the facade creates** are parked (`spaces_client.park`, verified by bounds) right after they exist and before the
-  first look or act, through `Facade.window_created(window_id)`. The one path that creates a window is the agent browser
-  (`computer_use/agent_browser.py`): `goto`, `open_tab` and `read_pages` launch or reuse one Chrome for Testing window and
-  call `window_created` for it once it exists. In a tab of that window a new tab needs no parking. The agent browser is
-  refused `agent_browser_misplaced` if its window is not wholly on the agent display. Any other path that
-  makes a window must call `window_created(window_id, title)` once the window exists and is titled; a park answering
-  `window_not_found` (a new window is briefly missing from the AX list) is retried 12 times at 0.5 s.
-- **Agent-owned apps** (`CUA_AGENT_APPS`, comma-separated app names, bundle ids or fnmatch patterns; default `qemu-system-*`,
-  `Android Emulator`, `Simulator`, Chrome Beta, Canary, Chromium, Chrome for Testing): an on-screen window of one of these that
-  the facade first observes in a window inventory is parked once. Shared apps (Chrome, Finder, ...) and the user's windows are
-  never moved. The Driver lists app names, not bundle ids, so matching is by name unless the Driver supplies a bundle id.
-- **Unavailable or untrusted helper:** `auto` continues and the response carries `agent_display_note`
-  (`agent_display: unavailable (<reason>)`); `required` refuses the step with `agent_display_unavailable` before anything is
-  opened or moved. The failure is cached for the server's lifetime.
-- A look or do response carries `agent_display: {id, parked: true}` only in the call where parking happened. Parking adds no
-  LLM-visible call. Foreground routes (`allow_foreground`, `invoke_menu`, the Cmd+W fallback) are unchanged.
-
-### Agent browser (CE-FACADE-009)
-
-`goto`, `open_tab` and `read_pages` default to the **agent browser**: one Chrome for Testing process with a profile folder the
-server owns (`~/.cache/computer-use/agent-profile`), started only when no agent browser window exists and then kept and reused for
-the server's lifetime (new tabs or navigation in that window, never a new window per task). The profile holds a lock file (`computer-use.owner`: owner pid, start time, command line); a second server whose
-lock names a live owner never kills that browser and uses `agent-profile-<pid>` instead (#91). Its window is launched inside the agent
-display. Chrome restores the window placement saved in the profile over `--window-position` (measured live 2026-09-30: with a
-saved `browser.window_placement` of (10,37) it opened on the built-in screen and the follow-up park failed, because AX did not yet
-list the new process's window). So the launch is guarded three ways, and the user's screen is never the fallback:
-
-- **Seed.** Before every launch (our Chrome not running; if it runs it is reused, never launched again) the profile's
-  `Default/Preferences` key `browser.window_placement` is rewritten to the agent display's bounds, read from the helper at that
-  moment (never an x remembered from an earlier run; the virtual display appears at a different x each time):
-  `{left: x+40, top: y+40, right: x+width-40, bottom: y+height-40, maximized: false, work_area_left: x, work_area_top: y,
-  work_area_right: x+width, work_area_bottom: y+height}`. The file and keys are created if missing and every other key is kept;
-  any `window_placement` key in `Local State` is removed. The `--window-position/--window-size` flags stay.
-- **No display, no launch.** The display must exist and its bounds be known before the launch. If not, the step is refused
-  `agent_display_unavailable` (also in `auto`) with the setup hint and nothing is opened. `auto` therefore means: no agent display
-  refuses browser work. Only an explicit `CUA_AGENT_DISPLAY=off` set by the user launches without a display (no seeding, no
-  verification).
-- **Verify, never park-after.** As soon as the process's titled layer-0 window is listed, its Driver bounds must lie wholly inside
-  the display (any overlap with another display, or unknown bounds, fails). If not, the process is quit at once (SIGTERM, SIGKILL
-  after 3 s), the saved placement is deleted (after the process exits, since Chrome writes its placement back as it quits) and the
-  step is refused `agent_browser_misplaced`, naming the bounds seen. Nothing was navigated; the window is never left up.
-
-- **Lifecycle (measured live 2026-09-30: 23 Chrome processes stayed alive after shutdown and the next launch forwarded into them).** Chrome
-  is launched with `start_new_session=True` (its own process group, pgid recorded). `stop()` sends SIGTERM to the group, waits up to 3 s,
-  sends SIGKILL to the group, then scans `ps -axo pid,command` and SIGKILLs by pid any process whose command line still contains our
-  user-data-dir path (a helper outside the group, or what a forwarded launch left). `shutdown()` calls `stop()`; so does interpreter exit
-  (`atexit`) as a last resort. At launch, a process already carrying our user-data-dir (stale from an earlier server) is killed the same
-  way first and logged (`agent_browser_recovered_stale`, with the pids): a launch never forwards into a stale instance.
-- **No session restore.** Before each launch `Default/Preferences` gets `session.restore_on_startup = 5` and `profile.exit_type =
-  "Normal"`, `profile.exited_cleanly = true`; `Default/Sessions` and the files `Current Session`, `Last Session`, `Current Tabs`,
-  `Last Tabs` are deleted (cookies, local and session storage stay); `--disable-session-crashed-bubble --hide-crash-restore-bubble` are
-  passed. The window therefore opens with exactly one tab (the placement seeding above is kept).
-- **The navigated tab is the tab.** After a navigation the Driver flags no tab active. The facade remembers the tab it last navigated
-  (id, then landed url and title) and, when no tab is active and the window shows several, uses it: by id, else by exactly one url+title match
-  (ids are re-minted on every bind). If it cannot be told, the step is still refused `browser_tab_ambiguous`; tabs are never closed blindly
-  (the next launch repairs a many-tab window via the no-restore seeding). `read_pages` closes each tab it opens; a tab left by `open_tab`
-  is the agent's to close with `close_tab`.
-
-The same containment rule applies to any window the facade creates (`window_created`) or first observes for an agent-owned app: a
-window not wholly inside the display is parked (a window that merely straddles it is no longer trusted by its centre).
-
-- `CUA_AGENT_BROWSER=auto` (default) or `user` (the old default: the window named by `title`). `CUA_AGENT_BROWSER_PATH` names an
-  installed Chromium-family executable instead of Chrome for Testing.
-- Chrome for Testing is installed on demand into `~/.cache/computer-use/browsers` with
-  `npx -y @puppeteer/browsers install chrome@stable --path <dir>` (bounded at 10 minutes). Without npx or on a failed download the
-  step is refused `agent_browser_unavailable`, naming that command.
-- A step says `profile: "user"` to use your own browser window instead (it still needs existing-profile access, else
-  `permission_required`); `profile: "agent"` forces the agent browser under `CUA_AGENT_BROWSER=user`. `look` by title works on either.
-
-Pass `context={"session":"user"}` to `look` or `do` for delegated work in the user’s apps and logins; visible presentation is the OBO default. Add `"presentation":"background"` to preserve the current Space. Reuse the returned `context_id` on subsequent calls; a returned `look_id` also carries its context. Calls without context default to non-OBO with the isolated browser. No environment change, restart, or setup call is required. Context state and foreground grants are separate across tasks; contexts expire after one hour idle. `look` remains read-only. Visible actions may front the exact bound target without another approval. Background actions use supported routes that preserve placement; a route requiring an active-Space change reports a conflict. Existing OS grants remain necessary.
-  Later steps of a plan act on the window the `goto` chose.
-- The Driver binds the agent browser with `browser_prepare` (`existing_profile`), which the running Driver must be allowed
-  (`serve --grant existing-profile`); the profile folder is ours, so no Full Disk Access is needed. Measured live 2026-09-30 (Driver
-  0.31.0, Chrome for Testing 154, `--remote-debugging-port=0`): the window opened on the virtual display, `DevToolsActivePort` was
-  written in our profile, the bind was exact and `browser_navigate` worked.
-- The server stops the browser and the display at shutdown. The agent browser is a fresh profile (no logins), by design.
-
-**Resize (#78).** The plan step `resize {width, height}` resizes only this window (never the user's browser or any other app: `resize_not_agent_window`; no window: `resize_no_agent_window`). It calls the Driver's `set_window_frame` with the window's current x, y, clamped so the whole window stays inside the agent display, and is done only when the Driver reports `effect: confirmed` with a readback within 2 pt of that frame AND a fresh window listing agrees and lies wholly inside the display (else `resize_unverified` / `resize_outside_display`, the old frame restored best effort). Looks of that window are dropped, so the next `look` reflows. It adds no LLM-visible call or mandatory step (CALL_BUDGET unchanged). Covered by fakes only; not run against a live display.
+Historical configurable display modes, user-profile browser routing and Mission Control fallback policies are recoverable from Git history and codex/archive-general-facade-2026-10-02 at a531b43. They are not setup instructions for the current server.

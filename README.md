@@ -3,7 +3,7 @@
 A skill for choosing the smallest useful computer-use route and completing delegated work reliably.
 
 - **OBO:** native tools in the user's apps and logged-in browser. Routine foreground interaction is part of the delegation; recover from ordinary friction without asking again.
-- **Light off-screen:** an available isolated browser for small tasks without user logins. The retained OH virtual-display browser is an optional fallback when its prerequisites work.
+- **Light off-screen:** an available isolated browser for small tasks without user logins. The retained OH virtual-display browser is optional when its prerequisites work; it uses a virtual monitor, not a Mission Control move.
 - **Guest desktop:** Cua Spaces with only three MCP tools and Driver schemas discovered by name.
 - **Mobile:** native support where available; the retained OH adapter is optional.
 
