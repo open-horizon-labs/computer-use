@@ -60,7 +60,7 @@
   "status": "accepted",
   "classification": "projection defect",
   "authority": "Existing user-governed sketch authorizes implementation repair; assistant conformance review, not new user policy approval.",
-  "sketch_clause": "S4.2.3–4",
+  "sketch_clause": "S4.2.3\u20134",
   "input_and_actual": "NaN confidence bypassed threshold comparisons.",
   "corrected_behavior": "Require finite probability in [0,1].",
   "sketch_change": "None: repair projection to existing clause",
@@ -75,7 +75,7 @@
   "status": "accepted",
   "classification": "projection defect",
   "authority": "Existing user-governed sketch authorizes implementation repair; assistant conformance review, not new user policy approval.",
-  "sketch_clause": "S4.2.4–5",
+  "sketch_clause": "S4.2.4\u20135",
   "input_and_actual": "Ordering-only request was rejected for lacking predicates.",
   "corrected_behavior": "Apply zero or more supplied predicates, then supplied ordering.",
   "sketch_change": "None: repair projection to existing clause",
@@ -671,5 +671,19 @@
    "tools_list.look_description": 3197,
    "tools_list.look_schema": 2390
   }
+ },
+ {
+  "id": "CE-FACADE-013",
+  "status": "approved",
+  "authority": "User requested live native-vs-stack tests, virtual-screen operation, and fixing observed reliability, latency and cost friction; OBO live testing subsequently skipped at user request.",
+  "classification": "facade Driver-semantic evidence projection and delivery recovery; no new tools or mandatory LLM-visible call.",
+  "input_and_actual": "Locked/headless desktop: native isolated browser completes booking via exact DOM refs and dom_event click. Stack navigates on its virtual display but refuses window_ax_unresolved before looking at already-authorized browser evidence. Initial harness server named computer-use is silently absent from Claude; computer-use-oh connects.",
+  "corrected_behavior": "After native AX is unreadable, accept only an already-authorized exact Driver browser binding and complete semantic snapshot. Project parent relationships from the observed outline. Duplicate controls require a unique observed ancestor, a fresh scoped snapshot with unchanged record subtree, and a unique scoped control ref. Deliver through browser_click with explicit dom_event, never assume dispatch proves activation; verify against fresh browser evidence. Incomplete or omitted competitors, changed subtree, wrong target/tab, unmapped/duplicate refs and guessed ordinal mappings refuse. Subsequent reads of that bound window retain the DOM route to avoid repeated futile AX probes. Visible OBO actions activate an exactly bound window before observation; look and verify never activate. Explicit isolated URL lookup searches only its owned browser process; all URL lookups remain read-only and never prepare a user profile. Preserve every parsed outline node, but detach nodes whose reported indentation skips a missing parent: these cannot contribute record evidence. This prevents Driver editable shadow-node tails from changing a correctly observed form subtree. Reject unparsable scoped evidence too. Record comparison follows proven parent links across detached shadow roots, retaining every later proper child rather than truncating its evidence. Include exact browser target, tab and page URL identity in look, full and scoped fingerprints: identical page content in another tab cannot reuse authorization.",
+  "tempting_wrong_repair": "Treat AX as mandatory for all browser work; guess duplicate refs from order; let DOM text authorize native AX arguments; prepare user browser during read-only look; accept partial scoped evidence; count CLI success when MCP server is missing.",
+  "regression": "computer_use/test_dom_bound.py on captured Driver 0.31.0 booking snapshots; computer_use/test_task_context.py; experiments/facade-vs-native/test_suite.py and test_score.py; default call-budget checks. Captured settings full/scoped snapshots exercise missing-parent shadow tails, including changed field-value refusals; test_who and task-context tests prohibit read-only browser_prepare and isolated lookup of user Chrome. Identical-content target/tab/URL switches invalidate both look and selection; a negative mutation dropping browser identity must fail by assertion.",
+  "call_budget": {
+   "note": "Default look/do counts unchanged; no new tool or mandatory caller step."
+  },
+  "status_note": "Live isolated fixture test verifies booking server event; user requested skipping OBO live tests on locked screen. Browser synthetic delivery still requires postcondition verification."
  }
 ]

@@ -1,0 +1,8 @@
+{"action": "book", "id": "s10", "run": "booking.stack.codex-default.r0.s20260928", "task": "booking", "ts": 1790912462.654845}
+{"action": "book", "id": "s10", "run": "booking.native.codex-default.r0.s20260928", "task": "booking", "ts": 1790912550.35458}
+{"action": "cancel_request", "id": "1044", "run": "orders.stack.codex-default.r0.s20260928", "task": "orders", "ts": 1790912614.449211}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.stack.codex-default.r0.s20260928", "task": "orders", "ts": 1790912624.640687}
+{"action": "cancel_request", "id": "1044", "run": "orders.native.codex-default.r0.s20260928", "task": "orders", "ts": 1790912700.932499}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.native.codex-default.r0.s20260928", "task": "orders", "ts": 1790912712.2863328}
+{"action": "press", "id": "form_save", "run": "ax_dup.stack.codex-default.r0.s20260928", "task": "ax_dup", "ts": 1790912775.571854}
+{"action": "press", "id": "form_save", "run": "ax_dup.native.codex-default.r0.s20260928", "task": "ax_dup", "ts": 1790912916.095985}

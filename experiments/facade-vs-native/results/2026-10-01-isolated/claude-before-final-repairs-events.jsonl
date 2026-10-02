@@ -1,0 +1,12 @@
+{"action": "book", "id": "s10", "run": "booking.stack.haiku.r0.s20260928", "task": "booking", "ts": 1790910969.725182}
+{"action": "book", "id": "s10", "run": "booking.native.haiku.r0.s20260928", "task": "booking", "ts": 1790911059.701062}
+{"action": "book", "id": "s10", "run": "booking.stack.sonnet.r0.s20260928", "task": "booking", "ts": 1790911096.10522}
+{"action": "book", "id": "s10", "run": "booking.native.sonnet.r0.s20260928", "task": "booking", "ts": 1790911143.4493299}
+{"action": "cancel_request", "id": "1044", "run": "orders.native.haiku.r0.s20260928", "task": "orders", "ts": 1790911182.479733}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.native.haiku.r0.s20260928", "task": "orders", "ts": 1790911191.188823}
+{"action": "cancel_request", "id": "1044", "run": "orders.native.sonnet.r0.s20260928", "task": "orders", "ts": 1790911254.0242932}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.native.sonnet.r0.s20260928", "task": "orders", "ts": 1790911260.664952}
+{"action": "cancel_request", "id": "1044", "run": "orders.stack.sonnet.r0.s20260928", "task": "orders", "ts": 1790911300.514803}
+{"action": "cancel_confirm", "id": "1044", "run": "orders.stack.sonnet.r0.s20260928", "task": "orders", "ts": 1790911306.310076}
+{"action": "press", "id": "header_save", "run": "ax_dup.native.sonnet.r0.s20260928", "task": "ax_dup", "ts": 1790911376.397443}
+{"action": "press", "id": "form_save", "run": "ax_dup.native.haiku.r0.s20260928", "task": "ax_dup", "ts": 1790911427.970273}

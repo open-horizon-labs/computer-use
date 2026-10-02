@@ -443,6 +443,8 @@ HINTS = {
     'look_window_mismatch': 'That look_id belongs to another window or device; nothing was done. Call `look` on the target you mean and pass the look_id it returns to `do`.',
     'window_not_found': 'No window or open page matches; nothing was done. Call `look` again with title=<one of candidates[].title> or url=<a candidates[].url domain>, or open a web page with a goto step.',
     'window_ambiguous': 'Several windows or pages match; nothing was guessed or done. Call `look` with title=<one of candidates[].title> (equal titles: pid and window_id) or a longer url, then `do` the same.',
+    'browser_not_prepared': 'The read-only lookup cannot bind this browser yet. Call `do` with an authorized goto or open_tab step to prepare the chosen profile; `look` never attaches or changes it.',
+    'dom_binding_unavailable': 'Call look for fresh complete browser evidence. A missing or ambiguous Driver ref cannot authorize a click; do not infer refs from order or use coordinates.',
     'window_ax_unresolved': 'Cua Driver cannot reach the window right now; nothing was done. Stop and ask the user, quoting message: bring it forward once, or approve one foreground step. Do not retry until they answer.',
     'tab_not_active': 'That page is a background tab of the window titled in candidates[0].title; nothing was done. Call `look` with that title to read its active tab, or open the page with a goto or open_tab step.',
     'window_closed': 'The target window is gone; nothing was done. If it is open again call `look` with its exact title; for a web page start a new one with a goto step in `do`.',

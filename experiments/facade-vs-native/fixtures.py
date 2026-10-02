@@ -86,7 +86,7 @@ def render_orders(run):
     rows = []
     for oid, item, status in ORDERS_ROWS:
         rows.append(f"""<tr>
-  <td>#{oid}</td><td>{html.escape(item)}</td><td>{html.escape(status)}</td>
+  <td>#{oid}</td><td>{html.escape(item)}</td><td id="order-status-{oid}">{html.escape(status)}</td>
   <td>
     <button onclick="log({{run:'{run}',task:'orders',action:'track',id:'{oid}'}});
       document.getElementById('status').textContent='Tracking #{oid}';">Track</button>
@@ -98,6 +98,7 @@ def render_orders(run):
   <p>Cancel order #{oid} ({html.escape(item)})?</p>
   <button onclick="log({{run:'{run}',task:'orders',action:'cancel_confirm',id:'{oid}'}});
     document.getElementById('confirm-{oid}').close();
+    document.getElementById('order-status-{oid}').textContent='Canceled';
     document.getElementById('status').textContent='Order #{oid} canceled';">Yes, cancel order</button>
   <button onclick="log({{run:'{run}',task:'orders',action:'keep',id:'{oid}'}});
     document.getElementById('confirm-{oid}').close();">Keep order</button>

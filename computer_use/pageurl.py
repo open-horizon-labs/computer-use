@@ -1,8 +1,8 @@
 """Target a page by url (look/do url=...): the browser window whose tab shows a url containing the given domain or part of the url.
 
 Titles of browser windows change with every page and tab ("Chrome" is not a title), so the stable handle is the page's url. Resolution reads the
-Driver's exact browser binding (get_browser_state tabs, browser.tab_state) of every browser window, the user's Chrome windows and the agent browser
-alike, and binds ONLY when exactly one tab matches. Several is window_ambiguous (never the first), none is window_not_found, and a match that is a
+Driver's existing browser bindings (get_browser_state tabs, browser.tab_state), without preparing an endpoint. Explicit isolated contexts search
+only their owned browser; other contexts can search user windows. Exactly one matching tab binds. Several is window_ambiguous (never the first), none is window_not_found, and a match that is a
 background tab is tab_not_active: the Driver has no tab switch that provably leaves the window where it is, and the facade never raises a window."""
 import re
 from urllib.parse import urlsplit
@@ -24,17 +24,20 @@ def _layer0(f, w):
 
 def resolve(f, needle):
     """{pid, window_id, title} of the one window showing the page, or core.WindowRefusal (candidates: titles and urls without query strings when several
-    match; domains only, at most 8, when none does). A window the Driver will not attach to is skipped; permission_required is raised only when no
-    window could be read at all."""
+    match; domains only, at most 8, when none does). A window without a readable existing binding is skipped; the first read refusal is returned
+    only when no window could be read at all. This function never prepares a browser."""
     from core import Gap, WindowRefusal
     want = (needle or '').strip().lower()
     if len(want) < 3 or len(want) > 200:
         raise Gap('bad_request: url must be 3 to 200 characters (a domain such as "myworkday.com" or part of the page url)')
     windows = [w for w in f.windows()['windows'] if BROWSER_APPS.search(w.get('app_name') or '') and _layer0(f, w)]
+    if getattr(f,'context_session',None)=='isolated':
+        owner=getattr(getattr(f.agent_browser,'proc',None),'pid',None)
+        windows=[w for w in windows if w['pid']==owner]
     matches, seen, errors, read = [], [], [], 0
     for w in windows:
         try:
-            _, tabs = browser.tab_state(f, w['pid'], w['window_id'])
+            _, tabs = browser.tab_state(f, w['pid'], w['window_id'], prepare=False)
         except Gap as error:
             errors.append(error)
             continue

@@ -91,6 +91,53 @@ class ContextTests(unittest.TestCase):
             self.assertEqual(clicks[-1].get('delivery_mode'), 'foreground' if presentation=='visible' else None)
             if fronts:self.assertEqual((fronts[0]['pid'],fronts[0]['window_id']),(1,2))
 
+    def test_visible_action_recovers_unreadable_target_before_selection(self):
+        import test_live_shapes as lv
+        from core import Gap
+        class Driver(lv.LiveDriver):
+            def __init__(self):
+                super().__init__('live_booking_ax.json');self.front=False;self.script=lv.booked()
+            def call(self, tool, args, timeout=20):
+                if tool=='bring_to_front':
+                    self.front=True;return {'effect':'confirmed'}
+                return super().call(tool,args,timeout)
+            def observe(self,*args):
+                if not self.front:raise Gap('window_ax_unresolved: fixture requires activation')
+                return super().observe(*args)
+        f=make(self.options);f.driver=Driver()
+        failed=f.look(title='Demo')
+        self.assertEqual(failed['reason'],'window_ax_unresolved')
+        self.assertFalse(f.driver.front)
+        self.assertNotIn('Ask the user',failed['message'])
+        result=f.do(goal='Book a visit',title='Demo',expect=None,control='Book')
+        # Activation must precede AX observation, independently of selection ambiguity/provider availability.
+        self.assertTrue(f.driver.front)
+        self.assertNotEqual(result.get('reason'),'window_ax_unresolved',result)
+        f.close()
+
+    def test_verify_never_activates_visible_obo_target(self):
+        f=make(self.options)
+        with patch.object(f,'front_window') as front:
+            f.do(goal='Check used product',title='Demo',expect='Used $80',operation='verify')
+            front.assert_not_called()
+        f.close()
+
+    def test_isolated_url_look_never_attaches_to_user_browser_and_returns_navigation_hint(self):
+        class Driver(FakeDriver):
+            def __init__(self):super().__init__();self.sent=[]
+            def call(self,tool,args,timeout=20):
+                self.sent.append(tool)
+                if tool=='list_windows':return {'windows':[{'pid':1,'window_id':2,'title':'User Chrome','app_name':'Google Chrome'}]}
+                return super().call(tool,args,timeout)
+        f=make({'session':'isolated','presentation':'visible'});f.context_session='isolated';f.driver=Driver()
+        result=f.look(url='clinic.example')
+        self.assertEqual(result['reason'],'window_not_found')
+        self.assertEqual(result['who'],'agent')
+        self.assertIn('goto',result['hint'])
+        self.assertNotIn('get_browser_state',f.driver.sent)
+        self.assertNotIn('browser_prepare',f.driver.sent)
+        f.close()
+
     def test_background_conflict_is_explicit_and_not_a_silent_mode_change(self):
         seen=self.registry.call(self.default,'look',{'title':'Demo'}, {'session':'user','presentation':'background'})
         result=self.registry.call(self.default,'do',dict(goal='Inspect first',control='Inspect first',expect=None,title='Demo',allow_foreground=True),context_id=seen['context_id'])

@@ -19,7 +19,7 @@ itself consent, it's an acknowledgment that consent was already obtained
 from the user in chat. Nothing in this repository, this README, or a
 fixture page can substitute for that consent.
 
-It also never activates, raises, or foregrounds a window: each run gets its
+The historical default placement does not activate, raise, or foreground a window: each run gets its
 own Chrome window from AppleScript `make new window` (no `activate`) and closes
 it by that window id, so no existing window gains a tab or is closed. It only
 talks to `127.0.0.1`. Prompts state user intent only; never add the answer or
@@ -37,7 +37,7 @@ list the decoys, or the comparison measures prompt hints rather than tools.
      `--mcp-config` pointed at *only* that arm's server
      (generated per run with absolute paths: `.venv-facade/bin/python
      computer_use/server.py`, or `$HOME/.local/bin/cua-driver mcp`),
-     `--allowedTools` restricted to that server (`mcp__computer-use` or
+     `--allowedTools` restricted to that server (`mcp__computer-use-oh` or
      `mcp__cua-driver`), and `--disallowedTools`
      covering `Bash,Edit,Write,WebFetch,WebSearch,Agent` (native also adds
      `Skill`, since the installed skill would otherwise reintroduce facade
@@ -160,3 +160,14 @@ check is provisional until a `native-skill` arm is run. Wrong clicks are strict:
 event, even one the agent later corrects (for example a wrong Cancel that is dismissed), makes the
 run `wrong`. The older `score.py` and `runner.py` CLI still work for the original booking/orders
 comparison but use the looser terminal-event rule.
+
+## Session and client coverage (2026-10-01)
+
+Use `--session-mode isolated` to have each agent open the fixture in a separate isolated browser; the stack owns a Chrome for Testing window on its virtual display. Use `--session-mode obo` for an existing user Chrome fixture window with delegated foreground delivery; only run it when that desktop is available. These are exploratory session comparisons, not additions to the preregistered verdict. `--client codex --models codex-default` exercises Codex; Claude remains the default. The fixture goal is unchanged across clients and arms. Codex run-local approval applies only to the selected arm server; Claude exposes only that server plus the stock skill in the optional native-skill arm. Audit transcripts for unexpected tools. Codex JSON events expose aggregate token usage and MCP calls, but do not establish API-equivalent USD or internal LLM turn count; those stay unknown.
+
+Register the stack as `computer-use-oh`: current Claude silently omits a server named `computer-use`. The harness now records whether the expected Claude MCP server connected, and treats a missing server as launcher failure. Runtime source digests are recorded for new runs. Prompts and event logs remain separate from self-reported success.
+
+```sh
+python3 experiments/facade-vs-native/suite.py run --i-have-consent --max-total-minutes 20 --session-mode isolated --tasks booking orders ax_dup --arms native stack --models sonnet --runs 1
+python3 experiments/facade-vs-native/suite.py run --i-have-consent --max-total-minutes 15 --session-mode isolated --client codex --tasks booking orders ax_dup --arms stack --models codex-default --runs 1
+```

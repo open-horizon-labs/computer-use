@@ -72,6 +72,7 @@ def scan_transcript(transcript_path):
     'result' event.
     """
     turns = 0
+    codex = False
     seen_messages = set()
     num_turns = None
     routes = Counter()
@@ -91,6 +92,9 @@ def scan_transcript(transcript_path):
                 event = json.loads(line)
             except json.JSONDecodeError:
                 continue
+            if event.get('type') == 'turn.completed':
+                usage = event.get('usage') or usage
+                codex = True
             if event.get('type') == 'assistant':
                 # stream-json emits one assistant event per content block; one LLM turn = one message id.
                 mid = (event.get('message') or {}).get('id')
@@ -123,7 +127,7 @@ def scan_transcript(transcript_path):
                                     routes[r] += 1
                         if inner.get('caller_preselected') is True:
                             caller_preselected_count += 1
-    return {'turns': num_turns if num_turns is not None else turns, 'routes': dict(routes), 'caller_preselected_count': caller_preselected_count,
+    return {'turns': None if codex else num_turns if num_turns is not None else turns, 'routes': dict(routes), 'caller_preselected_count': caller_preselected_count,
             'cost_usd': cost_usd, 'duration_ms': duration_ms, 'usage': usage, 'model': model}
 
 
@@ -141,6 +145,9 @@ def count_llm_visible_calls(transcript_path):
             try:
                 event = json.loads(line)
             except json.JSONDecodeError:
+                continue
+            if event.get('type') == 'item.completed' and event.get('item', {}).get('type') == 'mcp_tool_call':
+                count += 1
                 continue
             if event.get('type') != 'assistant':
                 continue

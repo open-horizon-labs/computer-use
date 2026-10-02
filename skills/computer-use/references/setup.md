@@ -127,3 +127,17 @@ Setting up the [local MCP facade](../../../docs/FACADE.md) via `scripts/setup_fa
 Pass `context={"session":"user"}` to `look` or `do` for delegated work in the user’s apps and logins; visible presentation is the OBO default. Add `"presentation":"background"` to preserve the current Space. Reuse the returned `context_id` on subsequent calls; a returned `look_id` also carries its context. Calls without context default to non-OBO with the isolated browser. No environment change, restart, or setup call is required. Context state and foreground grants are separate across tasks; contexts expire after one hour idle. `look` remains read-only. Visible actions may front the exact bound target without another approval. Background actions use supported routes that preserve placement; a route requiring an active-Space change reports a conflict. Existing OS grants remain necessary.
 
 Runtime providers and terminal helpers load `~/.config/computer-use/runtime.json` (override its path with `CUA_RUNTIME_CONFIG`). It is a JSON object of string environment settings, including `CUA_JULIA_COMMAND`, `CUA_SPAN_COMMAND`, `CUA_EXTRACT_URL`, `CUA_VISUAL_COMMAND`, and `CUA_SYSTEMONE_URL`. Command values are JSON-encoded argv arrays. Explicit environment values take precedence. Set `CUA_GENERIC_PROVIDER` to `julia-1` and `CUA_PAGE_EXTRACTION` to `1` for the selected stack. Configure `CUA_SYSTEMONE_URL` to the existing `/v1/systemone` facade for screenshot choices/terminal postcondition assessments. No shell export or profile change is needed when using the factory. The profile contains deployment addresses, not credentials.
+
+### Codex noninteractive tool policy
+
+A Codex session with `approval_policy="never"` can still refuse MCP writes unless that tool's approval policy allows them. For an operator who authorizes this local facade to execute delegated tasks, set the server's `look` and `do` tool policies explicitly; leave unrelated servers unchanged. Managed denials still take precedence.
+
+```toml
+[mcp_servers.computer-use-oh.tools.look]
+approval_mode = "approve"
+
+[mcp_servers.computer-use-oh.tools.do]
+approval_mode = "approve"
+```
+
+These settings grant the client transport permission to call those tools; task contexts, exact binding, destructive-step requirements, Driver grants and OS permissions remain enforced by the runtime. Start a fresh client session after installation to load changed schemas and policies.

@@ -290,7 +290,7 @@ class TargetByUrl(unittest.TestCase):
         r = f.look(url='myworkday.com')
         self.assertEqual((r['status'], r['reason'], r['who']), ('refused', 'tab_not_active', 'agent'))
         self.assertEqual(r['candidates'][0]['title'], 'Demo')
-        self.assertEqual([t for t, _ in driver.calls if t not in ('list_windows', 'get_browser_state', 'start_session', 'browser_prepare')], [])
+        self.assertEqual([t for t, _ in driver.calls if t not in ('list_windows', 'get_browser_state', 'start_session')], [])
 
     def test_only_browser_windows_are_asked_for_tabs(self):
         driver, f = self.make({(1, 2): [tab(1, 'https://a.myworkday.com/job', True)]})
@@ -303,7 +303,7 @@ class TargetByUrl(unittest.TestCase):
         driver, f = self.make({})
         with self.assertRaises(Gap) as caught:
             pageurl.resolve(f, 'myworkday.com')
-        self.assertIn('permission_required', str(caught.exception))
+        self.assertIn('browser_not_prepared', str(caught.exception))
 
     def test_url_with_another_target_or_a_too_short_needle_is_a_bad_request(self):
         driver, f = self.make({(1, 2): [tab(1, 'https://a.myworkday.com/job', True)]})

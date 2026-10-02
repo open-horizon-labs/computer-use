@@ -1,0 +1,130 @@
+{
+ "content_refs": [
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p158:0",
+   "role": "dialog",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Orders orders.native.sonnet.r0.s20260928",
+   "ref": "p158:2",
+   "role": "rootwebarea",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": null,
+   "ref": "p158:3",
+   "role": "paragraph",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  },
+  {
+   "actions": [],
+   "frame": "main",
+   "name": "Cancel order #1044 (Walnut desk lamp)?",
+   "ref": "p158:4",
+   "role": "statictext",
+   "states": {},
+   "value": null,
+   "visibility": "in_viewport"
+  }
+ ],
+ "mode": "snapshot",
+ "oopif": {
+  "frames": 0,
+  "status": "attached"
+ },
+ "outline": "- dialog [focusable=true]\n  - paragraph\n    - statictext \"Cancel order #1044 (Walnut desk lamp)?\"\n  - button \"Yes, cancel order\" [focusable=true,focused=true]\n  - button \"Keep order\" [focusable=true]",
+ "page": {
+  "title": "Orders orders.native.sonnet.r0.s20260928",
+  "url": "http://127.0.0.1:8934/orders?run=orders.native.sonnet.r0.s20260928"
+ },
+ "refs": [
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Yes, cancel order",
+   "ref": "p158:1",
+   "role": "button",
+   "states": {
+    "focusable": true,
+    "focused": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  },
+  {
+   "actions": [
+    "click",
+    "pointer"
+   ],
+   "frame": "main",
+   "name": "Keep order",
+   "ref": "p158:5",
+   "role": "button",
+   "states": {
+    "focusable": true
+   },
+   "value": null,
+   "visibility": "near_viewport"
+  }
+ ],
+ "screenshot": {
+  "coordinate_space": "viewport_css_px",
+  "height": 2358,
+  "mime_type": "image/png",
+  "pixel_to_css_scale_x": 0.5,
+  "pixel_to_css_scale_y": 0.5,
+  "scope": "viewport",
+  "source": "cdp_tab",
+  "tab_activation": "not_requested",
+  "viewport_css_height": 1179,
+  "viewport_css_width": 1200,
+  "width": 2400,
+  "window_foregrounding": "not_requested"
+ },
+ "screenshot_height": 2358,
+ "screenshot_mime_type": "image/png",
+ "screenshot_width": 2400,
+ "snapshot": {
+  "complete": true,
+  "continuation": null,
+  "format": "semantic_v2",
+  "id": "p158",
+  "node_budget": 300,
+  "omitted": {
+   "budget": 0,
+   "css_hidden": 0,
+   "no_layout": 0,
+   "offscreen": 0,
+   "page_occluded": 0,
+   "unknown": 0,
+   "unprovable_frame": 0
+  },
+  "scope": "viewport",
+  "selected_nodes": 6,
+  "total_nodes": 6
+ },
+ "status": "ok",
+ "tab_id": "tab_fixture",
+ "target_id": "bt_fixture"
+}

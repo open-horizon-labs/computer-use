@@ -309,9 +309,13 @@ def analyze(f, state):
         holders = sum(1 for i in content if nodes[i].get('role') not in f.CONTROL_ROLES and any(norm(nodes[i].get(k)) == norm(line) for k in ('label', 'value')))
         if holders > 1:
             repeated.append(line)
+    control_state=structural_state(f,state,content)
+    if state['raw'].get('_dom'):
+        import dom_bound
+        control_state.append({'browser_identity':dom_bound.identity(state['raw'])})
     return {'records': records, 'kind': kind, 'header': header, 'text': page_text, 'dialogs': dialogs, 'other_controls': other, 'inputs': inputs, 'toggles': toggles,
             'headings': list(dict.fromkeys(clean(nodes[i].get('label')) or text_of(nodes[i]) for i in sorted(content) if nodes[i].get('role') == 'AXHeading' and (clean(nodes[i].get('label')) or text_of(nodes[i])))),  # a heading's value is its level; its label is the text
-            'control_state': structural_state(f, state, content),
+            'control_state': control_state,
             'page_controls': len(page_controls), 'all_controls': len(all_controls), 'notes': notes, 'ctrl_ids': page_controls, 'repeated_text': repeated}
 
 
@@ -432,6 +436,9 @@ def attach_dom(f, pid, window_id, state, analysis, rows, extras):
     """Read the page text from the browser's semantic snapshot beside the AX tree (bounded, see dom.py) and report, never silently prefer one. On a
     timeout, refusal or failure the look stays AX-only with a note and `degraded`. The AX records, lines and look_id are never changed by it."""
     import dom
+    if state['raw'].get('_dom'):
+        extras['sources']={'ax':False,'dom':True,'dom_complete':True,'dom_omitted':state['raw']['_dom']['value']['snapshot'].get('omitted',{}), 'page':state['raw']['_dom']['value'].get('page',{})}
+        return
     semantic = dom.read(f, pid, window_id)
     if not semantic['ok']:
         if semantic.get('degraded'):

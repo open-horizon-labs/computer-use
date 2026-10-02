@@ -34,6 +34,17 @@ class ScoreGuards(unittest.TestCase):
         text = transcript([call('mcp__computer-use__do'), call('Bash')], [call('mcp__computer-use__finish')], [{'type': 'text', 'text': 'mcp__x'}])
         self.assertEqual(score.count_llm_visible_calls(self.write('t.jsonl', text)), 2)
 
+    def test_codex_calls_and_usage_are_counted_without_inventing_cost(self):
+        events=[{'type':'item.started','item':{'id':'x','type':'mcp_tool_call'}},
+                {'type':'item.completed','item':{'id':'x','type':'mcp_tool_call','server':'computer-use-oh','tool':'look'}},
+                {'type':'item.completed','item':{'type':'command_execution'}},
+                {'type':'turn.completed','usage':{'input_tokens':123,'output_tokens':45}}]
+        path=self.write('codex.jsonl','\n'.join(json.dumps(x) for x in events))
+        self.assertEqual(score.count_llm_visible_calls(path),1)
+        scanned=score.scan_transcript(path)
+        self.assertEqual(scanned['usage']['input_tokens'],123)
+        self.assertIsNone(scanned['cost_usd'])
+
     def test_missing_transcript_counts_zero(self):
         self.assertEqual(score.count_llm_visible_calls(str(self.dir / 'nope.jsonl')), 0)
 

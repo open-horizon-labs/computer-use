@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "seed": 20260928,
+  "client": "codex",
+  "session_mode": "isolated",
+  "interrupted": false,
+  "stopped": null,
+  "runs": [
+    {
+      "run_id": "booking.stack.codex-default.r0.s20260928",
+      "arm": "stack",
+      "task": "booking",
+      "model": "codex-default",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912409.7143319,
+      "ended": 1790912473.222303,
+      "returncode": 0,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "booking.native.codex-default.r0.s20260928",
+      "arm": "native",
+      "task": "booking",
+      "model": "codex-default",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912473.2231412,
+      "ended": 1790912566.248905,
+      "returncode": 0,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "orders.stack.codex-default.r0.s20260928",
+      "arm": "stack",
+      "task": "orders",
+      "model": "codex-default",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912566.249254,
+      "ended": 1790912636.355694,
+      "returncode": 0,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "orders.native.codex-default.r0.s20260928",
+      "arm": "native",
+      "task": "orders",
+      "model": "codex-default",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912636.35609,
+      "ended": 1790912722.613749,
+      "returncode": 0,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "ax_dup.stack.codex-default.r0.s20260928",
+      "arm": "stack",
+      "task": "ax_dup",
+      "model": "codex-default",
+      "runtime_digest": "f741863cfd976ac4ce812fa0d718da3f01a8dc7559cd194ca72662c42ba29105",
+      "started": 1790912722.614128,
+      "ended": 1790912787.1092632,
+      "returncode": 0,
+      "session_mode": "isolated"
+    },
+    {
+      "run_id": "ax_dup.native.codex-default.r0.s20260928",
+      "arm": "native",
+      "task": "ax_dup",
+      "model": "codex-default",
+      "runtime_digest": "2d40a3db09abdf58d06520897e87c3506188dd8a3bdfcd0138bb13447def9789",
+      "started": 1790912787.109677,
+      "ended": 1790912938.673471,
+      "returncode": 0,
+      "session_mode": "isolated"
+    }
+  ]
+}

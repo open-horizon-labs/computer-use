@@ -200,6 +200,7 @@ class Facade:
     def __init__(self, driver=None, generic_factory=generic_from_config, reader_factory=NuExtractPage,
                  spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None, setup_env=None, on_behalf=False, foreground_on_behalf=False):
         self.driver = driver or Driver()
+        self.dom_targets=set()  # exactly-bound browser windows successfully read when native AX was unavailable
         self.sleep = sleep
         self.reported = {}  # (pid, window_id, title) -> {text, controls} the LLM was last shown for that page (look or do summary): a do summary carries only what is new
         self._notice_sent = False;self._notice_windows = set()  # see _notice_needed
@@ -526,9 +527,22 @@ class Facade:
         args = [] if timeout is None else [timeout]
         if self.driver_version is not None and self.driver_version >= TIMEOUT_MS_SINCE:
             args = [20 if timeout is None else timeout, min(DRIVER_LAUNCH_WAIT_MS, int((20 if timeout is None else timeout) * 1000))]
-        raw = self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *args))
-        read = lambda: self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *args))
-        raw = self._reread_unresolved(pid, window_id, raw, read)
+        if (pid,window_id) in self.dom_targets:
+            import dom_bound
+            raw=dom_bound.observe(self,pid,window_id)
+        else:
+            raw = self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *args))
+            read = lambda: self._read('get_window_state', lambda: self.driver.observe(pid, window_id, self.session, *args))
+            try:raw = self._reread_unresolved(pid, window_id, raw, read)
+            except Gap as unresolved:
+                if not str(unresolved).startswith('window_ax_unresolved:'):raise
+                try:
+                    import dom_bound
+                    raw=dom_bound.observe(self,pid,window_id)
+                    self.dom_targets.add((pid,window_id))
+                except Gap as dom_error:
+                    if getattr(dom_error,'extra',{}).get('browser_binding_proven'):raise dom_error
+                    raise unresolved
         if not raw.get('snapshot_id') or raw.get('pid', pid) != pid or raw.get('window_id', window_id) != window_id:
             # A vague message here just makes the agent guess three times. Say
             # whether the window is gone or the Driver degraded/refused instead.
@@ -552,6 +566,9 @@ class Facade:
         content = {'pid': pid, 'window_id': window_id, 'title': raw.get('window_title'),
                    'bounds': raw.get('window_bounds'), 'nodes': normalized,
                    'degraded': raw.get('degraded_reason')}
+        if raw.get('_dom'):
+            import dom_bound
+            content['browser_identity']=dom_bound.identity(raw)
         handle = 'obs_' + uuid.uuid4().hex
         image = raw.pop('_image', b'')
         state = {'raw': raw, 'nodes': nodes, 'image': image, 'fingerprint': digest(content),
@@ -565,7 +582,7 @@ class Facade:
         quality = {'ax_available': bool(nodes), 'coverage': 'observed_tree_only',
                    'terminal_text_coverage': 'unknown', 'screenshot_available': bool(image),
                    'degraded_reason': raw.get('degraded_reason'), 'progress': 'unknown',
-                   'table_alias_count':len(state['aliases'])}
+                   'table_alias_count':len(state['aliases']), 'source':'driver_semantic' if raw.get('_dom') else 'native_ax'}
         self.event('observe', route='cua-driver', snapshot=handle, driver_ms=(self.clock()-began)*1000)
         return {'snapshot': handle, 'driver_snapshot_id': raw['snapshot_id'], 'title': raw.get('window_title'),
                 'quality': quality, 'elements': [{'id': 'e'+str(i), 'parent_id': 'e'+str(a['parent_index']) if a.get('parent_index') in nodes else None,
@@ -1363,8 +1380,12 @@ class Facade:
         def mask(node):
             tab=node.get('role')=='AXRadioButton'  # only a tab-strip tab carries the readout; page text is never masked
             return {k:(MEMORY_READOUT.sub(r'\1#',v) if tab and isinstance(v,str) else v) for k,v in node.items() if k!='element_token'}
-        return digest({'title':state['raw'].get('window_title'),'address':address,
-                       'nodes':[mask(state['nodes'][i]) for i in sorted(members)]})
+        content={'title':state['raw'].get('window_title'),'address':address,
+                 'nodes':[mask(state['nodes'][i]) for i in sorted(members)]}
+        if state['raw'].get('_dom'):
+            import dom_bound
+            content['browser_identity']=dom_bound.identity(state['raw'])
+        return digest(content)
 
     def act(self, selection):
         item=self.selections.get(selection)
@@ -1422,6 +1443,11 @@ class Facade:
             request['snapshot_id']=current['raw']['snapshot_id']
             for action in request['actions']:
                 action['arguments']['element_token']=self.node(current,action['id'])['element_token']
+            if current['raw'].get('_dom'):
+                import dom_bound
+                action=next(a for a in request['actions'] if a['id']==item['decision']['action_id'])
+                action['operation'],action['arguments']=dom_bound.action(self,current,action['id'],item['operation'],item.get('text'))
+                request['operation']=action['operation']
             decision={**item['decision'],'snapshot_id':request['snapshot_id'],'binding_digest':request_digest(request)}
         # A capture-bound click names its window in `target`; Driver 0.30.4 refuses target together with top-level pid/window_id
         # (invalid_action_target, live deep test 2026-09-30: every canvas press failed). The stored arguments keep them for the checks.
@@ -1778,6 +1804,7 @@ class Facade:
         nothing. Absence is unknown, never failed. Presence that proves nothing is `unproven` (no presence-based step can prove it):
         the text was already there before the click, it is the text just typed, or it is the label of a control. before=None (a
         verify-only look) has no before-state, so presence is all it can report."""
+        route = 'dom_expect' if state['raw'].get('_dom') else 'ax_expect'
         norm = lambda v: re.sub(r'\s+', ' ', str(v or '').strip()).casefold()
         needle = norm(expect)
         skip = (target.get('role'), target.get('label')) if target else None
@@ -1787,17 +1814,17 @@ class Facade:
         def hits(tree, exact):
             return sum(1 for n in bearing(tree) if any((norm(n.get(k)) == needle) if exact else (needle in norm(n.get(k))) for k in ('label', 'value')))
         if typed is not None and (needle in norm(typed) or norm(typed) in needle):
-            return {'status': 'unknown', 'route': 'ax_expect', 'reason': 'expect_echoes_typed_text', 'unproven': True}
+            return {'status': 'unknown', 'route': route, 'reason': 'expect_echoes_typed_text', 'unproven': True}
         content = self._content_ids(state)
         if any(n.get('role') in self.CONTROL_ROLES and norm(n.get('label')) == needle for i, n in state['nodes'].items() if i in content):
-            return {'status': 'unknown', 'route': 'ax_expect', 'reason': 'expect_is_a_control_label', 'unproven': True}
+            return {'status': 'unknown', 'route': route, 'reason': 'expect_is_a_control_label', 'unproven': True}
         if before is not None and hits(before, False) > 0:
-            return {'status': 'unknown', 'route': 'ax_expect', 'reason': 'expect_present_before_action', 'present_before': True, 'unproven': True}
+            return {'status': 'unknown', 'route': route, 'reason': 'expect_present_before_action', 'present_before': True, 'unproven': True}
         exact, loose = hits(state, True), hits(state, False)
         present_before = False if before is not None else 'unknown'
         if exact == 1 or (exact == 0 and loose == 1):
-            return {'status': 'satisfied', 'route': 'ax_expect_' + ('exact' if exact else 'contains'), 'present_before': present_before}
-        return {'status': 'unknown', 'route': 'ax_expect', 'present_before': present_before,
+            return {'status': 'satisfied', 'route': route + '_' + ('exact' if exact else 'contains'), 'present_before': present_before}
+        return {'status': 'unknown', 'route': route, 'present_before': present_before,
                 'reason': 'expect_ambiguous' if max(exact, loose) > 1 else 'absence_not_proven'}
 
     def _modal_signature(self, state, root):
@@ -2111,7 +2138,10 @@ class Facade:
         try:return pageurl.resolve(self, url)
         except Gap as gap:
             reason = self._do_reason(str(gap))
-            return self.mark({'status': 'refused', 'reason': reason, 'message': str(gap)[:600], 'delivery': 'none', **getattr(gap, 'extra', {})}, tool)
+            result={'status': 'refused', 'reason': reason, 'message': str(gap)[:600], 'delivery': 'none', **getattr(gap, 'extra', {})}
+            if reason=='window_not_found' and getattr(self,'context_session',None)=='isolated':
+                result['hint']='No matching page is open in this isolated browser. Call do with a goto step for the requested URL in this context, then look; do not attach to the user browser.'
+            return self.mark(result, tool)
 
     @staticmethod
     def _named(result, bound):
@@ -2155,7 +2185,9 @@ class Facade:
                 def recover(row):
                     if row.get('reason') in recoverable and not any(x.get('who') == 'user' for x in row.get('setup', []) if isinstance(x, dict)):
                         row['who'] = 'agent'
-                        row['hint'] = ('Call look to refresh the target and recover through a supported do route; visible OBO already permits foreground input. Verify uncertain delivery before retrying.'
+                        if row.get('reason') == 'window_ax_unresolved':
+                            row['message'] = 'The exact window is listed, but Driver could not read its accessibility tree; no content action was delivered.'
+                        row['hint'] = ('Visible OBO permits foreground input. Call do with the same target and delegated goal to activate it before fresh selection; verify uncertain delivery before retrying.'
                                        if self.foreground_on_behalf else
                                        'Call look to refresh the target and recover through a do route that preserves its Space. If Driver requires activation, report that placement conflict; do not retry blindly.')
                 recover(result)
@@ -2727,6 +2759,9 @@ class Facade:
             elif pid is None or window_id is None:raise Gap('bad_request: supply title, or pid and window_id')
             count('window', 'driver_inventory')
             self.foreground_for(ctx['pid'], ctx['window_id'])
+            # A delegated action may activate its exact target before obtaining readable AX evidence.
+            # Pure verification and look remain read-only; selection still uses a fresh observation.
+            if operation != 'verify':self.front_window(ctx['pid'], ctx['window_id'])
             if plan is not None:plan['pid'], plan['window_id'] = ctx['pid'], ctx['window_id']
             if lines_where:
                 lines_where['look'] = self.looks.get((ctx['pid'], ctx['window_id'], lines_where['look_id']))

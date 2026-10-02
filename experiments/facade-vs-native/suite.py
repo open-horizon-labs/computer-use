@@ -142,7 +142,7 @@ def execute(plan, tasks, args, out_dir, events_path, base_url=None):
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest_path = out_dir / 'manifest.json'
     manifest = {'version': 1, 'seed': args.seed, 'dry_run': bool(args.dry_run), 'planned': len(plan),
-                'interrupted': False, 'stopped': None, 'windows_opened': [], 'runs': []}
+                'client': getattr(args, 'client', 'claude'), 'session_mode': getattr(args, 'session_mode', None), 'interrupted': False, 'stopped': None, 'windows_opened': [], 'runs': []}
     write_manifest(manifest_path, manifest)
     started = time.monotonic()
     code = 0
@@ -154,19 +154,23 @@ def execute(plan, tasks, args, out_dir, events_path, base_url=None):
                 manifest['stopped'] = 'max-total-minutes'
                 break
             entry = dict(spec, title=task['title'].format(run=spec['run_id']), synthetic=bool(args.dry_run),
-                         window_id=None, started=time.time())
+                         window_id=None, effective_timeout_s=timeout, started=time.time())
             if args.dry_run:
                 entry.update(synthetic_run(spec, task, out_dir, events_path))
             else:
                 transcript = out_dir / f"{spec['run_id']}.jsonl"
                 window_id = None
                 try:
-                    window_id = runner.open_page(f"{base_url}{task['route']}?run={spec['run_id']}")
+                    url = f"{base_url}{task['route']}?run={spec['run_id']}"
+                    if getattr(args, 'session_mode', None) != 'isolated':
+                        window_id = runner.open_page(url)
                     entry['window_id'] = window_id
-                    manifest['windows_opened'].append(window_id)
+                    if window_id is not None: manifest['windows_opened'].append(window_id)
                     time.sleep(1)  # let the tab load before the agent starts
                     entry.update(runner.run_agent(spec['arm'], spec['task'], entry['title'], transcript, spec['model'],
-                                                  min(spec['max_turns'], args.max_turns or spec['max_turns']), timeout))
+                                                  min(spec['max_turns'], args.max_turns or spec['max_turns']), timeout,
+                                                  **({'session_mode': args.session_mode, 'url': url} if getattr(args, 'session_mode', None) else {}),
+                                                  **({'client': args.client} if getattr(args, 'client', 'claude') != 'claude' else {})))
                     entry['transcript'] = str(transcript)
                 finally:
                     if window_id is not None:
@@ -201,7 +205,7 @@ def score_manifest(manifest, events_path, tasks):
             'rep': run['rep'], 'seed': run['seed'], 'outcome': outcome, 'wrong_clicks': wrong, 'turns': trace['turns'],
             'mcp_calls': calls, 'wall_s': run.get('wall_s'), 'cost_usd': trace['cost_usd'],
             'tokens': {'input': usage.get('input_tokens'), 'output': usage.get('output_tokens'),
-                       'cache_read': usage.get('cache_read_input_tokens'), 'cache_write': usage.get('cache_creation_input_tokens')},
+                       'cache_read': usage.get('cache_read_input_tokens',usage.get('cached_input_tokens')), 'cache_write': usage.get('cache_creation_input_tokens')},
             'synthetic': bool(run.get('synthetic')), 'invalid': bool(infra)})
     return rows
 
@@ -284,6 +288,8 @@ def main(argv=None):
     p.add_argument('--max-total-minutes', type=float, help='required for live runs: stop before exceeding this wall budget')
     p.add_argument('--agent-timeout', type=int, help='seconds per run (default: per-task timeout_s)')
     p.add_argument('--max-turns', type=int, help='cap on agent turns (default: per-task max_turns)')
+    p.add_argument('--client', choices=['claude','codex'], default='claude', help='agent CLI; for Codex use --models codex-default or an explicit Codex model')
+    p.add_argument('--session-mode', choices=['obo', 'isolated'], help='explicit user session or isolated browser; omitted preserves historical fixture placement')
     p.add_argument('--port', type=int, default=8934)
     p.add_argument('--out-dir', default=None)
     for name in ('score', 'report'):

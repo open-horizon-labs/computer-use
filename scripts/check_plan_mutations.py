@@ -783,6 +783,50 @@ MUTATIONS = {
 }
 
 
+MUTATIONS.update({
+    'dom_browser_identity_ignored': (
+        'let identical content in another browser target, tab or URL reuse evidence',
+        [('dom_bound.py', "    return value['target_id'],value['tab_id'],value.get('page',{}).get('url')", "    return None")],
+        ['test_dom_bound.BoundDomTests.test_identical_content_in_another_tab_or_url_invalidates_look_and_selection']),
+    'dom_detached_node_truncates_record': (
+        'stop the record at a detached shadow node, hiding later real fields',
+        [('dom_bound.py', "    out=[root]\n    for i in range(root+1,len(nodes)):\n        parent=nodes[i]['parent']\n        while parent is not None and parent!=root:parent=nodes[parent]['parent']\n        if parent==root:out.append(i)", "    out=[]\n    for i in range(root,len(nodes)):\n        if i>root and nodes[i]['depth']<=nodes[root]['depth']:break\n        out.append(i)")],
+        ['test_dom_bound.BoundDomTests.test_missing_parent_tail_cannot_hide_later_real_field_changes']),
+    'isolated_url_searches_user_chrome': (
+        'search every browser profile before the isolated browser exists',
+        [('pageurl.py', "    if getattr(f,'context_session',None)=='isolated':", "    if False:")],
+        ['test_task_context.ContextTests.test_isolated_url_look_never_attaches_to_user_browser_and_returns_navigation_hint']),
+    'url_look_prepares_browser': (
+        'attach to a user profile from a read-only URL lookup',
+        [('pageurl.py', "browser.tab_state(f, w['pid'], w['window_id'], prepare=False)", "browser.tab_state(f, w['pid'], w['window_id'])")],
+        ['test_who.TargetByUrl.test_a_window_the_driver_will_not_attach_to_is_skipped_but_all_refused_is_permission_required']),
+    'dom_unparsed_scope_accepted': (
+        'drop unparsed scoped lines without reporting missing evidence',
+        [('dom_bound.py', "    if len([line for line in outline.splitlines() if line.strip()])!=len(nodes):", "    if False:")],
+        ['test_dom_bound.BoundDomTests.test_captured_settings_scopes_preserve_fields_without_inventing_shadow_ancestry']),
+    'dom_partial_scope_accepted': (
+        'treat a partial semantic snapshot as complete',
+        [('dom_bound.py', "    if snap.get('complete') is not True or snap.get('continuation'):", "    if False:")],
+        ['test_dom_bound.BoundDomTests.test_partial_and_omitted_competitors_refuse']),
+    'dom_changed_scoped_record_accepted': (
+        'resolve the label without proving the same observed record unchanged',
+        [('dom_bound.py', "        if len(matches)!=1 or signature(parsed,matches[0])!=signature(data['parsed'],anchor):", "        if False:")],
+        ['test_dom_bound.BoundDomTests.test_changed_scoped_record_and_duplicate_control_refuse']),
+    'dom_duplicate_scoped_control_accepted': (
+        'click the first scoped control with the requested label',
+        [('dom_bound.py', "        if len(candidates)!=1:raise gap('the scoped control is ambiguous or missing')", "        if not candidates:raise gap('the scoped control is missing')")],
+        ['test_dom_bound.BoundDomTests.test_changed_scoped_record_and_duplicate_control_refuse']),
+    'dom_wrong_tab_scope_accepted': (
+        'accept a scoped snapshot from a different tab',
+        [('dom_bound.py', "        if scoped.get('target_id')!=value['target_id'] or scoped.get('tab_id')!=value['tab_id']:\n            raise gap('the scoped snapshot belongs to another tab')", "        if False:\n            raise gap('the scoped snapshot belongs to another tab')")],
+        ['test_dom_bound.BoundDomTests.test_changed_scoped_record_and_duplicate_control_refuse']),
+    'dom_first_action_rebound_instead_of_selection': (
+        'rebind the first offered action instead of the selected action',
+        [('core.py', "                action=next(a for a in request['actions'] if a['id']==item['decision']['action_id'])", "                action=request['actions'][0]")],
+        ['test_dom_bound.DialogDispatch.test_only_selected_dialog_action_is_rebound_from_multiple_candidates']),
+})
+
+
 def stage(tmp):
     shutil.copytree(ROOT / 'computer_use', tmp / 'computer_use', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     shutil.copytree(ROOT / 'scripts', tmp / 'scripts', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))  # a copy: a patch must never reach the real file through a symlink
