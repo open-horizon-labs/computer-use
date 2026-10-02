@@ -26,6 +26,7 @@ from agent_display import AgentDisplay
 
 
 OBSERVE_RETRY_DELAYS = (0.5, 1.0)   # seconds before the 2nd and 3rd observation of a page that is not ready
+FOREGROUND_DRIVER_MIN_VERSION = (0, 31, 0)  # bring_to_front verifies persistent visible placement
 # A window the Driver lists but whose AX window it cannot resolve yet (live 2026-10-01: Calculator right after `open -g -a Calculator` answered
 # driver_snapshot_unavailable twice, and the agent gave up; in an earlier run the same look worked). A look waits for it: 0.5 + 1.0 + 1.5 = 3.0 s of
 # delays in total, and no attempt starts when its delay plus the Driver's own launch wait (twice DRIVER_LAUNCH_WAIT_MS) would pass LOOK_WAIT_MAX_S.
@@ -197,7 +198,7 @@ class Driver:
 
 class Facade:
     def __init__(self, driver=None, generic_factory=generic_from_config, reader_factory=NuExtractPage,
-                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None, setup_env=None):
+                 spans_factory=RemoteSpans, visual_factory=VisualTerminal, clock=time.monotonic, sleep=time.sleep, mobile=None, agent_display=None, agent_browser=None, setup_env=None, on_behalf=False, foreground_on_behalf=False):
         self.driver = driver or Driver()
         self.sleep = sleep
         self.reported = {}  # (pid, window_id, title) -> {text, controls} the LLM was last shown for that page (look or do summary): a do summary carries only what is new
@@ -222,6 +223,8 @@ class Facade:
         self.lock = threading.RLock()
         self.agent = agent_display or AgentDisplay()  # #60, CE-FACADE-009: parks created windows and agent-owned apps' windows off the user's screen
         self.agent_browser = agent_browser  # #60: the default target of goto/open_tab/read_pages (the server passes one; None = the user's own browser, as before)
+        self.on_behalf = bool(on_behalf)  # MCP caller selected this task context; user apps and foreground routes are authorized for the task
+        self.foreground_on_behalf = bool(foreground_on_behalf)
         self.setup_env = setup_env  # #64: a callable returning a cli.Env; None (the default) never attaches a `setup` block. The server passes the real one.
         self.setup_seen = set()  # the sets of blockers a `setup` block was already shown for (once per server process unless the set changes)
         self.started_at = clock()
@@ -276,6 +279,8 @@ class Facade:
                 if self.driver_version is not None and self.driver_version < MIN_DRIVER_VERSION:
                     raise Gap('cua-driver %s is unsupported (needs >= %s): off_space_or_ax_unresolved routes are refused on older builds; upgrade cua-driver (trycua/cua#4068)'
                               % ('.'.join(map(str, self.driver_version)), '.'.join(map(str, MIN_DRIVER_VERSION))))
+                if self.foreground_on_behalf and self.driver_version is not None and self.driver_version < FOREGROUND_DRIVER_MIN_VERSION:
+                    raise Gap('on_behalf_driver_too_old: Visible user context needs cua-driver >= %s for verified bring_to_front and action-scoped foreground input' % '.'.join(map(str, FOREGROUND_DRIVER_MIN_VERSION)))
             perception_probe = getattr(self.driver, 'perception_status', None)
             if callable(perception_probe):
                 payload = perception_probe() or {}
@@ -291,7 +296,8 @@ class Facade:
         self.titled_raw = titled  # resolve_window ranks by layer and Space, which the listing below does not carry
         raws = [w for w in titled if title is None or w['title']==title]
         listed = [{k:w[k] for k in ('app_name','pid','window_id','title','is_on_screen') if k in w} for w in raws]
-        self.agent.observed([{**w, 'bundle_id': raw.get('bundle_id'), 'bounds': raw.get('bounds')} for w, raw in zip(listed, raws)])
+        if not self.on_behalf:
+            self.agent.observed([{**w, 'bundle_id': raw.get('bundle_id'), 'bounds': raw.get('bounds')} for w, raw in zip(listed, raws)])
         return {'route': 'driver_inventory', 'windows': listed}
 
     WINDOW_CANDIDATES = 8
@@ -302,7 +308,7 @@ class Facade:
         title = next((w.get('title') for w in getattr(self, 'titled_raw', []) if w.get('pid') == pid and w.get('window_id') == window_id), None)
         key = (pid, window_id, title)
         if (explicit or self.foreground_ok) and title is not None:self.fg_grants[key] = True
-        allowed = bool(explicit or self.foreground_ok or (title is not None and key in self.fg_grants))
+        allowed = bool((self.on_behalf and self.foreground_on_behalf) or explicit or self.foreground_ok or (title is not None and key in self.fg_grants))
         if allowed:self.foreground_ok = True
         return allowed
 
@@ -347,6 +353,16 @@ class Facade:
     def window_created(self, window_id, title=None, bounds=None):
         """Every path that makes a NEW WINDOW calls this right after it exists and before the first look or act on it (#60)."""
         return self.agent.created(window_id, title, bounds)
+
+    def front_window(self, pid, window_id):
+        """Persistently show the bound user window only when the server owner selected visible on-behalf mode."""
+        if not (self.on_behalf and self.foreground_on_behalf):
+            return {'status':'not_requested'}
+        result = self.driver.call('bring_to_front', {'pid':pid,'window_id':window_id,'session':self.session})
+        if not isinstance(result,dict) or result.get('effect') not in ('confirmed','done','observed'):
+            raise Gap('foreground_activation_unverified: the Driver did not verify the requested window in front; no action was sent')
+        self.event('foreground_activation', verified=True)
+        return result
 
     def observe(self, pid, window_id, timeout=None, wait_ready=False):
         """With wait_ready (a look at a page just opened, never the revalidation or recovery observations of an action): observe, waiting out a page that is not ready yet: a bounded, deterministic retry (OBSERVE_RETRY_DELAYS) when the Driver call
@@ -557,14 +573,14 @@ class Facade:
                     'enabled': a.get('enabled', True), 'actions': a.get('actions', []),
                     **({'alias_of':'e'+str(state['aliases'][i])} if i in state['aliases'] else {})} for i,a in nodes.items()]}
 
-    @staticmethod
-    def check_foreground(raw):
+    def check_foreground(self, raw):
         """Refuse before delivery when the window is off-Space/AX-unresolved.
 
-        The facade never activates, raises or moves windows to work around
-        this; it only refuses so the caller (or the user) brings it forward,
-        or upgrades cua-driver.
+        Non-OBO preserves the existing refusal. OBO delegates background
+        capability to Driver; visible OBO fronts only its exact action target.
         """
+        if self.on_behalf:
+            return  # OBO leaves delivery to the Driver so a background-Space task can stay there
         background = raw.get('background_input') or {}
         exact_window = background.get('exact_window') or {}
         status = exact_window.get('status')
@@ -981,6 +997,8 @@ class Facade:
             evidence,_ = self.subtree(state,candidate)
             args={'pid':state['pid'],'window_id':state['window_id'],'session':self.session,
                   'element_token':node['element_token']}
+            if self.on_behalf and self.foreground_on_behalf:
+                args['delivery_mode']='foreground'
             if operation=='type_text':
                 if text is None:raise Gap('type_text requires caller text')
                 args['text']=text
@@ -1408,6 +1426,7 @@ class Facade:
         # A capture-bound click names its window in `target`; Driver 0.30.4 refuses target together with top-level pid/window_id
         # (invalid_action_target, live deep test 2026-09-30: every canvas press failed). The stored arguments keep them for the checks.
         wire=lambda args:{k:v for k,v in args.items() if not ('target' in args and k in ('pid','window_id'))}
+        self.front_window(state['pid'], state['window_id'])
         try:result=execute_bound(request,decision,request['snapshot_id'],lambda tool,args:self.driver.call(tool,wire(args)))
         except Gap as gap:
             if item.get('novnc') and str(gap).startswith('browser_input_trust_unavailable'):
@@ -2125,6 +2144,23 @@ class Facade:
             if report.get('parked'):result['agent_display'] = {'id': self.agent.display, 'parked': True}
             if report.get('note'):result['agent_display_note'] = report['note']
             if self.fg_grants:result['foreground_granted_for'] = [k[2] for k in self.fg_grants][:4]  # the windows the user already let this session front: no second ask
+            if self.on_behalf:
+                # A delegated task already specifies presentation. Do not turn a
+                # Driver capability refusal into a redundant permission request.
+                recoverable = {'foreground_required', 'needs_foreground', 'pointer_not_deliverable_in_background',
+                               'novnc_background_click_unavailable', 'element_outside_target_window',
+                               'tab_close_control_not_found', 'tab_close_control_ambiguous', 'window_ax_unresolved',
+                               'browser_tab_ambiguous', 'no_actionable_controls', 'upload_no_file_input',
+                               'foreground_activation_unverified'}
+                def recover(row):
+                    if row.get('reason') in recoverable and not any(x.get('who') == 'user' for x in row.get('setup', []) if isinstance(x, dict)):
+                        row['who'] = 'agent'
+                        row['hint'] = ('Call look to refresh the target and recover through a supported do route; visible OBO already permits foreground input. Verify uncertain delivery before retrying.'
+                                       if self.foreground_on_behalf else
+                                       'Call look to refresh the target and recover through a do route that preserves its Space. If Driver requires activation, report that placement conflict; do not retry blindly.')
+                recover(result)
+                for step in result.get('steps') or []:
+                    if isinstance(step, dict):recover(step)
             result['untrusted_page_text'] = True  # the flag is on every response; the fixed sentence only where it is news (CE-FACADE-011)
             if self._notice_needed(result):result['notice'] = lookmod.NOTICE
             else:result.pop('notice', None)
@@ -2158,6 +2194,8 @@ class Facade:
         return False
 
     def _do_entry(self, goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near, steps, look_id, abort_if, allow_foreground=None):
+        if self.on_behalf and not self.foreground_on_behalf and allow_foreground is True:
+            return self.mark({'status':'refused','reason':'presentation_conflict','message':'Background presentation cannot request activation of the user’s active Space'}, 'do')
         if steps is not None or look_id is not None or abort_if is not None:
             import plan as planmod
             with self.lock:
@@ -2166,7 +2204,7 @@ class Facade:
                 return planmod.run_plan(self, goal, title, pid, window_id, steps, look_id, abort_if, budget_s, expect,
                                         {'records': records, 'operation': operation, 'text': text, 'accept_unknown': accept_unknown, 'confirm': confirm,
                                          'control': control, 'treat_as_match': treat_as_match, 'near': near})
-        self.foreground_ok = allow_foreground is True
+        self.foreground_ok = (self.on_behalf and self.foreground_on_behalf) or allow_foreground is True
         try:
             with self.lock:return self._do(goal, title, pid, window_id, records, operation, text, expect, accept_unknown, budget_s, confirm, control, treat_as_match, near)
         finally:self.foreground_ok = False

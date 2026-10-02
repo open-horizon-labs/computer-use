@@ -9,7 +9,7 @@ from mcp import ClientSession,StdioServerParameters
 from mcp.client.stdio import stdio_client
 CODE=("import os,sys;sys.path.insert(0,'computer_use');import server;from test_core import FakeDriver,FakeReader,FakeChooser,FakeVision;"
       "from core import Facade;d=FakeDriver();d.capture_id='cap_test';"
-      "server.facade=Facade(d,reader_factory=FakeReader,generic_factory=FakeChooser,visual_factory=FakeVision);server.mcp.run()")
+      "server.facade=Facade(d,reader_factory=FakeReader,generic_factory=FakeChooser,visual_factory=FakeVision);server.contexts.factory=lambda options: Facade(d,reader_factory=FakeReader,generic_factory=FakeChooser,visual_factory=FakeVision,on_behalf=options['session']=='user',foreground_on_behalf=options['session']=='user' and options['presentation']=='visible');server.mcp.run()")
 SPEC={'fields':{'condition':{'description':'Condition'}},'predicates':[{'field':'condition','value':'Used'}],'record_ids':['e1','e4'],'coverage_complete':True}
 async def default_mode():
  async with stdio_client(StdioServerParameters(command=sys.executable,args=['-c',CODE],cwd=str(ROOT),env=dict(os.environ))) as (r,w):
@@ -35,6 +35,20 @@ async def default_mode():
    plan=json.loads((await s.call_tool('do',{'goal':'Inspect the used product','title':'Demo','expect':None,'look_id':seen['look_id'],'steps':[{'do':'press','where':{'lines':[{'line':'contains','value':'Used'}]},'expect':None}]})).content[0].text)
    assert plan['status']=='delivered_unverified' and plan['steps'][0]['selected']['description'].startswith('Inspect first') and plan['follow_up_needed'] is True,plan
    await navigation_steps(s,do)
+   async def call(name,args):
+    result=await s.call_tool(name,args)
+    assert not result.isError,result.content
+    return json.loads(result.content[0].text)
+   obo=await call('look',{'title':'Demo','context':{'session':'user'}})
+   assert obo['context']=={'session':'user','presentation':'visible'},obo
+   background=await call('look',{'title':'Demo','context':{'session':'user','presentation':'background'}})
+   mismatch=await call('do',{'title':'Demo','goal':'Verify','expect':None,'context_id':background['context_id'],'look_id':obo['look_id']})
+   assert mismatch['reason']=='context_look_mismatch',mismatch
+   inherited=await call('do',{'title':'Demo','goal':'Verify','expect':None,'look_id':obo['look_id'],'steps':[{'do':'verify','expect':'Used $80'}]})
+   assert inherited['context_id']==obo['context_id'] and inherited['status']=='observed',inherited
+   legacy=await call('look',{'title':'Demo'})
+   assert 'context_id' not in legacy,legacy
+
 async def navigation_steps(s,do):
  # A step the REAL MCP tool schema (PlanStep, extra=forbid) must accept: a previous bug had no `url` field, so every goto/open_tab was rejected by validation before
  # the executor ever saw it. Getting PAST validation is the check: the fake Driver binds no browser, so the step then stops with a typed reason of its own (never

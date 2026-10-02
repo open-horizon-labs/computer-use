@@ -369,7 +369,7 @@ class WelcomeScreen(unittest.TestCase):
         # Wrong patch: paste the whole tool description back into the instructions (they were three times this long).
         self.assertIs(self.server.mcp.instructions, self.text)
         self.assertLess(len(self.text), 2300)
-        for part in ('look', 'do', '`expect`', 'look_id', 'The expect is the proof', 'stop and ask the user', 'never reroute', 'allow_foreground'):
+        for part in ('look', 'do', '`expect`', 'look_id', 'The expect is the proof', 'who=user', 'never reroute', 'context_id'):
             self.assertIn(part, self.text, part)
         self.assertLess(self.text.index('`look`'), self.text.index('`do`'))
         self.assertFalse(lv.PRIMITIVES.search(self.text))

@@ -333,7 +333,7 @@ class DefaultPathBudget(unittest.TestCase):
         real = Facade.do
         def hands_back(self, *a, **k):
             r = real(self, *a, **k)
-            return {**r, 'status': 'stopped', 'reason': 'control_needed'} if k.get('steps') is None and len(a) > 14 and a[14] and r['status'] == 'done' else r
+            return {**r, 'status': 'stopped', 'reason': 'control_needed'} if (k.get('steps') or (len(a) > 14 and a[14])) and r['status'] == 'done' else r
         with mock.patch.object(Facade, 'do', hands_back):
             rows, problems = cb.table(BUDGET, cb.measure_scenarios())
         self.assertTrue(any(p.startswith('plan_booking_look_do') for p in problems), problems)

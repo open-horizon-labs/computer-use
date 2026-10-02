@@ -1,4 +1,4 @@
-"""The agent browser (#60, CE-FACADE-009): the default target of goto / open_tab / read_pages.
+"""The agent browser (#60, CE-FACADE-009): the off-screen target of goto / open_tab / read_pages.
 
 One Chrome for Testing process with a profile folder WE own, kept for the server's lifetime and reused (one window; new tabs, never a new
 window per task). Its first window opens ON the agent display, so nothing flashes on the user's screen. Chrome restores the placement saved in the
@@ -9,7 +9,7 @@ nothing is launched (agent_display_unavailable) unless the user set CUA_AGENT_DI
 profile: "user". The Driver binds it through browser_prepare (existing_profile) as for any Chromium: measured live 2026-09-30, Driver 0.31.0,
 Chrome for Testing 154 with --remote-debugging-port=0: DevToolsActivePort is written in our own profile and the bind is exact.
 
-CUA_AGENT_BROWSER = auto (default: the agent browser) | user (the user's own browser, as before). CUA_AGENT_BROWSER_PATH points at an installed
+Calls without task context retain the isolated browser. MCP context session=user routes browser steps to the existing user browser. CUA_AGENT_BROWSER = auto (default: the agent browser) | user (the user's own browser, as before). CUA_AGENT_BROWSER_PATH points at an installed
 Chromium-family executable instead of downloading Chrome for Testing. Nothing here runs until a step needs the agent browser.
 """
 import atexit

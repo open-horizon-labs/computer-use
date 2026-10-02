@@ -158,7 +158,7 @@ class WhoFixesIt(unittest.TestCase):
         for needle in ('who=agent', 'who=user', 'url="myworkday.com"', 'raw Driver'):
             self.assertIn(needle, text)
         skill = open(__file__.rsplit('/computer_use/', 1)[0] + '/skills/computer-use/SKILL.md').read()
-        for needle in ('who=agent', 'who=user', 'foreground_granted_for', 'url="myworkday.com"'):
+        for needle in ('who=agent', 'who=user', 'context_id', 'url="myworkday.com"'):
             self.assertIn(needle, skill)
 
 
@@ -310,6 +310,55 @@ class TargetByUrl(unittest.TestCase):
         self.assertEqual(f.look(url='myworkday.com', title='Demo')['reason'], 'bad_request')
         self.assertEqual(f.look(url='my')['reason'], 'bad_request')
         self.assertEqual(f.look(url='myworkday.com', device='x')['reason'], 'bad_request')
+
+
+class OnBehalfMode(unittest.TestCase):
+    def test_mode_grants_foreground_to_the_resolved_user_window_without_a_per_step_flag(self):
+        driver = Windows([win(1, 2, 'Workday application', 'Google Chrome')])
+        f = Facade(driver, generic_factory=FakeChooser, reader_factory=FakeReader, visual_factory=FakeVision, on_behalf=True, foreground_on_behalf=True)
+        target = f.resolve_window('Google Chrome')
+        self.assertEqual((target['pid'], target['window_id']), (1, 2))
+        self.assertTrue(f.foreground_for(1, 2))
+        self.assertTrue(f.foreground_ok)
+
+    def test_a_titleless_first_navigation_is_only_enabled_in_on_behalf_mode(self):
+        steps = [{'do': 'goto', 'url': 'https://workday.example/jobs', 'expect': None}]
+        f = facade(Windows([win(1, 2, 'Workday application', 'Google Chrome')]))
+        self.assertFalse(plan.starts_on_user_browser(f, steps))
+        f.on_behalf = True
+        self.assertTrue(plan.starts_on_user_browser(f, steps))
+        normalized = plan.validate(f, 'Open my job application', None, None, None, steps, None, None, 20, None, {})
+        self.assertEqual(normalized[0]['do'], 'goto')
+
+    def test_user_browser_is_the_default_browser_route_in_on_behalf_mode(self):
+        driver = Windows([win(1, 2, 'Workday application', 'Google Chrome')])
+        f = Facade(driver, generic_factory=FakeChooser, reader_factory=FakeReader, visual_factory=FakeVision, agent_browser=type('Browser', (), {'mode': 'auto'})(), on_behalf=True)
+        ctx = {'pid': None, 'window_id': None}
+        plan.resolve_browser_window(f, {'do': 'goto'}, ctx, None)
+        self.assertEqual((ctx['pid'], ctx['window_id']), (1, 2))
+
+    def test_visible_mode_uses_verified_fronting_and_foreground_driver_delivery(self):
+        class FocusDriver(Windows):
+            def call(self, tool, args, timeout=20):
+                if tool == 'bring_to_front':
+                    self.calls.append((tool, args.get('pid')))
+                    return {'effect':'confirmed'}
+                return super().call(tool, args, timeout)
+        driver = FocusDriver([win(1, 2, 'Workday application', 'Google Chrome')])
+        f = facade(driver);f.on_behalf=True;f.foreground_on_behalf=True
+        state = f.state(f.observe(1, 2)['snapshot'])
+        action = f.actions(state, ['e3'], 'click', None)[0]
+        self.assertEqual(action['arguments']['delivery_mode'], 'foreground')
+        self.assertEqual(f.front_window(1, 2)['effect'], 'confirmed')
+        self.assertIn(('bring_to_front', 1), driver.calls)
+
+    def test_background_mode_keeps_actions_on_the_driver_background_route(self):
+        driver = Windows([win(1, 2, 'Workday application', 'Google Chrome')])
+        f = facade(driver);f.on_behalf=True
+        state = f.state(f.observe(1, 2)['snapshot'])
+        action = f.actions(state, ['e3'], 'click', None)[0]
+        self.assertNotIn('delivery_mode', action['arguments'])
+        self.assertFalse(f.foreground_for(1, 2))
 
 
 if __name__ == '__main__':
