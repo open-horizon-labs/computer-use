@@ -1,6 +1,6 @@
 # Progressive Spaces discovery
 
-Use native tools by default. Use this path only for explicitly requested Spaces isolation. The separate cua-spaces MCP server exposes list_spaces, list_tools and call_tool. Lifecycle setup stays in the CLI; do not register the full upstream surface to obtain it.
+Use native tools by default; browser-only tasks prefer lightweight isolation. Use this path when the user requests a separate isolated desktop or selects Spaces. The separate cua-spaces MCP server exposes list_spaces, list_tools and call_tool. Lifecycle setup stays in the CLI; do not register the full upstream surface to obtain it.
 
 Choose a concrete owned guest Space from fresh discovery. Never automatically choose a host, shared user desktop or another task's guest. If unavailable, return the setup problem; do not fall back to the host desktop. Credentials and provider configuration remain external.
 

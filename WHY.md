@@ -1,9 +1,9 @@
 # Why use this?
 
-Use native tools for ordinary computer use. OH has not earned automatic preference in a fair comparison.
+Use this skill to choose a route that fits the user's intent without loading a large tool catalog or building another general driver stack.
 
-Use OH explicitly when you need a mobile adapter with fresh control binding and independent verification, or an isolated browser that must stay off the user's screen. These are capability choices, not claims of better speed or cost.
+For work in the user's apps and logins, use native OBO tools. For small isolated browser tasks, use lightweight isolation. Use Spaces when a separate desktop is useful, with three discovery/execution tools and schemas fetched by name. Mobile support remains optional. Keep fresh bindings and independently verify results on every route.
 
-The reviewed iOS candidate completed 3/3 tasks after a 0/3 timeout baseline, but native iOS was blocked by a grant, so that does not establish superiority. Terminal used fewer cumulative tokens than its earlier OH implementation but took longer than native. Android and web failed all three candidate runs; mixed tasks remained partial. VNC failed while native completed 3/3. Native Mac discovery/setup prevented a fair comparison. Missing token usage and failed-run durations are not savings.
+The value is routing and operational guidance, not a claim that OH beats native. Our bakeoff did not establish an automatic OH winner. The retained adapters cover capability gaps; they are disabled/unregistered by default. The slim Spaces test passed a five-action form, but has not established lower total agent tokens or better general reliability.
 
-[Benchmark evidence and limits](docs/BENCHMARK.md) support the empty automatic allowlist. Keep that evidence; recover broader experiments from `codex/archive-general-facade-2026-10-02` (`a531b43`) if future work is justified. Promotion requires a fair same-task comparison with better completion or efficiency without lowering completion.
+Keep [benchmark evidence](docs/BENCHMARK.md) and [Spaces qualification](docs/SPACES-PROGRESSIVE-2026-10-02.md). Recover broader experiments from codex/archive-general-facade-2026-10-02 (a531b43) only when a concrete gap warrants it. Promotion requires a fair same-task comparison with better completion or efficiency without lowering completion.
