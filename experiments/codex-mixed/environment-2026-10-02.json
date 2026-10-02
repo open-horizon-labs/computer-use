@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-02",
+  "source_commit": "0745718",
+  "codex_cli": "0.159.2",
+  "model": "gpt-6-astra",
+  "reasoning_effort": "ultra",
+  "native_plugin": "unified-computer-use/26.928.40906",
+  "python": "3.12.12",
+  "macos": {
+    "version": "27.0",
+    "build": "26A428"
+  },
+  "cua_driver": "0.31.0",
+  "terminal_use": "1.4.1",
+  "mobile_mcp": "1.0.6",
+  "mobilecli": "1.0.16",
+  "android": "15",
+  "ios": "26.5",
+  "vnc_image": "sha256:48fa386dfe02106a474496d1745f0100bbb36441033f1d6d96180237bac9df1d",
+  "vnc_packages": {
+    "novnc": "1:1.3.0-2",
+    "python3": "3.12.3-0ubuntu2.1",
+    "python3-tk": "3.12.3-0ubuntu1",
+    "websockify": "0.10.0+dfsg1-5build2",
+    "x11vnc": "0.9.16-10",
+    "xvfb": "2:21.1.12-1ubuntu1.8"
+  },
+  "presentation": "physical Mac locked; synthetic GUI targets on virtual displays; no visible OBO tests",
+  "browser_selection": "Chrome for native; isolated Chrome for Testing for OH",
+  "fixture_setup_excluded": true,
+  "post_source_commit": "a156b17ed25f644d4d4f469db10fbb88d3b2d797",
+  "project_documents_excluded": true,
+  "global_user_guidance_retained": true,
+  "android_data_partition": "2G",
+  "native_mac_discovery": "owned Applications symlink qualifies discovery; native app grant denied",
+  "mac_fixture_sha256": {
+    "experiments/codex-mixed/mac_fixture.swift": "c338e7bf76c0b174647a99b3cd0f4ca7c63195102a660a494c3c54e137886a3c",
+    "/tmp/cua-mixed-bench/OH Benchmark.app/Contents/MacOS/OHBenchmark": "822912785e05965b9bd410e095fe18a35c9a1679227a27751c82c6b8726d1fe4",
+    "/tmp/cua-mixed-bench/OH Benchmark.app/Contents/Info.plist": "23191cfc5952de0f42faff17327a8c67a78bf236e160d45fe7082a42fb24236f"
+  }
+}

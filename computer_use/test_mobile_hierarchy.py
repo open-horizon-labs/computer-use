@@ -145,4 +145,71 @@ class Hierarchy(unittest.TestCase):
             with self.assertRaises(mobile.MobileGap):
                 hierarchy.read('exact-device', lambda *a, **kw: self.fail('invalid config'))
 
+class AndroidHierarchy(unittest.TestCase):
+    def roots(self):
+        return json.loads((Path(__file__).parent / 'fixtures/mobile/android_display.real.raw.json').read_text())['hierarchy']
+
+    def target(self, roots):
+        return next(e for e in hierarchy.normalize_android(roots) if e['kind']=='Switch')
+
+    def test_real_false_is_known_and_missing_is_unknown(self):
+        roots=self.roots()
+        target=self.target(roots)
+        self.assertEqual(mobile.toggle_state(target), 'unchecked')
+        self.assertEqual(target['bounds'], (901,725,137,126))
+        self.assertIsNone(target['ref'])
+        def walk(nodes):
+            for n in nodes:
+                if n['class']=='android.widget.Switch':return n
+                child=walk(n.get('children') or [])
+                if child:return child
+        raw=walk(roots)
+        raw.pop('checked')
+        unknown=self.target(roots)
+        self.assertIsNone(mobile.toggle_state(unknown))
+        self.assertEqual(mobile.analyze([unknown])['toggles'][0]['state'], 'unknown')
+        self.assertNotEqual(mobile.look_id_for(mobile.analyze([target]), [], 'device'), mobile.look_id_for(mobile.analyze([unknown]), [], 'device'))
+
+    def test_invalid_tree_is_typed_and_invisible_cannot_be_live(self):
+        roots=self.roots()
+        for change in ('children','bounds','class','overflow'):
+            bad=copy.deepcopy(roots)
+            if change=='children':bad[0]['children']=42
+            elif change=='bounds':bad[0]['rect']['width']=-1
+            elif change=='overflow':bad[0]['rect']['width']=10**500
+            else:bad[0]['class']=None
+            with self.subTest(change=change), self.assertRaises(mobile.MobileGap):hierarchy.normalize_android(bad)
+        raw={'class':'android.widget.Switch','text':'Hidden','checkable':True,'checked':False,'visible':False,'rect':{'x':1,'y':1,'width':10,'height':10}}
+        self.assertFalse(mobile.live(hierarchy.normalize_android([raw])[0]))
+        raw['visible']=True
+        for flag in ('visible','enabled'):
+            parent={'class':'android.widget.FrameLayout','rect':{'x':0,'y':0,'width':100,'height':100},flag:False,'children':[copy.deepcopy(raw)]}
+            with self.subTest(ancestor_flag=flag):
+                self.assertFalse(mobile.live(hierarchy.normalize_android([parent])[0]))
+
+    def test_custom_backend_no_provider_and_conditional_complete_replacement(self):
+        self.assertIsNone(mobile.Mobile(backend=object()).android_hierarchy_reader)
+        roots=self.roots()
+        payload=[{'type':'android.widget.Switch','text':'old','coordinates':{'x':1,'y':1,'width':10,'height':10}}]
+        class Backend:
+            def call(self,*args,**kwargs):return mobile.ELEMENTS_PREFIX+json.dumps(payload),False
+        calls=[]
+        mob=mobile.Mobile(Backend(), android_hierarchy_reader=lambda device: calls.append(device) or roots)
+        els=mob._read('exact-owned-device')
+        self.assertEqual(calls,['exact-owned-device'])
+        self.assertNotIn('old', [e['text'] for e in els])
+        payload[0]['checked']=True
+        self.assertEqual(mob._read('exact-owned-device')[0]['text'],'old')
+        self.assertEqual(len(calls),1)
+
+    def test_raw_literal_command_and_invalid_payload(self):
+        roots=self.roots();calls=[]
+        def run(argv,**kwargs):
+            calls.append(argv)
+            return type('Result',(),{'returncode':0,'stdout':json.dumps({'status':'ok','data':{'rawData':json.dumps({'hierarchy':roots})}})})()
+        self.assertEqual(hierarchy.read('exact-device',run,raw=True), roots)
+        self.assertEqual(calls[0][-5:],['ui','--device','exact-device','--format','raw'])
+        with self.assertRaises(mobile.MobileGap):
+            hierarchy.read('exact-device',lambda *a,**k:type('R',(),{'returncode':0,'stdout':'{"status":"ok","data":{}}'})(),raw=True)
+
 if __name__ == '__main__': unittest.main()

@@ -8,23 +8,79 @@ import os
 import subprocess
 
 
-def read(device, run=subprocess.run):
+def read(device, run=subprocess.run, raw=False):
     from mobile import MobileGap, AGENT_PACKAGE, CALL_TIMEOUT_S
     try:
         prefix = json.loads(os.environ['CUA_MOBILECLI_COMMAND']) if os.environ.get('CUA_MOBILECLI_COMMAND') else ['npx', '-y', AGENT_PACKAGE]
         if not isinstance(prefix, list) or not prefix or not all(isinstance(x, str) and x for x in prefix):
             raise ValueError()
-        done = run(prefix + ['dump', 'ui', '--device', device], capture_output=True, text=True,
+        done = run(prefix + ['dump', 'ui', '--device', device] + (['--format', 'raw'] if raw else []), capture_output=True, text=True,
                    stdin=subprocess.DEVNULL, timeout=CALL_TIMEOUT_S,
                    env={**os.environ, 'MOBILEMCP_DISABLE_TELEMETRY': '1'})
         if done.returncode or len(done.stdout) > 4_000_000:
             raise ValueError()
         payload = json.loads(done.stdout)
-        if payload.get('status') != 'ok' or not isinstance(payload.get('data', {}).get('elements'), list):
+        if payload.get('status') != 'ok':
+            raise ValueError()
+        if raw:
+            tree = json.loads(payload['data']['rawData'])
+            if not isinstance(tree.get('hierarchy'), list):
+                raise ValueError()
+            return tree['hierarchy']
+        if not isinstance(payload.get('data', {}).get('elements'), list):
             raise ValueError()
         return payload['data']['elements']
-    except (OSError, ValueError, TypeError, AttributeError, RecursionError, subprocess.TimeoutExpired):
-        raise MobileGap('mobile_hierarchy_unavailable', 'the native iOS hierarchy could not be read; no switch activation was inferred')
+    except (OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError, subprocess.TimeoutExpired):
+        raise MobileGap('mobile_hierarchy_unavailable', 'the native hierarchy could not be read; no switch state or activation was inferred')
+
+
+def read_android(device):
+    return read(device, raw=True)
+
+
+def normalize_android(roots):
+    """Use one complete fresh raw tree; never infer false from absent state.
+
+    Raw Android nodes have no references. Their observed switch bounds supply
+    the existing mobile coordinate route; no older flat snapshot is joined.
+    """
+    import math
+    from mobile import normalize, MobileGap
+    out = []
+    nodes = 0
+    def visit(items, depth=0, ancestors_visible=True, ancestors_enabled=True):
+        nonlocal nodes
+        if not isinstance(items, list) or depth > 64:
+            raise ValueError()
+        for node in items:
+            nodes += 1
+            if not isinstance(node, dict) or nodes > 20000:
+                raise ValueError()
+            kind, box = node.get('class'), node.get('rect')
+            if not isinstance(kind, str) or not isinstance(box, dict):
+                raise ValueError()
+            if any(not isinstance(box.get(k), (int, float)) or isinstance(box.get(k), bool)
+                   or not math.isfinite(box[k]) for k in ('x', 'y', 'width', 'height')):
+                raise ValueError()
+            if box['width'] < 0 or box['height'] < 0:
+                raise ValueError()
+            visible = ancestors_visible and node.get('visible') is not False
+            enabled = ancestors_enabled and node.get('enabled') is not False
+            raw = {'type': kind, 'text': node.get('text'),
+                   'label': node.get('content-desc') or node.get('hint'),
+                   'identifier': node.get('resource-id'), 'coordinates': box,
+                   'enabled': enabled and visible}
+            if node.get('checkable') is True and isinstance(node.get('checked'), bool):
+                raw['checked'] = node['checked']
+            if node.get('text') or raw['label'] or raw['identifier'] or node.get('checkable') is True:
+                out.append(normalize(raw, len(out)))
+            children = node.get('children')
+            visit([] if children is None else children, depth + 1, visible, enabled)
+    try:
+        visit(roots)
+    except (ValueError, TypeError, OverflowError, RecursionError):
+        raise MobileGap('mobile_hierarchy_unavailable', 'the raw Android hierarchy is invalid; no switch state was inferred')
+    return out
 
 
 def normalize_tree(roots):

@@ -1,87 +1,45 @@
-# Why computer-use exists
+# Why use computer-use
 
-A screenshot-and-click agent pays for every step twice: once to see the screen and once to decide what to do. Both costs land in the model's context. computer-use moves most of that work out of the model and into code that checks itself.
+computer-use gives an agent one interface for work that crosses browsers, native apps, phones and terminal programs. `look` returns current evidence; `do` binds a plan to that evidence, executes it through a driver and checks the result. Use it when that common contract and its checks help your task. It does not make every task faster or cheaper.
 
-## The problem
+The [benchmark](docs/BENCHMARK.md) compares actual execution, wall time and reported tokens. Keep the experiments separate: the October 1 Claude comparison used a locally implemented screenshot tool as one baseline; the October 2 Codex comparison uses OpenAI’s installed `cua_repl` and native terminal tools. Neither experiment establishes a general reliability rate.
 
-With stock computer-use tools, the model gets a screenshot or an accessibility dump, picks a coordinate or an element, acts, and looks again. Every step is a model turn, and model turns, not tool time, dominate a run.
+## One contract across drivers
 
-Three more costs come with it:
-
-- **The agent needs your screen.** A driver that clicks on the desktop competes with the person using it.
-- **Pixels are a poor way to read text.** An OCR pass over a booking page got the layout right and the values wrong: "60 min" came back as "600 min".
-- **The model is the only safety check.** Nothing outside it decides whether a click hit the right thing.
-
-## What it does instead
-
-### Two tools
-
-The model sees `look` and `do`.
-
-- `look` is read-only and runs no model. It returns the strings the page actually shows, plus a `look_id`.
-- `do` takes a whole plan. The server checks the plan, then for each step re-reads the screen, binds the exact control, acts, checks the step's `expect`, and recovers from stale state on its own.
-
-Eight finer-grained tools exist, but only behind `CUA_TASK_ADVANCED=1`. Adding a tool or a mandatory step to the default path means changing a committed call budget, and CI rejects the change if the numbers don't match.
-
-Response budgets keep the context small. The tool list went from 32.5 KB to 23.6 KB, and responses shrank 10.7% across 54 test scenarios.
-
-### Rules decide who reads the page
-
-A dispatcher picks the reader:
-
-- no model for an exact control;
-- GLiNER or GLiNER2 for fields;
-- Jev for a semantic choice, escalating to Qwen (fleet profile) or Julia-1 (local-mac profile).
-
-Verification tries the exact check first. There is no trained router.
-
-On 39 paired observations, dispatch got all 39 right with no abstentions and a 29 ms median. Jev alone got 23 right, abstained on 14 and got 2 wrong, with a 144 ms median. That corpus is small: 35 booking steps from 20 tasks. The extractor also takes 4.56 s to start, so dispatch is slower overall unless the extractor stays loaded.
-
-### The screen is read in tiers
-
-1. The accessibility tree, with no model.
-2. In a browser, the page's DOM snapshot, capped at 6 s per call and 10 s in total. Lines that only the DOM has are shown as `dom_lines` and never acted on.
-3. On-device OCR for canvases. It is never treated as the truth.
-
-NuExtract3 page extraction is opt-in per request, through `look(fields=...)`. The test suite fails if a plain `look` starts it. It sends page content to the hosted service you configure, 10 records at a time. It took 9.1 s for 27 records and 13.7 s for 56. Its accuracy on large tables has not been measured.
-
-### It works off your screen
-
-On macOS, `space-mover` creates a 1920x1080 virtual display and parks the agent's own windows on it. Nothing is mirrored, so no Screen Recording permission is needed, and your windows are never moved. The agent's browser is Chrome for Testing with its own profile. It opens on that display, and if it lands anywhere else the step is refused. Input goes through background routes and never raises a window.
-
-The trade-offs are real. The helper uses private CoreGraphics classes that can change between macOS releases. It needs an Accessibility grant. While it runs, the extra display is part of your desktop layout.
-
-### Safety lives in code, not in the prompt
-
-- A destructive action such as delete or pay needs the step itself to carry `allow_destructive` with the exact control label. Wording in the goal never unlocks it.
-- Every step except the last carries an `expect`. A click is never retried. A `confirm` step must declare the dialog's full text and buttons.
-- Everything on the page is treated as data, never as instructions.
-- A refusal means stop and ask the user. The agent may not add `allow_foreground` on its own.
-- A VNC password is never typed.
-- Waiting for a slow page never solves or skips a check.
-
-## What it costs
-
-There is one head-to-head against the stock Cua Driver tools: six runs with Claude Sonnet 5.5, one per task and tool set.
-
-| Task | Stock Cua Driver | computer-use |
+| Surface | Execution route | What the common interface adds |
 |---|---|---|
-| booking | correct, 15 turns, $1.14, 35 s | correct, 30 turns, $0.90, 69 s |
-| orders | correct, 19 turns, $0.81, 43 s | correct, 19 turns, $0.91, 58 s |
-| canvas | no action, 11 turns, $0.51, 21 s | no action, 16 turns, $0.36, 32 s |
+| Web | Cua Driver with current AX/DOM evidence | Exact control binding, record filters, batched plans and checked postconditions |
+| Native Mac app | Cua Driver | Fresh window resolution, bound controls and checked results |
+| Android and iOS | mobile-mcp | Device identity, fresh elements before input and separate verification |
+| Agent-owned terminal TUI | terminal-use | Rendered text, styles and cursor; exact session binding; input and result checks |
+| VNC through noVNC | Browser and canvas/perception route | The same targeting and verification rules, subject to canvas input limits |
 
-One run per cell proves little. computer-use was cheaper on two tasks and more expensive on one, and slower on all three. The point is not cheaper runs. The point is a context that stays small and steps that are checked.
+A route being implemented does not mean it can finish a task in every environment. The live benchmark records failures and unavailable capabilities alongside completions. Existing GUI terminal tabs stay on the native-app route; the PTY driver creates task-owned sessions and does not attach to arbitrary running user terminals.
 
-The offline gate passes 28 of 28 scenarios, 40 of 40 variants and 35 of 35 replays, and rejects 7 of 7 deliberately wrong repairs. That shows the code follows its own rules. It does not show that a model writes good plans on messy real pages. That is still open.
+The default tool surface is just `look` and `do`. A plan can contain several steps, avoiding a separate model decision for each mechanical action. Before each action the server refreshes state, resolves its target and retains the actual driver arguments. Afterward it checks the declared `expect`. A delivered action whose result was not proved is reported as unverified; it is not blindly replayed.
 
-## What it does not do yet
+That design has a cost. Bad or invented expectations can consume verification waits and force another model turn. Ambiguous controls can stop a whole plan. A compact observation is useful only if it preserves the distinctions needed to act. The benchmark’s failures are work to fix, not evidence that a refusal is a successful task.
 
-- **macOS only.** Linux accessibility trees have been captured from Chrome on Xvfb, but the Linux backend is not built yet.
-- **Native file pickers.** The picker exposes nothing the Driver can act on. On web pages the `upload` step sets files on the page's file input directly, so no picker opens.
-- **Canvas clicks in the background.** A background click on a drawn canvas lands at the element's centre, so it is refused unless the step allows the foreground.
-- **Not yet run for real:** the Mission Control fallback, `invoke_menu` and noVNC. The Android emulator has been run headless: a look, a press and a back, all checked.
-- **`local-mac` has no local extractor.**
+## Choose whose session the agent uses
 
-## Where it fits
+With no context argument, the facade defaults to an isolated agent session. Its browser is Chrome for Testing with a separate profile, placed on a virtual display. It has no inherited user logins. Supported background routes let the person keep using their apps.
 
-computer-use works alongside a stock driver; it does not replace one. It is built on Cua Driver, mobile-mcp and Cua Perception. The virtual display and window parking follow DeskPad and PaperWM.
+For delegated work in the user’s apps and logins, pass `context={"session":"user"}` to `look` or `do`. Visible presentation is the default for that context and includes routine foreground delivery for the delegated task. Add `"presentation":"background"` when the user wants their Space preserved. Reuse the returned `context_id` or `look_id`; this is an MCP request choice, with no environment switch or server restart.
+
+A routine recovery belongs to the agent. A missing OS permission or an unavailable session may still need the user. The facade returns a typed reason and recovery guidance; it should not turn every recoverable failure into an approval question. A background request does not authorize moving the user into another Space. A locked-screen test also does not qualify visible OBO behavior.
+
+## Read what the task needs
+
+Plain text `look` uses the available accessibility tree, browser DOM, device elements or terminal renderer without an extraction-model call. `look(screen=True, ...)` returns pixels from the bound target when text evidence misses drawn content. The controlling agent can inspect those pixels; requesting them does not itself create safe action coordinates or solve an unavailable capture.
+
+For more structured work, the dispatcher can extract source-grounded fields and compare them on the same record. Qualified short English field requests use GLiNER2 with a typed reducer; bounded semantic selection uses the configured Jev or Julia-1 route, with configured escalation. Optional NuExtract page extraction has a separate cost. Its current adapter reads text records; the model family’s image capability does not imply image extraction is integrated here.
+
+The default fleet profile can send page content to configured hosted providers. `local-mac` is an explicit alternative with its own capability limits. See [provider profiles](docs/PROVIDERS.md).
+
+## What to compare before adopting it
+
+Completion comes first. Measure whether the intended item was changed, the submitted values were right and the result was independently visible. Then compare elapsed time and tokens for those outcomes. A quick refusal is not a faster completion, and a small output does not imply a small cumulative input bill.
+
+The preliminary Codex runs exposed an unresolved OH dropdown problem ([#100](https://github.com/open-horizon-labs/computer-use/issues/100)) and intermittent native browser connection failures. Their timing comparison was contaminated by inherited host guidance and was rerun with verified project-document exclusion; global user guidance remained and is explicitly qualified. Read the [full results and limitations](docs/BENCHMARK.md) before treating the shared facade as a performance improvement.
+
+Keep the native tools available where they work well. Choose OH for the common evidence/action contract, task isolation, structured matching or a useful specialist driver—and use measured outcomes to decide whether those benefits repay the extra machinery on your workload.

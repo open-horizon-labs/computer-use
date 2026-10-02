@@ -4,16 +4,7 @@
 
 Why this exists: [WHY.md](WHY.md).
 
-**Nine everyday jobs, three ways** (Claude Sonnet 5.5, one run per job, 2026-10-01; [details](docs/BENCHMARK.md)):
-
-| | Vanilla computer use | Stock Cua Driver tools | computer-use |
-|---|---|---|---|
-| Correct | 7 of 9 | 8 of 9 | **9 of 9** |
-| Turns | 156 | 154 | **86** |
-| Output tokens | 23.5k | 35.8k | **20.2k** |
-| Wall time | **483 s** | 643 s | 529 s |
-| Cost | $2.70 | $7.16 | **$1.95** |
-| Where it runs | your screen, your mouse and keyboard | agent display, background input | agent display, background input |
+**Measured comparisons:** [the benchmark report](docs/BENCHMARK.md) includes an actual native Codex vs OH comparison across terminal, web, VNC, Android, iOS, native Mac and a mixed workflow, alongside the separate earlier Claude experiment. It reports completion, wall time and token usage, including failures. The shared facade is not a universal speed or cost win.
 
 A companion to stock computer-use tools and skills. The stock driver observes and executes; this repository supplies typed request guidance, capability routing, evidence matching, bounded semantic recovery, and a CESS simulation loop.
 

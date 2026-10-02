@@ -104,6 +104,70 @@ class Base(lv.LiveBase):
         return self.f.look('Demo')
 
 
+class FieldValue(Base):
+    def state(self):
+        return self.f.state(self.f.observe(1,2)['snapshot'])
+
+    def test_real_field_exact_value_only_and_uniqueness(self):
+        before=self.state()
+        target=next(n for n in before['nodes'].values() if n.get('role')=='AXTextField' and n.get('label')==NAME)
+        text='Invoice 4471 was charged twice in September.'
+        def page(d,els):
+            self.driver.page(d,els)
+            next(e for e in els if e.get('role')=='AXTextField' and e.get('label')==NAME)['value']=text
+        self.driver.script=page
+        after=self.state()
+        check=self.f._expect_check(after,before,'value',target,text)
+        self.assertEqual((check['status'],check['scope']),('satisfied','field_only'))
+        self.assertEqual(self.f._expect_check(after,before,text,target,text)['reason'],'expect_echoes_typed_text')
+        for bad in (text.lower(),text+' ',text[:30]):
+            self.assertEqual(self.f._expect_check(after,before,'value',target,bad)['status'],'unknown')
+        def duplicate(d,els):
+            page(d,els)
+            twin=copy.deepcopy(next(e for e in els if e.get('role')=='AXTextField' and e.get('label')==NAME))
+            twin['element_index']=999
+            els.append(twin)
+        self.driver.script=duplicate
+        self.assertEqual(self.f._expect_check(self.state(),before,'value',target,text)['reason'],'field_value_target_unresolved')
+
+    def test_changed_document_with_same_label_and_value_cannot_prove_original_field(self):
+        before=self.state()
+        target=next(n for n in before['nodes'].values() if n.get('role')=='AXTextField' and n.get('label')==NAME)
+        target['identifier']='original-field'
+        for change in ('url','web_area','identifier','window'):
+            after=copy.deepcopy(before)
+            field=next(n for n in after['nodes'].values() if n.get('role')=='AXTextField' and n.get('label')==NAME)
+            field['value']='new text'
+            field['identifier']='original-field'
+            if change=='url':
+                address=next(n for n in after['nodes'].values() if n.get('value')=='127.0.0.1:8934/form?run=fixture')
+                address['value']='example.com/different-form'
+            elif change=='web_area':next(n for n in after['nodes'].values() if n.get('role')=='AXWebArea')['label']='Different form'
+            elif change=='identifier':field['identifier']='replacement-field'
+            else:after['window_id']=999
+            with self.subTest(change=change):self.assertEqual(self.f._expect_check(after,before,'value',target,'new text')['status'],'unknown')
+
+    def test_acknowledgment_missing_value_wrong_field_and_clipping_cannot_prove_value(self):
+        before=self.state()
+        target=next(n for n in before['nodes'].values() if n.get('role')=='AXTextField' and n.get('label')==NAME)
+        self.assertEqual(self.f._expect_check(before,before,'value',target,'new text')['status'],'unknown')
+        for change in ('missing','clipped','disabled','other_label'):
+            after=copy.deepcopy(before)
+            field=next(n for n in after['nodes'].values() if n.get('role')=='AXTextField' and n.get('label')==NAME)
+            field['value']='new text'
+            if change=='missing':field.pop('value')
+            elif change=='clipped':field['value_truncated']=True
+            elif change=='disabled':field['enabled']=False
+            else:field['label']='Other field'
+            with self.subTest(change=change):self.assertEqual(self.f._expect_check(after,before,'value',target,'new text')['status'],'unknown')
+
+    def test_plan_does_not_trust_delivery_ack_or_replay_a_drop(self):
+        result=self.plan([{'do':'type','control':NAME,'text':'new text','expect':'value'}])
+        self.assertEqual(result['status'],'stopped')
+        self.assertEqual(result['steps'][0]['verification']['reason'],'field_value_not_observed')
+        self.assertEqual(len(self.driver.executed),1)
+
+
 class Select(Base):
     def test_the_option_is_chosen_by_its_exact_label_without_opening_the_popup_and_proved_by_the_displayed_value(self):
         # Wrong patch: press the select (opens the native popup: its options exist twice in the tree, exact_target_not_unique) and press the option.

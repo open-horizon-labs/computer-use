@@ -779,7 +779,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
             for key in ('reason', 'page'):
                 if result.get(key):entry[key] = result[key]
             if result.get('verification'):
-                entry['verification'] = {k: result['verification'][k] for k in ('status', 'route', 'reason') if k in result['verification']}
+                entry['verification'] = {k: result['verification'][k] for k in ('status', 'route', 'reason', 'scope') if k in result['verification']}
             if result.get('delivery') not in (None, 'none'):
                 delivery = 'delivered'
             ok = status in ('done', 'observed') or (status == 'delivered_unverified' and n == len(plan_steps))
@@ -890,7 +890,7 @@ def run_plan(f, goal, title, pid, window_id, steps, look_id, abort_if, budget_s,
         if result.get('selected'):
             entry['selected'] = {'description': result['selected'].get('description', '')[:120]}
         if result.get('verification'):
-            entry['verification'] = {k: result['verification'][k] for k in ('status', 'route', 'reason') if k in result['verification']}
+            entry['verification'] = {k: result['verification'][k] for k in ('status', 'route', 'reason', 'scope') if k in result['verification']}
         if result.get('delivery_detail'):
             entry['delivery_detail'] = result['delivery_detail']
         if result.get('delivery') and result['delivery'] != 'none':

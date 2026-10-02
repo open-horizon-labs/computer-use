@@ -1,0 +1,1682 @@
+{
+  "hierarchy": [
+    {
+      "class": "android.widget.FrameLayout",
+      "text": "",
+      "hint": "",
+      "content-desc": "",
+      "resource-id": "",
+      "focused": false,
+      "enabled": true,
+      "checked": false,
+      "checkable": false,
+      "clickable": false,
+      "selected": false,
+      "visible": true,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 74
+      },
+      "children": [
+        {
+          "class": "android.widget.FrameLayout",
+          "text": "",
+          "hint": "",
+          "content-desc": "",
+          "resource-id": "com.android.systemui:id/status_bar_launch_animation_container",
+          "focused": false,
+          "enabled": true,
+          "checked": false,
+          "checkable": false,
+          "clickable": false,
+          "selected": false,
+          "visible": true,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1080,
+            "height": 74
+          },
+          "children": null,
+          "range": null,
+          "editable": false
+        },
+        {
+          "class": "android.widget.FrameLayout",
+          "text": "",
+          "hint": "",
+          "content-desc": "",
+          "resource-id": "com.android.systemui:id/status_bar_container",
+          "focused": false,
+          "enabled": true,
+          "checked": false,
+          "checkable": false,
+          "clickable": false,
+          "selected": false,
+          "visible": true,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1080,
+            "height": 74
+          },
+          "children": [
+            {
+              "class": "android.widget.FrameLayout",
+              "text": "",
+              "hint": "",
+              "content-desc": "",
+              "resource-id": "com.android.systemui:id/status_bar",
+              "focused": false,
+              "enabled": true,
+              "checked": false,
+              "checkable": false,
+              "clickable": false,
+              "selected": false,
+              "visible": true,
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "width": 1080,
+                "height": 74
+              },
+              "children": [
+                {
+                  "class": "android.widget.LinearLayout",
+                  "text": "",
+                  "hint": "",
+                  "content-desc": "",
+                  "resource-id": "com.android.systemui:id/status_bar_contents",
+                  "focused": false,
+                  "enabled": true,
+                  "checked": false,
+                  "checkable": false,
+                  "clickable": false,
+                  "selected": false,
+                  "visible": true,
+                  "rect": {
+                    "x": 47,
+                    "y": 0,
+                    "width": 980,
+                    "height": 74
+                  },
+                  "children": [
+                    {
+                      "class": "android.widget.FrameLayout",
+                      "text": "",
+                      "hint": "",
+                      "content-desc": "",
+                      "resource-id": "com.android.systemui:id/status_bar_start_side_container",
+                      "focused": false,
+                      "enabled": true,
+                      "checked": false,
+                      "checkable": false,
+                      "clickable": false,
+                      "selected": false,
+                      "visible": true,
+                      "rect": {
+                        "x": 47,
+                        "y": 1,
+                        "width": 412,
+                        "height": 73
+                      },
+                      "children": [
+                        {
+                          "class": "android.widget.FrameLayout",
+                          "text": "",
+                          "hint": "",
+                          "content-desc": "",
+                          "resource-id": "com.android.systemui:id/status_bar_start_side_content",
+                          "focused": false,
+                          "enabled": true,
+                          "checked": false,
+                          "checkable": false,
+                          "clickable": false,
+                          "selected": false,
+                          "visible": true,
+                          "rect": {
+                            "x": 47,
+                            "y": 1,
+                            "width": 162,
+                            "height": 73
+                          },
+                          "children": [
+                            {
+                              "class": "android.widget.LinearLayout",
+                              "text": "",
+                              "hint": "",
+                              "content-desc": "",
+                              "resource-id": "com.android.systemui:id/status_bar_start_side_except_heads_up",
+                              "focused": false,
+                              "enabled": true,
+                              "checked": false,
+                              "checkable": false,
+                              "clickable": false,
+                              "selected": false,
+                              "visible": true,
+                              "rect": {
+                                "x": 47,
+                                "y": 1,
+                                "width": 162,
+                                "height": 73
+                              },
+                              "children": [
+                                {
+                                  "class": "android.widget.TextView",
+                                  "text": "4:49",
+                                  "hint": "",
+                                  "content-desc": "4:49\u202fAM",
+                                  "resource-id": "com.android.systemui:id/clock",
+                                  "focused": false,
+                                  "enabled": true,
+                                  "checked": false,
+                                  "checkable": false,
+                                  "clickable": false,
+                                  "selected": false,
+                                  "visible": true,
+                                  "rect": {
+                                    "x": 47,
+                                    "y": 47,
+                                    "width": 104,
+                                    "height": 27
+                                  },
+                                  "children": null,
+                                  "range": null,
+                                  "editable": false
+                                },
+                                {
+                                  "class": "android.widget.FrameLayout",
+                                  "text": "",
+                                  "hint": "",
+                                  "content-desc": "",
+                                  "resource-id": "com.android.systemui:id/notification_icon_area",
+                                  "focused": false,
+                                  "enabled": true,
+                                  "checked": false,
+                                  "checkable": false,
+                                  "clickable": false,
+                                  "selected": false,
+                                  "visible": true,
+                                  "rect": {
+                                    "x": 151,
+                                    "y": 1,
+                                    "width": 58,
+                                    "height": 73
+                                  },
+                                  "children": [
+                                    {
+                                      "class": "android.view.ViewGroup",
+                                      "text": "",
+                                      "hint": "",
+                                      "content-desc": "",
+                                      "resource-id": "com.android.systemui:id/notificationIcons",
+                                      "focused": false,
+                                      "enabled": true,
+                                      "checked": false,
+                                      "checkable": false,
+                                      "clickable": false,
+                                      "selected": false,
+                                      "visible": true,
+                                      "rect": {
+                                        "x": 151,
+                                        "y": 1,
+                                        "width": 58,
+                                        "height": 73
+                                      },
+                                      "children": [
+                                        {
+                                          "class": "android.widget.ImageView",
+                                          "text": "",
+                                          "hint": "",
+                                          "content-desc": "Android System notification: Serial console enabled",
+                                          "resource-id": "",
+                                          "focused": false,
+                                          "enabled": true,
+                                          "checked": false,
+                                          "checkable": false,
+                                          "clickable": false,
+                                          "selected": false,
+                                          "visible": true,
+                                          "rect": {
+                                            "x": 151,
+                                            "y": 31,
+                                            "width": 58,
+                                            "height": 43
+                                          },
+                                          "children": null,
+                                          "range": null,
+                                          "editable": false
+                                        }
+                                      ],
+                                      "range": null,
+                                      "editable": false
+                                    }
+                                  ],
+                                  "range": null,
+                                  "editable": false
+                                }
+                              ],
+                              "range": null,
+                              "editable": false
+                            }
+                          ],
+                          "range": null,
+                          "editable": false
+                        }
+                      ],
+                      "range": null,
+                      "editable": false
+                    },
+                    {
+                      "class": "android.view.View",
+                      "text": "",
+                      "hint": "",
+                      "content-desc": "",
+                      "resource-id": "com.android.systemui:id/cutout_space_view",
+                      "focused": false,
+                      "enabled": true,
+                      "checked": false,
+                      "checkable": false,
+                      "clickable": false,
+                      "selected": false,
+                      "visible": true,
+                      "rect": {
+                        "x": 459,
+                        "y": 1,
+                        "width": 145,
+                        "height": 73
+                      },
+                      "children": null,
+                      "range": null,
+                      "editable": false
+                    },
+                    {
+                      "class": "android.widget.FrameLayout",
+                      "text": "",
+                      "hint": "",
+                      "content-desc": "",
+                      "resource-id": "com.android.systemui:id/status_bar_end_side_container",
+                      "focused": false,
+                      "enabled": true,
+                      "checked": false,
+                      "checkable": false,
+                      "clickable": false,
+                      "selected": false,
+                      "visible": true,
+                      "rect": {
+                        "x": 604,
+                        "y": 1,
+                        "width": 412,
+                        "height": 73
+                      },
+                      "children": [
+                        {
+                          "class": "android.widget.LinearLayout",
+                          "text": "",
+                          "hint": "",
+                          "content-desc": "",
+                          "resource-id": "com.android.systemui:id/status_bar_end_side_content",
+                          "focused": false,
+                          "enabled": true,
+                          "checked": false,
+                          "checkable": false,
+                          "clickable": false,
+                          "selected": false,
+                          "visible": true,
+                          "rect": {
+                            "x": 876,
+                            "y": 1,
+                            "width": 140,
+                            "height": 73
+                          },
+                          "children": [
+                            {
+                              "class": "android.widget.LinearLayout",
+                              "text": "",
+                              "hint": "",
+                              "content-desc": "",
+                              "resource-id": "com.android.systemui:id/system_icons",
+                              "focused": false,
+                              "enabled": true,
+                              "checked": false,
+                              "checkable": false,
+                              "clickable": false,
+                              "selected": false,
+                              "visible": true,
+                              "rect": {
+                                "x": 876,
+                                "y": 39,
+                                "width": 140,
+                                "height": 35
+                              },
+                              "children": [
+                                {
+                                  "class": "android.widget.LinearLayout",
+                                  "text": "",
+                                  "hint": "",
+                                  "content-desc": "",
+                                  "resource-id": "com.android.systemui:id/statusIcons",
+                                  "focused": false,
+                                  "enabled": true,
+                                  "checked": false,
+                                  "checkable": false,
+                                  "clickable": false,
+                                  "selected": false,
+                                  "visible": true,
+                                  "rect": {
+                                    "x": 884,
+                                    "y": 39,
+                                    "width": 101,
+                                    "height": 35
+                                  },
+                                  "children": [
+                                    {
+                                      "class": "android.widget.FrameLayout",
+                                      "text": "",
+                                      "hint": "",
+                                      "content-desc": "",
+                                      "resource-id": "com.android.systemui:id/wifi_combo",
+                                      "focused": false,
+                                      "enabled": true,
+                                      "checked": false,
+                                      "checkable": false,
+                                      "clickable": false,
+                                      "selected": false,
+                                      "visible": true,
+                                      "rect": {
+                                        "x": 884,
+                                        "y": 39,
+                                        "width": 46,
+                                        "height": 35
+                                      },
+                                      "children": [
+                                        {
+                                          "class": "android.widget.LinearLayout",
+                                          "text": "",
+                                          "hint": "",
+                                          "content-desc": "",
+                                          "resource-id": "com.android.systemui:id/wifi_group",
+                                          "focused": false,
+                                          "enabled": true,
+                                          "checked": false,
+                                          "checkable": false,
+                                          "clickable": false,
+                                          "selected": false,
+                                          "visible": true,
+                                          "rect": {
+                                            "x": 891,
+                                            "y": 39,
+                                            "width": 39,
+                                            "height": 35
+                                          },
+                                          "children": [
+                                            {
+                                              "class": "android.widget.FrameLayout",
+                                              "text": "",
+                                              "hint": "",
+                                              "content-desc": "",
+                                              "resource-id": "com.android.systemui:id/wifi_combo",
+                                              "focused": false,
+                                              "enabled": true,
+                                              "checked": false,
+                                              "checkable": false,
+                                              "clickable": false,
+                                              "selected": false,
+                                              "visible": true,
+                                              "rect": {
+                                                "x": 891,
+                                                "y": 48,
+                                                "width": 39,
+                                                "height": 26
+                                              },
+                                              "children": [
+                                                {
+                                                  "class": "android.widget.ImageView",
+                                                  "text": "",
+                                                  "hint": "",
+                                                  "content-desc": "Wifi signal full.",
+                                                  "resource-id": "com.android.systemui:id/wifi_signal",
+                                                  "focused": false,
+                                                  "enabled": true,
+                                                  "checked": false,
+                                                  "checkable": false,
+                                                  "clickable": false,
+                                                  "selected": false,
+                                                  "visible": true,
+                                                  "rect": {
+                                                    "x": 891,
+                                                    "y": 48,
+                                                    "width": 39,
+                                                    "height": 26
+                                                  },
+                                                  "children": null,
+                                                  "range": null,
+                                                  "editable": false
+                                                }
+                                              ],
+                                              "range": null,
+                                              "editable": false
+                                            }
+                                          ],
+                                          "range": null,
+                                          "editable": false
+                                        }
+                                      ],
+                                      "range": null,
+                                      "editable": false
+                                    },
+                                    {
+                                      "class": "android.widget.FrameLayout",
+                                      "text": "",
+                                      "hint": "",
+                                      "content-desc": "",
+                                      "resource-id": "",
+                                      "focused": false,
+                                      "enabled": true,
+                                      "checked": false,
+                                      "checkable": false,
+                                      "clickable": false,
+                                      "selected": false,
+                                      "visible": false,
+                                      "rect": {
+                                        "x": 884,
+                                        "y": 68,
+                                        "width": 0,
+                                        "height": 0
+                                      },
+                                      "children": null,
+                                      "range": null,
+                                      "editable": false
+                                    },
+                                    {
+                                      "class": "android.widget.FrameLayout",
+                                      "text": "",
+                                      "hint": "",
+                                      "content-desc": "Phone signal full.",
+                                      "resource-id": "com.android.systemui:id/mobile_combo",
+                                      "focused": false,
+                                      "enabled": true,
+                                      "checked": false,
+                                      "checkable": false,
+                                      "clickable": false,
+                                      "selected": false,
+                                      "visible": true,
+                                      "rect": {
+                                        "x": 930,
+                                        "y": 39,
+                                        "width": 39,
+                                        "height": 35
+                                      },
+                                      "children": [
+                                        {
+                                          "class": "android.widget.LinearLayout",
+                                          "text": "",
+                                          "hint": "",
+                                          "content-desc": "",
+                                          "resource-id": "com.android.systemui:id/mobile_group",
+                                          "focused": false,
+                                          "enabled": true,
+                                          "checked": false,
+                                          "checkable": false,
+                                          "clickable": false,
+                                          "selected": false,
+                                          "visible": true,
+                                          "rect": {
+                                            "x": 930,
+                                            "y": 39,
+                                            "width": 39,
+                                            "height": 35
+                                          },
+                                          "children": [
+                                            {
+                                              "class": "android.widget.FrameLayout",
+                                              "text": "",
+                                              "hint": "",
+                                              "content-desc": "",
+                                              "resource-id": "",
+                                              "focused": false,
+                                              "enabled": true,
+                                              "checked": false,
+                                              "checkable": false,
+                                              "clickable": false,
+                                              "selected": false,
+                                              "visible": true,
+                                              "rect": {
+                                                "x": 930,
+                                                "y": 48,
+                                                "width": 39,
+                                                "height": 26
+                                              },
+                                              "children": [
+                                                {
+                                                  "class": "android.widget.ImageView",
+                                                  "text": "",
+                                                  "hint": "",
+                                                  "content-desc": "",
+                                                  "resource-id": "com.android.systemui:id/mobile_signal",
+                                                  "focused": false,
+                                                  "enabled": true,
+                                                  "checked": false,
+                                                  "checkable": false,
+                                                  "clickable": false,
+                                                  "selected": false,
+                                                  "visible": true,
+                                                  "rect": {
+                                                    "x": 930,
+                                                    "y": 48,
+                                                    "width": 39,
+                                                    "height": 26
+                                                  },
+                                                  "children": null,
+                                                  "range": null,
+                                                  "editable": false
+                                                }
+                                              ],
+                                              "range": null,
+                                              "editable": false
+                                            }
+                                          ],
+                                          "range": null,
+                                          "editable": false
+                                        }
+                                      ],
+                                      "range": null,
+                                      "editable": false
+                                    }
+                                  ],
+                                  "range": null,
+                                  "editable": false
+                                },
+                                {
+                                  "class": "android.widget.LinearLayout",
+                                  "text": "",
+                                  "hint": "",
+                                  "content-desc": "Battery 100 percent.",
+                                  "resource-id": "com.android.systemui:id/battery",
+                                  "focused": false,
+                                  "enabled": true,
+                                  "checked": false,
+                                  "checkable": false,
+                                  "clickable": false,
+                                  "selected": false,
+                                  "visible": true,
+                                  "rect": {
+                                    "x": 985,
+                                    "y": 51,
+                                    "width": 20,
+                                    "height": 23
+                                  },
+                                  "children": [
+                                    {
+                                      "class": "android.widget.ImageView",
+                                      "text": "",
+                                      "hint": "",
+                                      "content-desc": "",
+                                      "resource-id": "",
+                                      "focused": false,
+                                      "enabled": true,
+                                      "checked": false,
+                                      "checkable": false,
+                                      "clickable": false,
+                                      "selected": false,
+                                      "visible": true,
+                                      "rect": {
+                                        "x": 985,
+                                        "y": 51,
+                                        "width": 20,
+                                        "height": 23
+                                      },
+                                      "children": null,
+                                      "range": null,
+                                      "editable": false
+                                    }
+                                  ],
+                                  "range": null,
+                                  "editable": false
+                                }
+                              ],
+                              "range": null,
+                              "editable": false
+                            }
+                          ],
+                          "range": null,
+                          "editable": false
+                        }
+                      ],
+                      "range": null,
+                      "editable": false
+                    }
+                  ],
+                  "range": null,
+                  "editable": false
+                }
+              ],
+              "range": null,
+              "editable": false
+            }
+          ],
+          "range": null,
+          "editable": false
+        }
+      ],
+      "range": null,
+      "editable": false
+    },
+    {
+      "class": "android.widget.FrameLayout",
+      "text": "",
+      "hint": "",
+      "content-desc": "",
+      "resource-id": "",
+      "focused": false,
+      "enabled": true,
+      "checked": false,
+      "checkable": false,
+      "clickable": false,
+      "selected": false,
+      "visible": true,
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1080,
+        "height": 2400
+      },
+      "children": [
+        {
+          "class": "android.widget.LinearLayout",
+          "text": "",
+          "hint": "",
+          "content-desc": "",
+          "resource-id": "",
+          "focused": false,
+          "enabled": true,
+          "checked": false,
+          "checkable": false,
+          "clickable": false,
+          "selected": false,
+          "visible": true,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1080,
+            "height": 2400
+          },
+          "children": [
+            {
+              "class": "android.widget.FrameLayout",
+              "text": "",
+              "hint": "",
+              "content-desc": "",
+              "resource-id": "",
+              "focused": false,
+              "enabled": true,
+              "checked": false,
+              "checkable": false,
+              "clickable": false,
+              "selected": false,
+              "visible": true,
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "width": 1080,
+                "height": 2400
+              },
+              "children": [
+                {
+                  "class": "android.widget.LinearLayout",
+                  "text": "",
+                  "hint": "",
+                  "content-desc": "",
+                  "resource-id": "com.google.android.settings.intelligence:id/action_bar_root",
+                  "focused": false,
+                  "enabled": true,
+                  "checked": false,
+                  "checkable": false,
+                  "clickable": false,
+                  "selected": false,
+                  "visible": true,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1080,
+                    "height": 2400
+                  },
+                  "children": [
+                    {
+                      "class": "android.widget.FrameLayout",
+                      "text": "",
+                      "hint": "",
+                      "content-desc": "",
+                      "resource-id": "android:id/content",
+                      "focused": false,
+                      "enabled": true,
+                      "checked": false,
+                      "checkable": false,
+                      "clickable": false,
+                      "selected": false,
+                      "visible": true,
+                      "rect": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 1080,
+                        "height": 2400
+                      },
+                      "children": [
+                        {
+                          "class": "android.widget.FrameLayout",
+                          "text": "",
+                          "hint": "",
+                          "content-desc": "",
+                          "resource-id": "com.google.android.settings.intelligence:id/main_content",
+                          "focused": false,
+                          "enabled": true,
+                          "checked": false,
+                          "checkable": false,
+                          "clickable": false,
+                          "selected": false,
+                          "visible": true,
+                          "rect": {
+                            "x": 0,
+                            "y": 0,
+                            "width": 1080,
+                            "height": 2400
+                          },
+                          "children": [
+                            {
+                              "class": "android.widget.FrameLayout",
+                              "text": "",
+                              "hint": "",
+                              "content-desc": "",
+                              "resource-id": "",
+                              "focused": false,
+                              "enabled": true,
+                              "checked": false,
+                              "checkable": false,
+                              "clickable": false,
+                              "selected": false,
+                              "visible": true,
+                              "rect": {
+                                "x": 0,
+                                "y": 0,
+                                "width": 1080,
+                                "height": 2400
+                              },
+                              "children": [
+                                {
+                                  "class": "android.widget.FrameLayout",
+                                  "text": "",
+                                  "hint": "",
+                                  "content-desc": "",
+                                  "resource-id": "com.google.android.settings.intelligence:id/search_view",
+                                  "focused": false,
+                                  "enabled": true,
+                                  "checked": false,
+                                  "checkable": false,
+                                  "clickable": false,
+                                  "selected": false,
+                                  "visible": true,
+                                  "rect": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "width": 1080,
+                                    "height": 2400
+                                  },
+                                  "children": [
+                                    {
+                                      "class": "android.view.View",
+                                      "text": "",
+                                      "hint": "",
+                                      "content-desc": "",
+                                      "resource-id": "com.google.android.settings.intelligence:id/open_search_view_scrim",
+                                      "focused": false,
+                                      "enabled": true,
+                                      "checked": false,
+                                      "checkable": false,
+                                      "clickable": false,
+                                      "selected": false,
+                                      "visible": false,
+                                      "rect": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "width": 1080,
+                                        "height": 2400
+                                      },
+                                      "children": null,
+                                      "range": null,
+                                      "editable": false
+                                    },
+                                    {
+                                      "class": "android.widget.FrameLayout",
+                                      "text": "",
+                                      "hint": "",
+                                      "content-desc": "",
+                                      "resource-id": "com.google.android.settings.intelligence:id/open_search_view_root",
+                                      "focused": false,
+                                      "enabled": true,
+                                      "checked": false,
+                                      "checkable": false,
+                                      "clickable": false,
+                                      "selected": false,
+                                      "visible": true,
+                                      "rect": {
+                                        "x": 0,
+                                        "y": 0,
+                                        "width": 1080,
+                                        "height": 2400
+                                      },
+                                      "children": [
+                                        {
+                                          "class": "android.widget.LinearLayout",
+                                          "text": "",
+                                          "hint": "",
+                                          "content-desc": "",
+                                          "resource-id": "com.google.android.settings.intelligence:id/open_search_view_background",
+                                          "focused": false,
+                                          "enabled": true,
+                                          "checked": false,
+                                          "checkable": false,
+                                          "clickable": false,
+                                          "selected": false,
+                                          "visible": true,
+                                          "rect": {
+                                            "x": 0,
+                                            "y": 0,
+                                            "width": 1080,
+                                            "height": 2400
+                                          },
+                                          "children": [
+                                            {
+                                              "class": "android.view.View",
+                                              "text": "",
+                                              "hint": "",
+                                              "content-desc": "",
+                                              "resource-id": "com.google.android.settings.intelligence:id/open_search_view_status_bar_spacer",
+                                              "focused": false,
+                                              "enabled": true,
+                                              "checked": false,
+                                              "checkable": false,
+                                              "clickable": false,
+                                              "selected": false,
+                                              "visible": true,
+                                              "rect": {
+                                                "x": 0,
+                                                "y": 0,
+                                                "width": 1080,
+                                                "height": 136
+                                              },
+                                              "children": null,
+                                              "range": null,
+                                              "editable": false
+                                            },
+                                            {
+                                              "class": "android.widget.FrameLayout",
+                                              "text": "",
+                                              "hint": "",
+                                              "content-desc": "",
+                                              "resource-id": "com.google.android.settings.intelligence:id/open_search_view_toolbar_container",
+                                              "focused": false,
+                                              "enabled": true,
+                                              "checked": false,
+                                              "checkable": false,
+                                              "clickable": false,
+                                              "selected": false,
+                                              "visible": true,
+                                              "rect": {
+                                                "x": 0,
+                                                "y": 136,
+                                                "width": 1080,
+                                                "height": 189
+                                              },
+                                              "children": [
+                                                {
+                                                  "class": "android.view.ViewGroup",
+                                                  "text": "",
+                                                  "hint": "",
+                                                  "content-desc": "",
+                                                  "resource-id": "com.google.android.settings.intelligence:id/open_search_view_toolbar",
+                                                  "focused": false,
+                                                  "enabled": true,
+                                                  "checked": false,
+                                                  "checkable": false,
+                                                  "clickable": false,
+                                                  "selected": false,
+                                                  "visible": true,
+                                                  "rect": {
+                                                    "x": 0,
+                                                    "y": 136,
+                                                    "width": 1080,
+                                                    "height": 189
+                                                  },
+                                                  "children": [
+                                                    {
+                                                      "class": "android.widget.ImageButton",
+                                                      "text": "",
+                                                      "hint": "",
+                                                      "content-desc": "Back",
+                                                      "resource-id": "",
+                                                      "focused": false,
+                                                      "enabled": true,
+                                                      "checked": false,
+                                                      "checkable": false,
+                                                      "clickable": true,
+                                                      "selected": false,
+                                                      "visible": true,
+                                                      "rect": {
+                                                        "x": 0,
+                                                        "y": 136,
+                                                        "width": 126,
+                                                        "height": 189
+                                                      },
+                                                      "children": null,
+                                                      "range": null,
+                                                      "editable": false
+                                                    },
+                                                    {
+                                                      "class": "android.widget.LinearLayout",
+                                                      "text": "",
+                                                      "hint": "",
+                                                      "content-desc": "",
+                                                      "resource-id": "",
+                                                      "focused": false,
+                                                      "enabled": true,
+                                                      "checked": false,
+                                                      "checkable": false,
+                                                      "clickable": false,
+                                                      "selected": false,
+                                                      "visible": true,
+                                                      "rect": {
+                                                        "x": 126,
+                                                        "y": 136,
+                                                        "width": 954,
+                                                        "height": 189
+                                                      },
+                                                      "children": [
+                                                        {
+                                                          "class": "android.widget.EditText",
+                                                          "text": "",
+                                                          "hint": "Search settings",
+                                                          "content-desc": "",
+                                                          "resource-id": "com.google.android.settings.intelligence:id/open_search_view_edit_text",
+                                                          "focused": true,
+                                                          "enabled": true,
+                                                          "checked": false,
+                                                          "checkable": false,
+                                                          "clickable": true,
+                                                          "selected": false,
+                                                          "visible": true,
+                                                          "rect": {
+                                                            "x": 126,
+                                                            "y": 136,
+                                                            "width": 954,
+                                                            "height": 189
+                                                          },
+                                                          "children": null,
+                                                          "range": null,
+                                                          "editable": true
+                                                        }
+                                                      ],
+                                                      "range": null,
+                                                      "editable": false
+                                                    },
+                                                    {
+                                                      "class": "android.widget.TextView",
+                                                      "text": "Settings Services",
+                                                      "hint": "",
+                                                      "content-desc": "",
+                                                      "resource-id": "",
+                                                      "focused": false,
+                                                      "enabled": true,
+                                                      "checked": false,
+                                                      "checkable": false,
+                                                      "clickable": false,
+                                                      "selected": false,
+                                                      "visible": false,
+                                                      "rect": {
+                                                        "x": 126,
+                                                        "y": 190,
+                                                        "width": 0,
+                                                        "height": 80
+                                                      },
+                                                      "children": null,
+                                                      "range": null,
+                                                      "editable": false
+                                                    },
+                                                    {
+                                                      "class": "android.support.v7.widget.LinearLayoutCompat",
+                                                      "text": "",
+                                                      "hint": "",
+                                                      "content-desc": "",
+                                                      "resource-id": "",
+                                                      "focused": false,
+                                                      "enabled": true,
+                                                      "checked": false,
+                                                      "checkable": false,
+                                                      "clickable": false,
+                                                      "selected": false,
+                                                      "visible": false,
+                                                      "rect": {
+                                                        "x": 1080,
+                                                        "y": 136,
+                                                        "width": 0,
+                                                        "height": 189
+                                                      },
+                                                      "children": null,
+                                                      "range": null,
+                                                      "editable": false
+                                                    }
+                                                  ],
+                                                  "range": null,
+                                                  "editable": false
+                                                }
+                                              ],
+                                              "range": null,
+                                              "editable": false
+                                            },
+                                            {
+                                              "class": "android.view.View",
+                                              "text": "",
+                                              "hint": "",
+                                              "content-desc": "",
+                                              "resource-id": "com.google.android.settings.intelligence:id/open_search_view_divider",
+                                              "focused": false,
+                                              "enabled": true,
+                                              "checked": false,
+                                              "checkable": false,
+                                              "clickable": false,
+                                              "selected": false,
+                                              "visible": true,
+                                              "rect": {
+                                                "x": 0,
+                                                "y": 325,
+                                                "width": 1080,
+                                                "height": 3
+                                              },
+                                              "children": null,
+                                              "range": null,
+                                              "editable": false
+                                            },
+                                            {
+                                              "class": "android.widget.FrameLayout",
+                                              "text": "",
+                                              "hint": "",
+                                              "content-desc": "",
+                                              "resource-id": "com.google.android.settings.intelligence:id/open_search_view_content_container",
+                                              "focused": false,
+                                              "enabled": true,
+                                              "checked": false,
+                                              "checkable": false,
+                                              "clickable": false,
+                                              "selected": false,
+                                              "visible": true,
+                                              "rect": {
+                                                "x": 0,
+                                                "y": 328,
+                                                "width": 1080,
+                                                "height": 2072
+                                              },
+                                              "children": [
+                                                {
+                                                  "class": "android.widget.ScrollView",
+                                                  "text": "",
+                                                  "hint": "",
+                                                  "content-desc": "",
+                                                  "resource-id": "com.google.android.settings.intelligence:id/search_scrollview",
+                                                  "focused": false,
+                                                  "enabled": true,
+                                                  "checked": false,
+                                                  "checkable": false,
+                                                  "clickable": false,
+                                                  "selected": false,
+                                                  "visible": true,
+                                                  "rect": {
+                                                    "x": 0,
+                                                    "y": 328,
+                                                    "width": 1080,
+                                                    "height": 2072
+                                                  },
+                                                  "children": [
+                                                    {
+                                                      "class": "android.widget.LinearLayout",
+                                                      "text": "",
+                                                      "hint": "",
+                                                      "content-desc": "",
+                                                      "resource-id": "com.google.android.settings.intelligence:id/open_search_view_suggestion_container",
+                                                      "focused": false,
+                                                      "enabled": true,
+                                                      "checked": false,
+                                                      "checkable": false,
+                                                      "clickable": false,
+                                                      "selected": false,
+                                                      "visible": true,
+                                                      "rect": {
+                                                        "x": 0,
+                                                        "y": 328,
+                                                        "width": 1080,
+                                                        "height": 2072
+                                                      },
+                                                      "children": [
+                                                        {
+                                                          "class": "android.widget.ScrollView",
+                                                          "text": "",
+                                                          "hint": "",
+                                                          "content-desc": "",
+                                                          "resource-id": "com.google.android.settings.intelligence:id/main_content_scrollable_container",
+                                                          "focused": false,
+                                                          "enabled": true,
+                                                          "checked": false,
+                                                          "checkable": false,
+                                                          "clickable": false,
+                                                          "selected": false,
+                                                          "visible": true,
+                                                          "rect": {
+                                                            "x": 0,
+                                                            "y": 328,
+                                                            "width": 1080,
+                                                            "height": 2072
+                                                          },
+                                                          "children": [
+                                                            {
+                                                              "class": "android.widget.LinearLayout",
+                                                              "text": "",
+                                                              "hint": "",
+                                                              "content-desc": "",
+                                                              "resource-id": "",
+                                                              "focused": false,
+                                                              "enabled": true,
+                                                              "checked": false,
+                                                              "checkable": false,
+                                                              "clickable": false,
+                                                              "selected": false,
+                                                              "visible": true,
+                                                              "rect": {
+                                                                "x": 0,
+                                                                "y": 328,
+                                                                "width": 1080,
+                                                                "height": 2072
+                                                              },
+                                                              "children": [
+                                                                {
+                                                                  "class": "android.widget.TextView",
+                                                                  "text": "RECENT SEARCH RESULTS",
+                                                                  "hint": "",
+                                                                  "content-desc": "",
+                                                                  "resource-id": "com.google.android.settings.intelligence:id/recent_searches_title",
+                                                                  "focused": false,
+                                                                  "enabled": true,
+                                                                  "checked": false,
+                                                                  "checkable": false,
+                                                                  "clickable": false,
+                                                                  "selected": false,
+                                                                  "visible": true,
+                                                                  "rect": {
+                                                                    "x": 53,
+                                                                    "y": 328,
+                                                                    "width": 1027,
+                                                                    "height": 126
+                                                                  },
+                                                                  "children": null,
+                                                                  "range": null,
+                                                                  "editable": false
+                                                                },
+                                                                {
+                                                                  "class": "android.widget.FrameLayout",
+                                                                  "text": "",
+                                                                  "hint": "",
+                                                                  "content-desc": "",
+                                                                  "resource-id": "com.google.android.settings.intelligence:id/layout_results",
+                                                                  "focused": false,
+                                                                  "enabled": true,
+                                                                  "checked": false,
+                                                                  "checkable": false,
+                                                                  "clickable": false,
+                                                                  "selected": false,
+                                                                  "visible": true,
+                                                                  "rect": {
+                                                                    "x": 0,
+                                                                    "y": 454,
+                                                                    "width": 1080,
+                                                                    "height": 1946
+                                                                  },
+                                                                  "children": [
+                                                                    {
+                                                                      "class": "android.support.v7.widget.RecyclerView",
+                                                                      "text": "",
+                                                                      "hint": "",
+                                                                      "content-desc": "",
+                                                                      "resource-id": "com.google.android.settings.intelligence:id/list_results",
+                                                                      "focused": false,
+                                                                      "enabled": true,
+                                                                      "checked": false,
+                                                                      "checkable": false,
+                                                                      "clickable": false,
+                                                                      "selected": false,
+                                                                      "visible": true,
+                                                                      "rect": {
+                                                                        "x": 0,
+                                                                        "y": 454,
+                                                                        "width": 1080,
+                                                                        "height": 1946
+                                                                      },
+                                                                      "children": [
+                                                                        {
+                                                                          "class": "android.widget.LinearLayout",
+                                                                          "text": "",
+                                                                          "hint": "",
+                                                                          "content-desc": "",
+                                                                          "resource-id": "",
+                                                                          "focused": false,
+                                                                          "enabled": true,
+                                                                          "checked": false,
+                                                                          "checkable": false,
+                                                                          "clickable": true,
+                                                                          "selected": false,
+                                                                          "visible": true,
+                                                                          "rect": {
+                                                                            "x": 0,
+                                                                            "y": 454,
+                                                                            "width": 1080,
+                                                                            "height": 223
+                                                                          },
+                                                                          "children": [
+                                                                            {
+                                                                              "class": "android.view.View",
+                                                                              "text": "",
+                                                                              "hint": "",
+                                                                              "content-desc": "",
+                                                                              "resource-id": "",
+                                                                              "focused": false,
+                                                                              "enabled": true,
+                                                                              "checked": false,
+                                                                              "checkable": false,
+                                                                              "clickable": false,
+                                                                              "selected": false,
+                                                                              "visible": true,
+                                                                              "rect": {
+                                                                                "x": 0,
+                                                                                "y": 496,
+                                                                                "width": 63,
+                                                                                "height": 139
+                                                                              },
+                                                                              "children": null,
+                                                                              "range": null,
+                                                                              "editable": false
+                                                                            },
+                                                                            {
+                                                                              "class": "android.widget.LinearLayout",
+                                                                              "text": "",
+                                                                              "hint": "",
+                                                                              "content-desc": "",
+                                                                              "resource-id": "",
+                                                                              "focused": false,
+                                                                              "enabled": true,
+                                                                              "checked": false,
+                                                                              "checkable": false,
+                                                                              "clickable": false,
+                                                                              "selected": false,
+                                                                              "visible": true,
+                                                                              "rect": {
+                                                                                "x": 63,
+                                                                                "y": 496,
+                                                                                "width": 975,
+                                                                                "height": 139
+                                                                              },
+                                                                              "children": [
+                                                                                {
+                                                                                  "class": "android.widget.TextView",
+                                                                                  "text": "Phone number",
+                                                                                  "hint": "",
+                                                                                  "content-desc": "",
+                                                                                  "resource-id": "android:id/title",
+                                                                                  "focused": false,
+                                                                                  "enabled": true,
+                                                                                  "checked": false,
+                                                                                  "checkable": false,
+                                                                                  "clickable": false,
+                                                                                  "selected": false,
+                                                                                  "visible": true,
+                                                                                  "rect": {
+                                                                                    "x": 63,
+                                                                                    "y": 496,
+                                                                                    "width": 354,
+                                                                                    "height": 80
+                                                                                  },
+                                                                                  "children": null,
+                                                                                  "range": null,
+                                                                                  "editable": false
+                                                                                },
+                                                                                {
+                                                                                  "class": "android.widget.TextView",
+                                                                                  "text": "About emulated device",
+                                                                                  "hint": "",
+                                                                                  "content-desc": "About emulated device",
+                                                                                  "resource-id": "com.google.android.settings.intelligence:id/breadcrumb",
+                                                                                  "focused": false,
+                                                                                  "enabled": true,
+                                                                                  "checked": false,
+                                                                                  "checkable": false,
+                                                                                  "clickable": false,
+                                                                                  "selected": false,
+                                                                                  "visible": true,
+                                                                                  "rect": {
+                                                                                    "x": 63,
+                                                                                    "y": 576,
+                                                                                    "width": 386,
+                                                                                    "height": 59
+                                                                                  },
+                                                                                  "children": null,
+                                                                                  "range": null,
+                                                                                  "editable": false
+                                                                                }
+                                                                              ],
+                                                                              "range": null,
+                                                                              "editable": false
+                                                                            }
+                                                                          ],
+                                                                          "range": null,
+                                                                          "editable": false
+                                                                        },
+                                                                        {
+                                                                          "class": "android.widget.LinearLayout",
+                                                                          "text": "",
+                                                                          "hint": "",
+                                                                          "content-desc": "",
+                                                                          "resource-id": "",
+                                                                          "focused": false,
+                                                                          "enabled": true,
+                                                                          "checked": false,
+                                                                          "checkable": false,
+                                                                          "clickable": true,
+                                                                          "selected": false,
+                                                                          "visible": true,
+                                                                          "rect": {
+                                                                            "x": 0,
+                                                                            "y": 677,
+                                                                            "width": 1080,
+                                                                            "height": 223
+                                                                          },
+                                                                          "children": [
+                                                                            {
+                                                                              "class": "android.view.View",
+                                                                              "text": "",
+                                                                              "hint": "",
+                                                                              "content-desc": "",
+                                                                              "resource-id": "",
+                                                                              "focused": false,
+                                                                              "enabled": true,
+                                                                              "checked": false,
+                                                                              "checkable": false,
+                                                                              "clickable": false,
+                                                                              "selected": false,
+                                                                              "visible": true,
+                                                                              "rect": {
+                                                                                "x": 0,
+                                                                                "y": 677,
+                                                                                "width": 63,
+                                                                                "height": 223
+                                                                              },
+                                                                              "children": null,
+                                                                              "range": null,
+                                                                              "editable": false
+                                                                            },
+                                                                            {
+                                                                              "class": "android.widget.LinearLayout",
+                                                                              "text": "",
+                                                                              "hint": "",
+                                                                              "content-desc": "",
+                                                                              "resource-id": "",
+                                                                              "focused": false,
+                                                                              "enabled": true,
+                                                                              "checked": false,
+                                                                              "checkable": false,
+                                                                              "clickable": false,
+                                                                              "selected": false,
+                                                                              "visible": true,
+                                                                              "rect": {
+                                                                                "x": 63,
+                                                                                "y": 677,
+                                                                                "width": 751,
+                                                                                "height": 223
+                                                                              },
+                                                                              "children": [
+                                                                                {
+                                                                                  "class": "android.widget.TextView",
+                                                                                  "text": "Dark theme",
+                                                                                  "hint": "",
+                                                                                  "content-desc": "",
+                                                                                  "resource-id": "android:id/title",
+                                                                                  "focused": false,
+                                                                                  "enabled": true,
+                                                                                  "checked": false,
+                                                                                  "checkable": false,
+                                                                                  "clickable": false,
+                                                                                  "selected": false,
+                                                                                  "visible": true,
+                                                                                  "rect": {
+                                                                                    "x": 63,
+                                                                                    "y": 719,
+                                                                                    "width": 281,
+                                                                                    "height": 80
+                                                                                  },
+                                                                                  "children": null,
+                                                                                  "range": null,
+                                                                                  "editable": false
+                                                                                },
+                                                                                {
+                                                                                  "class": "android.widget.TextView",
+                                                                                  "text": "Display & touch",
+                                                                                  "hint": "",
+                                                                                  "content-desc": "Display & touch",
+                                                                                  "resource-id": "com.google.android.settings.intelligence:id/breadcrumb",
+                                                                                  "focused": false,
+                                                                                  "enabled": true,
+                                                                                  "checked": false,
+                                                                                  "checkable": false,
+                                                                                  "clickable": false,
+                                                                                  "selected": false,
+                                                                                  "visible": true,
+                                                                                  "rect": {
+                                                                                    "x": 63,
+                                                                                    "y": 799,
+                                                                                    "width": 260,
+                                                                                    "height": 59
+                                                                                  },
+                                                                                  "children": null,
+                                                                                  "range": null,
+                                                                                  "editable": false
+                                                                                }
+                                                                              ],
+                                                                              "range": null,
+                                                                              "editable": false
+                                                                            },
+                                                                            {
+                                                                              "class": "android.view.View",
+                                                                              "text": "",
+                                                                              "hint": "",
+                                                                              "content-desc": "",
+                                                                              "resource-id": "com.google.android.settings.intelligence:id/action_divider",
+                                                                              "focused": false,
+                                                                              "enabled": true,
+                                                                              "checked": false,
+                                                                              "checkable": false,
+                                                                              "clickable": false,
+                                                                              "selected": false,
+                                                                              "visible": true,
+                                                                              "rect": {
+                                                                                "x": 856,
+                                                                                "y": 746,
+                                                                                "width": 3,
+                                                                                "height": 84
+                                                                              },
+                                                                              "children": null,
+                                                                              "range": null,
+                                                                              "editable": false
+                                                                            },
+                                                                            {
+                                                                              "class": "android.widget.Switch",
+                                                                              "text": "",
+                                                                              "hint": "",
+                                                                              "content-desc": "Dark theme",
+                                                                              "resource-id": "android:id/switch_widget",
+                                                                              "focused": false,
+                                                                              "enabled": true,
+                                                                              "checked": false,
+                                                                              "checkable": true,
+                                                                              "clickable": true,
+                                                                              "selected": false,
+                                                                              "visible": true,
+                                                                              "rect": {
+                                                                                "x": 901,
+                                                                                "y": 725,
+                                                                                "width": 137,
+                                                                                "height": 126
+                                                                              },
+                                                                              "children": null,
+                                                                              "range": null,
+                                                                              "editable": false
+                                                                            }
+                                                                          ],
+                                                                          "range": null,
+                                                                          "editable": false
+                                                                        },
+                                                                        {
+                                                                          "class": "android.widget.LinearLayout",
+                                                                          "text": "",
+                                                                          "hint": "",
+                                                                          "content-desc": "",
+                                                                          "resource-id": "com.google.android.settings.intelligence:id/clear_history_layout",
+                                                                          "focused": false,
+                                                                          "enabled": true,
+                                                                          "checked": false,
+                                                                          "checkable": false,
+                                                                          "clickable": true,
+                                                                          "selected": false,
+                                                                          "visible": true,
+                                                                          "rect": {
+                                                                            "x": 0,
+                                                                            "y": 900,
+                                                                            "width": 1080,
+                                                                            "height": 134
+                                                                          },
+                                                                          "children": [
+                                                                            {
+                                                                              "class": "android.widget.ImageView",
+                                                                              "text": "",
+                                                                              "hint": "",
+                                                                              "content-desc": "",
+                                                                              "resource-id": "",
+                                                                              "focused": false,
+                                                                              "enabled": true,
+                                                                              "checked": false,
+                                                                              "checkable": false,
+                                                                              "clickable": false,
+                                                                              "selected": false,
+                                                                              "visible": true,
+                                                                              "rect": {
+                                                                                "x": 63,
+                                                                                "y": 904,
+                                                                                "width": 63,
+                                                                                "height": 63
+                                                                              },
+                                                                              "children": null,
+                                                                              "range": null,
+                                                                              "editable": false
+                                                                            },
+                                                                            {
+                                                                              "class": "android.widget.TextView",
+                                                                              "text": "Clear history",
+                                                                              "hint": "",
+                                                                              "content-desc": "",
+                                                                              "resource-id": "com.google.android.settings.intelligence:id/clear_history_title",
+                                                                              "focused": false,
+                                                                              "enabled": true,
+                                                                              "checked": false,
+                                                                              "checkable": false,
+                                                                              "clickable": false,
+                                                                              "selected": false,
+                                                                              "visible": true,
+                                                                              "rect": {
+                                                                                "x": 189,
+                                                                                "y": 900,
+                                                                                "width": 295,
+                                                                                "height": 71
+                                                                              },
+                                                                              "children": null,
+                                                                              "range": null,
+                                                                              "editable": false
+                                                                            }
+                                                                          ],
+                                                                          "range": null,
+                                                                          "editable": false
+                                                                        }
+                                                                      ],
+                                                                      "range": null,
+                                                                      "editable": false
+                                                                    }
+                                                                  ],
+                                                                  "range": null,
+                                                                  "editable": false
+                                                                }
+                                                              ],
+                                                              "range": null,
+                                                              "editable": false
+                                                            }
+                                                          ],
+                                                          "range": null,
+                                                          "editable": false
+                                                        }
+                                                      ],
+                                                      "range": null,
+                                                      "editable": false
+                                                    }
+                                                  ],
+                                                  "range": null,
+                                                  "editable": false
+                                                }
+                                              ],
+                                              "range": null,
+                                              "editable": false
+                                            }
+                                          ],
+                                          "range": null,
+                                          "editable": false
+                                        }
+                                      ],
+                                      "range": null,
+                                      "editable": false
+                                    }
+                                  ],
+                                  "range": null,
+                                  "editable": false
+                                }
+                              ],
+                              "range": null,
+                              "editable": false
+                            }
+                          ],
+                          "range": null,
+                          "editable": false
+                        }
+                      ],
+                      "range": null,
+                      "editable": false
+                    }
+                  ],
+                  "range": null,
+                  "editable": false
+                }
+              ],
+              "range": null,
+              "editable": false
+            }
+          ],
+          "range": null,
+          "editable": false
+        }
+      ],
+      "range": null,
+      "editable": false
+    }
+  ]
+}

@@ -469,8 +469,8 @@ def analyze(els):
     controls = list(dict.fromkeys(label_of(e)[:40] for e in rest if e['role'] == 'control' and e['enabled'] and label_of(e) and area(e) > 0))
     disabled = list(dict.fromkeys(label_of(e)[:40] for e in rest if e['role'] == 'control' and not e['enabled'] and label_of(e)))
     inputs = [{'label': (e['label'] or e['name'] or e['id_tail'])[:40], 'value': content_of(e)[:30]} for e in rest if e['role'] == 'input']
-    toggles = [{'label': label_of(e)[:40], 'state': 'checked' if (e['checked'] or e['value'] in ('1', 'true', 'on')) else 'unchecked'} for e in rest if e['role'] == 'control' and e['toggle'] and label_of(e)]
-    state = sorted([e['kind'], label_of(e), str(e['enabled']), str(e['checked']), str(e['selected']), str(e['focused']), content_of(e) if e['role'] == 'input' else e['value'] if e['toggle'] else ''] for e in els if e['role'] in ('control', 'input'))
+    toggles = [{'label': label_of(e)[:40], 'state': toggle_state(e) or 'unknown'} for e in rest if e['role'] == 'control' and e['toggle'] and label_of(e)]
+    state = sorted([e['kind'], label_of(e), str(e['enabled']), str(e['checked']), str(e['selected']), str(e['focused']), content_of(e) if e['role'] == 'input' else str(toggle_state(e)) if e['toggle'] else ''] for e in els if e['role'] in ('control', 'input'))
     return {'dialogs': dialogs, 'text': text, 'controls': controls, 'disabled': disabled, 'inputs': inputs, 'toggles': toggles, 'control_state': state,
             'records': derive_records(rest), 'headings': [],
             'counts': {'elements': len(els), 'controls': sum(1 for e in els if e['role'] == 'control')}}
@@ -511,13 +511,17 @@ def check_device(device):
 
 class Mobile:
     """The facade's view of mobile-mcp: typed reads and actions over any backend with call(tool, args, mutating) -> (text, is_error) and close()."""
-    def __init__(self, backend=None, installer=install_agent, sleep=time.sleep, hierarchy_reader=None):
+    def __init__(self, backend=None, installer=install_agent, sleep=time.sleep, hierarchy_reader=None, android_hierarchy_reader=None):
         self.backend, self.installer, self.installed, self.sleep = backend, installer, [], sleep
         # A custom/remote backend must opt in: never start local providers in an offline test.
         if hierarchy_reader is None and backend is None and not os.environ.get(COMMAND_ENV):
             from mobile_hierarchy import read
             hierarchy_reader = read
         self.hierarchy_reader = hierarchy_reader
+        if android_hierarchy_reader is None and backend is None and not os.environ.get(COMMAND_ENV):
+            from mobile_hierarchy import read_android
+            android_hierarchy_reader = read_android
+        self.android_hierarchy_reader = android_hierarchy_reader
         self.cold_empty = False   # the last devices() answered empty while the backend had only just started
 
     def _backend(self):
@@ -561,6 +565,9 @@ class Mobile:
     def _read(self, device):
         text, error = self._backend().call('mobile_list_elements_on_screen', {'device': device, 'format': 'json'})
         elements = parse_elements(text)
+        if self.android_hierarchy_reader and any(e['android'] and e['toggle'] and toggle_state(e) is None for e in elements):
+            from mobile_hierarchy import normalize_android
+            return normalize_android(self.android_hierarchy_reader(device))
         if self.hierarchy_reader and any(not e['android'] and e['kind'] == 'Switch' and e['names'] and e['bounds'][2] > 3 * e['bounds'][3] for e in elements):
             from mobile_hierarchy import normalize_tree
             # The newer complete tree replaces the flat snapshot; never merge across reads.
