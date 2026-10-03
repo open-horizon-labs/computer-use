@@ -741,5 +741,33 @@
    "note": "The optional supplement retains look/do only and existing default call-count numbers. Selecting capability is an argument, not an extra tool call."
   },
   "status_note": "No new live superiority claim. Android raw-state remains manually qualified; OBO and retired field-value draft are not active routes."
+ },
+ {
+  "id": "CE-FACADE-019",
+  "status": "approved",
+  "authority": "User invoked salvage and execute after the SpaceO comparison, then explicitly selected all three scopes: lifecycle hardening, backend evaluation, and focus-isolation reporting (2026-10-02).",
+  "classification": "Optional virtual-display lifecycle containment and launch focus evidence; preserve existing MCP tools, capability allowlist and call counts.",
+  "input_and_actual": "select followed by readline can block indefinitely on partial startup JSON. Startup timeout previously terminated the display owner and teardown escalated to kill; controller restart could retry uncertain creation. Browser launch restoration could undo a concurrent user switch and had no independently observed result. Attended 2026-10-03 stock-Driver trial completed its synthetic task but reported agent_app/unconfirmed after launch.",
+  "corrected_behavior": "Read startup output with bounded raw-byte reads. Create a private exclusive pending lifecycle record before display launch; other clients and controller restarts refuse while it remains. Reuse the healthy owned display. Latch malformed, timed-out, or failed startup and unexpected owner exit; retain uncertain owners without automatic termination or replacement. Teardown sends one normal termination only for a healthy owner, never escalates to kill, and independently queries display absence before clearing ownership. Failed teardown retains the record. Restore frontmost app only when the current observed front app is the agent browser, independently observe the result, and trace keyboard/text routes as unknown. Backend evaluation is pinned static inspection, not promotion or live qualification. Native AppKit activation rechecks the current front app inside the activation call. A real launch refuses task input and closes the owned browser when independent focus is unknown or still agent-owned.",
+  "tempting_wrong_repair": "Keep blocking readline; kill and retry a timed-out display owner; accept a boolean display ID; drop pending state on restart; equate process exit with display removal; restore the prior user app after the user switched; equate osascript acknowledgment with verified restoration; use SpaceO live DOM ordinal references as saved observation bindings.",
+  "regression": "computer_use/test_spaces_client.py: partial output, output overflow, invalid identity, durable faults, exclusive pending ownership, corrupt pending record, stalled teardown, removal still present, dead owner. computer_use/test_agent_browser.py FocusIsolationTest: concurrent switch, unconfirmed restore, independent confirmation, unknown observations. docs/SPACEO-EVALUATION-2026-10-02.md records pinned binding incompatibility. LaunchFocusAdmission.test_unverified_real_launch_closes_browser_before_binding_or_input rejects report-only continuation.",
+  "call_budget": {
+   "note": "No MCP tool or mandatory LLM-visible step added. Existing CALL_BUDGET numbers unchanged; focus evidence uses the existing trace."
+  },
+  "status_note": "No live host freeze prevention or full input-route isolation claim. Journal storage calls are not deadline bounded, process exit can release retained displays, and operator recovery requires independent host/display inspection."
+ },
+ {
+  "id": "CE-FACADE-020",
+  "status": "approved",
+  "authority": "User selected our binding/verification over SpaceO lifecycle and explicitly invoked execute with our fixes and PR validation (2026-10-03).",
+  "classification": "Opt-in Stage lifecycle backend, preserve native-first routing, exact binding and unchanged LLM-visible look/do calls.",
+  "input_and_actual": "A helper owner exited while its display remained online; 37 older display-serving owners were invisible in the active/online baseline. A SpaceO lifecycle XCTest passed even though a sticky native health latch refused the following case.",
+  "corrected_behavior": "An explicitly prebuilt SpaceOKit worker owns one Stage; OH retains browser, Driver and saved-observation revalidation. Both backends share the durable OH exclusion record. The hybrid checks other known display owners before creation, native lifecycle readiness, separate online inventory and original topology. Unknown publication latches and retains the owner. Normal retirement never force-kills or retries; it requires successful worker exit, online removal, unchanged topology and ready native journal before clearing ownership. Missing worker or invalid backend never substitutes another backend or physical display.",
+  "tempting_wrong_repair": "Replace binding with SpaceO live ordinals; bypass native faults; ignore dormant owners; equate process exit with online retirement; clear the OH record before topology/readiness checks; silently choose the default backend when the worker is absent.",
+  "regression": "computer_use/test_spaceo_display.py: durable exclusion/reuse, owner-exit leak, topology drift, malformed inventory, native circuit, dormant owners, missing configuration; existing Facade stale-binding tests unchanged.",
+  "call_budget": {
+   "note": "No MCP tool or mandatory LLM-visible step added. Existing CALL_BUDGET numbers remain unchanged; backend selection is explicit external configuration."
+  },
+  "status_note": "Source/protocol research adapter only. Live hybrid creation/input/recovery is blocked by existing faults and foreign owners; compiled/read-only inventory evidence is not live qualification."
  }
 ]

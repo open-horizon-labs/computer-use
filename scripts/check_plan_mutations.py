@@ -904,6 +904,55 @@ MUTATIONS.update({
         ['test_native_first.NativeFirst.test_policy_empty_allowlist_and_legacy_env_cannot_revive_routes']),
 })
 
+# CE-FACADE-019: offline lifecycle and launch-focus counterexamples.
+MUTATIONS.update({
+    'display_fault_ignored_on_restart': (
+        'ignore a durable fault when this client has not failed yet',
+        [('spaces_client.py', 'if self._fault or (self._journal_fd is None and self.fault_path.exists()):', 'if self._fault:'),
+         ('spaces_client.py', 'os.O_RDWR | os.O_CREAT | os.O_EXCL', 'os.O_RDWR | os.O_CREAT')],
+        ['test_spaces_client.ClientTest.test_corrupt_pending_record_never_allows_new_creation']),
+    'display_identity_accepts_bool': (
+        'treat bool as an integer display identity',
+        [('spaces_client.py', "type(info.get('id')) is int", "isinstance(info.get('id'), int)")],
+        ['test_spaces_client.ClientTest.test_invalid_display_identity_latches_instead_of_accepting_boolean']),
+    'display_teardown_kills_uncertain_owner': (
+        'kill the display owner after its normal stop timeout',
+        [('spaces_client.py', "            except subprocess.TimeoutExpired:\n                self._latch('display owner did not exit", "            except subprocess.TimeoutExpired:\n                proc.kill()\n                self._latch('display owner did not exit")],
+        ['test_spaces_client.ClientTest.test_teardown_never_kills_a_stalled_owner']),
+    'display_process_exit_proves_removal': (
+        'assume the display disappeared because its owner exited',
+        [('spaces_client.py', '            if not removed:', '            if False:')],
+        ['test_spaces_client.ClientTest.test_owner_exit_is_not_proof_of_display_removal']),
+    'focus_restore_overwrites_user_switch': (
+        'restore the older app even after the user switched to another app',
+        [('agent_browser.py', '        if now != self.proc.pid:', '        if False:')],
+        ['test_agent_browser.FocusIsolationTest.test_user_switch_does_not_restore_an_older_app']),
+    'focus_restore_ack_is_success': (
+        'report restore success without observing the resulting frontmost app',
+        [('agent_browser.py', "report['restore'] = 'confirmed' if after == pid else 'unconfirmed'", "report['restore'] = 'confirmed'")],
+        ['test_agent_browser.FocusIsolationTest.test_acknowledged_restore_is_not_proof']),
+    'focus_unverified_launch_continues': (
+        'continue binding and input after an independently unverified launch focus',
+        [('agent_browser.py', "if self.real_launch and isolation['frontmost_app'] not in ('prior_app', 'other_app'):", 'if False:')],
+        ['test_agent_browser.LaunchFocusAdmission.test_unverified_real_launch_closes_browser_before_binding_or_input']),
+    'display_active_inventory_proves_online_removal': (
+        'accept an unlabelled active-only inventory as proof of online retirement',
+        [('spaces_client.py', "inventory.get('inventory') != 'online' or not isinstance(remaining, list)", 'not isinstance(remaining, list)')],
+        ['test_spaces_client.ClientTest.test_active_only_empty_inventory_cannot_prove_online_retirement']),
+    'display_other_owners_ignored': (
+        'create while known dormant display owners remain',
+        [('spaces_client.py', '        if self.owner_scan():', '        if False:')],
+        ['test_spaces_client.ClientTest.test_other_known_owners_refuse_before_journal_claim']),
+    'spaceo_native_circuit_ignored': (
+        'accept a readable inventory despite a blocked native lifecycle circuit',
+        [('spaceo_display.py', "        if value.get('lifecycleState') != 'ready':", '        if False:')],
+        ['test_spaceo_display.StageAdapter.test_good_inventory_cannot_hide_blocked_native_circuit']),
+    'spaceo_owner_exit_proves_retirement': (
+        'clear ownership when the Stage worker exited but its display is still online',
+        [('spaceo_display.py', "return self._serve is not None and self._serve.returncode == 0 and self._baseline is not None and rows == self._baseline and all(d['id'] != self._display for d in rows)", 'return True')],
+        ['test_spaceo_display.StageAdapter.test_owner_exit_with_online_display_retains_fault_and_refuses_new_owner']),
+})
+
 def stage(tmp):
     shutil.copytree(ROOT / 'computer_use', tmp / 'computer_use', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     shutil.copytree(ROOT / 'scripts', tmp / 'scripts', ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))  # a copy: a patch must never reach the real file through a symlink

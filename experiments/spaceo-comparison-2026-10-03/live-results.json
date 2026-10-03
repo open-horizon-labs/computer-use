@@ -1,0 +1,59 @@
+{
+  "scope": "attended normal-monitor research smoke on macOS 27.0; exact reviewed historical reports exempted temporarily, not production qualification",
+  "spaceo": {
+    "lifecycleXCTestPassed": true,
+    "caseSecondsIncluding90SecondPacing": 107.686,
+    "independentTopologyRestored": true,
+    "postflightHealthPassed": true,
+    "subsequentBrowserTask": "refused before launch",
+    "persistentFailure": "host health: host_health_unknown",
+    "rootCause": "not established; service transition is a hypothesis"
+  },
+  "oh": {
+    "lifecyclePassed": true,
+    "createdSeconds": 0.2629819590365514,
+    "retiredSeconds": 0.6886221249587834,
+    "stockDriverTaskPassed": true,
+    "capture": {
+      "width": 1280,
+      "height": 693,
+      "uniqueColors": 2677
+    },
+    "eventMeanings": [
+      "target"
+    ],
+    "topologyRestored": true,
+    "focusEvents": [
+      {
+        "operation": "agent_browser_focus",
+        "frontmost_app": "agent_app",
+        "key_input_route": "unknown",
+        "text_input_route": "unknown",
+        "restore": "unconfirmed"
+      }
+    ],
+    "postflightHealthPassed": true,
+    "focusFixRecheck": {
+      "taskOutcome": "unscored: harness cleanup exception prevented result persistence",
+      "retirementVerified": false,
+      "extraOnlineDisplayObserved": true,
+      "builtInDisplayActiveDuringRecovery": false,
+      "faultRecordPreserved": true,
+      "ownerProcessExited": true,
+      "forceKillOrAutomaticRetry": false,
+      "laterIndependentRecovery": {
+        "onlineDisplayCount": 1,
+        "builtInActive": true,
+        "originalTopologyRestored": true,
+        "forceKillServiceResetOrJournalReset": false,
+        "originalRetirementCheckStillFailed": true
+      }
+    }
+  },
+  "timingComparable": false,
+  "headlessOrLockedHostQualified": false,
+  "setupAttemptsExcludedFromTaskSuccess": [
+    "no Driver daemon",
+    "browser_consent_required"
+  ]
+}

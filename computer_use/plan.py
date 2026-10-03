@@ -459,6 +459,7 @@ HINTS = {
     'agent_browser_unavailable': 'The server\'s own browser could not start; nothing was opened. Run the setup block\'s fix if who=agent, else tell the user; then call do once more. Never use profile="user" or another browser.',
     'agent_display_unavailable': 'The agent display cannot start, so nothing was opened. Tell the user (the setup block names the fix); only they can set CUA_AGENT_DISPLAY=off. Do not retry `do` until it is fixed.',
     'agent_browser_misplaced': 'The agent browser opened outside the agent display, so it was quit at once and nothing was navigated. Tell the user what the message says; do not switch to profile="user" or retry in a loop.',
+    'agent_browser_focus_unverified': 'Launch focus was unverified; the owned browser closed before task input. Tell the user. Retry do only after focus restoration is repaired; no profile="user" fallback.',
     'presentation_conflict': 'This route would change the active Space. Call look to find a supported control route that preserves placement, or report the conflict; do not repeat the failed do blindly.',
     'on_behalf_driver_too_old': 'Visible user context needs the verified foreground tools in the current Cua Driver. Upgrade it, then retry with `do`.',
     'foreground_activation_unverified': 'The Driver did not verify this exact window in front, so no action was sent. Check the Driver grant and target window, then retry with `do`.',
@@ -498,7 +499,7 @@ HINTS = {
 WHO_USER = frozenset({
     'permission_required', 'foreground_required', 'needs_foreground', 'pointer_not_deliverable_in_background', 'novnc_background_click_unavailable',
     'element_outside_target_window', 'tab_close_control_not_found', 'tab_close_control_ambiguous', 'destructive_control', 'login_wall', 'credentials_required',
-    'captcha', 'window_ax_unresolved', 'agent_display_unavailable', 'agent_browser_misplaced', 'browser_tab_ambiguous', 'no_actionable_controls', 'upload_no_file_input',
+    'captcha', 'window_ax_unresolved', 'agent_display_unavailable', 'agent_browser_misplaced', 'agent_browser_focus_unverified', 'browser_tab_ambiguous', 'no_actionable_controls', 'upload_no_file_input',
     'mobile_backend_unavailable', 'mobile_device_agent_missing', 'navigated_elsewhere', 'navigate_refused', 'resize_refused',
     })
 EXTRA_REASONS = ('credentials_required', 'captcha', 'viewport_mapping_unavailable', 'abort_if_matched', 'refused')  # reasons raised outside the two hint catalogs

@@ -1,0 +1,54 @@
+{
+  "date": "2026-10-03",
+  "spaceo_tested_runtime_commit": "b3e40c20781f2374f062291fb21867ba8212f4e1",
+  "spaceo_latest_inspected_commit": "a858236cc3ca57653b49a244a3876f20a766bd71",
+  "latest_diff_changes_sources_tests_scripts_package": false,
+  "spaceo_test_patch": "spaceo-web-ordinal-characterization.patch",
+  "host": {
+    "macOS": "27.0",
+    "build": "26A428",
+    "swift": "6.4",
+    "architecture": "arm64",
+    "spaceo_permissions_can_drive": true,
+    "spaceo_permissions_can_capture": true,
+    "spaceo_user_online_display_count": 1,
+    "spaceo_user_active_display_count": 0,
+    "oh_accessibility_trusted": true,
+    "oh_active_display_count": 0,
+    "console_session_matches_execution_uid": false
+  },
+  "live_admission": {
+    "admitted": false,
+    "upstream_reason": "host_health_unknown",
+    "diagnosed_reason": "required_colorsync_service_counters_unavailable",
+    "colorsync_service_name_count": 0,
+    "display_creation_attempts": 0,
+    "app_launch_attempts": 0,
+    "source_level_additional_blocker": "SpaceO Stage.admissionFailure requires at least one existing active user/non-SpaceO display. Current userActive count is zero; no live Stage creation was attempted."
+  },
+  "spaceo_baseline_safe_swift_tests": {
+    "passed": 1701,
+    "failures": 0,
+    "live_tests_excluded": true
+  },
+  "spaceo_added_production_js_reorder_reproducer": {
+    "passed": 1,
+    "behavior": "Saved web ordinal resolves the other element after traversal order is reversed; production ChromiumObservation JavaScript, in-memory DOM adapter."
+  },
+  "oh_targeted_counterpart_tests": {
+    "passed": 36,
+    "failures": 0,
+    "behavior": "Changed-page, wrong-tab, scoped-record/duplicate control, lifecycle and launch-focus cases refuse or report the expected evidence."
+  },
+  "comparison_limit": "No admitted live A/B, task-completion rate, latency, token comparison, GUI stability or renderer input claim. No user attention or foreground physical-screen operation is required by the virtual-display concept; the existing active user-display requirement is SpaceO-specific admission policy.",
+  "publication": "SpaceO code contribution is in ready-for-review PR #37; issue #38 tracks live qualification. Empirical comparison evidence is included in this repository PR.",
+  "spaceo_verify_release_with_characterization": {
+    "safe_swift_tests_passed": 1702,
+    "failures": 0,
+    "mcp_smoke": "passed",
+    "mcp_tools_reported": 35,
+    "optimized_build": "passed",
+    "live_integration_tests_excluded": true,
+    "qualification_toolchain_note": "Built with available Swift 6.4; upstream release qualification pins a different toolchain. No live/release qualification claimed."
+  }
+}

@@ -59,8 +59,15 @@ class AgentDisplay:
             raise RuntimeError(self.failure)
         try:
             if self.client is None:
-                import spaces_client
-                self.client = spaces_client.SpaceMover()
+                backend = os.environ.get('CUA_DISPLAY_BACKEND', 'space-mover')
+                if backend == 'spaceo':
+                    from spaceo_display import SpaceODisplay
+                    self.client = SpaceODisplay()
+                elif backend == 'space-mover':
+                    import spaces_client
+                    self.client = spaces_client.SpaceMover()
+                else:
+                    raise RuntimeError('unknown CUA_DISPLAY_BACKEND; nothing was started')
             self.display = self.client.ensure_agent_display()
         except Exception as error:
             self.failure = self._reason(error)

@@ -18,6 +18,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_SCRIPT = ROOT / 'scripts' / 'build_space_mover.sh'
 DEFAULT_BINARY = ROOT / 'computer_use' / 'spaces' / 'bin' / 'space-mover'
+# Keep uncertain owners and their pipes alive even if a task drops its client.
+# Process exit still releases a display: this is containment, not OS cancellation.
+RETAINED_OWNERS = []
 
 
 class SpaceMoverError(Exception):
@@ -77,14 +80,82 @@ def select_thumbnail(thumbnails, title, bundle_id, active_space):
 
 
 class SpaceMover:
-    def __init__(self, binary=None, fallback_space=None, build_timeout=180, call_timeout=30, serve_timeout=10):
+    def __init__(self, binary=None, fallback_space=None, build_timeout=180, call_timeout=30, serve_timeout=10, fault_path=None, stop_timeout=5, owner_scan=None):
         self.binary = Path(binary or os.environ.get('CUA_SPACE_MOVER') or DEFAULT_BINARY)
         self.fallback_space = fallback_space
         self.build_timeout = build_timeout
         self.call_timeout = call_timeout
         self.serve_timeout = serve_timeout
+        self.stop_timeout = stop_timeout
+        self.fault_path = Path(fault_path) if fault_path is not None else Path(os.environ.get('CUA_CACHE_DIR') or Path.home() / '.cache' / 'computer-use') / 'display-fault.json'
+        self._fault = None
+        self._journal_fd = None
         self._serve = None
         self._display = None
+        from display_owners import known_display_owners
+        self.owner_scan = owner_scan or known_display_owners
+
+    def _check_fault(self):
+        if self._fault or (self._journal_fd is None and self.fault_path.exists()):
+            raise SpaceMoverUnavailable('display lifecycle blocked; inspect %s and retained owners before operator recovery' % self.fault_path,
+                                        self._fault or {'code': 'display_lifecycle_blocked'})
+
+    def _write_state(self, state):
+        payload = json.dumps(state).encode()
+        os.lseek(self._journal_fd, 0, os.SEEK_SET)
+        os.write(self._journal_fd, payload)
+        os.ftruncate(self._journal_fd, len(payload))
+        os.fsync(self._journal_fd)
+
+    def _claim_lifecycle(self):
+        """A pending record survives a controller crash and excludes other display creators."""
+        try:
+            self.fault_path.parent.mkdir(parents=True, exist_ok=True)
+            self._journal_fd = os.open(self.fault_path, os.O_RDWR | os.O_CREAT | os.O_EXCL, 0o600)
+            self._write_state({'code': 'display_lifecycle_pending', 'controller_pid': os.getpid(), 'owner_pid': None})
+        except OSError as error:
+            self._fault = {'code': 'display_lifecycle_blocked', 'persistence_error': type(error).__name__}
+            raise SpaceMoverUnavailable('cannot claim durable display lifecycle record; nothing was opened', self._fault)
+
+    def _latch(self, reason):
+        self._fault = {'code': 'display_lifecycle_uncertain', 'reason': reason,
+                       'owner_pid': self._serve.pid if self._serve else None, 'display_id': self._display}
+        if self._serve is not None and self._serve not in RETAINED_OWNERS:
+            RETAINED_OWNERS.append(self._serve)
+        try:
+            if self._journal_fd is not None:
+                self._write_state(self._fault)
+            else:
+                self.fault_path.parent.mkdir(parents=True, exist_ok=True)
+                fd = os.open(self.fault_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                with os.fdopen(fd, 'w') as out:
+                    json.dump(self._fault, out)
+                    out.flush()
+                    os.fsync(out.fileno())
+        except FileExistsError:
+            pass
+        except OSError as error:
+            self._fault['persistence_error'] = type(error).__name__
+        raise SpaceMoverUnavailable(reason, self._fault)
+
+    def _ready_line(self):
+        """Bound both time and bytes; select followed by readline can hang on a partial line."""
+        deadline = time.monotonic() + self.serve_timeout
+        data = bytearray()
+        fd = self._serve.stdout.fileno()
+        while time.monotonic() < deadline:
+            ready, _, _ = select.select([fd], [], [], max(0, deadline - time.monotonic()))
+            if not ready:
+                break
+            part = os.read(fd, 4096)
+            if not part:
+                break
+            data.extend(part)
+            if len(data) > 16384:
+                self._latch('display serve exceeded its startup output limit')
+            if b'\n' in data:
+                return bytes(data).split(b'\n', 1)[0]
+        self._latch('display serve did not report a complete display record in time')
 
     def ensure_binary(self):
         if self.binary.exists():
@@ -130,37 +201,76 @@ class SpaceMover:
 
     def ensure_agent_display(self, width=1920, height=1080):
         """Start `display serve` once as a child and cache its display id. The display lives while the child does."""
+        self._check_fault()
         if self._serve is not None and self._serve.poll() is None and self._display is not None:
             return self._display
+        if self._serve is not None:
+            self._latch('display owner exited unexpectedly; no replacement was started')
+        if self.owner_scan():
+            raise SpaceMoverUnavailable('other known display owners are present; inspect them before creation, no automatic signals')
         binary = self.ensure_binary()
-        self._serve = subprocess.Popen([str(binary), 'display', 'serve', '--width', str(width), '--height', str(height)],
-                                       stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
-        ready, _, _ = select.select([self._serve.stdout], [], [], self.serve_timeout)
-        line = self._serve.stdout.readline() if ready else ''
+        self._claim_lifecycle()
+        try:
+            self._serve = subprocess.Popen([str(binary), 'display', 'serve', '--width', str(width), '--height', str(height)],
+                                           stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            self._write_state({'code': 'display_lifecycle_active', 'controller_pid': os.getpid(), 'owner_pid': self._serve.pid})
+            line = self._ready_line()
+        except OSError:
+            self._latch('display startup transport or journal failed; no automatic retry')
         try:
             info = json.loads(line)
-        except ValueError:
-            self.stop()
-            raise SpaceMoverUnavailable('display serve did not report a display in time')
-        if not info.get('created') or not info.get('active'):
-            self.stop()
-            raise SpaceMoverUnavailable(info.get('reason') or 'virtual display was not created', info)
-        self._display = int(info['id'])
+            valid = isinstance(info, dict) and info.get('created') is True and info.get('active') is True and type(info.get('id')) is int and info['id'] > 0
+        except (ValueError, UnicodeError, RecursionError):
+            valid = False
+        if not valid:
+            self._latch('display serve returned an invalid or unverified display record')
+        self._display = info['id']
         return self._display
 
     def stop(self):
-        proc, self._serve, self._display = self._serve, None, None
+        proc = self._serve
         if proc is None:
             return
+        if self._fault:
+            return  # operator recovery owns uncertain teardown; never signal automatically
+        if proc.poll() is None:
+            try:
+                proc.terminate()
+                proc.wait(timeout=self.stop_timeout)
+            except subprocess.TimeoutExpired:
+                self._latch('display owner did not exit during teardown; retained without kill or retry')
+            except OSError:
+                self._latch('display owner teardown transport failed; retained without retry')
         if proc.stdout:
             proc.stdout.close()
-        if proc.poll() is None:
-            proc.terminate()
+        if self._display is not None:
             try:
-                proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                proc.wait()
+                removed = self._retirement_verified()
+            except Exception:
+                removed = False
+            if not removed:
+                self._latch('display removal could not be independently verified after owner exit')
+        if self._journal_fd is not None:
+            try:
+                held, current = os.fstat(self._journal_fd), self.fault_path.stat()
+                if (held.st_dev, held.st_ino) != (current.st_dev, current.st_ino):
+                    self._latch('display lifecycle record changed during ownership')
+                self.fault_path.unlink()
+                os.close(self._journal_fd)
+                self._journal_fd = None
+            except OSError:
+                self._latch('could not clear verified display lifecycle record')
+        self._serve, self._display = None, None
+
+    def _retirement_verified(self):
+        inventory = self.run('displays', '--online')
+        remaining = inventory.get('displays')
+        if inventory.get('inventory') != 'online' or not isinstance(remaining, list) or len(remaining) >= 64:
+            return False
+        if not all(isinstance(d, dict) and type(d.get('id')) is int and d['id'] > 0 for d in remaining):
+            return False
+        ids = [d['id'] for d in remaining]
+        return len(ids) == len(set(ids)) and self._display not in ids
 
     def park(self, window_id):
         """Move a window to the agent display and verify; fall back to the configured Space only if set."""

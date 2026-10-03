@@ -353,6 +353,21 @@ class Containment(Base):
         self.assertEqual(self.spaces.parked, [5])
 
 
+class LaunchFocusAdmission(Base):
+    def test_unverified_real_launch_closes_browser_before_binding_or_input(self):
+        # Wrong patch: report failed restoration but continue driving the browser.
+        from unittest.mock import Mock
+        from core import Gap
+        self.make()
+        self.ab.real_launch = True
+        self.ab.front_app = Mock(return_value=10)
+        self.ab.restore_front = Mock(return_value={'frontmost_app':'agent_app', 'restore':'unconfirmed'})
+        with self.assertRaisesRegex(Gap, 'agent_browser_focus_unverified'):
+            self.ab.window(self.f)
+        self.assertFalse(self.world.live())
+        self.assertFalse(self.driver.called('get_browser_state'))
+
+
 class Reuse(Base):
     def test_consecutive_calls_reuse_one_window(self):
         # Wrong patch: launch (or open a window) per call: the user watches windows pile up.
@@ -681,6 +696,45 @@ class Surface(Base):
         self.assertIsInstance(server.facade.agent_browser, AgentBrowser)
         self.assertEqual(server.facade.agent_browser.mode, 'auto')
 
+
+
+class FocusIsolationTest(unittest.TestCase):
+    def browser(self, observations):
+        from unittest.mock import Mock
+        from agent_browser import AgentBrowser
+        b = AgentBrowser.__new__(AgentBrowser)
+        b.proc = Mock(pid=99)
+        b.front_app = Mock(side_effect=observations)
+        return b
+
+    def test_user_switch_does_not_restore_an_older_app(self):
+        from unittest.mock import patch
+        b = self.browser([30, 10])
+        with patch('agent_browser.subprocess.run') as run:
+            report = b.restore_front(10)
+        run.assert_not_called()
+        self.assertEqual(report['frontmost_app'], 'other_app')
+
+    def test_acknowledged_restore_is_not_proof(self):
+        from unittest.mock import patch
+        b = self.browser([99, 99])
+        with patch('agent_browser.subprocess.run'):
+            report = b.restore_front(10)
+        self.assertEqual(report['restore'], 'unconfirmed')
+        self.assertEqual(report['frontmost_app'], 'agent_app')
+        self.assertEqual(report['key_input_route'], 'unknown')
+
+    def test_restore_requires_independent_observation(self):
+        from unittest.mock import patch
+        b = self.browser([99, 10])
+        with patch('agent_browser.subprocess.run'):
+            report = b.restore_front(10)
+        self.assertEqual(report['restore'], 'confirmed')
+        self.assertEqual(report['text_input_route'], 'unknown')
+
+    def test_missing_observation_is_not_isolation_success(self):
+        b = self.browser([None])
+        self.assertEqual(b.restore_front(10)['frontmost_app'], 'unknown')
 
 if __name__ == '__main__':
     unittest.main()

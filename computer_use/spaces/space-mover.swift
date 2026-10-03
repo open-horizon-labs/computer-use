@@ -481,8 +481,22 @@ func displayDescription(_ id: CGDirectDisplayID) -> [String: Any] {
     return out
 }
 
-func cmdDisplays() -> Never {
-    emit(["displays": activeDisplays().map(displayDescription)])
+func cmdDisplays(_ args: [String]) -> Never {
+    guard args == ["displays"] || args == ["displays", "--online"] else { usage("displays [--online]") }
+    if args.contains("--online") {
+        var ids = [CGDirectDisplayID](repeating: 0, count: 64)
+        var count: UInt32 = 0
+        guard CGGetOnlineDisplayList(64, &ids, &count) == .success, count < 64 else {
+            emit(["reason": "online_inventory_unknown"]); exit(4)
+        }
+        let online = Array(ids.prefix(Int(count)))
+        guard !online.contains(0), Set(online).count == online.count else {
+            emit(["reason": "online_inventory_invalid_identity"]); exit(4)
+        }
+        emit(["inventory": "online", "displays": online.sorted().map(displayDescription)])
+    } else {
+        emit(["displays": activeDisplays().map(displayDescription)])
+    }
     exit(0)
 }
 
@@ -804,7 +818,7 @@ case "spaces":
 case "move":
     cmdMove(args)
 case "displays":
-    cmdDisplays()
+    cmdDisplays(args)
 case "display":
     guard args.count >= 2, args[1] == "serve" || args[1] == "create" else { usage("display serve [--width W --height H --hidpi]") }
     cmdDisplayServe(args)

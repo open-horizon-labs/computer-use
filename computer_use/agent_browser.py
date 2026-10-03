@@ -242,17 +242,34 @@ class AgentBrowser:
             return None
 
     def restore_front(self, pid):
-        """Give focus back to the app that had it when Chrome took it on launch; never touches it when Chrome did not take focus."""
-        if not pid or not self.proc or pid == self.proc.pid:
-            return
+        """Restore only an observed agent takeover; a concurrent user app switch is left alone."""
+        report = {'frontmost_app': 'unknown', 'key_input_route': 'unknown', 'text_input_route': 'unknown', 'restore': 'not_attempted'}
         now = self.front_app()
-        if now is None or now == pid:
-            return
+        if not pid or not self.proc or now is None:
+            return report
+        if now != self.proc.pid:
+            report['frontmost_app'] = 'prior_app' if now == pid else 'other_app'
+            return report
+        report['frontmost_app'] = 'agent_app'
+        if pid == self.proc.pid:
+            return report
+        report['restore'] = 'attempted'
         try:
-            subprocess.run(['osascript', '-e', 'tell application "System Events" to set frontmost of (first process whose unix id is %d) to true' % pid],
+            # AppKit activation avoids a separate System Events Automation grant. Check
+            # again inside the native call so a user switch during launch is respected.
+            script = ('ObjC.import("AppKit"); '
+                      'const current = $.NSWorkspace.sharedWorkspace.frontmostApplication; '
+                      'if (current && current.processIdentifier == %d) { '
+                      'const prior = $.NSRunningApplication.runningApplicationWithProcessIdentifier(%d); '
+                      'if (prior) prior.activateWithOptions(2); }') % (self.proc.pid, pid)
+            subprocess.run(['osascript', '-l', 'JavaScript', '-e', script],
                      capture_output=True, text=True, timeout=5)
         except Exception:
             pass
+        after = self.front_app()
+        report['frontmost_app'] = 'unknown' if after is None else ('prior_app' if after == pid else ('agent_app' if after == self.proc.pid else 'other_app'))
+        report['restore'] = 'confirmed' if after == pid else 'unconfirmed'
+        return report
 
     def alive(self):
         return self.proc is not None and self.proc.poll() is None
@@ -417,7 +434,12 @@ class AgentBrowser:
             raise misplaced(seen[2], rect)
         self.window_id = seen[0]
         f.window_created(seen[0], seen[1], seen[2])
-        self.restore_front(getattr(self, '_front_before', None))
+        isolation = self.restore_front(getattr(self, '_front_before', None))
+        f.event('agent_browser_focus', **isolation)
+        if self.real_launch and isolation['frontmost_app'] not in ('prior_app', 'other_app'):
+            self.stop()
+            from core import Gap
+            raise Gap('agent_browser_focus_unverified: launch focus could not be independently restored; owned browser closed, no task input sent')
         return self.proc.pid, seen[0]
 
     # ---- resize (#78) ----

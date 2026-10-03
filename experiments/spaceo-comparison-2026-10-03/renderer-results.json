@@ -1,0 +1,935 @@
+{
+  "scope": "controlled real-renderer contract experiment",
+  "virtualDisplayQualified": false,
+  "stockDriverQualified": false,
+  "scriptedInitialSelections": true,
+  "repeats": 3,
+  "summary": {
+    "OH Facade + research renderer adapter": {
+      "disabled": {
+        "outcomes": [
+          "safe_no_effect",
+          "safe_no_effect",
+          "safe_no_effect"
+        ],
+        "statuses": [
+          "refused",
+          "refused",
+          "refused"
+        ]
+      },
+      "duplicate_context": {
+        "outcomes": [
+          "correct",
+          "correct",
+          "correct"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "form": {
+        "outcomes": [
+          "correct",
+          "correct",
+          "correct"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "insert_before": {
+        "outcomes": [
+          "safe_no_effect",
+          "safe_no_effect",
+          "safe_no_effect"
+        ],
+        "statuses": [
+          "refused",
+          "refused",
+          "refused"
+        ]
+      },
+      "meaning_change": {
+        "outcomes": [
+          "safe_no_effect",
+          "safe_no_effect",
+          "safe_no_effect"
+        ],
+        "statuses": [
+          "refused",
+          "refused",
+          "refused"
+        ]
+      },
+      "navigation": {
+        "outcomes": [
+          "safe_no_effect",
+          "safe_no_effect",
+          "safe_no_effect"
+        ],
+        "statuses": [
+          "refused",
+          "refused",
+          "refused"
+        ]
+      },
+      "removed": {
+        "outcomes": [
+          "safe_no_effect",
+          "safe_no_effect",
+          "safe_no_effect"
+        ],
+        "statuses": [
+          "refused",
+          "refused",
+          "refused"
+        ]
+      },
+      "reorder": {
+        "outcomes": [
+          "safe_no_effect",
+          "safe_no_effect",
+          "safe_no_effect"
+        ],
+        "statuses": [
+          "refused",
+          "refused",
+          "refused"
+        ]
+      },
+      "static": {
+        "outcomes": [
+          "correct",
+          "correct",
+          "correct"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      }
+    },
+    "SpaceO ChromiumBridge": {
+      "disabled": {
+        "outcomes": [
+          "safe_no_effect",
+          "safe_no_effect",
+          "safe_no_effect"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "duplicate_context": {
+        "outcomes": [
+          "correct",
+          "correct",
+          "correct"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "form": {
+        "outcomes": [
+          "correct",
+          "correct",
+          "correct"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "insert_before": {
+        "outcomes": [
+          "wrong_effect",
+          "wrong_effect",
+          "wrong_effect"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "meaning_change": {
+        "outcomes": [
+          "wrong_effect",
+          "wrong_effect",
+          "wrong_effect"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "navigation": {
+        "outcomes": [
+          "wrong_effect",
+          "wrong_effect",
+          "wrong_effect"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "removed": {
+        "outcomes": [
+          "wrong_effect",
+          "wrong_effect",
+          "wrong_effect"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "reorder": {
+        "outcomes": [
+          "wrong_effect",
+          "wrong_effect",
+          "wrong_effect"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      },
+      "static": {
+        "outcomes": [
+          "correct",
+          "correct",
+          "correct"
+        ],
+        "statuses": [
+          "sent",
+          "sent",
+          "sent"
+        ]
+      }
+    }
+  },
+  "controlledViewportCaptures": {
+    "spaceo-renderer.json.png": {
+      "width": 1280,
+      "height": 800,
+      "uniqueColors": 330,
+      "bytes": 13571
+    },
+    "oh-renderer.png": {
+      "width": 1280,
+      "height": 800,
+      "uniqueColors": 330,
+      "bytes": 13571
+    }
+  },
+  "rows": [
+    {
+      "actionMilliseconds": 113.818875,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "static",
+      "run": "spaceo-0-static",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 119.9305,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "duplicate_context",
+      "run": "spaceo-0-duplicate_context",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 125.6885,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "reorder",
+      "run": "spaceo-0-reorder",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 126.255292,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "insert_before",
+      "run": "spaceo-0-insert_before",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 121.480042,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "meaning_change",
+      "run": "spaceo-0-meaning_change",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 117.846083,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "removed",
+      "run": "spaceo-0-removed",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 128.774083,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "disabled",
+      "run": "spaceo-0-disabled",
+      "status": "sent",
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 121.076083,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "navigation",
+      "run": "spaceo-0-navigation",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 153.192042,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "form",
+      "run": "spaceo-0-form",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "submit"
+      ],
+      "submittedValues": [
+        {
+          "name": "Ada Lovelace",
+          "note": "Synthetic intake"
+        }
+      ]
+    },
+    {
+      "actionMilliseconds": 122.984875,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "static",
+      "run": "spaceo-1-static",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 118.405875,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "duplicate_context",
+      "run": "spaceo-1-duplicate_context",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 113.728875,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "reorder",
+      "run": "spaceo-1-reorder",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 117.9365,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "insert_before",
+      "run": "spaceo-1-insert_before",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 115.258417,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "meaning_change",
+      "run": "spaceo-1-meaning_change",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 128.675167,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "removed",
+      "run": "spaceo-1-removed",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 112.226834,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "disabled",
+      "run": "spaceo-1-disabled",
+      "status": "sent",
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 127.322833,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "navigation",
+      "run": "spaceo-1-navigation",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 152.661083,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "form",
+      "run": "spaceo-1-form",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "submit"
+      ],
+      "submittedValues": [
+        {
+          "name": "Ada Lovelace",
+          "note": "Synthetic intake"
+        }
+      ]
+    },
+    {
+      "actionMilliseconds": 114.846,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "static",
+      "run": "spaceo-2-static",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 117.6185,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "duplicate_context",
+      "run": "spaceo-2-duplicate_context",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 118.275791,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "reorder",
+      "run": "spaceo-2-reorder",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 125.477584,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "insert_before",
+      "run": "spaceo-2-insert_before",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 119.607917,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "meaning_change",
+      "run": "spaceo-2-meaning_change",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 126.46775,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "removed",
+      "run": "spaceo-2-removed",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 123.987125,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "disabled",
+      "run": "spaceo-2-disabled",
+      "status": "sent",
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 138.531042,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "navigation",
+      "run": "spaceo-2-navigation",
+      "status": "sent",
+      "outcome": "wrong_effect",
+      "eventMeanings": [
+        "decoy"
+      ],
+      "submittedValues": []
+    },
+    {
+      "actionMilliseconds": 153.680667,
+      "arm": "SpaceO ChromiumBridge",
+      "case": "form",
+      "run": "spaceo-2-form",
+      "status": "sent",
+      "outcome": "correct",
+      "eventMeanings": [
+        "submit"
+      ],
+      "submittedValues": [
+        {
+          "name": "Ada Lovelace",
+          "note": "Synthetic intake"
+        }
+      ]
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "static",
+      "run": "oh-0-static",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 107.19983302988112,
+      "researchDriverCalls": 5,
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "duplicate_context",
+      "run": "oh-0-duplicate_context",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 104.54358393326402,
+      "researchDriverCalls": 5,
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "reorder",
+      "run": "oh-0-reorder",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 107.62937495019287,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "insert_before",
+      "run": "oh-0-insert_before",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 103.33733400329947,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "meaning_change",
+      "run": "oh-0-meaning_change",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 107.76870790868998,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "removed",
+      "run": "oh-0-removed",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 107.18345805071294,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "disabled",
+      "run": "oh-0-disabled",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 108.22533397004008,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "navigation",
+      "run": "oh-0-navigation",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 111.92204197868705,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "form",
+      "run": "oh-0-form",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 116.97495891712606,
+      "researchDriverCalls": 11,
+      "outcome": "correct",
+      "eventMeanings": [
+        "submit"
+      ],
+      "submittedValues": [
+        {
+          "name": "Ada Lovelace",
+          "note": "Synthetic intake"
+        }
+      ]
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "static",
+      "run": "oh-1-static",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 110.09379103779793,
+      "researchDriverCalls": 5,
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "duplicate_context",
+      "run": "oh-1-duplicate_context",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 104.1506250621751,
+      "researchDriverCalls": 5,
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "reorder",
+      "run": "oh-1-reorder",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 107.85004205536097,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "insert_before",
+      "run": "oh-1-insert_before",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 107.5818749377504,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "meaning_change",
+      "run": "oh-1-meaning_change",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 105.17795803025365,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "removed",
+      "run": "oh-1-removed",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 104.58095802459866,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "disabled",
+      "run": "oh-1-disabled",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 108.05279202759266,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "navigation",
+      "run": "oh-1-navigation",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 113.41845791321248,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "form",
+      "run": "oh-1-form",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 114.58850000053644,
+      "researchDriverCalls": 11,
+      "outcome": "correct",
+      "eventMeanings": [
+        "submit"
+      ],
+      "submittedValues": [
+        {
+          "name": "Ada Lovelace",
+          "note": "Synthetic intake"
+        }
+      ]
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "static",
+      "run": "oh-2-static",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 108.25325001496822,
+      "researchDriverCalls": 5,
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "duplicate_context",
+      "run": "oh-2-duplicate_context",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 108.60395792406052,
+      "researchDriverCalls": 5,
+      "outcome": "correct",
+      "eventMeanings": [
+        "target"
+      ],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "reorder",
+      "run": "oh-2-reorder",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 107.85316699184477,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "insert_before",
+      "run": "oh-2-insert_before",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 108.38900005910546,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "meaning_change",
+      "run": "oh-2-meaning_change",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 106.7517080809921,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "removed",
+      "run": "oh-2-removed",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 106.80291603785008,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "disabled",
+      "run": "oh-2-disabled",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 103.165875072591,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "navigation",
+      "run": "oh-2-navigation",
+      "status": "refused",
+      "reason": "UI changed since selection; reobserve and choose again",
+      "actionMilliseconds": 115.44308299198747,
+      "researchDriverCalls": 4,
+      "outcome": "safe_no_effect",
+      "eventMeanings": [],
+      "submittedValues": []
+    },
+    {
+      "arm": "OH Facade + research renderer adapter",
+      "case": "form",
+      "run": "oh-2-form",
+      "status": "sent",
+      "reason": null,
+      "actionMilliseconds": 115.44950003735721,
+      "researchDriverCalls": 11,
+      "outcome": "correct",
+      "eventMeanings": [
+        "submit"
+      ],
+      "submittedValues": [
+        {
+          "name": "Ada Lovelace",
+          "note": "Synthetic intake"
+        }
+      ]
+    }
+  ]
+}
