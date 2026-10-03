@@ -38,5 +38,3 @@ def known_display_owners():
             process.kill()
             process.wait(timeout=1)
         process.stdout.close()
-
-
