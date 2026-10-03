@@ -11,16 +11,20 @@ Start with [the skill](skills/computer-use/SKILL.md). It loads route-specific gu
 
 ## Install
 
-Copy skills/computer-use into the client's skill directory (~/.claude/skills for Claude, ~/.agents/skills for Codex). Install Cua CLI separately, then register the slim Spaces profile:
+From the checkout, with Python 3.11 or newer:
 
-```sh
-claude mcp add --scope user cua-spaces -- cua mcp --embedded --permissions spaces:list_spaces,spaces:list_tools,spaces:call_tool
-codex mcp add cua-spaces -- cua mcp --embedded --permissions spaces:list_spaces,spaces:list_tools,spaces:call_tool
-```
+~~~sh
+python3 scripts/install_smart_defaults.py --client codex
+python3 scripts/install_smart_defaults.py --client codex --check
+~~~
 
-For a local installation of both clients, scripts/install_smart_defaults.py copies the skill, registers slim Spaces and disables/removes only this checkout's default OH adapter registration; --check verifies the result without changing it. It leaves unrelated native servers in place.
+Use --client claude for Claude Code or --client both (the default). This installs the skill, retires only this checkout's legacy OH registration and preserves unrelated client configuration. Native browser/app tools come from the client; skill-only installation needs no Cua CLI or Spaces server.
 
-Reconnect clients. The skill keeps Spaces task-selected even though its three discovery tools are registered. Creation/deletion stays CLI setup. Do not fetch the full Driver catalog. call_tool retains broad upstream authority: fewer tool schemas are not a security boundary. [Setup](skills/computer-use/references/setup.md) covers optional adapters and local paths.
+For a separate guest desktop, install Cua CLI and add --with-spaces to both commands. This registers the slim three-tool Spaces profile; guest creation and authentication remain separate setup. Reconnect after MCP changes and confirm the skill is discovered.
+
+Use the installer for upgrades: replaced skill packages are backed up outside skill discovery, retired files are removed from the active package, and obsolete global instruction references fail verification. --check verifies local files/configuration; it does not establish live tool access or install anything into a ChatGPT workspace.
+
+[Setup](skills/computer-use/references/setup.md) contains the client paths, migration details, optional Spaces/OH commands and ChatGPT execution boundaries.
 
 ## Optional runtime and evidence
 
