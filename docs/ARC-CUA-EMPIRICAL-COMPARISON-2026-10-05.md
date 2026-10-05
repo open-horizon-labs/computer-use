@@ -1,77 +1,55 @@
-# arc-cua — empirical comparison and salvage
+# Arc versus current Cua Driver — 2026-10-05
 
-## Decision
+## Current result
 
-**Default selection follow-up:** The user selected arc as the default after this comparison. The skill now prefers the connected arc standalone driver for macOS app/window work, with native fallback and the controller retaining record matching and verification. The tested revision is installed in a durable local environment and registered for Codex and Claude Code. Installed skill copies were synchronized and independently reviewed; this updates the prior opt-in recommendation below. New MCP connections require client reconnection. The display fault remains preserved.
+Both candidates were checked against upstream before this rerun: the installed Cua Driver was updated to **0.33.4**, the latest component release, and Arc remains **0.1.1** at upstream head `6ca19d62c95106732fad28f488ecd458c08e02f4`. MCP initialization independently confirms the running servers' versions. The original 0.31.0 comparison was outdated for a current head-to-head; it is preserved as [historical evidence](ARC-CUA-COMPARISON-0.31.0-2026-10-05.md), not the basis for the figures here.
 
-arc-cua earns consideration as an opt-in native macOS driver selected by our routing skill, especially for background AX controls and embedded web forms. It demonstrated a substantial speed advantage over the installed Cua Driver and stronger refusal of changed controls and modal state. Keep the controller's record matching and independent outcome checks. Do not put the broad native facade back into the optional OH adapter, replace guest Spaces, or adopt the decision-model executor by default.
+Arc's native form loop uses **8.1× less MCP time**, and its WebKit form loop **7.6× less**, at equal 3/3 completion in both cases. Cua is faster on the menu case (0.58 s versus Arc's 0.80 s). These are local driver-loop measurements with scripted selections, not autonomous-agent accuracy or measured model-token savings. The user-selected Arc default remains useful for these qualified macOS controls, with exact-window binding, controller-side record matching and independent outcome verification.
 
-The live work requested after the source evaluation is complete at this bounded scope. Display-lifecycle qualification, Electron parity, real authenticated application flows and decision-model accuracy remain outside the evidence. The existing display fault prevented virtual-display trials; it was preserved, not bypassed.
+## Candidates and method
 
-## What ran
+macOS 27.0.1, Python 3.12.12. Cua's canonical updater verified the universal release archive against SHA256SUMS, replaced the 0.31.0 signed app bundle, and preserved Accessibility and Screen Recording grants. Its updated standalone daemon was relaunched under the same `com.trycua.driver` identity. Arc uses the clean upstream checkout in the qualification environment; the optional guard PR is not part of either baseline. The installed Arc source pin remains unchanged.
 
-On this Mac, macOS 27.0.1: arc-cua 0.1.1 at `6ca19d62c95106732fad28f488ecd458c08e02f4`, versus the installed Cua Driver 0.31.0 through its existing daemon. Both were called through their public MCP stdio tools. arc ran in a temporary Python 3.12.12 environment, without global installation or MCP registration. The native driver was not upgraded; these results do not compare against its newer releases or every native tool available in Codex.
+The same public-MCP harnesses, exact-window targets and synthetic AppKit/WKWebView fixtures were reused. Independent app state and renderer JavaScript establish actual effects. Three repetitions alternate driver order. **All 72 scheduled cases ran: 66 native and six renderer trials, with zero fixture-setup failures.** No virtual displays, user documents, logins or browser profiles were used. Early front-app telemetry can be cached or include fixture launch; it is not scored as proof of attention isolation.
 
-The native fixture is a synthetic AppKit form extending upstream's fixture, with its own atomic state file and explicit app-side fault injection. The web fixture is a real WKWebView with input-event logging and a custom dropdown; a separate Unix-socket JavaScript oracle reads what the renderer received. All text and submissions were synthetic. Selected controls were grounded in current exact-window observations. Adversarial tests deliberately submitted saved handles after controlled mutations to measure the driver's refusal boundary, rather than an agent's willingness to act through a modal dialog.
+Times below are median summed MCP latency, including observations and Arc's `settle: true`; fixture startup, MCP initialization, release and model reasoning are excluded. Each case's independent oracle also waits for actual effects. Additional Cua observations retain the same verification loop as the original comparison. There was no foreground text recovery in either driver's renderer trials.
 
-Three repetitions alternated driver order. There were 72 scheduled driver cases, 70 completed, and two fixture-readiness failures before driver input: the first minimized fixture for each driver failed to minimize. Later minimized cases passed twice per driver. Setup failures are retained separately and are not counted as driver failures. Earlier exploratory runs with an unoffered popup action and an early menu oracle were excluded from the scored comparison. The corrected popup opens the observed control and selects an observed menu item; the menu oracle waits up to three seconds for the actual counter change.
+## Matched completion and efficiency
 
-Initial web observation sometimes exposed only the window shell. The final web harness allows up to three fresh observations, spaced 0.2 seconds apart, before refusing an unavailable target. The earlier one-observation failures do not establish native inability to drive the form. Both drivers completed the corrected web case without foreground text recovery.
-
-## Matched task results
-
-Times are median summed MCP tool latency, including observations and arc's `settle: true`. They exclude fixture launch, release and model reasoning. These are driver-loop measurements with scripted selections, not measured LLM token savings or autonomous-agent accuracy. The independent oracle separately establishes actual task effects.
-
-| Task | arc completion | Installed Cua Driver completion | arc / native MCP time | arc / native calls |
+| Task | Arc completion | Cua 0.33.4 completion | Arc / Cua MCP time | Arc / Cua calls |
 | --- | --- | --- | --- | --- |
-| Native form: two fields, checkbox, submit | 3/3 | 3/3 | 1.05 / 9.73 s | 5 / 9 |
-| Native popup selection | 3/3 | 3/3 | 0.88 / 4.85 s | 3 / 5 |
-| Menu counter command | 3/3 | 3/3 | 0.69 / 0.91 s | 3 / 3 |
-| Exact first window after second window appears | 3/3 | 3/3 | 0.39 / 2.76 s | 3 / 4 |
-| Hidden app: checkbox, remains hidden | 3/3 | 3/3 | 0.21 / 2.41 s | 2 / 3 |
-| Minimized window: checkbox, remains minimized | 2/2 completed | 2/2 completed | 0.22 / 1.22 s | 2 / 3 |
-| WebKit: text, custom degree dropdown, submit | 3/3 | 3/3 | 1.40 / 10.72 s | median 8 / 9 |
-
-For the native form this is about 9.2× less MCP time; for the web form about 7.6×. Three runs on an actively used Mac establish a local advantage on these cases, not a universal multiplier. arc's initial per-fixture driver setup is included. Extra native observations are part of its documented action/verification loop; arc can return the settled observation with the action. Both are scored from the independent fixture, not their acknowledgments.
+| Native form: two fields, checkbox, submit | 3/3 | 3/3 | 1.19 / 9.70 s | 5 / 9 |
+| Native popup selection | 3/3 | 3/3 | 0.91 / 4.81 s | 3 / 5 |
+| Menu counter command | 3/3 | 3/3 | 0.80 / 0.58 s | 3 / 3 |
+| Exact first window after second window appears | 3/3 | 3/3 | 0.32 / 2.74 s | 3 / 4 |
+| Hidden app: checkbox, remains hidden | 3/3 | 3/3 | 0.28 / 2.50 s | 2 / 3 |
+| Minimized window: checkbox, remains minimized | 3/3 | 3/3 | 0.22 / 1.19 s | 2 / 3 |
+| WebKit: text, custom degree dropdown, submit | 3/3 | 3/3 | 1.48 / 11.20 s | 8 / 9 |
 
 ## Refusal boundaries
 
-Each cell covers three completed repetitions. The expected result is refusal without submission.
+Adversarial trials deliberately reuse saved handles after app-side mutations. Expected success is refusal with zero submission; these are driver-mechanism checks rather than instructions for a controller to ignore changed task context.
 
-| Mutation after the selected observation | arc | Installed Cua Driver |
+| Mutation | Arc 0.1.1 | Cua 0.33.4 |
 | --- | --- | --- |
-| Submit button label changes | Refused 3/3; no submissions | Allowed 3/3; submitted through changed label |
-| Submit button becomes disabled | Refused 3/3; no submissions | Refused 3/3; no submissions |
-| Sheet opens above Submit | Refused 3/3; no submissions | Allowed 3/3; submitted beneath sheet |
-| Sheet opens 800 ms after a click | Returned before sheet; later stale action refused 3/3 | Returned after sheet; cached underlying Submit allowed 3/3 |
-| Surrounding record changes A → B; Submit itself unchanged | Allowed 3/3; submitted record B | Allowed 3/3; submitted record B |
+| Submit label changes | Refused 3/3; zero submissions | Allowed 3/3; submitted through changed label |
+| Submit becomes disabled | Refused 3/3; zero submissions | Refused 3/3; zero submissions |
+| Attached sheet opens above Submit | Refused 3/3; zero submissions | Allowed 3/3; submitted behind sheet |
+| Sheet opens 800 ms after the initiating click | Later cached action refused 2/3; one behind-sheet submission | Cached underlying action allowed 3/3 |
+| Surrounding record changes A → B; Submit itself unchanged | Allowed 3/3; submitted B | Allowed 3/3; submitted B |
 
-arc's last row is the decisive reason to retain our semantic contract. An unchanged actionable node can now belong to the wrong record. A target's label/value guard and a structural journal do not replace current same-record predicates. These tests measure driver mechanisms; a controller could avoid all these actions by rereading and checking the task context itself.
+The delayed-sheet result weakens the earlier three-of-three Arc refusal claim. UI quiet is not proof that future modal state has arrived, and notification-based revalidation is not a universal modal interlock. The failed trial is retained in the scored evidence. Three additional fresh-server trials reproduced one behind-sheet submission and two refusals. See the [confirmation evidence](../experiments/arc-cua-comparison-2026-10-05/latest-0334/delayed-sheet-followup.json) and [review packet](ARC-CUA-REVIEW-2026-10-05.md). Neither baseline guarantees same-record submission; the optional [Arc context-guard PR](https://github.com/shhivv/arc-cua/pull/3) remains separate, with explicit anchors and independent verification still owned by the controller.
 
-## Background and lifecycle evidence
+## Lifecycle, menu and review limits
 
-Hidden/minimized actions reported `parked: false` and preserved those states. No virtual display was created. The independent CoreGraphics inventory retained the initial three online and three active displays; the existing fault record was unchanged. All trial fixture and MCP processes exited; the pre-existing Cua Driver daemon remained running.
+Hidden and minimized checkbox tasks preserved their original state in all three trials per driver; Arc reports no parking. The preserved display lifecycle fault remains in place, and no new virtual display was created. The updated Cua daemon remains available after benchmark clients and owned fixtures close.
 
-Background guarantees are narrower than task completion. The fixture's own 5 ms state timer sampled app activation; activation was seen during all three native menu trials and one arc menu trial. Endpoint front-app comparisons did not change. Four cursor endpoint changes without a recent HID mouse event were recorded in native menu trials, while none were recorded in the other native cases or arc cases. The host was actively used, and the watcher includes observation/launch settling; this is not enough to attribute every transient or certify attention isolation. It is contrary to treating completed menu tasks as proof of an absolute no-disturbance guarantee. A reserved-host test with per-action frontmost sampling is required before promising that guarantee.
+The separately controlled menu test kept an owned sentinel active in five of five trials and recorded zero target activation notifications. The earlier activation observation remains attribution-uncertain, not an established Arc menu bug. This qualifies the synthetic command, not every application's menus. Global Apple menu trees and screenshots are excluded from saved observations.
 
-Virtual-display behavior was deliberately not exercised. The preserved fault still reports uncertain owner teardown. arc's private WindowServer calls and window parking must pass an independent lifecycle/recovery matrix before that capability is selected. Source-level similarity cannot clear an existing incident or demonstrate safe retirement.
+The two Cua fixes, [#4677](https://github.com/trycua/cua/pull/4677) and [#4678](https://github.com/trycua/cua/pull/4678), remain independent drafts pending their required full canonical matrix. Their native focused regressions pass; this benchmark uses the official release rather than either candidate patch. Display ownership, Electron, real authenticated flows and decision-model accuracy remain unqualified by these synthetic results.
 
-## Additional qualification
+## Always update comparison candidates
 
-The upstream non-browser suite passed 368 tests with its browser module initially skipped because the optional WebSockets dependency was absent. After installing that dependency in the temporary environment, all 14 upstream Chrome tests passed against an owned headless Chrome and local pages. These include changed-target rejection, covered controls, form submission, dropdowns, shadow DOM/iframes, delayed network settling, JavaScript dialogs and tab following. This supports a potential lightweight isolated-browser role, but it is not a matched performance comparison with our off-screen adapter and does not establish access to the user's login.
+Every new head-to-head must update all candidates to their current upstream release/source first. The harness now makes a fresh Cua component-update query, rejects differing current/latest versions, checks Arc against current upstream head and clean tracked source, verifies the imported package path, and checks each actual MCP server version. A new CLI with an old daemon is refused. Exact versions/commits and query timestamps are saved; a failed update lookup is not permission to compare an old candidate. This rule is also recorded in AGENTS.md. Five offline preflight regressions cover stale CLI/server versions and failed-initialization cleanup.
 
-The Jev/choice policy was not live-qualified. Driver speed does not establish decision accuracy, prose-constraint enforcement or independent completion verification; the latter remains optional in `DesktopExecutor` unless supplied by the caller.
-
-## Salvage and next decision
-
-The useful frame is now supported by live evidence: adoptable driver mechanisms, separately qualified perception/selection, and separately qualified display ownership. The initial static assessment understated how useful the driver could be; source review alone was insufficient for the requested evaluation.
-
-Retain arc's exact-window targets, label/value revalidation, modal change refusal and combined action/settled-observation response. Retain our same-record checks because the wrong-record case still acted in every repetition. Keep bounded observation recovery: the early WebKit shell was a readiness condition, not final evidence of missing capability. Keep transport completion separate from app effects: menu dispatch can return before the app's counter is updated.
-
-The concrete fit is a native-driver option in the skill, with the controller owning semantic checks and independent verification. The Chrome backend is a secondary candidate for small isolated browser work. The decision-model loop and virtual-display ownership should remain separate candidates until measured. No routing defaults, installed skills, runtime projection or fault records were changed by this evaluation.
-
-Evidence and reproduction: [native results](../experiments/arc-cua-comparison-2026-10-05/results.json), [renderer results](../experiments/arc-cua-comparison-2026-10-05/web-results.json), [cleanup](../experiments/arc-cua-comparison-2026-10-05/cleanup.json), [harness](../experiments/arc-cua-comparison-2026-10-05/run.py), [web harness](../experiments/arc-cua-comparison-2026-10-05/web_run.py), [fixture](../experiments/arc-cua-comparison-2026-10-05/fixture.py), [initial source evaluation](ARC-CUA-EVALUATION-2026-10-05.md). Global Apple/menu trees are excluded from saved observations because they can contain recent user documents. Screenshots and private host inventories are not saved in the repository.
-
-## Follow-up qualification and review
-
-A controlled follow-up kept a separate owned sentinel active throughout five arc menu-command trials; the target counter advanced once in each trial and no target activation notification occurred. The earlier observation remains attribution-uncertain and does not establish an arc menu bug. Optional record-anchor guards blocked all three live Record A-to-B submissions; the unguarded baseline still submitted B in all three. See the [review packet](ARC-CUA-REVIEW-2026-10-05.md) for methods, results and upstream PRs.
+Evidence: [current native results](../experiments/arc-cua-comparison-2026-10-05/latest-0334/results.json), [current renderer results](../experiments/arc-cua-comparison-2026-10-05/latest-0334/web-results.json), [current schemas](../experiments/arc-cua-comparison-2026-10-05/latest-0334/schemas.json), [native harness](../experiments/arc-cua-comparison-2026-10-05/run.py), [renderer harness](../experiments/arc-cua-comparison-2026-10-05/web_run.py), [preflight tests](../experiments/arc-cua-comparison-2026-10-05/test_candidate_preflight.py), [review packet](ARC-CUA-REVIEW-2026-10-05.md).

@@ -5,6 +5,8 @@ Input is delivered only through each driver's public MCP tools. State/fault
 injection belongs to the synthetic fixture, independently of either driver.
 """
 import json
+from contextlib import ExitStack
+from datetime import datetime, timezone
 import os
 import platform
 import select
@@ -12,6 +14,7 @@ import statistics
 import subprocess
 import sys
 import tempfile
+import tomllib
 import threading
 import time
 from pathlib import Path
@@ -68,10 +71,15 @@ class MCP:
         self.proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                      stderr=open(f'/tmp/arc-eval-{name}.stderr', 'w'), bufsize=0)
         self.buffer = b''
-        self.request('initialize', {'protocolVersion': '2025-06-18', 'capabilities': {},
-                                    'clientInfo': {'name': 'oh-arc-eval', 'version': '1'}})
-        self.send({'jsonrpc': '2.0', 'method': 'notifications/initialized'})
-        self.schemas = {t['name']: t['inputSchema'] for t in self.request('tools/list', {})['tools']}
+        try:
+            initialized = self.request('initialize', {'protocolVersion': '2025-06-18', 'capabilities': {},
+                                                      'clientInfo': {'name': 'oh-arc-eval', 'version': '1'}})
+            self.server_info = initialized['serverInfo']
+            self.send({'jsonrpc': '2.0', 'method': 'notifications/initialized'})
+            self.schemas = {t['name']: t['inputSchema'] for t in self.request('tools/list', {})['tools']}
+        except BaseException:
+            self.close()
+            raise
 
     def send(self, obj):
         self.proc.stdin.write((json.dumps(obj) + '\n').encode())
@@ -314,29 +322,67 @@ def scenario(client, case, rep):
     return result
 
 
+def candidate_versions():
+    """Refuse stale candidates, then retain exact provenance for each new run."""
+    native_check = json.loads(subprocess.check_output(
+        ['cua-driver', 'check-update', '--json', '--no-cache'], text=True, timeout=30))
+    if (native_check.get('error') or native_check.get('update_available') or not native_check.get('latest_version')
+            or native_check.get('current_version') != native_check.get('latest_version')):
+        raise RuntimeError('Update Cua Driver before comparing: cua-driver update --apply')
+    source = Path(os.environ['ARC_EVAL_SOURCE']).resolve()
+    commit = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
+    latest_arc = subprocess.check_output(
+        ['gh', 'api', 'repos/shhivv/arc-cua/commits/master', '--jq', '.sha'], text=True, timeout=30).strip()
+    arc_checked_at = datetime.now(timezone.utc).isoformat()
+    if commit != latest_arc:
+        raise RuntimeError('Update the arc checkout and its installed environment to upstream head before comparing')
+    subprocess.run(['git', '-C', str(source), 'diff', '--exit-code', 'HEAD', '--', 'src', 'pyproject.toml'],
+                   check=True, capture_output=True)
+    import arc_cua
+    if not Path(arc_cua.__file__).resolve().is_relative_to(source):
+        raise RuntimeError('The active Python environment does not use the checked arc source')
+    arc_version = tomllib.loads((source / 'pyproject.toml').read_text())['project']['version']
+    return {'arc_commit': commit, 'arc_version': arc_version,
+            'native_version': native_check['current_version'],
+            'native_latest_version': native_check['latest_version'],
+            'native_release': native_check['release_notes_url'] or
+                f"https://github.com/trycua/cua/releases/tag/cua-driver-rs-v{native_check['current_version']}",
+            'arc_upstream_checked_at': arc_checked_at,
+            'candidates_checked_at': native_check['checked_at'],
+            'macos': platform.mac_ver()[0], 'python': platform.python_version()}
+
+
+def verify_servers(versions, arc, native):
+    if native.server_info['version'] != versions['native_version']:
+        raise RuntimeError('Running Cua daemon differs from the current CLI; restart it before comparing')
+    if arc.server_info['version'] != versions['arc_version']:
+        raise RuntimeError('Running arc MCP server differs from the checked source')
+    versions['servers'] = {'arc': arc.server_info, 'native': native.server_info}
+
+
 def main():
     reps = int(os.environ.get('ARC_EVAL_REPS', '3'))
     cases = os.environ.get('ARC_EVAL_CASES', 'form,popup,menu,second_window,label,record,disable,sheet,delayed_sheet,hidden,minimized').split(',')
-    arc = MCP([sys.executable, '-m', 'arc_cua', 'mcp'], 'arc')
-    native = MCP(['cua-driver', 'mcp', '--socket', str(Path.home()/'Library/Caches/cua-driver/cua-driver.sock')], 'native')
-    output = {'arc_commit':'6ca19d62c95106732fad28f488ecd458c08e02f4',
-              'native_version':'0.31.0', 'macos':platform.mac_ver()[0],
-              'python':platform.python_version(), 'scope':'live AX-only synthetic AppKit, scripted selections, MCP stdio',
-              'results':[]}
-    (HERE/'schemas.json').write_text(json.dumps({'arc':{k:v for k,v in arc.schemas.items() if k in
-        ('observe','act','commands','run_command','release')}, 'native':{k:v for k,v in native.schemas.items()
-        if k in ('get_window_state','click','set_value','invoke_menu')}}, indent=2))
-    try:
+    versions = candidate_versions()
+    with ExitStack() as owned:
+        arc = MCP([sys.executable, '-m', 'arc_cua', 'mcp'], 'arc')
+        owned.callback(arc.close)
+        native = MCP(['cua-driver', 'mcp', '--socket', str(Path.home()/'Library/Caches/cua-driver/cua-driver.sock')], 'native')
+        owned.callback(native.close)
+        verify_servers(versions, arc, native)
+        output = {**versions, 'scope':'live AX-only synthetic AppKit, scripted selections, MCP stdio', 'results':[]}
+        result_path = HERE / os.environ.get('ARC_EVAL_RESULT_FILE', 'results.json')
+        result_path.parent.mkdir(parents=True, exist_ok=True)
+        (result_path.parent/'schemas.json').write_text(json.dumps({'arc':{k:v for k,v in arc.schemas.items() if k in
+            ('observe','act','commands','run_command','release')}, 'native':{k:v for k,v in native.schemas.items()
+            if k in ('get_window_state','click','set_value','invoke_menu')}}, indent=2))
         for rep in range(reps):
             for case in cases:
                 for client in ([arc,native] if rep % 2 == 0 else [native,arc]):
                     result = scenario(client, case, rep)
                     output['results'].append(result)
-                    (HERE/os.environ.get('ARC_EVAL_RESULT_FILE', 'results.json')).write_text(json.dumps(output, indent=2))
+                    result_path.write_text(json.dumps(output, indent=2))
                     print(json.dumps({k:result.get(k) for k in ('driver','case','rep','passed','tool_calls','tool_ms','error','refused','sheet_at_return','parked')}), flush=True)
-    finally:
-        arc.close()
-        native.close()
     for case in cases:
         for name in ('arc','native'):
             rows = [r for r in output['results'] if r['case'] == case and r['driver'] == name]

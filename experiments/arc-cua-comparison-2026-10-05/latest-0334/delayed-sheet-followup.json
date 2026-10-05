@@ -1,0 +1,1859 @@
+{
+  "arc_commit": "6ca19d62c95106732fad28f488ecd458c08e02f4",
+  "arc_version": "0.1.1",
+  "native_version": "0.33.4",
+  "native_latest_version": "0.33.4",
+  "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.33.4",
+  "arc_upstream_checked_at": "2026-10-05T20:09:10.915080+00:00",
+  "candidates_checked_at": "2026-10-05T20:09:10Z",
+  "macos": "27.0.1",
+  "python": "3.12.12",
+  "scope": "three fresh-server delayed-sheet confirmation trials",
+  "results": [
+    {
+      "driver": "arc",
+      "case": "delayed_sheet",
+      "rep": 0,
+      "sheet_at_return": false,
+      "refused": true,
+      "passed": true,
+      "wall_ms": 1520.8734170009848,
+      "state": {
+        "name": "",
+        "email": "",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": true,
+        "active": true,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit"
+      },
+      "background_monitor": {
+        "fixture_active": true,
+        "samples": 257
+      },
+      "calls": [
+        {
+          "tool": "observe",
+          "arguments": {
+            "pid": 91149,
+            "window_id": 10136
+          },
+          "ms": 410.4259160012589,
+          "error": false,
+          "result": {
+            "snapshot": "s1",
+            "pid": 91149,
+            "window_id": 10136,
+            "application": "python",
+            "window": "Arc Bench Form",
+            "elements": [
+              {
+                "id": "ax_1",
+                "role": "Window",
+                "name": "Arc Bench Form"
+              },
+              {
+                "id": "ax_2",
+                "role": "StaticText",
+                "value": "Full name",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_3",
+                "role": "TextField",
+                "name": "Full name",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK",
+                  "TYPE_TEXT",
+                  "SET_VALUE"
+                ],
+                "focused": true,
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_4",
+                "role": "StaticText",
+                "value": "Email",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_5",
+                "role": "TextField",
+                "name": "Email",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK",
+                  "TYPE_TEXT",
+                  "SET_VALUE"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_6",
+                "role": "CheckBox",
+                "name": "Subscribe",
+                "value": 0,
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_7",
+                "role": "StaticText",
+                "value": "Plan",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_8",
+                "role": "PopUpButton",
+                "name": "Plan",
+                "value": "Basic",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_9",
+                "role": "Button",
+                "name": "Submit",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_10",
+                "role": "Button",
+                "name": "Open 0 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_11",
+                "role": "Button",
+                "name": "Open 300 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_12",
+                "role": "Button",
+                "name": "Open 800 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_13",
+                "role": "Button",
+                "name": "Open 1500 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_14",
+                "role": "StaticText",
+                "value": "Record A",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_15",
+                "role": "Button",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_16",
+                "role": "Button",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK"
+                ],
+                "enabled": false,
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_17",
+                "role": "Group",
+                "parent": "ax_16"
+              },
+              {
+                "id": "ax_18",
+                "role": "Button",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_19",
+                "role": "StaticText",
+                "value": "Arc Bench Form",
+                "parent": "ax_1"
+              }
+            ]
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        },
+        {
+          "tool": "act",
+          "arguments": {
+            "snapshot": "s1",
+            "element": "ax_12",
+            "action": "CLICK",
+            "settle": true
+          },
+          "ms": 320.0770420007757,
+          "error": false,
+          "result": {
+            "status": "done",
+            "elapsed_ms": 319.9,
+            "fresh": {
+              "snapshot": "s2",
+              "pid": 91149,
+              "window_id": 10136,
+              "application": "python",
+              "window": "Arc Bench Form",
+              "elements": [
+                {
+                  "id": "ax_1",
+                  "role": "Window",
+                  "name": "Arc Bench Form"
+                },
+                {
+                  "id": "ax_2",
+                  "role": "StaticText",
+                  "value": "Full name",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_3",
+                  "role": "TextField",
+                  "name": "Full name",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "focused": true,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_4",
+                  "role": "StaticText",
+                  "value": "Email",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_5",
+                  "role": "TextField",
+                  "name": "Email",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_6",
+                  "role": "CheckBox",
+                  "name": "Subscribe",
+                  "value": 0,
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_7",
+                  "role": "StaticText",
+                  "value": "Plan",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_8",
+                  "role": "PopUpButton",
+                  "name": "Plan",
+                  "value": "Basic",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_9",
+                  "role": "Button",
+                  "name": "Submit",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_10",
+                  "role": "Button",
+                  "name": "Open 0 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_11",
+                  "role": "Button",
+                  "name": "Open 300 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_12",
+                  "role": "Button",
+                  "name": "Open 800 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_13",
+                  "role": "Button",
+                  "name": "Open 1500 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_14",
+                  "role": "StaticText",
+                  "value": "Record A",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_15",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_16",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_17",
+                  "role": "Group",
+                  "parent": "ax_16"
+                },
+                {
+                  "id": "ax_20",
+                  "role": "Group",
+                  "parent": "ax_17"
+                },
+                {
+                  "id": "ax_18",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_19",
+                  "role": "StaticText",
+                  "value": "Arc Bench Form",
+                  "parent": "ax_1"
+                }
+              ]
+            },
+            "settled": {
+              "reacted": true,
+              "timed_out": false,
+              "elapsed_ms": 191.8
+            }
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        },
+        {
+          "tool": "act",
+          "arguments": {
+            "snapshot": "s2",
+            "element": "ax_9",
+            "action": "CLICK",
+            "settle": true
+          },
+          "ms": 12.181124999187887,
+          "error": false,
+          "result": {
+            "status": "changed",
+            "elapsed_ms": 11.9,
+            "changes": [
+              "AXCreated AXSheet",
+              "AXSheetCreated AXSheet",
+              "AXFocusedWindowChanged AXSheet"
+            ],
+            "fresh": {
+              "snapshot": "s3",
+              "pid": 91149,
+              "window_id": 10136,
+              "application": "python",
+              "window": "Arc Bench Form",
+              "elements": [
+                {
+                  "id": "ax_1",
+                  "role": "Window",
+                  "name": "Arc Bench Form"
+                },
+                {
+                  "id": "ax_2",
+                  "role": "StaticText",
+                  "value": "Full name",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_3",
+                  "role": "TextField",
+                  "name": "Full name",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_4",
+                  "role": "StaticText",
+                  "value": "Email",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_5",
+                  "role": "TextField",
+                  "name": "Email",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_6",
+                  "role": "CheckBox",
+                  "name": "Subscribe",
+                  "value": 0,
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_7",
+                  "role": "StaticText",
+                  "value": "Plan",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_8",
+                  "role": "PopUpButton",
+                  "name": "Plan",
+                  "value": "Basic",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_9",
+                  "role": "Button",
+                  "name": "Submit",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_10",
+                  "role": "Button",
+                  "name": "Open 0 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_11",
+                  "role": "Button",
+                  "name": "Open 300 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_12",
+                  "role": "Button",
+                  "name": "Open 800 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_13",
+                  "role": "Button",
+                  "name": "Open 1500 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_14",
+                  "role": "StaticText",
+                  "value": "Record A",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_15",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_16",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_17",
+                  "role": "Group",
+                  "parent": "ax_16"
+                },
+                {
+                  "id": "ax_20",
+                  "role": "Group",
+                  "parent": "ax_17"
+                },
+                {
+                  "id": "ax_18",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_19",
+                  "role": "StaticText",
+                  "value": "Arc Bench Form",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_22",
+                  "role": "StaticText",
+                  "value": "Dialog open",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_23",
+                  "role": "Button",
+                  "name": "Close",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "focused": true,
+                  "parent": "ax_1"
+                }
+              ]
+            }
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        }
+      ],
+      "tool_calls": 3,
+      "tool_ms": 742.6840830012225
+    },
+    {
+      "driver": "arc",
+      "case": "delayed_sheet",
+      "rep": 1,
+      "sheet_at_return": false,
+      "refused": false,
+      "passed": false,
+      "wall_ms": 1738.919249997707,
+      "state": {
+        "name": "",
+        "email": "",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 1,
+        "counter": 0,
+        "dialog": true,
+        "active": true,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": "Record A",
+        "submit_label": "Submit"
+      },
+      "background_monitor": {
+        "fixture_active": true,
+        "samples": 278
+      },
+      "calls": [
+        {
+          "tool": "observe",
+          "arguments": {
+            "pid": 91467,
+            "window_id": 10163
+          },
+          "ms": 340.87962500052527,
+          "error": false,
+          "result": {
+            "snapshot": "s1",
+            "pid": 91467,
+            "window_id": 10163,
+            "application": "python",
+            "window": "Arc Bench Form",
+            "elements": [
+              {
+                "id": "ax_1",
+                "role": "Window",
+                "name": "Arc Bench Form"
+              },
+              {
+                "id": "ax_2",
+                "role": "StaticText",
+                "value": "Full name",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_3",
+                "role": "TextField",
+                "name": "Full name",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK",
+                  "TYPE_TEXT",
+                  "SET_VALUE"
+                ],
+                "focused": true,
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_4",
+                "role": "StaticText",
+                "value": "Email",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_5",
+                "role": "TextField",
+                "name": "Email",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK",
+                  "TYPE_TEXT",
+                  "SET_VALUE"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_6",
+                "role": "CheckBox",
+                "name": "Subscribe",
+                "value": 0,
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_7",
+                "role": "StaticText",
+                "value": "Plan",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_8",
+                "role": "PopUpButton",
+                "name": "Plan",
+                "value": "Basic",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_9",
+                "role": "Button",
+                "name": "Submit",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_10",
+                "role": "Button",
+                "name": "Open 0 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_11",
+                "role": "Button",
+                "name": "Open 300 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_12",
+                "role": "Button",
+                "name": "Open 800 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_13",
+                "role": "Button",
+                "name": "Open 1500 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_14",
+                "role": "StaticText",
+                "value": "Record A",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_15",
+                "role": "Button",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_16",
+                "role": "Button",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK"
+                ],
+                "enabled": false,
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_17",
+                "role": "Group",
+                "parent": "ax_16"
+              },
+              {
+                "id": "ax_18",
+                "role": "Button",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_19",
+                "role": "StaticText",
+                "value": "Arc Bench Form",
+                "parent": "ax_1"
+              }
+            ]
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        },
+        {
+          "tool": "act",
+          "arguments": {
+            "snapshot": "s1",
+            "element": "ax_12",
+            "action": "CLICK",
+            "settle": true
+          },
+          "ms": 316.9011669961037,
+          "error": false,
+          "result": {
+            "status": "done",
+            "elapsed_ms": 316.7,
+            "fresh": {
+              "snapshot": "s2",
+              "pid": 91467,
+              "window_id": 10163,
+              "application": "python",
+              "window": "Arc Bench Form",
+              "elements": [
+                {
+                  "id": "ax_1",
+                  "role": "Window",
+                  "name": "Arc Bench Form"
+                },
+                {
+                  "id": "ax_2",
+                  "role": "StaticText",
+                  "value": "Full name",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_3",
+                  "role": "TextField",
+                  "name": "Full name",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "focused": true,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_4",
+                  "role": "StaticText",
+                  "value": "Email",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_5",
+                  "role": "TextField",
+                  "name": "Email",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_6",
+                  "role": "CheckBox",
+                  "name": "Subscribe",
+                  "value": 0,
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_7",
+                  "role": "StaticText",
+                  "value": "Plan",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_8",
+                  "role": "PopUpButton",
+                  "name": "Plan",
+                  "value": "Basic",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_9",
+                  "role": "Button",
+                  "name": "Submit",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_10",
+                  "role": "Button",
+                  "name": "Open 0 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_11",
+                  "role": "Button",
+                  "name": "Open 300 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_12",
+                  "role": "Button",
+                  "name": "Open 800 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_13",
+                  "role": "Button",
+                  "name": "Open 1500 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_14",
+                  "role": "StaticText",
+                  "value": "Record A",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_15",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_16",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_17",
+                  "role": "Group",
+                  "parent": "ax_16"
+                },
+                {
+                  "id": "ax_20",
+                  "role": "Group",
+                  "parent": "ax_17"
+                },
+                {
+                  "id": "ax_18",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_19",
+                  "role": "StaticText",
+                  "value": "Arc Bench Form",
+                  "parent": "ax_1"
+                }
+              ]
+            },
+            "settled": {
+              "reacted": true,
+              "timed_out": false,
+              "elapsed_ms": 184.6
+            }
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        },
+        {
+          "tool": "act",
+          "arguments": {
+            "snapshot": "s2",
+            "element": "ax_9",
+            "action": "CLICK",
+            "settle": true
+          },
+          "ms": 299.9502079983358,
+          "error": false,
+          "result": {
+            "status": "done",
+            "elapsed_ms": 299.7,
+            "fresh": {
+              "snapshot": "s3",
+              "pid": 91467,
+              "window_id": 10163,
+              "application": "python",
+              "window": "Arc Bench Form",
+              "elements": [
+                {
+                  "id": "ax_1",
+                  "role": "Window",
+                  "name": "Arc Bench Form"
+                },
+                {
+                  "id": "ax_2",
+                  "role": "StaticText",
+                  "value": "Full name",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_3",
+                  "role": "TextField",
+                  "name": "Full name",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_4",
+                  "role": "StaticText",
+                  "value": "Email",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_5",
+                  "role": "TextField",
+                  "name": "Email",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_6",
+                  "role": "CheckBox",
+                  "name": "Subscribe",
+                  "value": 0,
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_7",
+                  "role": "StaticText",
+                  "value": "Plan",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_8",
+                  "role": "PopUpButton",
+                  "name": "Plan",
+                  "value": "Basic",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_9",
+                  "role": "Button",
+                  "name": "Submit",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_10",
+                  "role": "Button",
+                  "name": "Open 0 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_11",
+                  "role": "Button",
+                  "name": "Open 300 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_12",
+                  "role": "Button",
+                  "name": "Open 800 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_13",
+                  "role": "Button",
+                  "name": "Open 1500 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_14",
+                  "role": "StaticText",
+                  "value": "Record A",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_15",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_16",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_17",
+                  "role": "Group",
+                  "parent": "ax_16"
+                },
+                {
+                  "id": "ax_20",
+                  "role": "Group",
+                  "parent": "ax_17"
+                },
+                {
+                  "id": "ax_18",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_19",
+                  "role": "StaticText",
+                  "value": "Arc Bench Form",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_22",
+                  "role": "StaticText",
+                  "value": "Dialog open",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_23",
+                  "role": "Button",
+                  "name": "Close",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "focused": true,
+                  "parent": "ax_1"
+                }
+              ]
+            },
+            "settled": {
+              "reacted": true,
+              "timed_out": false,
+              "elapsed_ms": 189.2
+            }
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        }
+      ],
+      "tool_calls": 3,
+      "tool_ms": 957.7309999949648
+    },
+    {
+      "driver": "arc",
+      "case": "delayed_sheet",
+      "rep": 2,
+      "sheet_at_return": false,
+      "refused": true,
+      "passed": true,
+      "wall_ms": 1443.8182910016621,
+      "state": {
+        "name": "",
+        "email": "",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": true,
+        "active": true,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit"
+      },
+      "background_monitor": {
+        "fixture_active": true,
+        "samples": 231
+      },
+      "calls": [
+        {
+          "tool": "observe",
+          "arguments": {
+            "pid": 92070,
+            "window_id": 10176
+          },
+          "ms": 337.6544999991893,
+          "error": false,
+          "result": {
+            "snapshot": "s1",
+            "pid": 92070,
+            "window_id": 10176,
+            "application": "python",
+            "window": "Arc Bench Form",
+            "elements": [
+              {
+                "id": "ax_1",
+                "role": "Window",
+                "name": "Arc Bench Form"
+              },
+              {
+                "id": "ax_2",
+                "role": "StaticText",
+                "value": "Full name",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_3",
+                "role": "TextField",
+                "name": "Full name",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK",
+                  "TYPE_TEXT",
+                  "SET_VALUE"
+                ],
+                "focused": true,
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_4",
+                "role": "StaticText",
+                "value": "Email",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_5",
+                "role": "TextField",
+                "name": "Email",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK",
+                  "TYPE_TEXT",
+                  "SET_VALUE"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_6",
+                "role": "CheckBox",
+                "name": "Subscribe",
+                "value": 0,
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_7",
+                "role": "StaticText",
+                "value": "Plan",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_8",
+                "role": "PopUpButton",
+                "name": "Plan",
+                "value": "Basic",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_9",
+                "role": "Button",
+                "name": "Submit",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_10",
+                "role": "Button",
+                "name": "Open 0 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_11",
+                "role": "Button",
+                "name": "Open 300 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_12",
+                "role": "Button",
+                "name": "Open 800 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_13",
+                "role": "Button",
+                "name": "Open 1500 ms",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_14",
+                "role": "StaticText",
+                "value": "Record A",
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_15",
+                "role": "Button",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_16",
+                "role": "Button",
+                "actions": [
+                  "CLICK",
+                  "RIGHT_CLICK"
+                ],
+                "enabled": false,
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_17",
+                "role": "Group",
+                "parent": "ax_16"
+              },
+              {
+                "id": "ax_18",
+                "role": "Button",
+                "actions": [
+                  "CLICK"
+                ],
+                "parent": "ax_1"
+              },
+              {
+                "id": "ax_19",
+                "role": "StaticText",
+                "value": "Arc Bench Form",
+                "parent": "ax_1"
+              }
+            ]
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        },
+        {
+          "tool": "act",
+          "arguments": {
+            "snapshot": "s1",
+            "element": "ax_12",
+            "action": "CLICK",
+            "settle": true
+          },
+          "ms": 319.7674580005696,
+          "error": false,
+          "result": {
+            "status": "done",
+            "elapsed_ms": 319.5,
+            "fresh": {
+              "snapshot": "s2",
+              "pid": 92070,
+              "window_id": 10176,
+              "application": "python",
+              "window": "Arc Bench Form",
+              "elements": [
+                {
+                  "id": "ax_1",
+                  "role": "Window",
+                  "name": "Arc Bench Form"
+                },
+                {
+                  "id": "ax_2",
+                  "role": "StaticText",
+                  "value": "Full name",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_3",
+                  "role": "TextField",
+                  "name": "Full name",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "focused": true,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_4",
+                  "role": "StaticText",
+                  "value": "Email",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_5",
+                  "role": "TextField",
+                  "name": "Email",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_6",
+                  "role": "CheckBox",
+                  "name": "Subscribe",
+                  "value": 0,
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_7",
+                  "role": "StaticText",
+                  "value": "Plan",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_8",
+                  "role": "PopUpButton",
+                  "name": "Plan",
+                  "value": "Basic",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_9",
+                  "role": "Button",
+                  "name": "Submit",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_10",
+                  "role": "Button",
+                  "name": "Open 0 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_11",
+                  "role": "Button",
+                  "name": "Open 300 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_12",
+                  "role": "Button",
+                  "name": "Open 800 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_13",
+                  "role": "Button",
+                  "name": "Open 1500 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_14",
+                  "role": "StaticText",
+                  "value": "Record A",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_15",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_16",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_17",
+                  "role": "Group",
+                  "parent": "ax_16"
+                },
+                {
+                  "id": "ax_20",
+                  "role": "Group",
+                  "parent": "ax_17"
+                },
+                {
+                  "id": "ax_18",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_19",
+                  "role": "StaticText",
+                  "value": "Arc Bench Form",
+                  "parent": "ax_1"
+                }
+              ]
+            },
+            "settled": {
+              "reacted": true,
+              "timed_out": false,
+              "elapsed_ms": 189.3
+            }
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        },
+        {
+          "tool": "act",
+          "arguments": {
+            "snapshot": "s2",
+            "element": "ax_9",
+            "action": "CLICK",
+            "settle": true
+          },
+          "ms": 8.849500001815613,
+          "error": false,
+          "result": {
+            "status": "changed",
+            "elapsed_ms": 8.6,
+            "changes": [
+              "AXCreated AXSheet",
+              "AXSheetCreated AXSheet",
+              "AXFocusedWindowChanged AXSheet"
+            ],
+            "fresh": {
+              "snapshot": "s3",
+              "pid": 92070,
+              "window_id": 10176,
+              "application": "python",
+              "window": "Arc Bench Form",
+              "elements": [
+                {
+                  "id": "ax_1",
+                  "role": "Window",
+                  "name": "Arc Bench Form"
+                },
+                {
+                  "id": "ax_2",
+                  "role": "StaticText",
+                  "value": "Full name",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_3",
+                  "role": "TextField",
+                  "name": "Full name",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_4",
+                  "role": "StaticText",
+                  "value": "Email",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_5",
+                  "role": "TextField",
+                  "name": "Email",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK",
+                    "TYPE_TEXT",
+                    "SET_VALUE"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_6",
+                  "role": "CheckBox",
+                  "name": "Subscribe",
+                  "value": 0,
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_7",
+                  "role": "StaticText",
+                  "value": "Plan",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_8",
+                  "role": "PopUpButton",
+                  "name": "Plan",
+                  "value": "Basic",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_9",
+                  "role": "Button",
+                  "name": "Submit",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_10",
+                  "role": "Button",
+                  "name": "Open 0 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_11",
+                  "role": "Button",
+                  "name": "Open 300 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_12",
+                  "role": "Button",
+                  "name": "Open 800 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_13",
+                  "role": "Button",
+                  "name": "Open 1500 ms",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_14",
+                  "role": "StaticText",
+                  "value": "Record A",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_15",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_16",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK",
+                    "RIGHT_CLICK"
+                  ],
+                  "enabled": false,
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_17",
+                  "role": "Group",
+                  "parent": "ax_16"
+                },
+                {
+                  "id": "ax_20",
+                  "role": "Group",
+                  "parent": "ax_17"
+                },
+                {
+                  "id": "ax_18",
+                  "role": "Button",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_19",
+                  "role": "StaticText",
+                  "value": "Arc Bench Form",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_22",
+                  "role": "StaticText",
+                  "value": "Dialog open",
+                  "parent": "ax_1"
+                },
+                {
+                  "id": "ax_23",
+                  "role": "Button",
+                  "name": "Close",
+                  "actions": [
+                    "CLICK"
+                  ],
+                  "focused": true,
+                  "parent": "ax_1"
+                }
+              ]
+            }
+          },
+          "front_changed": false,
+          "cursor_changed": false,
+          "physical_mouse_recent": false
+        }
+      ],
+      "tool_calls": 3,
+      "tool_ms": 666.2714580015745
+    }
+  ]
+}

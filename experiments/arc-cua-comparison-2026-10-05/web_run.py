@@ -5,6 +5,7 @@ Native text recovery uses foreground delivery only after independent renderer
 evidence establishes that the first attempt had no effect.
 """
 import json
+from contextlib import ExitStack
 import os
 import socket
 import subprocess
@@ -13,7 +14,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from run import MCP, HERE, observe, find, act, wait_for, windows
+from run import MCP, HERE, observe, find, act, wait_for, windows, candidate_versions, verify_servers
 
 
 class WebFixture:
@@ -112,20 +113,24 @@ def trial(client, rep):
 
 
 def main():
-    arc=MCP([sys.executable,'-m','arc_cua','mcp'],'arc-web')
-    native=MCP(['cua-driver','mcp','--socket',str(Path.home()/'Library/Caches/cua-driver/cua-driver.sock')],'native-web')
-    # Reuse action adapters while preserving separate private log filenames.
-    arc.name='arc';native.name='native'
-    output={'scope':'live WebKit renderer; independent JS oracle, scripted selections','results':[]}
-    try:
+    versions=candidate_versions()
+    with ExitStack() as owned:
+        arc=MCP([sys.executable,'-m','arc_cua','mcp'],'arc-web')
+        owned.callback(arc.close)
+        native=MCP(['cua-driver','mcp','--socket',str(Path.home()/'Library/Caches/cua-driver/cua-driver.sock')],'native-web')
+        owned.callback(native.close)
+        # Reuse action adapters while preserving separate private log filenames.
+        arc.name='arc';native.name='native'
+        verify_servers(versions,arc,native)
+        result_path=HERE/os.environ.get('ARC_WEB_RESULT_FILE','web-results.json')
+        result_path.parent.mkdir(parents=True,exist_ok=True)
+        output={**versions,'scope':'live WebKit renderer; independent JS oracle, scripted selections','results':[]}
         for rep in range(int(os.environ.get('ARC_EVAL_REPS','3'))):
             for client in ([arc,native] if rep%2==0 else [native,arc]):
                 result=trial(client,rep)
                 output['results'].append(result)
-                (HERE/'web-results.json').write_text(json.dumps(output,indent=2))
+                result_path.write_text(json.dumps(output,indent=2))
                 print(json.dumps({k:result.get(k) for k in ('driver','rep','passed','foreground_recovery','tool_calls','tool_ms','error')}),flush=True)
-    finally:
-        arc.close();native.close()
 
 
 if __name__=='__main__':
