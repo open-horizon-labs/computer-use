@@ -180,7 +180,9 @@ class ScreenTests(unittest.TestCase):
         from mcp.client.stdio import stdio_client
         code = 'import server,mobile,sys; from core import Facade; from pathlib import Path; server.contexts.factory=lambda options: Facade(mobile=mobile.Mobile(mobile.StdioBackend(command=[sys.executable,str(Path("fake_mobile_mcp.py").resolve())]))); server.mcp.run()'
         async def probe():
-            params = StdioServerParameters(command=sys.executable, args=['-c', code], cwd=str(Path(__file__).parent))
+            # setup-python's Linux interpreter may depend on its configured loader path.
+            loader_env = {key: os.environ[key] for key in ('LD_LIBRARY_PATH',) if key in os.environ}
+            params = StdioServerParameters(command=sys.executable, args=['-c', code], cwd=str(Path(__file__).parent), env=loader_env)
             async with stdio_client(params) as (r, w):
                 async with ClientSession(r, w) as session:
                     await session.initialize()
