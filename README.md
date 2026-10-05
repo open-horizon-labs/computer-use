@@ -2,12 +2,12 @@
 
 A skill for choosing the smallest useful computer-use route and completing delegated work reliably.
 
-- **OBO:** native tools in the user's apps and logged-in browser. Routine foreground interaction is part of the delegation; recover from ordinary friction without asking again.
+- **OBO:** arc-cua is the preferred macOS app/window driver when connected; use available native tools for unsupported controls or other platforms. Preserve the user's apps and logged-in browser. Routine foreground interaction is part of the delegation; recover from ordinary friction without asking again.
 - **Light off-screen:** an available isolated browser for small tasks without user logins. The retained OH virtual-display browser is optional when its prerequisites work; it uses a virtual monitor, not a Mission Control move.
 - **Guest desktop:** Cua Spaces with only three MCP tools and Driver schemas discovered by name.
 - **Mobile:** native support where available; the retained OH adapter is optional.
 
-Start with [the skill](skills/computer-use/SKILL.md). It loads route-specific guidance only when needed. Native tools remain the overall default; no OH route has earned automatic performance preference. [Why](WHY.md) and [benchmark evidence](docs/BENCHMARK.md) explain the limits.
+Start with [the skill](skills/computer-use/SKILL.md). It loads route-specific guidance only when needed. arc's macOS preference follows a [live matched comparison](docs/ARC-CUA-EMPIRICAL-COMPARISON-2026-10-05.md) and the user's default selection; retain current record matching and independent outcome verification. Native tools remain the overall route, and no OH route has earned automatic performance preference. [Why](WHY.md) and [benchmark evidence](docs/BENCHMARK.md) explain the limits.
 
 ## Install
 
@@ -21,6 +21,8 @@ codex mcp add cua-spaces -- cua mcp --embedded --permissions spaces:list_spaces,
 For a local installation of both clients, scripts/install_smart_defaults.py copies the skill, registers slim Spaces and disables/removes only this checkout's default OH adapter registration; --check verifies the result without changing it. It leaves unrelated native servers in place.
 
 Reconnect clients. The skill keeps Spaces task-selected even though its three discovery tools are registered. Creation/deletion stays CLI setup. Do not fetch the full Driver catalog. call_tool retains broad upstream authority: fewer tool schemas are not a security boundary. [Setup](skills/computer-use/references/setup.md) covers optional adapters and local paths.
+
+[Install the preferred macOS arc driver separately](skills/computer-use/references/setup.md#preferred-macos-driver-arc-cua); preserve unrelated client configuration.
 
 ## Optional runtime and evidence
 

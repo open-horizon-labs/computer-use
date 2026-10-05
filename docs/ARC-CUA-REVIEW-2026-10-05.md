@@ -1,0 +1,25 @@
+# Arc qualification and upstream review — 2026-10-05
+
+The optional record-binding improvement is ready for review in [arc-cua #3](https://github.com/shhivv/arc-cua/pull/3). The suspected menu activation did not reproduce under controlled sampling, so it does not warrant a bug PR on this evidence. The two independently reproduced Cua click bugs have separate draft PRs with focused native regressions.
+
+## Optional record binding
+
+The evaluated arc source is `6ca19d62c95106732fad28f488ecd458c08e02f4` (0.1.1). Keeping the same Submit control while changing its record heading from A to B caused three of three unguarded live MCP trials to submit Record B. With explicit `guard_elements` containing the originally observed heading, all three returned `stale` and the independent fixture reported zero submissions. [Sanitized results](../experiments/arc-cua-comparison-2026-10-05/context-guard-results.json).
+
+Candidate `f92c9e5f27edf7ea6079b9a4ba7213223d5f057d` captures anchor fingerprints before any journal refresh, then reobserves the exact bound window before input. The empty/default path retains its behavior and observation cost. Callers choose the anchors and still own semantic record matching and outcome verification; the check is not an atomic application transaction. The PR includes a self-contained public-MCP/AppKit smoke, invalid-input and exact-window tests, and documentation. All 391 tests pass, Ruff passes, and removing the fingerprint comparison causes the name/value/parent-change regressions to fail. Independent binding review completed. The installed source pin stays at the evaluated upstream revision until the improvement is accepted and separately qualified.
+
+## Controlled menu reproduction
+
+Five repetitions used two owned shown AppKit fixtures: a target with a menu increment action and a separate sentinel. Native `bring_to_front` set up the sentinel before sampling; arc `commands` and `run_command(..., settle: true)` operated only the target. The target fixture records `NSApplicationDidBecomeActiveNotification`; both fixtures publish their own `NSApp.isActive` state every 5 ms, sampled approximately every 1 ms during baseline, discovery, the intervening pause, command dispatch/settling and the following 500 ms. Independent target counters establish effects.
+
+All five commands returned `done`, the target counter reached one, the sentinel remained active at every sample, and the target recorded zero activation notifications during command dispatch and settling. [Sanitized phase counts](../experiments/arc-cua-comparison-2026-10-05/menu-controlled-results.json), [reproduction](../experiments/arc-cua-comparison-2026-10-05/menu_controlled.py), [fixture](../experiments/arc-cua-comparison-2026-10-05/menu-fixture/fixture.py). Supply `ARC_EVAL_SOURCE` for the evaluated arc checkout and `CUA_MENU_SETUP_DRIVER` for the native setup executable; run using the Python environment with arc and PyObjC installed. Setup clients need their normal OS grants.
+
+Three initial setup attempts were excluded because the Python observer's cached NSWorkspace front-app value did not reflect activation. The corrected oracle uses each fixture's running AppKit state and target activation notifications. The earlier mixed-host observation included launch/observation activity and cannot attribute a transient to menu dispatch. This negative reproduction qualifies only this synthetic command on this Mac; it cannot promise that every application's menu action avoids activation. No screenshots, Apple menu trees, private host inventory or virtual displays are retained or used for this test.
+
+## Cua fixes
+
+[trycua/cua #4677](https://github.com/trycua/cua/pull/4677) refuses cached clicks after observed control identity changes. Final candidate `85ec50f` includes fresh-label normalization and dispatch-time checks after foreground activation/cursor motion. Its owned AppKit regression passes; five snapshot unit tests pass. The original bug reproduced three of three times on the checksum-verified 0.33.4 release.
+
+[trycua/cua #4678](https://github.com/trycua/cua/pull/4678) refuses parent-window clicks behind an attached modal sheet. Final candidate `d804b30` preserves exact-owner foreground menu clicks and rechecks at dispatch. Its expanded owned AppKit regression verifies blocked parent clicks, sheet dismissal, resumed parent interaction and a working foreground menu item. The original bug reproduced three of three times on the same official release. The PRs are independent.
+
+Both PRs include canonical runner registration and earlier mutation checks against their initial guards. The final dispatch seam is reviewed in code; a separately synchronized live race test has not been added. Focused owned native checks passed, but the repository requires the complete canonical macOS desktop/browser matrix at the final SHA before marking ready. These PRs remain drafts for maintainers to run that gate; the local evidence does not certify the whole release. No running user daemon was upgraded or restarted.

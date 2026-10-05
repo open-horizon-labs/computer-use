@@ -1,0 +1,172 @@
+[
+  {
+    "rep": 0,
+    "status": "done",
+    "counter": 1,
+    "activation_notifications": 0,
+    "front_at_end": "sentinel",
+    "samples_by_phase": {
+      "baseline": {
+        "target": 0,
+        "sentinel": 234,
+        "other": 0
+      },
+      "commands": {
+        "target": 0,
+        "sentinel": 95,
+        "other": 0
+      },
+      "between": {
+        "target": 0,
+        "sentinel": 235,
+        "other": 0
+      },
+      "run_command": {
+        "target": 0,
+        "sentinel": 655,
+        "other": 0
+      },
+      "after": {
+        "target": 0,
+        "sentinel": 381,
+        "other": 0
+      }
+    }
+  },
+  {
+    "rep": 1,
+    "status": "done",
+    "counter": 1,
+    "activation_notifications": 0,
+    "front_at_end": "sentinel",
+    "samples_by_phase": {
+      "baseline": {
+        "target": 0,
+        "sentinel": 232,
+        "other": 0
+      },
+      "commands": {
+        "target": 0,
+        "sentinel": 91,
+        "other": 0
+      },
+      "between": {
+        "target": 0,
+        "sentinel": 225,
+        "other": 0
+      },
+      "run_command": {
+        "target": 0,
+        "sentinel": 584,
+        "other": 0
+      },
+      "after": {
+        "target": 0,
+        "sentinel": 390,
+        "other": 0
+      }
+    }
+  },
+  {
+    "rep": 2,
+    "status": "done",
+    "counter": 1,
+    "activation_notifications": 0,
+    "front_at_end": "sentinel",
+    "samples_by_phase": {
+      "baseline": {
+        "target": 0,
+        "sentinel": 231,
+        "other": 0
+      },
+      "commands": {
+        "target": 0,
+        "sentinel": 89,
+        "other": 0
+      },
+      "between": {
+        "target": 0,
+        "sentinel": 234,
+        "other": 0
+      },
+      "run_command": {
+        "target": 0,
+        "sentinel": 608,
+        "other": 0
+      },
+      "after": {
+        "target": 0,
+        "sentinel": 370,
+        "other": 0
+      }
+    }
+  },
+  {
+    "rep": 3,
+    "status": "done",
+    "counter": 1,
+    "activation_notifications": 0,
+    "front_at_end": "sentinel",
+    "samples_by_phase": {
+      "baseline": {
+        "target": 0,
+        "sentinel": 230,
+        "other": 0
+      },
+      "commands": {
+        "target": 0,
+        "sentinel": 101,
+        "other": 0
+      },
+      "between": {
+        "target": 0,
+        "sentinel": 225,
+        "other": 0
+      },
+      "run_command": {
+        "target": 0,
+        "sentinel": 648,
+        "other": 0
+      },
+      "after": {
+        "target": 0,
+        "sentinel": 378,
+        "other": 0
+      }
+    }
+  },
+  {
+    "rep": 4,
+    "status": "done",
+    "counter": 1,
+    "activation_notifications": 0,
+    "front_at_end": "sentinel",
+    "samples_by_phase": {
+      "baseline": {
+        "target": 0,
+        "sentinel": 203,
+        "other": 0
+      },
+      "commands": {
+        "target": 0,
+        "sentinel": 101,
+        "other": 0
+      },
+      "between": {
+        "target": 0,
+        "sentinel": 229,
+        "other": 0
+      },
+      "run_command": {
+        "target": 0,
+        "sentinel": 605,
+        "other": 0
+      },
+      "after": {
+        "target": 0,
+        "sentinel": 377,
+        "other": 0
+      }
+    }
+  }
+]

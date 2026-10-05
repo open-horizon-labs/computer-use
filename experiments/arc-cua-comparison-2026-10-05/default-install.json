@@ -1,0 +1,15 @@
+{
+  "installed_runtime_mcp_smoke": true,
+  "version": "0.1.1",
+  "accessibility": true,
+  "independent_checkbox_effect": true,
+  "parked": false,
+  "source_commit": "6ca19d62c95106732fad28f488ecd458c08e02f4",
+  "codex_registered": true,
+  "claude_registered": true,
+  "skill_packages_verified": true,
+  "independent_review": "approved after explicit implicit-parking boundary",
+  "skill_checks": "14 installer tests; YAML metadata and all progressive links",
+  "default": "arc for connected macOS app/window interaction",
+  "client_reconnect_required": true
+}

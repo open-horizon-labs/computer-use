@@ -1,0 +1,44 @@
+[
+  {
+    "guarded": false,
+    "repetition": 0,
+    "status": "done",
+    "submitted": 1,
+    "submitted_record": "Record B"
+  },
+  {
+    "guarded": false,
+    "repetition": 1,
+    "status": "done",
+    "submitted": 1,
+    "submitted_record": "Record B"
+  },
+  {
+    "guarded": false,
+    "repetition": 2,
+    "status": "done",
+    "submitted": 1,
+    "submitted_record": "Record B"
+  },
+  {
+    "guarded": true,
+    "repetition": 0,
+    "status": "stale",
+    "submitted": 0,
+    "submitted_record": null
+  },
+  {
+    "guarded": true,
+    "repetition": 1,
+    "status": "stale",
+    "submitted": 0,
+    "submitted_record": null
+  },
+  {
+    "guarded": true,
+    "repetition": 2,
+    "status": "stale",
+    "submitted": 0,
+    "submitted_record": null
+  }
+]

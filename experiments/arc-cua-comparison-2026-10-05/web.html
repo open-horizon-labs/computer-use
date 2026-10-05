@@ -1,0 +1,31 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Synthetic application form</title>
+<style>body{font:16px system-ui;margin:24px}label{display:block;margin:16px 0}input,button{font:inherit;padding:8px}#options[hidden]{display:none}</style>
+<h1>Synthetic application</h1>
+<form id="form">
+  <label>Full name <input id="name" aria-label="Full name" required></label>
+  <button id="choose" type="button" aria-expanded="false">Choose degree</button>
+  <div id="options" hidden>
+    <button type="button" data-degree="Bachelor">Bachelor</button>
+    <button type="button" data-degree="Master">Master</button>
+  </div>
+  <p id="degree">No degree selected</p>
+  <button type="submit">Save application</button>
+</form>
+<p role="status" id="status"></p>
+<script>
+window.__events=[];window.__degree=null;window.__submitted=null;
+nameField=document.getElementById('name');
+nameField.addEventListener('input',()=>__events.push({kind:'input',value:nameField.value}));
+document.getElementById('choose').onclick=()=>{options.hidden=false;document.getElementById('choose').setAttribute('aria-expanded','true')};
+document.querySelectorAll('[data-degree]').forEach(button=>button.onclick=()=>{
+  __degree=button.dataset.degree;document.getElementById('degree').textContent=__degree;
+  options.hidden=true;document.getElementById('choose').setAttribute('aria-expanded','false');
+  __events.push({kind:'degree',value:__degree});
+});
+document.getElementById('form').onsubmit=event=>{
+  event.preventDefault();__submitted={name:nameField.value,degree:__degree};
+  document.getElementById('status').textContent='Application saved';
+};
+</script>
