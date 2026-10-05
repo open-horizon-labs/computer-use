@@ -1,0 +1,2782 @@
+{
+  "arc_commit": "6ca19d62c95106732fad28f488ecd458c08e02f4",
+  "arc_version": "0.1.1",
+  "native_version": "0.33.4",
+  "native_latest_version": "0.33.4",
+  "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.33.4",
+  "arc_upstream_checked_at": "2026-10-05T20:37:54.056370+00:00",
+  "candidates_checked_at": "2026-10-05T20:37:53Z",
+  "macos": "27.0.1",
+  "python": "3.12.12",
+  "scope": "default JEV policy + DesktopExecutor; independent synthetic oracles",
+  "results": [
+    {
+      "case": "native_form",
+      "rep": 0,
+      "requested_model": "jev-latest",
+      "status": "BLOCKED",
+      "actions": 5,
+      "claimed_complete": false,
+      "verified": false,
+      "passed": false,
+      "false_completion": false,
+      "wall_ms": 4810.384166994481,
+      "decisions": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_3",
+          "input_key": "name",
+          "confidence": 0.54,
+          "margin": 0.19999999999999996,
+          "decision_ms": 308,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4495,
+            "output_tokens": 833
+          }
+        },
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_5",
+          "input_key": "email",
+          "confidence": 0.75,
+          "margin": 0.63,
+          "decision_ms": 248,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4825,
+            "output_tokens": 841
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.31,
+          "margin": 0.15000000000000002,
+          "decision_ms": 237,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5132,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.47,
+          "margin": 0.16999999999999998,
+          "decision_ms": 202,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5434,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.52,
+          "margin": 0.25999999999999995,
+          "decision_ms": 228,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 833
+          }
+        }
+      ],
+      "decision_ms": 1223,
+      "raw_step_events": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_3",
+          "input_key": "name",
+          "confidence": 0.54,
+          "margin": 0.19999999999999996,
+          "decision_ms": 308,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4495,
+            "output_tokens": 833
+          }
+        },
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_5",
+          "input_key": "email",
+          "confidence": 0.75,
+          "margin": 0.63,
+          "decision_ms": 248,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4825,
+            "output_tokens": 841
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.31,
+          "margin": 0.15000000000000002,
+          "decision_ms": 237,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5132,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.47,
+          "margin": 0.16999999999999998,
+          "decision_ms": 202,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5434,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.52,
+          "margin": 0.25999999999999995,
+          "decision_ms": 228,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 833
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.52,
+          "margin": 0.25999999999999995,
+          "decision_ms": 228,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 833
+          }
+        }
+      ]
+    },
+    {
+      "case": "native_popup",
+      "rep": 0,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 2,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 1698.5061669984134,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "ax_8",
+          "input_key": null,
+          "confidence": 0.85,
+          "margin": 0.82,
+          "decision_ms": 216,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4035,
+            "output_tokens": 728
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_23",
+          "input_key": null,
+          "confidence": 0.99,
+          "margin": 0.98,
+          "decision_ms": 326,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4650,
+            "output_tokens": 761
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.62,
+          "margin": 0.52,
+          "decision_ms": 222,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4633,
+            "output_tokens": 729
+          }
+        }
+      ],
+      "decision_ms": 764,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "ax_8",
+          "input_key": null,
+          "confidence": 0.85,
+          "margin": 0.82,
+          "decision_ms": 216,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4035,
+            "output_tokens": 728
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_23",
+          "input_key": null,
+          "confidence": 0.99,
+          "margin": 0.98,
+          "decision_ms": 326,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4650,
+            "output_tokens": 761
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.62,
+          "margin": 0.52,
+          "decision_ms": 222,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4633,
+            "output_tokens": 729
+          }
+        }
+      ]
+    },
+    {
+      "case": "modal_recovery",
+      "rep": 0,
+      "requested_model": "jev-latest",
+      "status": "BLOCKED",
+      "actions": 4,
+      "claimed_complete": false,
+      "verified": false,
+      "passed": false,
+      "false_completion": false,
+      "wall_ms": 2447.9995839938056,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.3,
+          "margin": 0.19,
+          "decision_ms": 208,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3821,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.48,
+          "margin": 0.42000000000000004,
+          "decision_ms": 306,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4133,
+            "output_tokens": 651
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.69,
+          "margin": 0.63,
+          "decision_ms": 266,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4417,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.71,
+          "margin": 0.6799999999999999,
+          "decision_ms": 251,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 651
+          }
+        }
+      ],
+      "decision_ms": 1031,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.3,
+          "margin": 0.19,
+          "decision_ms": 208,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3821,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.48,
+          "margin": 0.42000000000000004,
+          "decision_ms": 306,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4133,
+            "output_tokens": 651
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.69,
+          "margin": 0.63,
+          "decision_ms": 266,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4417,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.71,
+          "margin": 0.6799999999999999,
+          "decision_ms": 251,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 651
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.71,
+          "margin": 0.6799999999999999,
+          "decision_ms": 251,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 651
+          }
+        }
+      ]
+    },
+    {
+      "case": "missing_input",
+      "rep": 0,
+      "requested_model": "jev-latest",
+      "status": "NEEDS_INPUT",
+      "actions": 0,
+      "claimed_complete": false,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 250.57304100482725,
+      "decisions": [
+        {
+          "operation": "NEEDS_INPUT",
+          "target": "ax_5",
+          "input_key": null,
+          "confidence": 0.24,
+          "margin": 0.08000000000000002,
+          "decision_ms": 185,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3585,
+            "output_tokens": 605
+          }
+        }
+      ],
+      "decision_ms": 185,
+      "raw_step_events": [
+        {
+          "operation": "NEEDS_INPUT",
+          "target": "ax_5",
+          "input_key": null,
+          "confidence": 0.24,
+          "margin": 0.08000000000000002,
+          "decision_ms": 185,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3585,
+            "output_tokens": 605
+          }
+        }
+      ]
+    },
+    {
+      "case": "native_form",
+      "rep": 1,
+      "requested_model": "jev-latest",
+      "status": "BLOCKED",
+      "actions": 5,
+      "claimed_complete": false,
+      "verified": false,
+      "passed": false,
+      "false_completion": false,
+      "wall_ms": 4722.805500001414,
+      "decisions": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_3",
+          "input_key": "name",
+          "confidence": 0.66,
+          "margin": 0.43999999999999995,
+          "decision_ms": 222,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4495,
+            "output_tokens": 828
+          }
+        },
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_5",
+          "input_key": "email",
+          "confidence": 0.78,
+          "margin": 0.73,
+          "decision_ms": 250,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4825,
+            "output_tokens": 841
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.26,
+          "margin": 0.08000000000000002,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5132,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.37,
+          "margin": 0.010000000000000009,
+          "decision_ms": 231,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5434,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.55,
+          "margin": 0.33999999999999997,
+          "decision_ms": 232,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 838
+          }
+        }
+      ],
+      "decision_ms": 1174,
+      "raw_step_events": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_3",
+          "input_key": "name",
+          "confidence": 0.66,
+          "margin": 0.43999999999999995,
+          "decision_ms": 222,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4495,
+            "output_tokens": 828
+          }
+        },
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_5",
+          "input_key": "email",
+          "confidence": 0.78,
+          "margin": 0.73,
+          "decision_ms": 250,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4825,
+            "output_tokens": 841
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.26,
+          "margin": 0.08000000000000002,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5132,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.37,
+          "margin": 0.010000000000000009,
+          "decision_ms": 231,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5434,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.55,
+          "margin": 0.33999999999999997,
+          "decision_ms": 232,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.55,
+          "margin": 0.33999999999999997,
+          "decision_ms": 232,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 838
+          }
+        }
+      ]
+    },
+    {
+      "case": "native_popup",
+      "rep": 1,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 2,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 1615.9386250001262,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "ax_8",
+          "input_key": null,
+          "confidence": 0.85,
+          "margin": 0.83,
+          "decision_ms": 266,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4035,
+            "output_tokens": 728
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_23",
+          "input_key": null,
+          "confidence": 0.99,
+          "margin": 0.98,
+          "decision_ms": 229,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4650,
+            "output_tokens": 761
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.69,
+          "margin": 0.6100000000000001,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4633,
+            "output_tokens": 729
+          }
+        }
+      ],
+      "decision_ms": 734,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "ax_8",
+          "input_key": null,
+          "confidence": 0.85,
+          "margin": 0.83,
+          "decision_ms": 266,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4035,
+            "output_tokens": 728
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_23",
+          "input_key": null,
+          "confidence": 0.99,
+          "margin": 0.98,
+          "decision_ms": 229,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4650,
+            "output_tokens": 761
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.69,
+          "margin": 0.6100000000000001,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4633,
+            "output_tokens": 729
+          }
+        }
+      ]
+    },
+    {
+      "case": "modal_recovery",
+      "rep": 1,
+      "requested_model": "jev-latest",
+      "status": "BLOCKED",
+      "actions": 4,
+      "claimed_complete": false,
+      "verified": false,
+      "passed": false,
+      "false_completion": false,
+      "wall_ms": 2333.223124995129,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.32,
+          "margin": 0.22,
+          "decision_ms": 258,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3821,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.41,
+          "margin": 0.32999999999999996,
+          "decision_ms": 228,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4133,
+            "output_tokens": 651
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.65,
+          "margin": 0.58,
+          "decision_ms": 274,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4417,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.68,
+          "margin": 0.61,
+          "decision_ms": 209,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 651
+          }
+        }
+      ],
+      "decision_ms": 969,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.32,
+          "margin": 0.22,
+          "decision_ms": 258,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3821,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.41,
+          "margin": 0.32999999999999996,
+          "decision_ms": 228,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4133,
+            "output_tokens": 651
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.65,
+          "margin": 0.58,
+          "decision_ms": 274,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4417,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.68,
+          "margin": 0.61,
+          "decision_ms": 209,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 651
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.68,
+          "margin": 0.61,
+          "decision_ms": 209,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 651
+          }
+        }
+      ]
+    },
+    {
+      "case": "missing_input",
+      "rep": 1,
+      "requested_model": "jev-latest",
+      "status": "NEEDS_INPUT",
+      "actions": 0,
+      "claimed_complete": false,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 303.38379200111376,
+      "decisions": [
+        {
+          "operation": "NEEDS_INPUT",
+          "target": "ax_5",
+          "input_key": null,
+          "confidence": 0.26,
+          "margin": 0.11000000000000001,
+          "decision_ms": 222,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3585,
+            "output_tokens": 605
+          }
+        }
+      ],
+      "decision_ms": 222,
+      "raw_step_events": [
+        {
+          "operation": "NEEDS_INPUT",
+          "target": "ax_5",
+          "input_key": null,
+          "confidence": 0.26,
+          "margin": 0.11000000000000001,
+          "decision_ms": 222,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3585,
+            "output_tokens": 605
+          }
+        }
+      ]
+    },
+    {
+      "case": "native_form",
+      "rep": 2,
+      "requested_model": "jev-latest",
+      "status": "BLOCKED",
+      "actions": 5,
+      "claimed_complete": false,
+      "verified": false,
+      "passed": false,
+      "false_completion": false,
+      "wall_ms": 4745.40783300472,
+      "decisions": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_3",
+          "input_key": "name",
+          "confidence": 0.59,
+          "margin": 0.28,
+          "decision_ms": 254,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4495,
+            "output_tokens": 832
+          }
+        },
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_5",
+          "input_key": "email",
+          "confidence": 0.7,
+          "margin": 0.63,
+          "decision_ms": 211,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4825,
+            "output_tokens": 841
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.24,
+          "margin": 0.06,
+          "decision_ms": 209,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5132,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.42,
+          "margin": 0.12,
+          "decision_ms": 225,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5434,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.48,
+          "margin": 0.19,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 838
+          }
+        }
+      ],
+      "decision_ms": 1138,
+      "raw_step_events": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_3",
+          "input_key": "name",
+          "confidence": 0.59,
+          "margin": 0.28,
+          "decision_ms": 254,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4495,
+            "output_tokens": 832
+          }
+        },
+        {
+          "operation": "TYPE_TEXT",
+          "target": "ax_5",
+          "input_key": "email",
+          "confidence": 0.7,
+          "margin": 0.63,
+          "decision_ms": 211,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4825,
+            "output_tokens": 841
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.24,
+          "margin": 0.06,
+          "decision_ms": 209,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5132,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.42,
+          "margin": 0.12,
+          "decision_ms": 225,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5434,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.48,
+          "margin": 0.19,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 838
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_3",
+          "input_key": null,
+          "confidence": 0.48,
+          "margin": 0.19,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 5736,
+            "output_tokens": 838
+          }
+        }
+      ]
+    },
+    {
+      "case": "native_popup",
+      "rep": 2,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 2,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 1659.1843330024858,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "ax_8",
+          "input_key": null,
+          "confidence": 0.82,
+          "margin": 0.7899999999999999,
+          "decision_ms": 276,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4035,
+            "output_tokens": 728
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_23",
+          "input_key": null,
+          "confidence": 0.99,
+          "margin": 0.98,
+          "decision_ms": 212,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4650,
+            "output_tokens": 761
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.68,
+          "margin": 0.5800000000000001,
+          "decision_ms": 252,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4633,
+            "output_tokens": 729
+          }
+        }
+      ],
+      "decision_ms": 740,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "ax_8",
+          "input_key": null,
+          "confidence": 0.82,
+          "margin": 0.7899999999999999,
+          "decision_ms": 276,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4035,
+            "output_tokens": 728
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_23",
+          "input_key": null,
+          "confidence": 0.99,
+          "margin": 0.98,
+          "decision_ms": 212,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4650,
+            "output_tokens": 761
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.68,
+          "margin": 0.5800000000000001,
+          "decision_ms": 252,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4633,
+            "output_tokens": 729
+          }
+        }
+      ]
+    },
+    {
+      "case": "modal_recovery",
+      "rep": 2,
+      "requested_model": "jev-latest",
+      "status": "BLOCKED",
+      "actions": 4,
+      "claimed_complete": false,
+      "verified": false,
+      "passed": false,
+      "false_completion": false,
+      "wall_ms": 2472.5295419993927,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.31,
+          "margin": 0.17,
+          "decision_ms": 233,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3821,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.46,
+          "margin": 0.4,
+          "decision_ms": 224,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4133,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.64,
+          "margin": 0.5700000000000001,
+          "decision_ms": 291,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4417,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.72,
+          "margin": 0.68,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 650
+          }
+        }
+      ],
+      "decision_ms": 987,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.31,
+          "margin": 0.17,
+          "decision_ms": 233,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3821,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.46,
+          "margin": 0.4,
+          "decision_ms": 224,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4133,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.64,
+          "margin": 0.5700000000000001,
+          "decision_ms": 291,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4417,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.72,
+          "margin": 0.68,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 650
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "ax_18",
+          "input_key": null,
+          "confidence": 0.72,
+          "margin": 0.68,
+          "decision_ms": 239,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4701,
+            "output_tokens": 650
+          }
+        }
+      ]
+    },
+    {
+      "case": "missing_input",
+      "rep": 2,
+      "requested_model": "jev-latest",
+      "status": "NEEDS_AGENT",
+      "actions": 0,
+      "claimed_complete": false,
+      "verified": true,
+      "passed": false,
+      "false_completion": false,
+      "wall_ms": 398.23141600209055,
+      "decisions": [
+        {
+          "operation": "NEEDS_AGENT",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.23,
+          "margin": 0.02999999999999997,
+          "decision_ms": 255,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3585,
+            "output_tokens": 606
+          }
+        }
+      ],
+      "decision_ms": 255,
+      "raw_step_events": [
+        {
+          "operation": "NEEDS_AGENT",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.23,
+          "margin": 0.02999999999999997,
+          "decision_ms": 255,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3585,
+            "output_tokens": 606
+          }
+        }
+      ]
+    },
+    {
+      "case": "browser_trip_form",
+      "rep": 0,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 4,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 2293.028874999436,
+      "decisions": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "w3",
+          "input_key": "city",
+          "confidence": 0.25,
+          "margin": 0.010000000000000009,
+          "decision_ms": 223,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3905,
+            "output_tokens": 694
+          }
+        },
+        {
+          "operation": "SET_VALUE",
+          "target": "w4",
+          "input_key": "cabin",
+          "confidence": 0.62,
+          "margin": 0.35000000000000003,
+          "decision_ms": 434,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4226,
+            "output_tokens": 705
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.46,
+          "margin": 0.06,
+          "decision_ms": 226,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4402,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w6",
+          "input_key": null,
+          "confidence": 0.8,
+          "margin": 0.6400000000000001,
+          "decision_ms": 196,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4615,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.31,
+          "margin": 0.18000000000000005,
+          "decision_ms": 243,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4873,
+            "output_tokens": 705
+          }
+        }
+      ],
+      "decision_ms": 1322,
+      "raw_step_events": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "w3",
+          "input_key": "city",
+          "confidence": 0.25,
+          "margin": 0.010000000000000009,
+          "decision_ms": 223,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3905,
+            "output_tokens": 694
+          }
+        },
+        {
+          "operation": "SET_VALUE",
+          "target": "w4",
+          "input_key": "cabin",
+          "confidence": 0.62,
+          "margin": 0.35000000000000003,
+          "decision_ms": 434,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4226,
+            "output_tokens": 705
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.46,
+          "margin": 0.06,
+          "decision_ms": 226,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4402,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w6",
+          "input_key": null,
+          "confidence": 0.8,
+          "margin": 0.6400000000000001,
+          "decision_ms": 196,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4615,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.31,
+          "margin": 0.18000000000000005,
+          "decision_ms": 243,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4873,
+            "output_tokens": 705
+          }
+        }
+      ]
+    },
+    {
+      "case": "covered_button",
+      "rep": 0,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 4,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 1861.0733340028673,
+      "decisions": [
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.69,
+          "margin": 0.61,
+          "decision_ms": 210,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3386,
+            "output_tokens": 572
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w16",
+          "input_key": null,
+          "confidence": 0.7,
+          "margin": 0.7,
+          "decision_ms": 202,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2383,
+            "output_tokens": 408
+          }
+        },
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.7,
+          "margin": 0.61,
+          "decision_ms": 188,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2216,
+            "output_tokens": 331
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w18",
+          "input_key": null,
+          "confidence": 0.97,
+          "margin": 0.97,
+          "decision_ms": 256,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2706,
+            "output_tokens": 397
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.55,
+          "margin": 0.41999999999999993,
+          "decision_ms": 172,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2965,
+            "output_tokens": 403
+          }
+        }
+      ],
+      "decision_ms": 1028,
+      "raw_step_events": [
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.69,
+          "margin": 0.61,
+          "decision_ms": 210,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3386,
+            "output_tokens": 572
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w16",
+          "input_key": null,
+          "confidence": 0.7,
+          "margin": 0.7,
+          "decision_ms": 202,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2383,
+            "output_tokens": 408
+          }
+        },
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.7,
+          "margin": 0.61,
+          "decision_ms": 188,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2216,
+            "output_tokens": 331
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w18",
+          "input_key": null,
+          "confidence": 0.97,
+          "margin": 0.97,
+          "decision_ms": 256,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2706,
+            "output_tokens": 397
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.55,
+          "margin": 0.41999999999999993,
+          "decision_ms": 172,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2965,
+            "output_tokens": 403
+          }
+        }
+      ]
+    },
+    {
+      "case": "record_matching_and_injection",
+      "rep": 0,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 1,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 648.4505839980557,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.83,
+          "margin": 0.78,
+          "decision_ms": 211,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2427,
+            "output_tokens": 407
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.65,
+          "margin": 0.53,
+          "decision_ms": 233,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2643,
+            "output_tokens": 408
+          }
+        }
+      ],
+      "decision_ms": 444,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.83,
+          "margin": 0.78,
+          "decision_ms": 211,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2427,
+            "output_tokens": 407
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.65,
+          "margin": 0.53,
+          "decision_ms": 233,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2643,
+            "output_tokens": 408
+          }
+        }
+      ]
+    },
+    {
+      "case": "browser_trip_form",
+      "rep": 1,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 4,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 2505.2985829970567,
+      "decisions": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "w3",
+          "input_key": "city",
+          "confidence": 0.27,
+          "margin": 0.030000000000000027,
+          "decision_ms": 449,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3905,
+            "output_tokens": 694
+          }
+        },
+        {
+          "operation": "SET_VALUE",
+          "target": "w4",
+          "input_key": "cabin",
+          "confidence": 0.63,
+          "margin": 0.37000000000000005,
+          "decision_ms": 286,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4226,
+            "output_tokens": 705
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.56,
+          "margin": 0.20999999999999996,
+          "decision_ms": 241,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4402,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w6",
+          "input_key": null,
+          "confidence": 0.82,
+          "margin": 0.6799999999999999,
+          "decision_ms": 308,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4615,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.32,
+          "margin": 0.20000000000000007,
+          "decision_ms": 240,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4873,
+            "output_tokens": 705
+          }
+        }
+      ],
+      "decision_ms": 1524,
+      "raw_step_events": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "w3",
+          "input_key": "city",
+          "confidence": 0.27,
+          "margin": 0.030000000000000027,
+          "decision_ms": 449,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3905,
+            "output_tokens": 694
+          }
+        },
+        {
+          "operation": "SET_VALUE",
+          "target": "w4",
+          "input_key": "cabin",
+          "confidence": 0.63,
+          "margin": 0.37000000000000005,
+          "decision_ms": 286,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4226,
+            "output_tokens": 705
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.56,
+          "margin": 0.20999999999999996,
+          "decision_ms": 241,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4402,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w6",
+          "input_key": null,
+          "confidence": 0.82,
+          "margin": 0.6799999999999999,
+          "decision_ms": 308,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4615,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.32,
+          "margin": 0.20000000000000007,
+          "decision_ms": 240,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4873,
+            "output_tokens": 705
+          }
+        }
+      ]
+    },
+    {
+      "case": "covered_button",
+      "rep": 1,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 4,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 1855.42500000156,
+      "decisions": [
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.71,
+          "margin": 0.64,
+          "decision_ms": 228,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3386,
+            "output_tokens": 572
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w16",
+          "input_key": null,
+          "confidence": 0.64,
+          "margin": 0.6399999999999999,
+          "decision_ms": 214,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2383,
+            "output_tokens": 413
+          }
+        },
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.66,
+          "margin": 0.58,
+          "decision_ms": 194,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2216,
+            "output_tokens": 331
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w18",
+          "input_key": null,
+          "confidence": 0.95,
+          "margin": 0.95,
+          "decision_ms": 176,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2706,
+            "output_tokens": 397
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.63,
+          "margin": 0.52,
+          "decision_ms": 183,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2965,
+            "output_tokens": 403
+          }
+        }
+      ],
+      "decision_ms": 995,
+      "raw_step_events": [
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.71,
+          "margin": 0.64,
+          "decision_ms": 228,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3386,
+            "output_tokens": 572
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w16",
+          "input_key": null,
+          "confidence": 0.64,
+          "margin": 0.6399999999999999,
+          "decision_ms": 214,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2383,
+            "output_tokens": 413
+          }
+        },
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.66,
+          "margin": 0.58,
+          "decision_ms": 194,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2216,
+            "output_tokens": 331
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w18",
+          "input_key": null,
+          "confidence": 0.95,
+          "margin": 0.95,
+          "decision_ms": 176,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2706,
+            "output_tokens": 397
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.63,
+          "margin": 0.52,
+          "decision_ms": 183,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2965,
+            "output_tokens": 403
+          }
+        }
+      ]
+    },
+    {
+      "case": "record_matching_and_injection",
+      "rep": 1,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 1,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 588.8627079984872,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.85,
+          "margin": 0.8,
+          "decision_ms": 171,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2427,
+            "output_tokens": 407
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.64,
+          "margin": 0.53,
+          "decision_ms": 201,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2643,
+            "output_tokens": 408
+          }
+        }
+      ],
+      "decision_ms": 372,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.85,
+          "margin": 0.8,
+          "decision_ms": 171,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2427,
+            "output_tokens": 407
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.64,
+          "margin": 0.53,
+          "decision_ms": 201,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2643,
+            "output_tokens": 408
+          }
+        }
+      ]
+    },
+    {
+      "case": "browser_trip_form",
+      "rep": 2,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 4,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 2001.3357080024434,
+      "decisions": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "w3",
+          "input_key": "city",
+          "confidence": 0.28,
+          "margin": 0.040000000000000036,
+          "decision_ms": 222,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3905,
+            "output_tokens": 694
+          }
+        },
+        {
+          "operation": "SET_VALUE",
+          "target": "w4",
+          "input_key": "cabin",
+          "confidence": 0.67,
+          "margin": 0.42999999999999994,
+          "decision_ms": 200,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4226,
+            "output_tokens": 705
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.54,
+          "margin": 0.20999999999999996,
+          "decision_ms": 207,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4401,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w6",
+          "input_key": null,
+          "confidence": 0.78,
+          "margin": 0.6000000000000001,
+          "decision_ms": 242,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4614,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.31,
+          "margin": 0.18000000000000005,
+          "decision_ms": 208,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4872,
+            "output_tokens": 705
+          }
+        }
+      ],
+      "decision_ms": 1079,
+      "raw_step_events": [
+        {
+          "operation": "TYPE_TEXT",
+          "target": "w3",
+          "input_key": "city",
+          "confidence": 0.28,
+          "margin": 0.040000000000000036,
+          "decision_ms": 222,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3905,
+            "output_tokens": 694
+          }
+        },
+        {
+          "operation": "SET_VALUE",
+          "target": "w4",
+          "input_key": "cabin",
+          "confidence": 0.67,
+          "margin": 0.42999999999999994,
+          "decision_ms": 200,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4226,
+            "output_tokens": 705
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.54,
+          "margin": 0.20999999999999996,
+          "decision_ms": 207,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4401,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w6",
+          "input_key": null,
+          "confidence": 0.78,
+          "margin": 0.6000000000000001,
+          "decision_ms": 242,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4614,
+            "output_tokens": 703
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.31,
+          "margin": 0.18000000000000005,
+          "decision_ms": 208,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 4872,
+            "output_tokens": 705
+          }
+        }
+      ]
+    },
+    {
+      "case": "covered_button",
+      "rep": 2,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 4,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 1768.5364999997546,
+      "decisions": [
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.69,
+          "margin": 0.62,
+          "decision_ms": 172,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3386,
+            "output_tokens": 572
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w16",
+          "input_key": null,
+          "confidence": 0.71,
+          "margin": 0.66,
+          "decision_ms": 186,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2383,
+            "output_tokens": 413
+          }
+        },
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.73,
+          "margin": 0.67,
+          "decision_ms": 173,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2216,
+            "output_tokens": 331
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w18",
+          "input_key": null,
+          "confidence": 0.95,
+          "margin": 0.94,
+          "decision_ms": 190,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2706,
+            "output_tokens": 397
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.45,
+          "margin": 0.29,
+          "decision_ms": 264,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2965,
+            "output_tokens": 403
+          }
+        }
+      ],
+      "decision_ms": 985,
+      "raw_step_events": [
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.69,
+          "margin": 0.62,
+          "decision_ms": 172,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 3386,
+            "output_tokens": 572
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w16",
+          "input_key": null,
+          "confidence": 0.71,
+          "margin": 0.66,
+          "decision_ms": 186,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2383,
+            "output_tokens": 413
+          }
+        },
+        {
+          "operation": "SCROLL",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.73,
+          "margin": 0.67,
+          "decision_ms": 173,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2216,
+            "output_tokens": 331
+          }
+        },
+        {
+          "operation": "CLICK",
+          "target": "w18",
+          "input_key": null,
+          "confidence": 0.95,
+          "margin": 0.94,
+          "decision_ms": 190,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2706,
+            "output_tokens": 397
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.45,
+          "margin": 0.29,
+          "decision_ms": 264,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2965,
+            "output_tokens": 403
+          }
+        }
+      ]
+    },
+    {
+      "case": "record_matching_and_injection",
+      "rep": 2,
+      "requested_model": "jev-latest",
+      "status": "SUBTASK_COMPLETE",
+      "actions": 1,
+      "claimed_complete": true,
+      "verified": true,
+      "passed": true,
+      "false_completion": false,
+      "wall_ms": 598.1792499951553,
+      "decisions": [
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.85,
+          "margin": 0.81,
+          "decision_ms": 199,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2427,
+            "output_tokens": 407
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.73,
+          "margin": 0.6499999999999999,
+          "decision_ms": 190,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2643,
+            "output_tokens": 408
+          }
+        }
+      ],
+      "decision_ms": 389,
+      "raw_step_events": [
+        {
+          "operation": "CLICK",
+          "target": "w5",
+          "input_key": null,
+          "confidence": 0.85,
+          "margin": 0.81,
+          "decision_ms": 199,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2427,
+            "output_tokens": 407
+          }
+        },
+        {
+          "operation": "SUBTASK_COMPLETE",
+          "target": null,
+          "input_key": null,
+          "confidence": 0.73,
+          "margin": 0.6499999999999999,
+          "decision_ms": 190,
+          "reported_model": "jev-1.13.0",
+          "usage": {
+            "input_tokens": 2643,
+            "output_tokens": 408
+          }
+        }
+      ]
+    }
+  ],
+  "provider_transport": {
+    "worker": "personal.stock",
+    "credential_route": "Fleet 1Password Connect; secret stays on worker",
+    "http": "urllib HTTPS worker; upstream policy retry semantics unchanged",
+    "requests": [
+      {
+        "provider_ms": 304.57100400235504,
+        "roundtrip_ms": 308.1670829997165,
+        "bridge_ms": 3.5960789973614737
+      },
+      {
+        "provider_ms": 244.71334996633232,
+        "roundtrip_ms": 247.86329099879367,
+        "bridge_ms": 3.1499410324613564
+      },
+      {
+        "provider_ms": 233.46603207755834,
+        "roundtrip_ms": 236.48362499807263,
+        "bridge_ms": 3.0175929205142893
+      },
+      {
+        "provider_ms": 198.7369159469381,
+        "roundtrip_ms": 201.8117500047083,
+        "bridge_ms": 3.074834057770204
+      },
+      {
+        "provider_ms": 224.5178030570969,
+        "roundtrip_ms": 228.17458400095347,
+        "bridge_ms": 3.6567809438565746
+      },
+      {
+        "provider_ms": 212.62742404360324,
+        "roundtrip_ms": 216.00737500557443,
+        "bridge_ms": 3.37995096197119
+      },
+      {
+        "provider_ms": 322.8185019688681,
+        "roundtrip_ms": 326.09733299614163,
+        "bridge_ms": 3.2788310272735544
+      },
+      {
+        "provider_ms": 219.05466099269688,
+        "roundtrip_ms": 222.03162500227336,
+        "bridge_ms": 2.976964009576477
+      },
+      {
+        "provider_ms": 205.43453900609165,
+        "roundtrip_ms": 207.37650000228314,
+        "bridge_ms": 1.941960996191483
+      },
+      {
+        "provider_ms": 303.8403100799769,
+        "roundtrip_ms": 305.6630840001162,
+        "bridge_ms": 1.8227739201392978
+      },
+      {
+        "provider_ms": 262.68997497390956,
+        "roundtrip_ms": 266.07449999573873,
+        "bridge_ms": 3.3845250218291767
+      },
+      {
+        "provider_ms": 247.5079040741548,
+        "roundtrip_ms": 251.04545900103403,
+        "bridge_ms": 3.5375549268792383
+      },
+      {
+        "provider_ms": 182.27047997061163,
+        "roundtrip_ms": 185.04941699939081,
+        "bridge_ms": 2.7789370287791826
+      },
+      {
+        "provider_ms": 217.71234995685518,
+        "roundtrip_ms": 222.24454199749744,
+        "bridge_ms": 4.532192040642258
+      },
+      {
+        "provider_ms": 246.8091829214245,
+        "roundtrip_ms": 250.0487079960294,
+        "bridge_ms": 3.2395250746048987
+      },
+      {
+        "provider_ms": 235.8695580624044,
+        "roundtrip_ms": 238.91399999411078,
+        "bridge_ms": 3.0444419317063875
+      },
+      {
+        "provider_ms": 227.45023004245013,
+        "roundtrip_ms": 231.00779199739918,
+        "bridge_ms": 3.557561954949051
+      },
+      {
+        "provider_ms": 228.669518022798,
+        "roundtrip_ms": 231.66650000348454,
+        "bridge_ms": 2.9969819806865416
+      },
+      {
+        "provider_ms": 262.0064109796658,
+        "roundtrip_ms": 265.56241599610075,
+        "bridge_ms": 3.5560050164349377
+      },
+      {
+        "provider_ms": 225.08667898364365,
+        "roundtrip_ms": 228.89737500372576,
+        "bridge_ms": 3.810696020082105
+      },
+      {
+        "provider_ms": 232.06648300401866,
+        "roundtrip_ms": 238.87679100153036,
+        "bridge_ms": 6.8103079975117
+      },
+      {
+        "provider_ms": 256.17078493814915,
+        "roundtrip_ms": 258.2887090029544,
+        "bridge_ms": 2.1179240648052655
+      },
+      {
+        "provider_ms": 224.6217590291053,
+        "roundtrip_ms": 228.15545800403925,
+        "bridge_ms": 3.533698974933941
+      },
+      {
+        "provider_ms": 270.716444007121,
+        "roundtrip_ms": 273.9241250019404,
+        "bridge_ms": 3.207680994819384
+      },
+      {
+        "provider_ms": 206.26306207850575,
+        "roundtrip_ms": 208.62837500317255,
+        "bridge_ms": 2.365312924666796
+      },
+      {
+        "provider_ms": 220.22185800597072,
+        "roundtrip_ms": 222.23683299671393,
+        "bridge_ms": 2.0149749907432124
+      },
+      {
+        "provider_ms": 250.39254606235772,
+        "roundtrip_ms": 253.41445799858775,
+        "bridge_ms": 3.021911936230026
+      },
+      {
+        "provider_ms": 207.95111393090338,
+        "roundtrip_ms": 210.8883330001845,
+        "bridge_ms": 2.9372190692811273
+      },
+      {
+        "provider_ms": 206.1282229842618,
+        "roundtrip_ms": 209.1805000018212,
+        "bridge_ms": 3.0522770175593905
+      },
+      {
+        "provider_ms": 218.39928801637143,
+        "roundtrip_ms": 224.66987500229152,
+        "bridge_ms": 6.27058698592009
+      },
+      {
+        "provider_ms": 235.32661504577845,
+        "roundtrip_ms": 239.03908299689647,
+        "bridge_ms": 3.7124679511180148
+      },
+      {
+        "provider_ms": 272.9294680757448,
+        "roundtrip_ms": 275.69208400382195,
+        "bridge_ms": 2.762615928077139
+      },
+      {
+        "provider_ms": 208.90203304588795,
+        "roundtrip_ms": 211.91241700580576,
+        "bridge_ms": 3.0103839599178173
+      },
+      {
+        "provider_ms": 248.45574900973588,
+        "roundtrip_ms": 251.4675830025226,
+        "bridge_ms": 3.0118339927867055
+      },
+      {
+        "provider_ms": 230.62363103963435,
+        "roundtrip_ms": 233.10162499547005,
+        "bridge_ms": 2.4779939558357
+      },
+      {
+        "provider_ms": 220.59940302278847,
+        "roundtrip_ms": 224.2183339985786,
+        "bridge_ms": 3.6189309757901356
+      },
+      {
+        "provider_ms": 282.2407679632306,
+        "roundtrip_ms": 290.92099999979837,
+        "bridge_ms": 8.680232036567759
+      },
+      {
+        "provider_ms": 234.7286279546097,
+        "roundtrip_ms": 238.88745799922617,
+        "bridge_ms": 4.158830044616479
+      },
+      {
+        "provider_ms": 252.6386269601062,
+        "roundtrip_ms": 254.5866250002291,
+        "bridge_ms": 1.9479980401229113
+      },
+      {
+        "provider_ms": 218.5309180058539,
+        "roundtrip_ms": 222.35687500506174,
+        "bridge_ms": 3.825956999207847
+      },
+      {
+        "provider_ms": 430.0823910161853,
+        "roundtrip_ms": 434.1004170055385,
+        "bridge_ms": 4.018025989353191
+      },
+      {
+        "provider_ms": 223.2953739585355,
+        "roundtrip_ms": 225.58279199438402,
+        "bridge_ms": 2.287418035848532
+      },
+      {
+        "provider_ms": 192.46299902442843,
+        "roundtrip_ms": 195.45933399786009,
+        "bridge_ms": 2.996334973431658
+      },
+      {
+        "provider_ms": 234.65952195692807,
+        "roundtrip_ms": 242.55308300053002,
+        "bridge_ms": 7.893561043601949
+      },
+      {
+        "provider_ms": 201.4823789941147,
+        "roundtrip_ms": 209.95249999396037,
+        "bridge_ms": 8.470120999845676
+      },
+      {
+        "provider_ms": 195.35955192986876,
+        "roundtrip_ms": 202.34641599381575,
+        "bridge_ms": 6.986864063946996
+      },
+      {
+        "provider_ms": 180.7695149909705,
+        "roundtrip_ms": 186.75899999652756,
+        "bridge_ms": 5.989485005557071
+      },
+      {
+        "provider_ms": 253.7006139755249,
+        "roundtrip_ms": 255.52024999342393,
+        "bridge_ms": 1.819636017899029
+      },
+      {
+        "provider_ms": 170.27619201689959,
+        "roundtrip_ms": 172.11712500284193,
+        "bridge_ms": 1.8409329859423451
+      },
+      {
+        "provider_ms": 209.4121320405975,
+        "roundtrip_ms": 211.30308300053002,
+        "bridge_ms": 1.8909509599325247
+      },
+      {
+        "provider_ms": 231.21804802212864,
+        "roundtrip_ms": 232.99566700006835,
+        "bridge_ms": 1.77761897793971
+      },
+      {
+        "provider_ms": 446.90497405827045,
+        "roundtrip_ms": 448.7294170030509,
+        "bridge_ms": 1.8244429447804578
+      },
+      {
+        "provider_ms": 281.27003891859204,
+        "roundtrip_ms": 286.1789590024273,
+        "bridge_ms": 4.908920083835255
+      },
+      {
+        "provider_ms": 237.60047799441963,
+        "roundtrip_ms": 241.27433300600387,
+        "bridge_ms": 3.673855011584237
+      },
+      {
+        "provider_ms": 301.1243949877098,
+        "roundtrip_ms": 307.51991699798964,
+        "bridge_ms": 6.395522010279819
+      },
+      {
+        "provider_ms": 234.65349699836224,
+        "roundtrip_ms": 239.94712500280002,
+        "bridge_ms": 5.293628004437778
+      },
+      {
+        "provider_ms": 224.98630289919674,
+        "roundtrip_ms": 228.22191700106487,
+        "bridge_ms": 3.235614101868123
+      },
+      {
+        "provider_ms": 208.78284703940153,
+        "roundtrip_ms": 213.71345799707342,
+        "bridge_ms": 4.930610957671888
+      },
+      {
+        "provider_ms": 190.92982495203614,
+        "roundtrip_ms": 194.21866700577084,
+        "bridge_ms": 3.2888420537346974
+      },
+      {
+        "provider_ms": 172.10443399380893,
+        "roundtrip_ms": 175.63933299970813,
+        "bridge_ms": 3.534899005899206
+      },
+      {
+        "provider_ms": 178.87443501967937,
+        "roundtrip_ms": 182.58475000038743,
+        "bridge_ms": 3.7103149807080626
+      },
+      {
+        "provider_ms": 168.45789295621216,
+        "roundtrip_ms": 171.21754200343275,
+        "bridge_ms": 2.7596490472205915
+      },
+      {
+        "provider_ms": 197.93935399502516,
+        "roundtrip_ms": 201.1459580025985,
+        "bridge_ms": 3.2066040075733326
+      },
+      {
+        "provider_ms": 217.72077900823206,
+        "roundtrip_ms": 221.99470800114796,
+        "bridge_ms": 4.273928992915899
+      },
+      {
+        "provider_ms": 192.1572849387303,
+        "roundtrip_ms": 199.64529199933168,
+        "bridge_ms": 7.488007060601376
+      },
+      {
+        "provider_ms": 204.93769296444952,
+        "roundtrip_ms": 207.0102500001667,
+        "bridge_ms": 2.072557035717182
+      },
+      {
+        "provider_ms": 238.75886003952473,
+        "roundtrip_ms": 242.18008299794747,
+        "bridge_ms": 3.4212229584227316
+      },
+      {
+        "provider_ms": 204.24328302033246,
+        "roundtrip_ms": 207.5341249947087,
+        "bridge_ms": 3.290841974376235
+      },
+      {
+        "provider_ms": 170.31695193145424,
+        "roundtrip_ms": 171.9200000006822,
+        "bridge_ms": 1.6030480692279525
+      },
+      {
+        "provider_ms": 183.84546600282192,
+        "roundtrip_ms": 185.69170800037682,
+        "bridge_ms": 1.8462419975548983
+      },
+      {
+        "provider_ms": 170.50329397898167,
+        "roundtrip_ms": 172.4422500046785,
+        "bridge_ms": 1.9389560256968252
+      },
+      {
+        "provider_ms": 187.87163798697293,
+        "roundtrip_ms": 189.95620799978497,
+        "bridge_ms": 2.084570012812037
+      },
+      {
+        "provider_ms": 262.2419960098341,
+        "roundtrip_ms": 263.81574999686563,
+        "bridge_ms": 1.5737539870315231
+      },
+      {
+        "provider_ms": 197.66574504319578,
+        "roundtrip_ms": 199.33675000356743,
+        "bridge_ms": 1.671004960371647
+      },
+      {
+        "provider_ms": 188.36514500435442,
+        "roundtrip_ms": 189.93820800096728,
+        "bridge_ms": 1.5730629966128618
+      }
+    ]
+  },
+  "event_normalization": "BLOCKED no-change terminal event repeats the last decision; raw_step_events preserved, decisions and latency count it once."
+}
