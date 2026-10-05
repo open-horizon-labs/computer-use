@@ -1,0 +1,29 @@
+{
+  "format": "lossless gzip of exact captured JSON, plus review summary",
+  "artifacts": [
+    {
+      "archive": "results-full.json.gz",
+      "raw_sha256": "83e02e35f01c1cc0623de1a2c628d0bdb36c18d2523be7ed5d38d3cdfa6f76a9",
+      "compressed_sha256": "6f6207b2e39fe84fc133dbeb8b27e52e3aa9ec6228c7c22e430edcd1f0ed332b",
+      "raw_bytes": 8344261,
+      "compressed_bytes": 226793,
+      "scored": true
+    },
+    {
+      "archive": "invalid-smoke.json.gz",
+      "raw_sha256": "9a3d3f29b41a3a3fd54b9a332139f5f4f554888cabe867447125ee82f4ac0472",
+      "compressed_sha256": "e76658711555fb3f67b0b78020d490827aa52c9941446de57ac8af76a99dd1b5",
+      "raw_bytes": 856309,
+      "compressed_bytes": 39013,
+      "scored": false
+    },
+    {
+      "archive": "invalid-smoke2.json.gz",
+      "raw_sha256": "b9b529cea57c3184521f87700cd2c3f92a06f8679acfb8d6746a6d8aeabf7709",
+      "compressed_sha256": "53b24188cfc976b0367157cdbdce1df9b9f15177cac76ac17a2c091ba749060d",
+      "raw_bytes": 1569400,
+      "compressed_bytes": 60672,
+      "scored": false
+    }
+  ]
+}
