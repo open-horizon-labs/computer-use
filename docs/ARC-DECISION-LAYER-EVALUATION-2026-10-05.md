@@ -1,5 +1,7 @@
 # Arc decision-layer qualification — 2026-10-05
 
+This is the historical Arc-only direct-backend study. The later [matched real JEV comparison on Arc and Cua Driver 0.34.0](JEV-ARC-CUA-MATCHED-2026-10-05.md) uses public MCP backends and identical WebKit hosts; its results differ and are not pooled with this Chrome/CDP study.
+
 Arc's default JEV decision layer passed 14 of 21 live synthetic trials. All nine browser trials passed, including a covered button and duplicate-record selection with an untrusted instruction. Native popup selection passed 3/3, but the native form and modal-recovery tasks failed 0/3 each. It is a promising bounded browser specialist; these results do not support making its decision layer the general native-app default. The independently measured driver speed advantage remains a separate result.
 
 The credential ran through the existing Fleet worker `personal.stock`, using its configured read-only 1Password Connect access to `Fleet/Typesafe.ai Jev API Key/credential`. The key remained in worker memory; it never crossed to the Mac or entered evidence. Desktop 1Password unlock was unnecessary. The local Mac executed owned synthetic fixtures while a persistent SSH bridge forwarded model requests to the worker.

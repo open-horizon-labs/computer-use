@@ -113,7 +113,11 @@ def run_one(name, rep, backend, task, policy, oracle, expected=TerminalKind.SUBT
                 continue
             last_decision = decision
             raw = decision.raw or {}
-            events.append({'step': event.step, 'target_name': event.snapshot.element(decision.target_id).name if decision.target_id else None, 'state_changed': event.record.state_changed if event.record else None, 'operation': decision.kind.value if decision.kind else decision.terminal.value,
+            target_name = event.record.target_name if event.record else None
+            if target_name is None and decision.target_id:
+                try: target_name = event.snapshot.element(decision.target_id).name
+                except KeyError: pass
+            events.append({'step': event.step, 'target_name': target_name, 'state_changed': event.record.state_changed if event.record else None, 'operation': decision.kind.value if decision.kind else decision.terminal.value,
                            'target': decision.target_id, 'input_key': decision.input_key,
                            'confidence': decision.confidence, 'margin': decision.margin,
                            'decision_ms': decision.latency_ms,

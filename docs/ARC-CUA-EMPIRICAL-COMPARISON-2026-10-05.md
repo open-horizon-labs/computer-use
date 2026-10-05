@@ -1,5 +1,7 @@
 # Arc versus current Cua Driver — 2026-10-05
 
+This 0.33.4 driver comparison is historical following the publication of Cua Driver 0.34.0. The later [matched JEV comparison](JEV-ARC-CUA-MATCHED-2026-10-05.md) checks current 0.34.0 and actual running server versions; it measures model plus projection plus driver, rather than reusing these scripted speed results as current agent evidence.
+
 ## Current result
 
 Both candidates were checked against upstream before this rerun: the installed Cua Driver was updated to **0.33.4**, the latest component release, and Arc remains **0.1.1** at upstream head `6ca19d62c95106732fad28f488ecd458c08e02f4`. MCP initialization independently confirms the running servers' versions. The original 0.31.0 comparison was outdated for a current head-to-head; it is preserved as [historical evidence](ARC-CUA-COMPARISON-0.31.0-2026-10-05.md), not the basis for the figures here.
