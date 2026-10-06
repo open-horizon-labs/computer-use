@@ -1,0 +1,41 @@
+# Arc qualification and upstream review — 2026-10-05
+
+The optional record-binding improvement is ready for review in [arc-cua #3](https://github.com/shhivv/arc-cua/pull/3). The suspected menu activation did not reproduce under controlled sampling, so it does not warrant a bug PR on this evidence. The two independently reproduced Cua click bugs have separate draft PRs with focused native regressions.
+
+## Optional record binding
+
+The evaluated arc source is `6ca19d62c95106732fad28f488ecd458c08e02f4` (0.1.1). Keeping the same Submit control while changing its record heading from A to B caused three of three unguarded live MCP trials to submit Record B. With explicit `guard_elements` containing the originally observed heading, all three returned `stale` and the independent fixture reported zero submissions. [Sanitized results](../experiments/arc-cua-comparison-2026-10-05/context-guard-results.json).
+
+Candidate `f92c9e5f27edf7ea6079b9a4ba7213223d5f057d` captures anchor fingerprints before any journal refresh, then reobserves the exact bound window before input. The empty/default path retains its behavior and observation cost. Callers choose the anchors and still own semantic record matching and outcome verification; the check is not an atomic application transaction. The PR includes a self-contained public-MCP/AppKit smoke, invalid-input and exact-window tests, and documentation. All 391 tests pass, Ruff passes, and removing the fingerprint comparison causes the name/value/parent-change regressions to fail. Independent binding review completed. The installed source pin stays at the evaluated upstream revision until the improvement is accepted and separately qualified.
+
+## Controlled menu reproduction
+
+Five repetitions used two owned shown AppKit fixtures: a target with a menu increment action and a separate sentinel. Native `bring_to_front` set up the sentinel before sampling; arc `commands` and `run_command(..., settle: true)` operated only the target. The target fixture records `NSApplicationDidBecomeActiveNotification`; both fixtures publish their own `NSApp.isActive` state every 5 ms, sampled approximately every 1 ms during baseline, discovery, the intervening pause, command dispatch/settling and the following 500 ms. Independent target counters establish effects.
+
+All five commands returned `done`, the target counter reached one, the sentinel remained active at every sample, and the target recorded zero activation notifications during command dispatch and settling. [Sanitized phase counts](../experiments/arc-cua-comparison-2026-10-05/menu-controlled-results.json), [reproduction](../experiments/arc-cua-comparison-2026-10-05/menu_controlled.py), [fixture](../experiments/arc-cua-comparison-2026-10-05/menu-fixture/fixture.py). Supply `ARC_EVAL_SOURCE` for the evaluated arc checkout and `CUA_MENU_SETUP_DRIVER` for the native setup executable; run using the Python environment with arc and PyObjC installed. Setup clients need their normal OS grants.
+
+Three initial setup attempts were excluded because the Python observer's cached NSWorkspace front-app value did not reflect activation. The corrected oracle uses each fixture's running AppKit state and target activation notifications. The earlier mixed-host observation included launch/observation activity and cannot attribute a transient to menu dispatch. This negative reproduction qualifies only this synthetic command on this Mac; it cannot promise that every application's menu action avoids activation. No screenshots, Apple menu trees, private host inventory or virtual displays are retained or used for this test.
+
+## Cua fixes
+
+[trycua/cua #4677](https://github.com/trycua/cua/pull/4677) refuses cached clicks after observed control identity changes. Final candidate `85ec50f` includes fresh-label normalization and dispatch-time checks after foreground activation/cursor motion. Its owned AppKit regression passes; five snapshot unit tests pass. The original bug reproduced three of three times on the checksum-verified 0.33.4 release.
+
+[trycua/cua #4678](https://github.com/trycua/cua/pull/4678) refuses parent-window clicks behind an attached modal sheet. Final candidate `d804b30` preserves exact-owner foreground menu clicks and rechecks at dispatch. Its expanded owned AppKit regression verifies blocked parent clicks, sheet dismissal, resumed parent interaction and a working foreground menu item. The original bug reproduced three of three times on the same official release. The PRs are independent.
+
+Both PRs include canonical runner registration and earlier mutation checks against their initial guards. The final dispatch seam is reviewed in code; a separately synchronized live race test has not been added. Focused owned native checks passed, but the repository requires the complete canonical macOS desktop/browser matrix at the final SHA before marking ready. These PRs remain drafts for maintainers to run that gate; the local evidence does not certify the whole release. No running user daemon was upgraded or restarted.
+
+## Latest-candidate comparison correction
+
+Cua Driver was updated to latest 0.33.4 and its daemon restarted with preserved signed-app OS grants. Arc upstream remains at 6ca19d6. The complete 72-case head-to-head was rerun with matching actual MCP server versions and no fixture setup failures. Current median native-form MCP time is 1.19 s Arc versus 9.70 s Cua (8.1×), and renderer-form time is 1.48 s versus 11.20 s (7.6×); both complete 3/3. Cua is faster on the menu case. [Current report](ARC-CUA-EMPIRICAL-COMPARISON-2026-10-05.md) supersedes the 0.31.0 speed comparison.
+
+One Arc delayed-sheet trial submitted behind the modal sheet, so the latest refusal score is 2/3 rather than the earlier 3/3. This failure is retained, and three fresh-server confirmation trials reproduced one behind-sheet submission. [Confirmation evidence](../experiments/arc-cua-comparison-2026-10-05/latest-0334/delayed-sheet-followup.json). Existing Cua click bugs and both drivers' wrong-record submissions persist on the latest baselines. AGENTS.md and the harness now require current candidates, exact source provenance and verified running-server versions before future comparisons.
+
+## Live decision-layer qualification and cursor ablation
+
+The default JEV policy was evaluated through Fleet's configured 1Password Connect credential route, with the key retained on its existing worker. It passed 14/21 independently scored synthetic trials: all nine browser cases and all three native popup cases passed, while native form and modal recovery failed all three repetitions each; missing-input handoff met its exact contract twice. No false completion occurred. The returned model was jev-1.13.0. [Full qualification and evidence](ARC-DECISION-LAYER-EVALUATION-2026-10-05.md) support a bounded browser specialist with caller verification, while native decision execution remains experimental. This does not change the driver-only default or establish planner superiority.
+
+The delegated [cursor ablation](../experiments/arc-cua-comparison-2026-10-05/cursor-ablation/REPORT.md) found no useful gain from disabling the Cua session cursor: native form medians were 9.773 s enabled and 9.943 s disabled; renderer form medians were 11.115 s and 11.151 s. All 18 trials verified. The earlier animation hypothesis is unsupported by this configuration, so no animation PR was created. Enabled registry state does not prove animation actually rendered; internal action stages still require profiling.
+
+## Matched real JEV on current Cua and Arc
+
+The [42-trial matched evaluation](JEV-ARC-CUA-MATCHED-2026-10-05.md) uses latest Cua Driver 0.34.0 and current Arc, with identical JEV policy/goals/budgets and public-MCP AX backends. Arc met strict terminal plus oracle criteria 9/21, Cua 8/21. Arc made three false native-form completion claims; Cua made none. Oracle satisfaction is reported separately, including correct B submissions followed by Cua handoff and Cua’s fixed-window browser popup refusal. Neither path is qualified as a general JEV native decision default. All 169 requests returned jev-1.13.0; the approximately 166 ms request medians match between drivers. The older Arc-only Chrome/CDP study and 0.33.4 scripted driver timings remain separate historical evidence.

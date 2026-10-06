@@ -1,6 +1,6 @@
 # On behalf of the user
 
-Use native computer-use tools in the user's real apps and logged-in browser. Prefer the browser/app named by the user; inspect current state and bind the exact target. Use a unique observed match; resolve genuine ambiguity rather than demanding an exact title string the user may not know.
+On macOS, use the connected arc-cua standalone driver first for app/window interaction; follow [arc's binding and verification workflow](arc.md). Use available native tools elsewhere or when arc cannot cover the required control. Prefer the browser/app named by the user; preserve the real app and logged-in session, inspect current state and bind the exact target. Use a unique observed match with its surrounding record; resolve genuine ambiguity rather than demanding an exact title string the user may not know.
 
 Delegated routine interaction includes bringing the bound target forward when needed, clicking widgets and opening native pickers. Do not ask again for routine foreground delivery merely because a background route refuses. Use the available native tool's supported foreground route. Keep execution within the user's requested work; OS permissions and credentials still need the user's participation when unavailable.
 

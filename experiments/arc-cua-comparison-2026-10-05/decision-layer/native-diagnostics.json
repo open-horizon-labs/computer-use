@@ -1,0 +1,210 @@
+[
+  {
+    "case": "native_form",
+    "rep": 3,
+    "requested_model": "jev-latest",
+    "status": "BLOCKED",
+    "reason": "No observable UI change after 3 consecutive actions.",
+    "actions": 5,
+    "claimed_complete": false,
+    "verified": false,
+    "passed": false,
+    "false_completion": false,
+    "wall_ms": 4757.885708997492,
+    "decisions": [
+      {
+        "step": 1,
+        "target_name": "Full name",
+        "state_changed": true,
+        "operation": "TYPE_TEXT",
+        "target": "ax_3",
+        "input_key": "name",
+        "confidence": 0.58,
+        "margin": 0.28,
+        "decision_ms": 252,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 4494,
+          "output_tokens": 832
+        }
+      },
+      {
+        "step": 2,
+        "target_name": "Email",
+        "state_changed": true,
+        "operation": "TYPE_TEXT",
+        "target": "ax_5",
+        "input_key": "email",
+        "confidence": 0.65,
+        "margin": 0.55,
+        "decision_ms": 252,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 4824,
+          "output_tokens": 841
+        }
+      },
+      {
+        "step": 3,
+        "target_name": "Full name",
+        "state_changed": false,
+        "operation": "CLICK",
+        "target": "ax_3",
+        "input_key": null,
+        "confidence": 0.24,
+        "margin": 0.03999999999999998,
+        "decision_ms": 215,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 5131,
+          "output_tokens": 838
+        }
+      },
+      {
+        "step": 4,
+        "target_name": "Full name",
+        "state_changed": false,
+        "operation": "CLICK",
+        "target": "ax_3",
+        "input_key": null,
+        "confidence": 0.42,
+        "margin": 0.12,
+        "decision_ms": 241,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 5433,
+          "output_tokens": 838
+        }
+      },
+      {
+        "step": 5,
+        "target_name": "Full name",
+        "state_changed": false,
+        "operation": "CLICK",
+        "target": "ax_3",
+        "input_key": null,
+        "confidence": 0.45,
+        "margin": 0.13,
+        "decision_ms": 241,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 5735,
+          "output_tokens": 838
+        }
+      }
+    ],
+    "decision_ms": 1201,
+    "fixture_state": {
+      "name": "Synthetic Person",
+      "email": "synthetic@example.invalid",
+      "subscribe": false,
+      "plan": "Basic",
+      "submitted": 0,
+      "counter": 0,
+      "dialog": false,
+      "active": true,
+      "minimized": false,
+      "hidden": false,
+      "applied": 0,
+      "record": "Record A",
+      "submitted_record": null,
+      "submit_label": "Submit"
+    }
+  },
+  {
+    "case": "modal_recovery",
+    "rep": 3,
+    "requested_model": "jev-latest",
+    "status": "BLOCKED",
+    "reason": "No observable UI change after 3 consecutive actions.",
+    "actions": 4,
+    "claimed_complete": false,
+    "verified": false,
+    "passed": false,
+    "false_completion": false,
+    "wall_ms": 2486.2367089954205,
+    "decisions": [
+      {
+        "step": 1,
+        "target_name": "",
+        "state_changed": true,
+        "operation": "CLICK",
+        "target": "ax_18",
+        "input_key": null,
+        "confidence": 0.27,
+        "margin": 0.15999999999999998,
+        "decision_ms": 340,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 3820,
+          "output_tokens": 650
+        }
+      },
+      {
+        "step": 2,
+        "target_name": "",
+        "state_changed": false,
+        "operation": "CLICK",
+        "target": "ax_18",
+        "input_key": null,
+        "confidence": 0.42,
+        "margin": 0.31999999999999995,
+        "decision_ms": 220,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 4132,
+          "output_tokens": 651
+        }
+      },
+      {
+        "step": 3,
+        "target_name": "",
+        "state_changed": false,
+        "operation": "CLICK",
+        "target": "ax_18",
+        "input_key": null,
+        "confidence": 0.62,
+        "margin": 0.55,
+        "decision_ms": 218,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 4416,
+          "output_tokens": 651
+        }
+      },
+      {
+        "step": 4,
+        "target_name": "",
+        "state_changed": false,
+        "operation": "CLICK",
+        "target": "ax_18",
+        "input_key": null,
+        "confidence": 0.67,
+        "margin": 0.62,
+        "decision_ms": 260,
+        "reported_model": "jev-1.13.0",
+        "usage": {
+          "input_tokens": 4700,
+          "output_tokens": 650
+        }
+      }
+    ],
+    "decision_ms": 1038,
+    "fixture_state": {
+      "name": "",
+      "email": "",
+      "subscribe": false,
+      "plan": "Basic",
+      "submitted": 0,
+      "counter": 0,
+      "dialog": true,
+      "active": true,
+      "minimized": true,
+      "hidden": false,
+      "applied": 1,
+      "record": "Record A",
+      "submitted_record": null,
+      "submit_label": "Submit"
+    }
+  }
+]

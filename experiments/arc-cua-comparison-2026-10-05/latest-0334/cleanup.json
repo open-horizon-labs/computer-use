@@ -1,0 +1,13 @@
+{
+  "native_before": "0.31.0",
+  "native_after": "0.33.4",
+  "latest_native_verified_after_run": true,
+  "active_displays": 3,
+  "online_displays": 3,
+  "preserved_fault_matches_prior_incident": true,
+  "preserved_fault_sha256": "6a3c5abd172ecedc6cc3f9a6e54292f6b39662d1cd4a414dacf7bccf468e5108",
+  "owned_fixture_processes_remaining": 0,
+  "native_daemon_left_running": true,
+  "virtual_displays_created": 0,
+  "source_revision": "6ca19d62c95106732fad28f488ecd458c08e02f4"
+}
