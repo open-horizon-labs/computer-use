@@ -1,0 +1,20 @@
+[
+  {
+    "mutant": "trust_echo",
+    "keeper_failed": true,
+    "reason": "keeper expected exact rejected outcome",
+    "observed_terminal": "complete"
+  },
+  {
+    "mutant": "skip_fence",
+    "keeper_failed": true,
+    "reason": "keeper expected exact rejected outcome",
+    "observed_terminal": "complete"
+  },
+  {
+    "mutant": "cancel_watchers",
+    "keeper_failed": true,
+    "reason": "caller cancellation killed supervisors",
+    "observed_terminal": "supervision_cancelled"
+  }
+]

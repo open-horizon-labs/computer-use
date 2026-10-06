@@ -1,0 +1,779 @@
+[
+  {
+    "mode": "serial",
+    "scenario": "stable",
+    "terminal": "complete",
+    "decision_ms": 249.88845799999999,
+    "elapsed_ms": 249.93754199999995,
+    "writes": 2,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice",
+        "email": "a@example.test"
+      },
+      "generation": 0,
+      "acks": {
+        "0b458c6f744f4cd090a35bb4b3e18106": {
+          "tx": "0b458c6f744f4cd090a35bb4b3e18106",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "name",
+          "value": "Alice"
+        },
+        "ac753ff7fdc847298c6b08bf16057eee": {
+          "tx": "ac753ff7fdc847298c6b08bf16057eee",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "email",
+          "value": "a@example.test"
+        }
+      }
+    }
+  },
+  {
+    "mode": "supervision",
+    "scenario": "stable",
+    "terminal": "complete",
+    "decision_ms": 153.27079200000006,
+    "elapsed_ms": 153.31958400000002,
+    "writes": 2,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice",
+        "email": "a@example.test"
+      },
+      "generation": 0,
+      "acks": {
+        "088019b9be2c4bc692d59bcfadad958e": {
+          "tx": "088019b9be2c4bc692d59bcfadad958e",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "name",
+          "value": "Alice"
+        },
+        "68ab3cf946f042b7be1490e83c52b2e9": {
+          "tx": "68ab3cf946f042b7be1490e83c52b2e9",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "email",
+          "value": "a@example.test"
+        }
+      }
+    }
+  },
+  {
+    "mode": "evidence",
+    "scenario": "stable",
+    "terminal": "complete",
+    "decision_ms": 78.13075000000002,
+    "elapsed_ms": 78.13687499999999,
+    "writes": 2,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice",
+        "email": "a@example.test"
+      },
+      "generation": 0,
+      "acks": {
+        "641f0527bc5f481c93644d9a1a15add3": {
+          "tx": "641f0527bc5f481c93644d9a1a15add3",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "name",
+          "value": "Alice"
+        },
+        "3948e51efd9144e2939024c532abaed0": {
+          "tx": "3948e51efd9144e2939024c532abaed0",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "email",
+          "value": "a@example.test"
+        }
+      }
+    }
+  },
+  {
+    "mode": "combined",
+    "scenario": "stable",
+    "terminal": "complete",
+    "decision_ms": 149.28033299999998,
+    "elapsed_ms": 149.32295800000006,
+    "writes": 2,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice",
+        "email": "a@example.test"
+      },
+      "generation": 0,
+      "acks": {
+        "e77703406ec34360898dcce11041e5f8": {
+          "tx": "e77703406ec34360898dcce11041e5f8",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "name",
+          "value": "Alice"
+        },
+        "c0c5906691224cb9bc4c78e18addb384": {
+          "tx": "c0c5906691224cb9bc4c78e18addb384",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "email",
+          "value": "a@example.test"
+        }
+      }
+    }
+  },
+  {
+    "mode": "serial",
+    "scenario": "reject",
+    "terminal": "rejected",
+    "decision_ms": 93.39508399999997,
+    "elapsed_ms": 93.442625,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "4283b9a78165442eb95057dac8a163b4": {
+          "tx": "4283b9a78165442eb95057dac8a163b4",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "supervision",
+    "scenario": "reject",
+    "terminal": "rejected",
+    "decision_ms": 95.5315,
+    "elapsed_ms": 95.57395800000002,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "b3098508246941e4a65a381661fe454e": {
+          "tx": "b3098508246941e4a65a381661fe454e",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "evidence",
+    "scenario": "reject",
+    "terminal": "rejected",
+    "decision_ms": 93.77708300000009,
+    "elapsed_ms": 93.78362500000004,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "13a988898d774b34adca2677863d6105": {
+          "tx": "13a988898d774b34adca2677863d6105",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "combined",
+    "scenario": "reject",
+    "terminal": "rejected",
+    "decision_ms": 94.433333,
+    "elapsed_ms": 94.50991700000012,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "b630abfb8c6541eba27b1958da940eb3": {
+          "tx": "b630abfb8c6541eba27b1958da940eb3",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "serial",
+    "scenario": "late_reject",
+    "terminal": "complete",
+    "decision_ms": 146.636958,
+    "elapsed_ms": 146.68508299999993,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "supervision",
+    "scenario": "late_reject",
+    "terminal": "complete",
+    "decision_ms": 153.98204100000012,
+    "elapsed_ms": 154.02554099999998,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "evidence",
+    "scenario": "late_reject",
+    "terminal": "rejected",
+    "decision_ms": 192.82170899999994,
+    "elapsed_ms": 192.82812499999991,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "b1bb878a6e3247199c0195856cc7c327": {
+          "tx": "b1bb878a6e3247199c0195856cc7c327",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "combined",
+    "scenario": "late_reject",
+    "terminal": "rejected",
+    "decision_ms": 194.95149999999995,
+    "elapsed_ms": 195.0992089999999,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "55f7354721f8420488006b6d02c5e610": {
+          "tx": "55f7354721f8420488006b6d02c5e610",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "serial",
+    "scenario": "record_change",
+    "terminal": "context_changed",
+    "decision_ms": 52.99662500000002,
+    "elapsed_ms": 53.03229200000015,
+    "writes": 1,
+    "state": {
+      "record": "B",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 1,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "supervision",
+    "scenario": "record_change",
+    "terminal": "context_changed",
+    "decision_ms": 41.18095799999999,
+    "elapsed_ms": 41.21554199999999,
+    "writes": 1,
+    "state": {
+      "record": "B",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 1,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "evidence",
+    "scenario": "record_change",
+    "terminal": "context_changed",
+    "decision_ms": 39.88295900000005,
+    "elapsed_ms": 39.89666700000005,
+    "writes": 1,
+    "state": {
+      "record": "B",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 1,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "combined",
+    "scenario": "record_change",
+    "terminal": "context_changed",
+    "decision_ms": 40.761999999999965,
+    "elapsed_ms": 40.81762499999986,
+    "writes": 1,
+    "state": {
+      "record": "B",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 1,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "serial",
+    "scenario": "dependent",
+    "terminal": "rejected",
+    "decision_ms": 89.09504199999985,
+    "elapsed_ms": 89.16770799999973,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "ef355766adbd4427a1f13ca450d867b5": {
+          "tx": "ef355766adbd4427a1f13ca450d867b5",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "supervision",
+    "scenario": "dependent",
+    "terminal": "rejected",
+    "decision_ms": 87.29604199999974,
+    "elapsed_ms": 87.47604200000004,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "8f96cd985bec4f2e8ccb4c01ec105fff": {
+          "tx": "8f96cd985bec4f2e8ccb4c01ec105fff",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "evidence",
+    "scenario": "dependent",
+    "terminal": "rejected",
+    "decision_ms": 87.43791699999991,
+    "elapsed_ms": 87.44337499999988,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "f1b2650ca73841dfa6e8cae546dfda9f": {
+          "tx": "f1b2650ca73841dfa6e8cae546dfda9f",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "combined",
+    "scenario": "dependent",
+    "terminal": "rejected",
+    "decision_ms": 89.84137499999977,
+    "elapsed_ms": 90.01008399999976,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED"
+      },
+      "generation": 0,
+      "acks": {
+        "eba0bdb84bf146989bfe6e04c2954861": {
+          "tx": "eba0bdb84bf146989bfe6e04c2954861",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "serial",
+    "scenario": "partial_failure",
+    "terminal": "rejected",
+    "decision_ms": 145.2836660000001,
+    "elapsed_ms": 145.3384579999999,
+    "writes": 2,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED",
+        "email": "a@example.test"
+      },
+      "generation": 0,
+      "acks": {
+        "e0a432d1f6404618a0ab9344392daf74": {
+          "tx": "e0a432d1f6404618a0ab9344392daf74",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "email",
+          "value": "a@example.test"
+        },
+        "a529bfa58cd54840a15d9557fc7a6230": {
+          "tx": "a529bfa58cd54840a15d9557fc7a6230",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "supervision",
+    "scenario": "partial_failure",
+    "terminal": "rejected",
+    "decision_ms": 153.62554200000034,
+    "elapsed_ms": 153.69604200000043,
+    "writes": 2,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED",
+        "email": "a@example.test"
+      },
+      "generation": 0,
+      "acks": {
+        "51a70e8949fb461e8ed9597da9fcfd65": {
+          "tx": "51a70e8949fb461e8ed9597da9fcfd65",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "email",
+          "value": "a@example.test"
+        },
+        "23f1170d22f9424888aba8c2f8d2ec39": {
+          "tx": "23f1170d22f9424888aba8c2f8d2ec39",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "evidence",
+    "scenario": "partial_failure",
+    "terminal": "rejected",
+    "decision_ms": 97.20187499999966,
+    "elapsed_ms": 97.20920899999984,
+    "writes": 2,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED",
+        "email": "a@example.test"
+      },
+      "generation": 0,
+      "acks": {
+        "086958dde0044b9db37045e9b940e7fc": {
+          "tx": "086958dde0044b9db37045e9b940e7fc",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "email",
+          "value": "a@example.test"
+        },
+        "f97e1bbe1b374553bd36ef792c8384b5": {
+          "tx": "f97e1bbe1b374553bd36ef792c8384b5",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "combined",
+    "scenario": "partial_failure",
+    "terminal": "rejected",
+    "decision_ms": 91.92291699999977,
+    "elapsed_ms": 147.620458,
+    "writes": 2,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "REJECTED",
+        "email": "a@example.test"
+      },
+      "generation": 0,
+      "acks": {
+        "4844e6ee45204232b3d3b8ffa226bc7a": {
+          "tx": "4844e6ee45204232b3d3b8ffa226bc7a",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "email",
+          "value": "a@example.test"
+        },
+        "a3ba2da31f224879a2d283a452d654b1": {
+          "tx": "a3ba2da31f224879a2d283a452d654b1",
+          "record": "A",
+          "generation": 0,
+          "outcome": "rejected",
+          "key": "name",
+          "value": "REJECTED"
+        }
+      }
+    }
+  },
+  {
+    "mode": "serial",
+    "scenario": "missing_ack",
+    "terminal": "complete",
+    "decision_ms": 153.08662500000025,
+    "elapsed_ms": 153.14216700000037,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "supervision",
+    "scenario": "missing_ack",
+    "terminal": "complete",
+    "decision_ms": 153.15837499999984,
+    "elapsed_ms": 153.20870799999975,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "evidence",
+    "scenario": "missing_ack",
+    "terminal": "ack_unavailable",
+    "decision_ms": 347.378709,
+    "elapsed_ms": 347.3913749999999,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "combined",
+    "scenario": "missing_ack",
+    "terminal": "ack_unavailable",
+    "decision_ms": 355.56216600000033,
+    "elapsed_ms": 355.6654999999997,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "serial",
+    "scenario": "cancel",
+    "supervisor_alive": true,
+    "terminal": "complete",
+    "decision_ms": 154.0894160000006,
+    "elapsed_ms": 154.13241600000038,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {
+        "5d47eb5667bd45e88746dd639e2648bc": {
+          "tx": "5d47eb5667bd45e88746dd639e2648bc",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "name",
+          "value": "Alice"
+        }
+      }
+    }
+  },
+  {
+    "mode": "supervision",
+    "scenario": "cancel",
+    "supervisor_alive": true,
+    "terminal": "complete",
+    "decision_ms": 150.9008329999997,
+    "elapsed_ms": 150.94554199999965,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {
+        "77263559ae6a4ef6ade3cb1ef21fa102": {
+          "tx": "77263559ae6a4ef6ade3cb1ef21fa102",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "name",
+          "value": "Alice"
+        }
+      }
+    }
+  },
+  {
+    "mode": "evidence",
+    "scenario": "cancel",
+    "supervisor_alive": true,
+    "terminal": "complete",
+    "decision_ms": 61.57662500000072,
+    "elapsed_ms": 61.57983300000058,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {}
+    }
+  },
+  {
+    "mode": "combined",
+    "scenario": "cancel",
+    "supervisor_alive": true,
+    "terminal": "complete",
+    "decision_ms": 144.31158399999956,
+    "elapsed_ms": 144.34954199999962,
+    "writes": 1,
+    "state": {
+      "record": "A",
+      "values": {
+        "name": "Alice"
+      },
+      "generation": 0,
+      "acks": {
+        "d359390a1c0b4765a4d8c38c783cea81": {
+          "tx": "d359390a1c0b4765a4d8c38c783cea81",
+          "record": "A",
+          "generation": 0,
+          "outcome": "committed",
+          "key": "name",
+          "value": "Alice"
+        }
+      }
+    }
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "python": "3.9.6 (default, Aug 25 2026, 21:26:21) \n[Clang 21.0.0 (clang-2100.3.34.2)]",
+  "scope": "offline separate-process completion protocol; no native driver or desktop input",
+  "sha256": {
+    "REPORT.md": "df8b3173313a152ba5f80ceab9517aececfa5815e5306c47140729515a437c00",
+    "results.json": "9cd17605a7686604d7099f062c657c93c43af26020e58d8a76c90e13a4e93ad5",
+    "benchmark.json": "db554439f4551924e3ef580ca326263461ad81eaf451144bfdee01b01406af4b",
+    "test_study.py": "a82ab2725096cb6a545e4bb98fa91be1ac7125a44c6d2b21b04e5e259c798d75",
+    "bench.py": "ccf07320e83845b6ed4b1eaf8850baffb7152558826b6b1c3edbfd15b7f5e20f",
+    "tests.log": "6f8f0b02ef153d2c73ffed685ad98a5ab97610c9cbd67addef6e068191b2b919",
+    "mutation-check.json": "ea32674d8db144efb8b14f4538c2c29d9a64a6821c35264b333e6b54f714f0c4",
+    "mutation_check.py": "7afe10064e7ac22d676a76975f1b67a7732b8b795e530facf0ce6c911516e08d",
+    "study.py": "dbae07381674b518253d759e48338d009f4ba55466be5ddbbae36aeb0077fd13"
+  }
+}
