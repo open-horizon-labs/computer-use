@@ -1,0 +1,67 @@
+{
+  "versions": {
+    "arc_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+    "arc_version": "0.1.1",
+    "native_version": "0.34.0",
+    "native_latest_version": "0.34.0",
+    "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
+    "arc_upstream_checked_at": "2026-10-06T22:20:08.958276+00:00",
+    "candidates_checked_at": "2026-10-06T22:20:08Z",
+    "macos": "27.0.1",
+    "python": "3.12.12"
+  },
+  "row": {
+    "mode": "supervision",
+    "scenario": "activation",
+    "rep": -1,
+    "terminal": "handoff",
+    "strict_pass": false,
+    "writes": 1,
+    "foreground_binding": {
+      "cocoa_front_matches": true,
+      "native_front_matches": true,
+      "registered": true
+    },
+    "fence": {
+      "exit_code": 0,
+      "disconnect_wait_ms": 1529.4864589959616
+    },
+    "error": "I/O operation on closed file",
+    "target_ever_active": false,
+    "competing_input_detected": false,
+    "oracle": {
+      "name": "Native Person",
+      "email": "",
+      "subscribe": false,
+      "plan": "Basic",
+      "submitted": 0,
+      "counter": 0,
+      "dialog": false,
+      "active": false,
+      "minimized": false,
+      "hidden": false,
+      "applied": 0,
+      "record": "Record A",
+      "submitted_record": null,
+      "submit_label": "Submit",
+      "transactions": {
+        "eb46f135d58a453394b20abbaec01e82": {
+          "status": "committed",
+          "tx": "eb46f135d58a453394b20abbaec01e82",
+          "field": "name",
+          "value": "Native Person",
+          "record": "Record A",
+          "generation": 0,
+          "pid": 21665,
+          "window_id": 19464
+        }
+      },
+      "pid": 21665,
+      "window_id": 19464,
+      "generation": 0,
+      "activation_requests": 1
+    },
+    "foreground_preserved": true
+  },
+  "cleanup_restored": true
+}

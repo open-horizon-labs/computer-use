@@ -1,0 +1,1226 @@
+{
+  "versions": {
+    "arc_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+    "arc_version": "0.1.1",
+    "native_version": "0.34.0",
+    "native_latest_version": "0.34.0",
+    "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
+    "arc_upstream_checked_at": "2026-10-06T22:22:31.944595+00:00",
+    "candidates_checked_at": "2026-10-06T22:22:31Z",
+    "macos": "27.0.1",
+    "python": "3.12.12"
+  },
+  "rows": [
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "rep": 0,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "committed_ms": 416.63608299859334,
+      "supervision_at_commit": "pending_owned",
+      "fence": {
+        "receipts": {
+          "receipt-1": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-2": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          }
+        },
+        "supervision": [
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          },
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          }
+        ]
+      },
+      "decision_ms": 1471.1937920073979,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "2202d1551d0e4db89397d29b54631885": {
+            "status": "committed",
+            "tx": "2202d1551d0e4db89397d29b54631885",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 35880,
+            "window_id": 19801
+          },
+          "957a173015854e898bfcfc9343302e7c": {
+            "status": "committed",
+            "tx": "957a173015854e898bfcfc9343302e7c",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 35880,
+            "window_id": 19801
+          }
+        },
+        "pid": 35880,
+        "window_id": 19801,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": true
+    },
+    {
+      "mode": "arc_ack",
+      "scenario": "stable",
+      "rep": 0,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 757.7148330019554,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "ab3bad0b0d404319b930338cd124cdd3": {
+            "status": "committed",
+            "tx": "ab3bad0b0d404319b930338cd124cdd3",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 36437,
+            "window_id": 19807
+          },
+          "9b862b1e64404b5b9f8a27e71bc34fc5": {
+            "status": "committed",
+            "tx": "9b862b1e64404b5b9f8a27e71bc34fc5",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 36437,
+            "window_id": 19807
+          }
+        },
+        "pid": 36437,
+        "window_id": 19807,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": true
+    },
+    {
+      "mode": "arc_ack",
+      "scenario": "stable",
+      "rep": 1,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 496.0223749949364,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "095ca9c40e8b4a01984753629056f267": {
+            "status": "committed",
+            "tx": "095ca9c40e8b4a01984753629056f267",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 36893,
+            "window_id": 19819
+          },
+          "b41406438f3149f09f6d042806637d35": {
+            "status": "committed",
+            "tx": "b41406438f3149f09f6d042806637d35",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 36893,
+            "window_id": 19819
+          }
+        },
+        "pid": 36893,
+        "window_id": 19819,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "rep": 1,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "committed_ms": 458.2651250093477,
+      "supervision_at_commit": "pending_owned",
+      "fence": {
+        "receipts": {
+          "receipt-1": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-2": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-3": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-4": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          }
+        },
+        "supervision": [
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          },
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          }
+        ]
+      },
+      "decision_ms": 1501.5737080102554,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "d769b5f8ad604e44b4f1c50700bf9d50": {
+            "status": "committed",
+            "tx": "d769b5f8ad604e44b4f1c50700bf9d50",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 37334,
+            "window_id": 19825
+          },
+          "78254ab4182e4af3993db59332adc9d8": {
+            "status": "committed",
+            "tx": "78254ab4182e4af3993db59332adc9d8",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 37334,
+            "window_id": 19825
+          }
+        },
+        "pid": 37334,
+        "window_id": 19825,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "rep": 2,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "committed_ms": 451.8509159970563,
+      "supervision_at_commit": "pending_owned",
+      "fence": {
+        "receipts": {
+          "receipt-1": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-2": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-3": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-4": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-5": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-6": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          }
+        },
+        "supervision": [
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          },
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          }
+        ]
+      },
+      "decision_ms": 1511.7590000008931,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "4b597525445148329d1d3721eb753801": {
+            "status": "committed",
+            "tx": "4b597525445148329d1d3721eb753801",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 37950,
+            "window_id": 19837
+          },
+          "6d12ace63c1f454780832b8f0bd2e422": {
+            "status": "committed",
+            "tx": "6d12ace63c1f454780832b8f0bd2e422",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 37950,
+            "window_id": 19837
+          }
+        },
+        "pid": 37950,
+        "window_id": 19837,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "arc_ack",
+      "scenario": "stable",
+      "rep": 2,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 494.3615419906564,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "a5b69091aab5421b9166dfb4e1d1e31a": {
+            "status": "committed",
+            "tx": "a5b69091aab5421b9166dfb4e1d1e31a",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 38530,
+            "window_id": 19843
+          },
+          "922db6e3842945adbffcabb1bcdfa6d6": {
+            "status": "committed",
+            "tx": "922db6e3842945adbffcabb1bcdfa6d6",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 38530,
+            "window_id": 19843
+          }
+        },
+        "pid": 38530,
+        "window_id": 19843,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "arc_ack",
+      "scenario": "stable",
+      "rep": 3,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 539.9256249947939,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "8e5e42efc6b54bc99c73de707bdb397c": {
+            "status": "committed",
+            "tx": "8e5e42efc6b54bc99c73de707bdb397c",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 39023,
+            "window_id": 19849
+          },
+          "cd4af175aa38424dac7d2e4002467050": {
+            "status": "committed",
+            "tx": "cd4af175aa38424dac7d2e4002467050",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 39023,
+            "window_id": 19849
+          }
+        },
+        "pid": 39023,
+        "window_id": 19849,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "rep": 3,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "committed_ms": 421.1776669981191,
+      "supervision_at_commit": "pending_owned",
+      "fence": {
+        "receipts": {
+          "receipt-1": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-2": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-3": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-4": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-5": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-6": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-7": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-8": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          }
+        },
+        "supervision": [
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          },
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          }
+        ]
+      },
+      "decision_ms": 1482.300874995417,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "10bc77d378164112a026eabfc8e609d6": {
+            "status": "committed",
+            "tx": "10bc77d378164112a026eabfc8e609d6",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 39444,
+            "window_id": 19855
+          },
+          "6478e9eb930640eea3080c6bb325c540": {
+            "status": "committed",
+            "tx": "6478e9eb930640eea3080c6bb325c540",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 39444,
+            "window_id": 19855
+          }
+        },
+        "pid": 39444,
+        "window_id": 19855,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "rep": 4,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "committed_ms": 433.86375000409316,
+      "supervision_at_commit": "pending_owned",
+      "fence": {
+        "receipts": {
+          "receipt-1": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-10": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-2": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-3": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-4": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-5": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-6": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-7": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          },
+          "receipt-8": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [2] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [2] AXTextField."
+            }
+          },
+          "receipt-9": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "unverifiable",
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField."
+            }
+          }
+        },
+        "supervision": [
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          },
+          {
+            "foreground_changed": false,
+            "new_window_count": 0,
+            "polled": true
+          }
+        ]
+      },
+      "decision_ms": 1481.382708007004,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "7f573c0cd22e4431a9d05dc6d0ceda12": {
+            "status": "committed",
+            "tx": "7f573c0cd22e4431a9d05dc6d0ceda12",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 40023,
+            "window_id": 19867
+          },
+          "aaffa591f4344631ae0f62563284519c": {
+            "status": "committed",
+            "tx": "aaffa591f4344631ae0f62563284519c",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 40023,
+            "window_id": 19867
+          }
+        },
+        "pid": 40023,
+        "window_id": 19867,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "arc_ack",
+      "scenario": "stable",
+      "rep": 4,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 508.4155410004314,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "3ed15f50c5b840db844290d690951f43": {
+            "status": "committed",
+            "tx": "3ed15f50c5b840db844290d690951f43",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 40601,
+            "window_id": 19873
+          },
+          "63817bf187c2458cb199e650657816bc": {
+            "status": "committed",
+            "tx": "63817bf187c2458cb199e650657816bc",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 40601,
+            "window_id": 19873
+          }
+        },
+        "pid": 40601,
+        "window_id": 19873,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    }
+  ],
+  "cleanup_restored": true
+}

@@ -1,5 +1,7 @@
 # Separating dispatch, supervision and application completion
 
+The subsequent real-driver results are in [the native experiment report](native/REPORT.md). The measurements below describe the earlier offline protocol study.
+
 Execution complete for the offline protocol experiment. Tested supervision alone, application completion evidence alone, and their combination against the serial-wait baseline. No desktop, driver daemon, app focus, cursor or keyboard was operated. This prototype changes no production API or PR #4762.
 
 ## Outcome

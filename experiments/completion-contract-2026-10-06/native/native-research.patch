@@ -1,0 +1,85 @@
+diff --git a/libs/cua-driver/rust/crates/platform-macos/src/focus_steal.rs b/libs/cua-driver/rust/crates/platform-macos/src/focus_steal.rs
+index 682a6ff86..bfd2c3e74 100644
+--- a/libs/cua-driver/rust/crates/platform-macos/src/focus_steal.rs
++++ b/libs/cua-driver/rust/crates/platform-macos/src/focus_steal.rs
+@@ -515,15 +515,29 @@ fn handle_activation(dispatcher: &Arc<Dispatcher>, note: &objc2_foundation::NSNo
+         pid as i32
+     };
+ 
++    eprintln!("RESEARCH_ACTIVATION_CALLBACK");
+     let restore_pids = dispatcher.snapshot_matches(activated_pid);
+     for pid in restore_pids {
++        eprintln!("RESEARCH_FOCUS_RESTORE");
+         restore_focus(pid);
+     }
+ }
+ 
+ /// Re-activate `pid` if it's still running. Safe to call from any
+ /// thread — Apple documents `activateWithOptions:` as thread-safe.
++static RESEARCH_RESTORE: std::sync::OnceLock<std::sync::Mutex<std::collections::HashMap<i32,u32>>> = std::sync::OnceLock::new();
++/// Private experiment registration; never included in a shipping patch.
++pub fn research_restore_target(pid:i32, window:u32)->bool {
++    if !crate::windows::window_info_by_id(window).is_some_and(|w| w.pid==pid) { return false; }
++    RESEARCH_RESTORE.get_or_init(Default::default).lock().unwrap().insert(pid,window);true
++}
+ fn restore_focus(pid: i32) {
++    if let Some(window)=RESEARCH_RESTORE.get_or_init(Default::default).lock().unwrap().get(&pid).copied() {
++        let _=crate::input::skylight::set_front_process_persistently(pid,window);
++        let _=crate::input::skylight::make_exact_window_key(pid,window);
++        eprintln!("RESEARCH_EXACT_RESTORE_REQUEST");
++    }
++
+     unsafe {
+         if let Some(app) = NSRunningApplication::runningApplicationWithProcessIdentifier(pid) {
+             let _ = app.activateWithOptions(NSApplicationActivationOptions(0));
+diff --git a/libs/cua-driver/rust/crates/platform-macos/src/tools/set_value.rs b/libs/cua-driver/rust/crates/platform-macos/src/tools/set_value.rs
+index 58a842345..5a8bcf66c 100644
+--- a/libs/cua-driver/rust/crates/platform-macos/src/tools/set_value.rs
++++ b/libs/cua-driver/rust/crates/platform-macos/src/tools/set_value.rs
+@@ -204,7 +204,14 @@ impl Tool for SetValueTool {
+         )
+         .await;
+ 
+-        let changes = snapshot.detect_async().await;
++        // Research-only: dispatch/restoration/read-back are complete.
++        // The action task still owns the full wildcard supervision snapshot.
++        drop(_mutation_lease);
++        let deferred = std::env::var_os("CUA_RESEARCH_DEFER_SUPERVISION").is_some();
++        let changes = if deferred {
++            crate::window_change_detector::research_defer(snapshot);
++            crate::window_change_detector::Changes::not_polled()
++        } else { snapshot.detect_async().await };
+ 
+         match result {
+             Ok(Ok(mut outcome)) => {
+@@ -218,6 +225,10 @@ impl Tool for SetValueTool {
+                     "verified": verified,
+                     "effect": if verified { "confirmed" } else { "unverifiable" },
+                 });
++                if deferred {
++                    structured["supervision"] = serde_json::json!("pending_fence");
++                    structured["effect"] = serde_json::json!("immediate_readback_only");
++                }
+                 if ax_echo_surface {
+                     structured["escalation"] = serde_json::json!({
+                         "recommended": "px",
+diff --git a/libs/cua-driver/rust/crates/platform-macos/src/window_change_detector.rs b/libs/cua-driver/rust/crates/platform-macos/src/window_change_detector.rs
+index 551c4e4f0..563691d6b 100644
+--- a/libs/cua-driver/rust/crates/platform-macos/src/window_change_detector.rs
++++ b/libs/cua-driver/rust/crates/platform-macos/src/window_change_detector.rs
+@@ -676,3 +676,15 @@ mod tests {
+         );
+     }
+ }
++
++// Private research ownership registry: not a shipped API.
++static RESEARCH_WATCHERS: std::sync::OnceLock<std::sync::Mutex<Vec<tokio::task::JoinHandle<Changes>>>> = std::sync::OnceLock::new();
++pub fn research_defer(snapshot: Snapshot) {
++    RESEARCH_WATCHERS.get_or_init(Default::default).lock().unwrap().push(tokio::spawn(snapshot.detect_async()));
++}
++pub async fn research_drain() -> Result<Vec<Changes>, tokio::task::JoinError> {
++    let tasks = std::mem::take(&mut *RESEARCH_WATCHERS.get_or_init(Default::default).lock().unwrap());
++    let mut changes = Vec::new();
++    for task in tasks { changes.push(task.await?); }
++    Ok(changes)
++}
