@@ -1,0 +1,380 @@
+{
+  "versions": {
+    "arc_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+    "arc_version": "0.1.1",
+    "native_version": "0.34.0",
+    "native_latest_version": "0.34.0",
+    "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
+    "arc_upstream_checked_at": "2026-10-06T16:44:08.959410+00:00",
+    "candidates_checked_at": "2026-10-06T16:44:07Z",
+    "macos": "27.0.1",
+    "python": "3.12.12",
+    "servers": {
+      "arc": {
+        "name": "arc-cua",
+        "version": "0.1.1"
+      },
+      "native": {
+        "name": "cua-driver",
+        "version": "0.34.0"
+      }
+    }
+  },
+  "scope": "Arc OS-level node reader microbenchmark; no Cua speed claim",
+  "rows": [
+    {
+      "rep": 0,
+      "mode": "full",
+      "warmup": true,
+      "ms": 51.832666009431705,
+      "node_reads": null,
+      "nodes": 19
+    },
+    {
+      "rep": 0,
+      "mode": "topology",
+      "warmup": true,
+      "ms": 7.468291005352512,
+      "node_reads": 19,
+      "nodes": 19
+    },
+    {
+      "rep": 1,
+      "mode": "topology",
+      "warmup": true,
+      "ms": 13.91820800199639,
+      "node_reads": 19,
+      "nodes": 19
+    },
+    {
+      "rep": 1,
+      "mode": "full",
+      "warmup": true,
+      "ms": 7.676125009311363,
+      "node_reads": null,
+      "nodes": 19
+    },
+    {
+      "rep": 2,
+      "mode": "full",
+      "warmup": false,
+      "ms": 17.408791987691075,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 2,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 6.05524999264162,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 3,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 6.027166993590072,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 3,
+      "mode": "full",
+      "warmup": false,
+      "ms": 7.5017920025857165,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 4,
+      "mode": "full",
+      "warmup": false,
+      "ms": 5.429083001217805,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 4,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 10.173624992603436,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 5,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 5.568124994169921,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 5,
+      "mode": "full",
+      "warmup": false,
+      "ms": 5.307792001985945,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 6,
+      "mode": "full",
+      "warmup": false,
+      "ms": 5.022666999138892,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 6,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 4.92345800739713,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 7,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 4.8205420025624335,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 7,
+      "mode": "full",
+      "warmup": false,
+      "ms": 4.679957986809313,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 8,
+      "mode": "full",
+      "warmup": false,
+      "ms": 15.961291996063665,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 8,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 6.106375003582798,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 9,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 8.879084009095095,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 9,
+      "mode": "full",
+      "warmup": false,
+      "ms": 6.01079199986998,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 10,
+      "mode": "full",
+      "warmup": false,
+      "ms": 5.784166001831181,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 10,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 7.422750000841916,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 11,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 4.968666995409876,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 11,
+      "mode": "full",
+      "warmup": false,
+      "ms": 11.592999988351949,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 12,
+      "mode": "full",
+      "warmup": false,
+      "ms": 36.55629200511612,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 12,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 16.058667009929195,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 13,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 23.846624986617826,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 13,
+      "mode": "full",
+      "warmup": false,
+      "ms": 16.5002080029808,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 14,
+      "mode": "full",
+      "warmup": false,
+      "ms": 10.577000008197501,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 14,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 9.646916994825006,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 15,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 6.431208006688394,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 15,
+      "mode": "full",
+      "warmup": false,
+      "ms": 18.474750002496876,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 16,
+      "mode": "full",
+      "warmup": false,
+      "ms": 6.312040990451351,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 16,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 6.325708003714681,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 17,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 6.05675000406336,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 17,
+      "mode": "full",
+      "warmup": false,
+      "ms": 11.208334006369114,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 18,
+      "mode": "full",
+      "warmup": false,
+      "ms": 14.080334003665484,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 18,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 6.077583006117493,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 19,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 9.276665994548239,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 19,
+      "mode": "full",
+      "warmup": false,
+      "ms": 12.619250002899207,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 20,
+      "mode": "full",
+      "warmup": false,
+      "ms": 16.052250008215196,
+      "node_reads": null,
+      "nodes": 20
+    },
+    {
+      "rep": 20,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 7.000375000643544,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 21,
+      "mode": "topology",
+      "warmup": false,
+      "ms": 5.745957998442464,
+      "node_reads": 20,
+      "nodes": 20
+    },
+    {
+      "rep": 21,
+      "mode": "full",
+      "warmup": false,
+      "ms": 10.374833000241779,
+      "node_reads": null,
+      "nodes": 20
+    }
+  ],
+  "topology_reuses": 415,
+  "edge_replacements": 2
+}

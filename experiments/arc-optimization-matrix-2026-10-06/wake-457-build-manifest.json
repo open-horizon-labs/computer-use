@@ -1,0 +1,8 @@
+{
+  "source_base": "45775a9244df4a1e33090c1377eeb2448d2eb820",
+  "binary_sha256": {
+    "baseline": "4348f1778f4a0462ded0fc8621242ef8044114b3d83f52fdfcbb4ba4b2108852",
+    "wake": "a92eb2160074b4251ec2201699ea491bce0e77a10eb32ce3162e49a0c393143b"
+  },
+  "patch_sha256": "1b37bcd2ff0bb43da3ce4c0faeadb8c4443c48154733b541c06e24b26d54277e"
+}

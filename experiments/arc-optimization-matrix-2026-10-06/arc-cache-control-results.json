@@ -1,0 +1,285 @@
+{
+  "arc_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+  "arc_version": "0.1.1",
+  "native_version": "0.34.0",
+  "native_latest_version": "0.34.0",
+  "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
+  "arc_upstream_checked_at": "2026-10-06T16:34:42.286475+00:00",
+  "candidates_checked_at": "2026-10-06T16:34:41Z",
+  "macos": "27.0.1",
+  "python": "3.12.12",
+  "scope": "Current Arc cache control: two warmup pairs and twenty alternating pairs; omitted-notification adversary",
+  "results": [
+    {
+      "mode": "full",
+      "rep": 0,
+      "ms": 18.96966600907035,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 0,
+      "ms": 11.149167010444216,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 1,
+      "ms": 3.3170410024467856,
+      "elements": 19
+    },
+    {
+      "mode": "full",
+      "rep": 1,
+      "ms": 6.109750000177883,
+      "elements": 19
+    },
+    {
+      "mode": "full",
+      "rep": 2,
+      "ms": 8.946832997025922,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 2,
+      "ms": 3.4553750010672957,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 3,
+      "ms": 4.58608299959451,
+      "elements": 19
+    },
+    {
+      "mode": "full",
+      "rep": 3,
+      "ms": 6.671415991149843,
+      "elements": 19
+    },
+    {
+      "mode": "full",
+      "rep": 4,
+      "ms": 17.41141700767912,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 4,
+      "ms": 11.121624993393198,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 5,
+      "ms": 2.2859580058138818,
+      "elements": 19
+    },
+    {
+      "mode": "full",
+      "rep": 5,
+      "ms": 11.342333003995009,
+      "elements": 19
+    },
+    {
+      "mode": "full",
+      "rep": 6,
+      "ms": 13.965749996714294,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 6,
+      "ms": 6.047707996913232,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 7,
+      "ms": 1.6216249932767823,
+      "elements": 19
+    },
+    {
+      "mode": "full",
+      "rep": 7,
+      "ms": 8.959875005530193,
+      "elements": 19
+    },
+    {
+      "mode": "full",
+      "rep": 8,
+      "ms": 11.810165990027599,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 8,
+      "ms": 4.946125001879409,
+      "elements": 19
+    },
+    {
+      "mode": "cached",
+      "rep": 9,
+      "ms": 32.511375000467524,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 9,
+      "ms": 7.881249999627471,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 10,
+      "ms": 8.482707999064587,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 10,
+      "ms": 4.886541006271727,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 11,
+      "ms": 1.8367089942330495,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 11,
+      "ms": 5.0712910015136,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 12,
+      "ms": 6.0948749887757,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 12,
+      "ms": 8.460915996693075,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 13,
+      "ms": 3.260792000219226,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 13,
+      "ms": 5.584915998042561,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 14,
+      "ms": 6.067624999559484,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 14,
+      "ms": 1.6352079983334988,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 15,
+      "ms": 3.1279579998226836,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 15,
+      "ms": 6.082500010961667,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 16,
+      "ms": 6.133333998150192,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 16,
+      "ms": 1.5205000090645626,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 17,
+      "ms": 5.039708994445391,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 17,
+      "ms": 4.951625000103377,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 18,
+      "ms": 4.6578330075135455,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 18,
+      "ms": 1.4765000087209046,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 19,
+      "ms": 3.4814590035239235,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 19,
+      "ms": 5.8290000015404075,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 20,
+      "ms": 5.8685830008471385,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 20,
+      "ms": 1.5615000011166558,
+      "elements": 20
+    },
+    {
+      "mode": "cached",
+      "rep": 21,
+      "ms": 3.5787500091828406,
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 21,
+      "ms": 5.379249996622093,
+      "elements": 20
+    }
+  ],
+  "independent_label": "Changed Submit",
+  "full_labels": [
+    "Changed Submit"
+  ],
+  "cached_missing_notification_labels": [
+    "Submit"
+  ]
+}

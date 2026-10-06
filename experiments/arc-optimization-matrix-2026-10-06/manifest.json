@@ -1,0 +1,29 @@
+{
+  "files_sha256": {
+    "structure-fixture.py": "4ad595f4ce3fb4be68f817961c04a331c36e749db8d3cc6477a89a7bea6926f2",
+    "arc-cache-control-results.json": "ae2274086f48e1347ae12a5e4ba63dd1845293ebd60b2ad5d22ab1ef68cd95a7",
+    "observation-results.json.gz": "0505682acb085965c96d057c7e0f63b92ad9799f4586237b03b9636976b2de6f",
+    "ax_batch_bench_host.rs": "c064342b33f9c6a4c4936a2da544e2294aa5bb732ad609e56b20810b3afe2c92",
+    "task-results.json.gz": "f8d95021c76d965d712c02062586b6ec21fba1f3d4fe98bd525625a5d1a8d19e",
+    "summary.json": "9dfde3f55de72ebf12e51b2e963ba2a219a1fce68d423429d1eefd144e02a864",
+    "structure-static-results.json": "b47ecb8e758bc145071d879512a0e5be40bf0c0bebb66806ca39ad0ead79f90d",
+    "wake-focus-cleanup.json": "30d603c324bae4e45253f9510630e4ab20b637b3e238bb67c31f847854956595",
+    "baseline-457-manifest.json": "0649808f980d37f8a1514d4ba35a1a1cf2101154ec273feef6862780fc8608a8",
+    "REPORT.md": "e4e13b8439a112b1a816a4a301e3f3a435b3cef81218ec0153d44bc951314baf",
+    "broad-457-manifest.json": "f29b6a5788eddb78123f1791c9ae7681e0561222293fa72637b792864f4807fb",
+    "measured-arc-cache-control.py": "721c12f8023eb33428578632a8a63e70b0c80ed6cbc7ce68c7643ec3a9edb0aa",
+    "wake-457.patch": "1b37bcd2ff0bb43da3ce4c0faeadb8c4443c48154733b541c06e24b26d54277e",
+    "structure-results.json": "764f49496d70265d587aa0795d5f57b1c17bba6e081e9d357c85d6921b4fe669",
+    "arc-cache-control.py": "732f77479d37c669728be2704f6e2e98e55dc7c316aff1d5324241ed22fcb5be",
+    "string-only-457-manifest.json": "be5e9f1e2579f1b1eaf245a7074ab5ea2e5b6b6e62f0bce799ee91dd90dcea84",
+    "negative-approaches.md": "b9c6ec6fb5fd846f15fcfddbbac1190e79a673ccc3c6829b679ebb939612175e",
+    "structure.py": "664a59413342ae7c55e705ff77bdae162f1e6fc1ebd9d3c6163194beb1ea416a",
+    "mutation-check.json": "9b68d808455f28c1fb2292c34560c7e553c2fe47659c2b7c6d7de073a1824bb7",
+    "broad-typed-ax.patch": "d9de9ddd90b4610c2c61e4c42695235118ecf0c3479c06830b3b438e4799095e",
+    "wake-457-live-results.json": "347e93b1648ac0a7af23ca2f5eb230fda573722796ed842ce2269cdf26c9034b",
+    "EXECUTE.md": "84e6432a50931924e59e10dc74bdd78ce6cd6648622d5a744b96fcd8891fbd36",
+    "structure_static.py": "7204c31662b71e28017e43b87ae6c2c7e381ddb0a08607f8053c16deda71e3eb",
+    "wake-457-build-manifest.json": "1d8fafc23f573944036254837abeebcdd6221fd887e5a38967989dc4c297d03d"
+  },
+  "upstream_pr": "https://github.com/trycua/cua/pull/4762"
+}

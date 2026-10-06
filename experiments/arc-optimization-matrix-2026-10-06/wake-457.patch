@@ -1,0 +1,169 @@
+diff --git a/libs/cua-driver/rust/crates/platform-macos/src/focus_steal.rs b/libs/cua-driver/rust/crates/platform-macos/src/focus_steal.rs
+index 682a6ff86..333d4d2c5 100644
+--- a/libs/cua-driver/rust/crates/platform-macos/src/focus_steal.rs
++++ b/libs/cua-driver/rust/crates/platform-macos/src/focus_steal.rs
+@@ -519,6 +519,7 @@ fn handle_activation(dispatcher: &Arc<Dispatcher>, note: &objc2_foundation::NSNo
+     for pid in restore_pids {
+         restore_focus(pid);
+     }
++    crate::window_change_detector::wake_after_activation();
+ }
+ 
+ /// Re-activate `pid` if it's still running. Safe to call from any
+diff --git a/libs/cua-driver/rust/crates/platform-macos/src/window_change_detector.rs b/libs/cua-driver/rust/crates/platform-macos/src/window_change_detector.rs
+index 551c4e4f0..8ac2f5cb7 100644
+--- a/libs/cua-driver/rust/crates/platform-macos/src/window_change_detector.rs
++++ b/libs/cua-driver/rust/crates/platform-macos/src/window_change_detector.rs
+@@ -37,6 +37,7 @@
+ //! idempotent so explicit-detect + later-drop is safe.
+ 
+ use std::collections::HashSet;
++use std::sync::{Condvar, Mutex, OnceLock};
+ use std::time::{Duration, Instant};
+ 
+ use cua_driver_core::window_observation::WindowObservationBounds;
+@@ -45,6 +46,47 @@ use crate::apps;
+ use crate::focus_steal::{self, SuppressionLease};
+ use crate::windows::{self, WindowInfo};
+ 
++// Notifications are wake hints only. A missing notification still falls back
++// to the full periodic observation horizon; it never proves unchanged state.
++#[derive(Default)]
++struct ActivationWake {
++    generation: Mutex<u64>,
++    changed: Condvar,
++}
++
++impl ActivationWake {
++    fn current(&self) -> u64 {
++        *self.generation.lock().unwrap_or_else(|e| e.into_inner())
++    }
++
++    fn notify(&self) {
++        let mut generation = self.generation.lock().unwrap_or_else(|e| e.into_inner());
++        *generation = generation.wrapping_add(1);
++        self.changed.notify_all();
++    }
++
++    fn wait(&self, seen: &mut u64, duration: Duration) {
++        let generation = self.generation.lock().unwrap_or_else(|e| e.into_inner());
++        let (generation, _) = self.changed
++            .wait_timeout_while(generation, duration, |generation| *generation == *seen)
++            .unwrap_or_else(|e| e.into_inner());
++        if *seen != *generation {
++            tracing::debug!("window observation woke after activation hint");
++        }
++        *seen = *generation;
++    }
++}
++
++fn activation_wake() -> &'static ActivationWake {
++    static WAKE: OnceLock<ActivationWake> = OnceLock::new();
++    WAKE.get_or_init(ActivationWake::default)
++}
++
++pub(crate) fn wake_after_activation() {
++    tracing::debug!("activation hint received after restore requests");
++    activation_wake().notify();
++}
++
+ /// One window that appeared between `snapshot()` and `detect()`.
+ #[derive(Debug, Clone, PartialEq, Eq)]
+ pub struct WindowEvent {
+@@ -71,6 +113,7 @@ pub struct Snapshot {
+     window_ids: HashSet<u32>,
+     front_pid: Option<i32>,
+     _lease: Option<SuppressionLease>,
++    wake_generation: u64,
+ }
+ 
+ /// Result of `detect()` — what changed during the action window.
+@@ -275,6 +318,7 @@ impl WindowChangeDetector {
+             window_ids,
+             front_pid: prior_front,
+             _lease: lease,
++            wake_generation: activation_wake().current(),
+         }
+     }
+ }
+@@ -345,8 +389,9 @@ impl Snapshot {
+         mut observe: impl FnMut() -> (Vec<WindowInfo>, Option<i32>),
+     ) -> Changes {
+         let deadline = Instant::now() + timeout;
++        let mut wake_generation = self.wake_generation;
+         loop {
+-            std::thread::sleep(poll_interval);
++            activation_wake().wait(&mut wake_generation, poll_interval);
+ 
+             let (current, current_front) = observe();
+             // Keep the live detector and the pure regression tests on the same
+@@ -675,4 +720,69 @@ mod tests {
+             "no frontmost pid means no lease"
+         );
+     }
++    #[test]
++    fn activation_hint_wakes_the_same_live_change_detector() {
++        use std::sync::atomic::{AtomicBool, Ordering};
++        use std::sync::Arc;
++        let ready = Arc::new(AtomicBool::new(false));
++        let notifier_ready = ready.clone();
++        let snap = WindowChangeDetector::capture_from(HashSet::from([1]), Some(7), false, None);
++        let notifier = std::thread::spawn(move || {
++            std::thread::sleep(Duration::from_millis(10));
++            notifier_ready.store(true, Ordering::Release);
++            wake_after_activation();
++        });
++        let started = Instant::now();
++        let changes = snap.detect_with(Duration::from_millis(1000), Duration::from_millis(1000), || {
++            (vec![win(1, 7, "Fixture", "Main")],
++             Some(if ready.load(Ordering::Acquire) { 8 } else { 7 }))
++        });
++        notifier.join().unwrap();
++        assert!(changes.foreground_changed);
++        assert!(started.elapsed() < Duration::from_millis(500));
++    }
++
++    #[test]
++    fn absent_hint_keeps_full_horizon_for_delayed_changes() {
++        let snap = WindowChangeDetector::capture_from(HashSet::from([1]), Some(7), false, None);
++        let started = Instant::now();
++        let changes = snap.detect_with(Duration::from_millis(180), Duration::from_millis(20), || {
++            let delayed = started.elapsed() >= Duration::from_millis(100);
++            let mut windows = vec![win(1, 7, "Fixture", "Main")];
++            if delayed { windows.push(win(2, 7, "Fixture", "Delayed modal")); }
++            (windows, Some(7))
++        });
++        assert_eq!(changes.new_windows.len(), 1);
++        assert!(started.elapsed() >= Duration::from_millis(100));
++    }
++
++    #[test]
++    fn spurious_activation_storm_never_shortens_the_observation_horizon() {
++        use std::sync::atomic::{AtomicBool, Ordering};
++        use std::sync::Arc;
++        let stop = Arc::new(AtomicBool::new(false));
++        let notifier_stop = stop.clone();
++        let snap = WindowChangeDetector::capture_from(HashSet::from([1]), Some(7), false, None);
++        let notifier = std::thread::spawn(move || {
++            while !notifier_stop.load(Ordering::Acquire) {
++                wake_after_activation();
++                std::thread::sleep(Duration::from_millis(2));
++            }
++        });
++        let started = Instant::now();
++        let mut reads = 0;
++        let changes = snap.detect_with(Duration::from_millis(120), Duration::from_millis(40), || {
++            reads += 1;
++            (vec![win(1, 7, "Fixture", "Unchanged")], Some(7))
++        });
++        stop.store(true, Ordering::Release);
++        notifier.join().unwrap();
++        assert!(reads > 3, "notification hints must actually exercise the wake path");
++        assert!(started.elapsed() >= Duration::from_millis(120));
++        assert!(started.elapsed() < Duration::from_millis(500));
++        assert!(changes.polled);
++        assert!(!changes.foreground_changed);
++        assert!(changes.new_windows.is_empty());
++    }
++
+ }

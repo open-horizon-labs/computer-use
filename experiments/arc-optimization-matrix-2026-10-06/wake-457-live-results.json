@@ -1,0 +1,164 @@
+{
+  "versions": {
+    "arc_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+    "arc_version": "0.1.1",
+    "native_version": "0.34.0",
+    "native_latest_version": "0.34.0",
+    "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
+    "arc_upstream_checked_at": "2026-10-06T17:05:26.434372+00:00",
+    "candidates_checked_at": "2026-10-06T17:05:25Z",
+    "macos": "27.0.1",
+    "python": "3.12.12",
+    "native_source_commit": "45775a9244df4a1e33090c1377eeb2448d2eb820",
+    "servers": {
+      "arc": {
+        "name": "arc-cua",
+        "version": "0.1.1"
+      },
+      "native": {
+        "name": "cua-driver",
+        "version": "0.34.0"
+      }
+    }
+  },
+  "source_base": "45775a9244df4a1e33090c1377eeb2448d2eb820",
+  "binary_sha256": {
+    "baseline": "4348f1778f4a0462ded0fc8621242ef8044114b3d83f52fdfcbb4ba4b2108852",
+    "wake": "a92eb2160074b4251ec2201699ea491bce0e77a10eb32ce3162e49a0c393143b"
+  },
+  "rows": [
+    {
+      "rep": 0,
+      "mode": "baseline",
+      "seconds": 1.2080517499998678,
+      "submitted_once": true,
+      "activation_requested": 1,
+      "focus_restored_at_return": false,
+      "sentinel_active": false,
+      "fixture_active": true,
+      "fresh_os_front_is_fixture": true,
+      "result": [
+        {
+          "delivery": {
+            "mode": "background"
+          },
+          "effect": "unverifiable",
+          "route": "accessibility",
+          "summary": "\u2705 Performed AXPress on [5] AXButton \"Submit\"."
+        },
+        false
+      ]
+    },
+    {
+      "rep": 0,
+      "mode": "wake",
+      "seconds": 1.2291613330016844,
+      "submitted_once": true,
+      "activation_requested": 1,
+      "focus_restored_at_return": false,
+      "sentinel_active": false,
+      "fixture_active": true,
+      "fresh_os_front_is_fixture": true,
+      "result": [
+        {
+          "delivery": {
+            "mode": "background"
+          },
+          "effect": "unverifiable",
+          "route": "accessibility",
+          "summary": "\u2705 Performed AXPress on [5] AXButton \"Submit\"."
+        },
+        false
+      ]
+    },
+    {
+      "rep": 1,
+      "mode": "wake",
+      "seconds": 1.2214080419944366,
+      "submitted_once": true,
+      "activation_requested": 1,
+      "focus_restored_at_return": false,
+      "sentinel_active": false,
+      "fixture_active": true,
+      "fresh_os_front_is_fixture": true,
+      "result": [
+        {
+          "delivery": {
+            "mode": "background"
+          },
+          "effect": "unverifiable",
+          "route": "accessibility",
+          "summary": "\u2705 Performed AXPress on [5] AXButton \"Submit\"."
+        },
+        false
+      ]
+    },
+    {
+      "rep": 1,
+      "mode": "baseline",
+      "seconds": 1.2240326250030193,
+      "submitted_once": true,
+      "activation_requested": 1,
+      "focus_restored_at_return": false,
+      "sentinel_active": false,
+      "fixture_active": true,
+      "fresh_os_front_is_fixture": true,
+      "result": [
+        {
+          "delivery": {
+            "mode": "background"
+          },
+          "effect": "unverifiable",
+          "route": "accessibility",
+          "summary": "\u2705 Performed AXPress on [5] AXButton \"Submit\"."
+        },
+        false
+      ]
+    },
+    {
+      "rep": 2,
+      "mode": "baseline",
+      "seconds": 1.1800057079963153,
+      "submitted_once": true,
+      "activation_requested": 1,
+      "focus_restored_at_return": false,
+      "sentinel_active": false,
+      "fixture_active": true,
+      "fresh_os_front_is_fixture": true,
+      "result": [
+        {
+          "delivery": {
+            "mode": "background"
+          },
+          "effect": "unverifiable",
+          "route": "accessibility",
+          "summary": "\u2705 Performed AXPress on [5] AXButton \"Submit\"."
+        },
+        false
+      ]
+    },
+    {
+      "rep": 2,
+      "mode": "wake",
+      "seconds": 1.1851922079949873,
+      "submitted_once": true,
+      "activation_requested": 1,
+      "focus_restored_at_return": false,
+      "sentinel_active": false,
+      "fixture_active": true,
+      "fresh_os_front_is_fixture": true,
+      "result": [
+        {
+          "delivery": {
+            "mode": "background"
+          },
+          "effect": "unverifiable",
+          "route": "accessibility",
+          "summary": "\u2705 Performed AXPress on [5] AXButton \"Submit\"."
+        },
+        false
+      ]
+    }
+  ],
+  "scope": "owned CLI daemons with same OS grants; overlays disabled; actual delayed activation by owned fixture; original horizon unchanged"
+}

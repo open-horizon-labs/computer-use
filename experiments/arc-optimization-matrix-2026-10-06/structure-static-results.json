@@ -1,0 +1,1695 @@
+{
+  "versions": {
+    "arc_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+    "arc_version": "0.1.1",
+    "native_version": "0.34.0",
+    "native_latest_version": "0.34.0",
+    "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
+    "arc_upstream_checked_at": "2026-10-06T16:54:54.515490+00:00",
+    "candidates_checked_at": "2026-10-06T16:54:54Z",
+    "macos": "27.0.1",
+    "python": "3.12.12",
+    "servers": {
+      "arc": {
+        "name": "arc-cua",
+        "version": "0.1.1"
+      },
+      "native": {
+        "name": "cua-driver",
+        "version": "0.34.0"
+      }
+    }
+  },
+  "scope": "Arc retained-topology microbenchmark; all fresh semantic fields, geometry, actions and parent relationships; no native Cua speed claim",
+  "rows": [
+    {
+      "mode": "topology",
+      "rep": 0,
+      "warmup": true,
+      "ms": 6.746958999428898,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 0,
+      "warmup": true,
+      "ms": 5.750333002652042,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 0,
+      "warmup": true,
+      "ms": 5.483000000822358,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 1,
+      "warmup": true,
+      "ms": 5.668582991347648,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 1,
+      "warmup": true,
+      "ms": 5.4686670046066865,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 1,
+      "warmup": true,
+      "ms": 5.27058300212957,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 2,
+      "warmup": true,
+      "ms": 5.946624994976446,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 2,
+      "warmup": true,
+      "ms": 5.154583006515168,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 2,
+      "warmup": true,
+      "ms": 4.874292004387826,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 3,
+      "warmup": true,
+      "ms": 6.304624999756925,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 3,
+      "warmup": true,
+      "ms": 5.8362080017104745,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 3,
+      "warmup": true,
+      "ms": 6.604458001675084,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 4,
+      "warmup": true,
+      "ms": 5.663207994075492,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 4,
+      "warmup": true,
+      "ms": 6.318582993117161,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 4,
+      "warmup": true,
+      "ms": 5.587166000623256,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 5,
+      "warmup": true,
+      "ms": 5.7922080013668165,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 5,
+      "warmup": true,
+      "ms": 4.741165990708396,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 5,
+      "warmup": true,
+      "ms": 5.10329200187698,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 6,
+      "warmup": false,
+      "ms": 5.307666011503898,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 6,
+      "warmup": false,
+      "ms": 4.8485839943168685,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 6,
+      "warmup": false,
+      "ms": 5.775665995315649,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 7,
+      "warmup": false,
+      "ms": 4.828832999919541,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 7,
+      "warmup": false,
+      "ms": 4.959999991115183,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 7,
+      "warmup": false,
+      "ms": 5.370124999899417,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 8,
+      "warmup": false,
+      "ms": 5.315333997714333,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 8,
+      "warmup": false,
+      "ms": 5.194875004235655,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 8,
+      "warmup": false,
+      "ms": 10.785209000459872,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 9,
+      "warmup": false,
+      "ms": 6.4291250018868595,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 9,
+      "warmup": false,
+      "ms": 5.24849999055732,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 9,
+      "warmup": false,
+      "ms": 4.910333998850547,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 10,
+      "warmup": false,
+      "ms": 5.159458989510313,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 10,
+      "warmup": false,
+      "ms": 5.444542010081932,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 10,
+      "warmup": false,
+      "ms": 5.797707999590784,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 11,
+      "warmup": false,
+      "ms": 5.4282500059343874,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 11,
+      "warmup": false,
+      "ms": 5.003124999348074,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 11,
+      "warmup": false,
+      "ms": 5.004750011721626,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 12,
+      "warmup": false,
+      "ms": 6.039208004949614,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 12,
+      "warmup": false,
+      "ms": 6.312917001196183,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 12,
+      "warmup": false,
+      "ms": 6.177082992508076,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 13,
+      "warmup": false,
+      "ms": 5.99395799508784,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 13,
+      "warmup": false,
+      "ms": 5.958124995231628,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 13,
+      "warmup": false,
+      "ms": 6.067084003007039,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 14,
+      "warmup": false,
+      "ms": 6.0582920123124495,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 14,
+      "warmup": false,
+      "ms": 6.242792005650699,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 14,
+      "warmup": false,
+      "ms": 5.8417919935891405,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 15,
+      "warmup": false,
+      "ms": 5.873290996532887,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 15,
+      "warmup": false,
+      "ms": 5.1189999940106645,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 15,
+      "warmup": false,
+      "ms": 5.9228750033071265,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 16,
+      "warmup": false,
+      "ms": 5.964209005469456,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 16,
+      "warmup": false,
+      "ms": 5.681541995727457,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 16,
+      "warmup": false,
+      "ms": 4.591667006025091,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 17,
+      "warmup": false,
+      "ms": 5.083750002086163,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 17,
+      "warmup": false,
+      "ms": 9.391917003085837,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 17,
+      "warmup": false,
+      "ms": 5.098832989460789,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 18,
+      "warmup": false,
+      "ms": 4.825957992579788,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 18,
+      "warmup": false,
+      "ms": 4.251583988661878,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 18,
+      "warmup": false,
+      "ms": 6.611167002120055,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 19,
+      "warmup": false,
+      "ms": 4.796667009941302,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 19,
+      "warmup": false,
+      "ms": 4.068458001711406,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 19,
+      "warmup": false,
+      "ms": 4.07150000683032,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 20,
+      "warmup": false,
+      "ms": 4.464541998459026,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 20,
+      "warmup": false,
+      "ms": 4.159874995821156,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 20,
+      "warmup": false,
+      "ms": 4.210041995975189,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 21,
+      "warmup": false,
+      "ms": 4.260250003426336,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 21,
+      "warmup": false,
+      "ms": 4.083207997609861,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 21,
+      "warmup": false,
+      "ms": 4.023750007036142,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 22,
+      "warmup": false,
+      "ms": 4.354167002020404,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 22,
+      "warmup": false,
+      "ms": 4.789917002199218,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 22,
+      "warmup": false,
+      "ms": 4.8534579982515424,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 23,
+      "warmup": false,
+      "ms": 5.475958998431452,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 23,
+      "warmup": false,
+      "ms": 4.68383300176356,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 23,
+      "warmup": false,
+      "ms": 4.141667013755068,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 24,
+      "warmup": false,
+      "ms": 5.7962499995483086,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 24,
+      "warmup": false,
+      "ms": 5.549916997551918,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 24,
+      "warmup": false,
+      "ms": 5.1622499886434525,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 25,
+      "warmup": false,
+      "ms": 5.61170800938271,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 25,
+      "warmup": false,
+      "ms": 5.586915998719633,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 25,
+      "warmup": false,
+      "ms": 5.405124989920296,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 26,
+      "warmup": false,
+      "ms": 5.386499993619509,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 26,
+      "warmup": false,
+      "ms": 4.904540997813456,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 26,
+      "warmup": false,
+      "ms": 4.863124995608814,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 27,
+      "warmup": false,
+      "ms": 5.53766600205563,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 27,
+      "warmup": false,
+      "ms": 5.1848750008502975,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 27,
+      "warmup": false,
+      "ms": 4.987332999007776,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 28,
+      "warmup": false,
+      "ms": 4.601374996127561,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 28,
+      "warmup": false,
+      "ms": 5.630917003145441,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 28,
+      "warmup": false,
+      "ms": 5.392000006395392,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 29,
+      "warmup": false,
+      "ms": 6.032915989635512,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 29,
+      "warmup": false,
+      "ms": 5.408625002019107,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 29,
+      "warmup": false,
+      "ms": 9.82674999977462,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 30,
+      "warmup": false,
+      "ms": 5.0490829889895394,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 30,
+      "warmup": false,
+      "ms": 4.62366700230632,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 30,
+      "warmup": false,
+      "ms": 4.844958006287925,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 31,
+      "warmup": false,
+      "ms": 5.084042000817135,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 31,
+      "warmup": false,
+      "ms": 7.081582996761426,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 31,
+      "warmup": false,
+      "ms": 4.466958998818882,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 32,
+      "warmup": false,
+      "ms": 4.236583990859799,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 32,
+      "warmup": false,
+      "ms": 4.298624990042299,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 32,
+      "warmup": false,
+      "ms": 4.525833006482571,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 33,
+      "warmup": false,
+      "ms": 4.618624996510334,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 33,
+      "warmup": false,
+      "ms": 4.215875000227243,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 33,
+      "warmup": false,
+      "ms": 4.40945899754297,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 34,
+      "warmup": false,
+      "ms": 4.903334003756754,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 34,
+      "warmup": false,
+      "ms": 4.646500005037524,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 34,
+      "warmup": false,
+      "ms": 4.42849998944439,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 35,
+      "warmup": false,
+      "ms": 4.67804200889077,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 35,
+      "warmup": false,
+      "ms": 5.10495800699573,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 35,
+      "warmup": false,
+      "ms": 4.214916989440098,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 36,
+      "warmup": false,
+      "ms": 4.389249996165745,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 36,
+      "warmup": false,
+      "ms": 4.463874996872619,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 36,
+      "warmup": false,
+      "ms": 4.107582994038239,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 37,
+      "warmup": false,
+      "ms": 4.589916992699727,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 37,
+      "warmup": false,
+      "ms": 4.442791992914863,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 37,
+      "warmup": false,
+      "ms": 4.097415992873721,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 38,
+      "warmup": false,
+      "ms": 6.233958003576845,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 38,
+      "warmup": false,
+      "ms": 4.2357909987913445,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 38,
+      "warmup": false,
+      "ms": 4.114750001463108,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 39,
+      "warmup": false,
+      "ms": 4.7986669960664585,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 39,
+      "warmup": false,
+      "ms": 4.5438329980243,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 39,
+      "warmup": false,
+      "ms": 4.070334005518816,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 40,
+      "warmup": false,
+      "ms": 4.405832994962111,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 40,
+      "warmup": false,
+      "ms": 4.225834010867402,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 40,
+      "warmup": false,
+      "ms": 4.236791995936073,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "full",
+      "rep": 41,
+      "warmup": false,
+      "ms": 4.343125008745119,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "fresh_override",
+      "rep": 41,
+      "warmup": false,
+      "ms": 4.098749996046536,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    },
+    {
+      "mode": "topology",
+      "rep": 41,
+      "warmup": false,
+      "ms": 5.585209000855684,
+      "native_api_calls": {
+        "AXUIElementCopyAttributeValue": 8,
+        "AXUIElementCopyMultipleAttributeValues": 20,
+        "AXUIElementCopyActionNames": 20,
+        "AXUIElementIsAttributeSettable": 10
+      },
+      "elements": 20
+    }
+  ],
+  "adversaries": [
+    {
+      "mutation": "label",
+      "all_published_fields_equal": true,
+      "independent_fixture_oracle": true,
+      "notifications_used": false
+    },
+    {
+      "mutation": "value",
+      "all_published_fields_equal": true,
+      "independent_fixture_oracle": true,
+      "notifications_used": false
+    },
+    {
+      "mutation": "replace",
+      "all_published_fields_equal": true,
+      "independent_fixture_oracle": true,
+      "notifications_used": false
+    },
+    {
+      "mutation": "disable",
+      "all_published_fields_equal": true,
+      "independent_fixture_oracle": true,
+      "notifications_used": false
+    }
+  ],
+  "medians_ms": {
+    "full": 4.953832998580765,
+    "fresh_override": 4.90683400130365,
+    "topology": 5.139458502526395
+  }
+}
