@@ -1,0 +1,1595 @@
+{
+  "scope": "Offline protocol fixture, 100 ms simulated supervision horizon, 25 ms app commit delay; NOT Cua/Reference driver performance",
+  "rows": [
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 247.70600000000005,
+      "elapsed_ms": 247.78549999999998,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "b38da4d9237442f08c6adc1a60bb4d06": {
+            "tx": "b38da4d9237442f08c6adc1a60bb4d06",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "aa2a293c18ca47578981331b3cea903e": {
+            "tx": "aa2a293c18ca47578981331b3cea903e",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 0,
+      "warmup": true
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 159.42525,
+      "elapsed_ms": 159.493459,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "b3f0ffd2091749229773d00d2ec1a21f": {
+            "tx": "b3f0ffd2091749229773d00d2ec1a21f",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "8c1e505f89334eb78baeb881d3f1db75": {
+            "tx": "8c1e505f89334eb78baeb881d3f1db75",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 0,
+      "warmup": true
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 79.722625,
+      "elapsed_ms": 79.73429199999998,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "4548ee375a25477bb33f85fc8f7915be": {
+            "tx": "4548ee375a25477bb33f85fc8f7915be",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "8d7230e8d8db478e9a4c9a0417f980e5": {
+            "tx": "8d7230e8d8db478e9a4c9a0417f980e5",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 0,
+      "warmup": true
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 148.32229200000003,
+      "elapsed_ms": 148.388709,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "31dee9741ff848f5bee9a16f8c8d84e8": {
+            "tx": "31dee9741ff848f5bee9a16f8c8d84e8",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "dea0264e313641889f70c7ab5b036080": {
+            "tx": "dea0264e313641889f70c7ab5b036080",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 0,
+      "warmup": true
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 150.96183400000007,
+      "elapsed_ms": 151.03583400000008,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "a9df3d9ac6a04714ae2166889953ebe1": {
+            "tx": "a9df3d9ac6a04714ae2166889953ebe1",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "189ed72998c543b79f79a4b6f3ca3c80": {
+            "tx": "189ed72998c543b79f79a4b6f3ca3c80",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 1,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 76.02820799999999,
+      "elapsed_ms": 76.03937499999991,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "419ff92fee9d4b2ab4cdb60d06e8abff": {
+            "tx": "419ff92fee9d4b2ab4cdb60d06e8abff",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "db50383a69434caebe199165a58449bd": {
+            "tx": "db50383a69434caebe199165a58449bd",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 1,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 149.461042,
+      "elapsed_ms": 149.526292,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "cc06d6c6ee3c42ac91d6218d4aedc426": {
+            "tx": "cc06d6c6ee3c42ac91d6218d4aedc426",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "a32d86fb32154da3bebc027df34ac73e": {
+            "tx": "a32d86fb32154da3bebc027df34ac73e",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 1,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 257.15883399999996,
+      "elapsed_ms": 257.234542,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "4e04014d827e497cb5a3f51b65494a37": {
+            "tx": "4e04014d827e497cb5a3f51b65494a37",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "00d4ae9895c44d2db2dc7fccbf223cb4": {
+            "tx": "00d4ae9895c44d2db2dc7fccbf223cb4",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 1,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 257.69700000000006,
+      "elapsed_ms": 257.7605410000001,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "6368d3da51d84478a295163ba4ec3818": {
+            "tx": "6368d3da51d84478a295163ba4ec3818",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "f6094d5503314ca18ca46757d4fac203": {
+            "tx": "f6094d5503314ca18ca46757d4fac203",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 2,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 156.40716599999993,
+      "elapsed_ms": 156.4902079999999,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "f40efd32e68d46f2bc8f20dc5e06de97": {
+            "tx": "f40efd32e68d46f2bc8f20dc5e06de97",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "aa15d695c2624254b7f84601f8eba3e8": {
+            "tx": "aa15d695c2624254b7f84601f8eba3e8",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 2,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 80.83187499999988,
+      "elapsed_ms": 80.84641599999998,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "122c86bbe50b4567a31d2e851219c17c": {
+            "tx": "122c86bbe50b4567a31d2e851219c17c",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "34467c8ccc4b4a09977a02b5f931fa19": {
+            "tx": "34467c8ccc4b4a09977a02b5f931fa19",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 2,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 148.15104199999985,
+      "elapsed_ms": 148.21179200000012,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "2ea82e8564c44e79afae02d6ffdfaa0f": {
+            "tx": "2ea82e8564c44e79afae02d6ffdfaa0f",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "7575d0d50193427d9aea9161d949ed83": {
+            "tx": "7575d0d50193427d9aea9161d949ed83",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 2,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 152.41133299999987,
+      "elapsed_ms": 152.46283299999996,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "27b2188c8a0947e6b59cd74c7301d08f": {
+            "tx": "27b2188c8a0947e6b59cd74c7301d08f",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "7e62527706c4435e8a6f70d6d0afec51": {
+            "tx": "7e62527706c4435e8a6f70d6d0afec51",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 3,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 79.26624999999987,
+      "elapsed_ms": 79.27966700000022,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "de29dd90f6d44f1eb43decff99d7debb": {
+            "tx": "de29dd90f6d44f1eb43decff99d7debb",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "4b8caffd5e3c47dd9957de24c382c902": {
+            "tx": "4b8caffd5e3c47dd9957de24c382c902",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 3,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 145.97533399999963,
+      "elapsed_ms": 146.04579199999978,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "7f86d4c826524e398e0f31468da8c6af": {
+            "tx": "7f86d4c826524e398e0f31468da8c6af",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "85913a8873984884a454c36716646a95": {
+            "tx": "85913a8873984884a454c36716646a95",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 3,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 252.4542089999997,
+      "elapsed_ms": 252.51166699999982,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "e978a93c1aae4443b8687f6ac388845b": {
+            "tx": "e978a93c1aae4443b8687f6ac388845b",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "3b056e50f46e46068b26ab7b3f2fbff8": {
+            "tx": "3b056e50f46e46068b26ab7b3f2fbff8",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 3,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 257.7860410000001,
+      "elapsed_ms": 257.8438329999999,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "ef2c4a075e2f42f48cb5ed827ec209cb": {
+            "tx": "ef2c4a075e2f42f48cb5ed827ec209cb",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "e14aee732a9047e1866d946bc7922ea5": {
+            "tx": "e14aee732a9047e1866d946bc7922ea5",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 4,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 157.66704199999992,
+      "elapsed_ms": 157.74616699999999,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "0a67538572f34aa39e980229ed1b64b6": {
+            "tx": "0a67538572f34aa39e980229ed1b64b6",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "b8b39d5006434fd28f33794d979b9bce": {
+            "tx": "b8b39d5006434fd28f33794d979b9bce",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 4,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 83.3200409999999,
+      "elapsed_ms": 83.33595800000015,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "6c3dad927e134b418a57fddb0c712ed5": {
+            "tx": "6c3dad927e134b418a57fddb0c712ed5",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "138a8e5a551f4cea91dce0395cb7aa22": {
+            "tx": "138a8e5a551f4cea91dce0395cb7aa22",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 4,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 148.85570800000013,
+      "elapsed_ms": 148.92791699999998,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "256f3f3c0dab4219831d98264d50233c": {
+            "tx": "256f3f3c0dab4219831d98264d50233c",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "168c3d6cc8224dd4a99738c2a454d1ce": {
+            "tx": "168c3d6cc8224dd4a99738c2a454d1ce",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 4,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 150.7963750000001,
+      "elapsed_ms": 150.86166700000004,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "87429db403b2484d91161b05a2a90c84": {
+            "tx": "87429db403b2484d91161b05a2a90c84",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "98606e69b64c4a989301cacb6d20f304": {
+            "tx": "98606e69b64c4a989301cacb6d20f304",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 5,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 80.51454199999996,
+      "elapsed_ms": 80.52241700000008,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "3fc895c8f5b14f7daae549e9fa98df41": {
+            "tx": "3fc895c8f5b14f7daae549e9fa98df41",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "557579af2c41462eb54ee5bab06ad388": {
+            "tx": "557579af2c41462eb54ee5bab06ad388",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 5,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 148.32999999999964,
+      "elapsed_ms": 148.398083,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "3ec8c782eff14cfdba6eb43ca489f06a": {
+            "tx": "3ec8c782eff14cfdba6eb43ca489f06a",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "4c3b266b261c472984853da745f7f508": {
+            "tx": "4c3b266b261c472984853da745f7f508",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 5,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 255.5792499999998,
+      "elapsed_ms": 255.65487499999983,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "f0b00db7b88a44f3b4b090bcbc558ce4": {
+            "tx": "f0b00db7b88a44f3b4b090bcbc558ce4",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "65459994f23e4d028edff26ec4b4a43a": {
+            "tx": "65459994f23e4d028edff26ec4b4a43a",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 5,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 258.99037499999974,
+      "elapsed_ms": 259.0562089999997,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "7e7ffa5cc6f8436492ba233a57d2e708": {
+            "tx": "7e7ffa5cc6f8436492ba233a57d2e708",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "21a4c7f4dd0c42cda2c8e844bfdd0fdc": {
+            "tx": "21a4c7f4dd0c42cda2c8e844bfdd0fdc",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 6,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 152.5904579999997,
+      "elapsed_ms": 152.65504199999924,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "dee945b6192f456990ad632a1b8b20e0": {
+            "tx": "dee945b6192f456990ad632a1b8b20e0",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "02a97cafe87d43d387a914847676e0ee": {
+            "tx": "02a97cafe87d43d387a914847676e0ee",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 6,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 76.54274999999977,
+      "elapsed_ms": 76.55791699999969,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "935393248fcc4c8b8dbd642a10af735a": {
+            "tx": "935393248fcc4c8b8dbd642a10af735a",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "44eb1c58b9744483b9060aef7fdde0a2": {
+            "tx": "44eb1c58b9744483b9060aef7fdde0a2",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 6,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 147.25104100000053,
+      "elapsed_ms": 147.31633300000001,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "22a8eaf84cfd4aa58dc84900b1ac046f": {
+            "tx": "22a8eaf84cfd4aa58dc84900b1ac046f",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "485e4c5969f94556a7227c5c1dcb8db6": {
+            "tx": "485e4c5969f94556a7227c5c1dcb8db6",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 6,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 154.2100409999998,
+      "elapsed_ms": 154.2728750000002,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "c48c4044e7244aff9ad18fb28aa2dd63": {
+            "tx": "c48c4044e7244aff9ad18fb28aa2dd63",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "0bc2e541cf70404f9061c7dcfb6930c4": {
+            "tx": "0bc2e541cf70404f9061c7dcfb6930c4",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 7,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 70.62245899999996,
+      "elapsed_ms": 70.63637499999942,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "a5c583664cb8468497f262efc8b678fd": {
+            "tx": "a5c583664cb8468497f262efc8b678fd",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "77af3d1c6c8e47599e46a2a031aa171d": {
+            "tx": "77af3d1c6c8e47599e46a2a031aa171d",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 7,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 151.88095799999957,
+      "elapsed_ms": 151.94804099999982,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "c681ce7d2fca41beb93d7286783c3ab2": {
+            "tx": "c681ce7d2fca41beb93d7286783c3ab2",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "7cef33b019b54945b1b0e7c5cb22eb3c": {
+            "tx": "7cef33b019b54945b1b0e7c5cb22eb3c",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 7,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 255.05520799999994,
+      "elapsed_ms": 255.1052080000007,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "127f3c0fa6814899b7f80e359eb54b4a": {
+            "tx": "127f3c0fa6814899b7f80e359eb54b4a",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "a2153a67126c40eab878563aab0c046a": {
+            "tx": "a2153a67126c40eab878563aab0c046a",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 7,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 251.38204100000027,
+      "elapsed_ms": 251.4596660000006,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "e4273ca29c30462297c56cd639ea062e": {
+            "tx": "e4273ca29c30462297c56cd639ea062e",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "8d10d3fbdef64744aab0aa892cac3eb7": {
+            "tx": "8d10d3fbdef64744aab0aa892cac3eb7",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 8,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 158.12104100000025,
+      "elapsed_ms": 158.18929100000022,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "b4d5f07e0ec84478bb1fa1bc33511342": {
+            "tx": "b4d5f07e0ec84478bb1fa1bc33511342",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "38c1e13a4ffa47169ed34ebe5cf4de39": {
+            "tx": "38c1e13a4ffa47169ed34ebe5cf4de39",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 8,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 79.56470900000045,
+      "elapsed_ms": 79.58162500000032,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "0cdbfc0c5ebd4a1b80631606edc37be6": {
+            "tx": "0cdbfc0c5ebd4a1b80631606edc37be6",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "837db982bc724b4c9f54ae98a26e66db": {
+            "tx": "837db982bc724b4c9f54ae98a26e66db",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 8,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 150.59254200000004,
+      "elapsed_ms": 150.69304199999945,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "702d85d35fed4acc965b943cef4c3a09": {
+            "tx": "702d85d35fed4acc965b943cef4c3a09",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "e61296e3d7eb4c6fab74d9604cd1ac09": {
+            "tx": "e61296e3d7eb4c6fab74d9604cd1ac09",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 8,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 152.68425000000008,
+      "elapsed_ms": 152.74949999999964,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "5345e5883e3946da9369d10e14ad1b07": {
+            "tx": "5345e5883e3946da9369d10e14ad1b07",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "4d960fabf3994eb88d80604857faa903": {
+            "tx": "4d960fabf3994eb88d80604857faa903",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 9,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 78.68254100000004,
+      "elapsed_ms": 78.6910409999999,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "16c5cdcf66a04a67b8efe8124f2dc354": {
+            "tx": "16c5cdcf66a04a67b8efe8124f2dc354",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "0cbd352c796c4577950f600e729a7ed0": {
+            "tx": "0cbd352c796c4577950f600e729a7ed0",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 9,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 147.39924999999943,
+      "elapsed_ms": 147.45883399999914,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "063f3077d205439cbc531f25ea57c9a1": {
+            "tx": "063f3077d205439cbc531f25ea57c9a1",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "baba79b9e9a64f918821d0b29aee3466": {
+            "tx": "baba79b9e9a64f918821d0b29aee3466",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 9,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 254.866292,
+      "elapsed_ms": 254.94895799999995,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "63513ab1d7bd4cf19ed941b8ce3ad946": {
+            "tx": "63513ab1d7bd4cf19ed941b8ce3ad946",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "9c887fc160dd452d981be3afd759b1ba": {
+            "tx": "9c887fc160dd452d981be3afd759b1ba",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 9,
+      "warmup": false
+    },
+    {
+      "mode": "serial",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 264.16941700000064,
+      "elapsed_ms": 264.25941699999987,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "edaa6708f9534537b39be660903fee49": {
+            "tx": "edaa6708f9534537b39be660903fee49",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "4a3c58a0ec79479388ad08eee2c16e79": {
+            "tx": "4a3c58a0ec79479388ad08eee2c16e79",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 10,
+      "warmup": false
+    },
+    {
+      "mode": "supervision",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 158.90795800000035,
+      "elapsed_ms": 158.9815830000001,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "b717413743f84c689a1bf2cd98066bfd": {
+            "tx": "b717413743f84c689a1bf2cd98066bfd",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "8b054c85574c43f48d09de0ffcb104e1": {
+            "tx": "8b054c85574c43f48d09de0ffcb104e1",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 10,
+      "warmup": false
+    },
+    {
+      "mode": "evidence",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 77.48787500000009,
+      "elapsed_ms": 77.50441600000002,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "01440a8972df4d0588502b1d70efb5df": {
+            "tx": "01440a8972df4d0588502b1d70efb5df",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "4b346678e3de4090b6fac09b8522475d": {
+            "tx": "4b346678e3de4090b6fac09b8522475d",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 10,
+      "warmup": false
+    },
+    {
+      "mode": "combined",
+      "scenario": "stable",
+      "terminal": "complete",
+      "decision_ms": 147.4266669999995,
+      "elapsed_ms": 147.48408399999934,
+      "writes": 2,
+      "state": {
+        "record": "A",
+        "values": {
+          "name": "Alice",
+          "email": "a@example.test"
+        },
+        "generation": 0,
+        "acks": {
+          "25229339bd574d2d8829be08dbd7974c": {
+            "tx": "25229339bd574d2d8829be08dbd7974c",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "name",
+            "value": "Alice"
+          },
+          "28e5150c02a6488b81733a663d34c037": {
+            "tx": "28e5150c02a6488b81733a663d34c037",
+            "record": "A",
+            "generation": 0,
+            "outcome": "committed",
+            "key": "email",
+            "value": "a@example.test"
+          }
+        }
+      },
+      "rep": 10,
+      "warmup": false
+    }
+  ],
+  "median_decision_ms": {
+    "serial": 256.36904199999987,
+    "supervision": 152.23570799999965,
+    "evidence": 78.97439549999996,
+    "combined": 150.69445850000005
+  }
+}

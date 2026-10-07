@@ -1,0 +1,133 @@
+{
+  "versions": {
+    "reference_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+    "reference_version": "0.1.1",
+    "native_version": "0.34.0",
+    "native_latest_version": "0.34.0",
+    "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
+    "reference_upstream_checked_at": "2026-10-06T22:08:05.610360+00:00",
+    "candidates_checked_at": "2026-10-06T22:08:04Z",
+    "macos": "27.0.1",
+    "python": "3.12.12"
+  },
+  "base": "5227ad637590a15976413b1a33f8693fac0e9a7e",
+  "binary_sha256": "e73f1a3040e42849d947a6a5fa54218749fcab7dc96a123e11a300358703f348",
+  "rows": [
+    {
+      "mode": "combined",
+      "scenario": "activation",
+      "rep": -1,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 1,
+      "fence": {
+        "receipts": {
+          "receipt-1": {
+            "content": [
+              {
+                "text": "\u2705 Set AXValue on [1] AXTextField.\n\n\ud83d\udd00 Action caused a different app to become frontmost.",
+                "type": "text"
+              }
+            ],
+            "structuredContent": {
+              "delivery": {
+                "mode": "background"
+              },
+              "effect": "confirmed",
+              "evidence": [
+                {
+                  "kind": "value_readback"
+                }
+              ],
+              "route": "accessibility",
+              "summary": "\u2705 Set AXValue on [1] AXTextField.\n\n\ud83d\udd00 Action caused a different app to become frontmost."
+            }
+          }
+        }
+      },
+      "decision_ms": 725.6397919991286,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": null
+      },
+      "target_ever_active": true,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": true,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "1b8fc33209c440518ea4688319ed950b": {
+            "status": "committed",
+            "tx": "1b8fc33209c440518ea4688319ed950b",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 75695,
+            "window_id": 18748
+          }
+        },
+        "pid": 75695,
+        "window_id": 18748,
+        "generation": 0,
+        "activation_requests": 1
+      },
+      "foreground_preserved": false
+    }
+  ],
+  "servers": {
+    "serial": {
+      "capability_version": "1",
+      "contract_version": "0.8.0",
+      "driver_version": "0.34.0",
+      "embedded": true,
+      "host_bundle_id": null,
+      "mcp_protocol_version": "2025-06-18",
+      "pid": 75427,
+      "tools_list_schema_version": "1"
+    },
+    "supervision": {
+      "capability_version": "1",
+      "contract_version": "0.8.0",
+      "driver_version": "0.34.0",
+      "embedded": true,
+      "host_bundle_id": null,
+      "mcp_protocol_version": "2025-06-18",
+      "pid": 75605,
+      "tools_list_schema_version": "1"
+    },
+    "evidence": {
+      "capability_version": "1",
+      "contract_version": "0.8.0",
+      "driver_version": "0.34.0",
+      "embedded": true,
+      "host_bundle_id": null,
+      "mcp_protocol_version": "2025-06-18",
+      "pid": 75630,
+      "tools_list_schema_version": "1"
+    },
+    "combined": {
+      "capability_version": "1",
+      "contract_version": "0.8.0",
+      "driver_version": "0.34.0",
+      "embedded": true,
+      "host_bundle_id": null,
+      "mcp_protocol_version": "2025-06-18",
+      "pid": 75659,
+      "tools_list_schema_version": "1"
+    }
+  },
+  "cleanup_restored": true
+}

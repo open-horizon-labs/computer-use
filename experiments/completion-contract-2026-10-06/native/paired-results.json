@@ -1,0 +1,656 @@
+{
+  "versions": {
+    "reference_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+    "reference_version": "0.1.1",
+    "native_version": "0.34.0",
+    "native_latest_version": "0.34.0",
+    "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
+    "reference_upstream_checked_at": "2026-10-06T22:20:54.929865+00:00",
+    "candidates_checked_at": "2026-10-06T22:20:53Z",
+    "macos": "27.0.1",
+    "python": "3.12.12"
+  },
+  "rows": [
+    {
+      "mode": "cua_ack",
+      "scenario": "stable",
+      "rep": 0,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 437.2404580062721,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "1a4276b464864dbeabafaddd20ae0b11": {
+            "status": "committed",
+            "tx": "1a4276b464864dbeabafaddd20ae0b11",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 24703,
+            "window_id": 19548
+          },
+          "3b127707400b42d6984b4fad7c9aa8e5": {
+            "status": "committed",
+            "tx": "3b127707400b42d6984b4fad7c9aa8e5",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 24703,
+            "window_id": 19548
+          }
+        },
+        "pid": 24703,
+        "window_id": 19548,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": true
+    },
+    {
+      "mode": "reference_ack",
+      "scenario": "stable",
+      "rep": 0,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 745.1805000018794,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "5b3129f2948e4925b88f8c4d43dd92d5": {
+            "status": "committed",
+            "tx": "5b3129f2948e4925b88f8c4d43dd92d5",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 25233,
+            "window_id": 19554
+          },
+          "f99a8bc7e6f04472bd6a1e3cb756cd3e": {
+            "status": "committed",
+            "tx": "f99a8bc7e6f04472bd6a1e3cb756cd3e",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 25233,
+            "window_id": 19554
+          }
+        },
+        "pid": 25233,
+        "window_id": 19554,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": true
+    },
+    {
+      "mode": "reference_ack",
+      "scenario": "stable",
+      "rep": 1,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 489.7870840068208,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "633bbb9c642042139ef51777ab0ab3ab": {
+            "status": "committed",
+            "tx": "633bbb9c642042139ef51777ab0ab3ab",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 25662,
+            "window_id": 19560
+          },
+          "663e7f75d9db45aa9574c2d647dd92bc": {
+            "status": "committed",
+            "tx": "663e7f75d9db45aa9574c2d647dd92bc",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 25662,
+            "window_id": 19560
+          }
+        },
+        "pid": 25662,
+        "window_id": 19560,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "cua_ack",
+      "scenario": "stable",
+      "rep": 1,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 448.93416699778754,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "1bb9ade287b04644a1611821bbba2e41": {
+            "status": "committed",
+            "tx": "1bb9ade287b04644a1611821bbba2e41",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 26104,
+            "window_id": 19566
+          },
+          "b18870cb1c0047f791a43ab6f419b0a5": {
+            "status": "committed",
+            "tx": "b18870cb1c0047f791a43ab6f419b0a5",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 26104,
+            "window_id": 19566
+          }
+        },
+        "pid": 26104,
+        "window_id": 19566,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "cua_ack",
+      "scenario": "stable",
+      "rep": 2,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 429.88487500406336,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "6ef11b7e5f8640dfa9c4098a3a02fee0": {
+            "status": "committed",
+            "tx": "6ef11b7e5f8640dfa9c4098a3a02fee0",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 26657,
+            "window_id": 19578
+          },
+          "9a1e9f68c6894fd0bd57a81dd0abfcd6": {
+            "status": "committed",
+            "tx": "9a1e9f68c6894fd0bd57a81dd0abfcd6",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 26657,
+            "window_id": 19578
+          }
+        },
+        "pid": 26657,
+        "window_id": 19578,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "reference_ack",
+      "scenario": "stable",
+      "rep": 2,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 511.6804159915773,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "c8e430995a8345bd9b788dde3b007d52": {
+            "status": "committed",
+            "tx": "c8e430995a8345bd9b788dde3b007d52",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 27224,
+            "window_id": 19584
+          },
+          "b18f42c835c24a47b5bb21ce9bd0d810": {
+            "status": "committed",
+            "tx": "b18f42c835c24a47b5bb21ce9bd0d810",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 27224,
+            "window_id": 19584
+          }
+        },
+        "pid": 27224,
+        "window_id": 19584,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "reference_ack",
+      "scenario": "stable",
+      "rep": 3,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 525.8051249984419,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "da2328ec85394db7b5373c697f4864ed": {
+            "status": "committed",
+            "tx": "da2328ec85394db7b5373c697f4864ed",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 27654,
+            "window_id": 19596
+          },
+          "51383d42fefe491c80b8f4c8e5d46dd4": {
+            "status": "committed",
+            "tx": "51383d42fefe491c80b8f4c8e5d46dd4",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 27654,
+            "window_id": 19596
+          }
+        },
+        "pid": 27654,
+        "window_id": 19596,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "cua_ack",
+      "scenario": "stable",
+      "rep": 3,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 441.0301660100231,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "920842c827de4bad8a695c4fcee496de": {
+            "status": "committed",
+            "tx": "920842c827de4bad8a695c4fcee496de",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 28121,
+            "window_id": 19602
+          },
+          "b16e87d44a5e4627979df9a82189cae1": {
+            "status": "committed",
+            "tx": "b16e87d44a5e4627979df9a82189cae1",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 28121,
+            "window_id": 19602
+          }
+        },
+        "pid": 28121,
+        "window_id": 19602,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "cua_ack",
+      "scenario": "stable",
+      "rep": 4,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 410.9416660066927,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "ca56b84e0e194028afb909af05a78c63": {
+            "status": "committed",
+            "tx": "ca56b84e0e194028afb909af05a78c63",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 28669,
+            "window_id": 19614
+          },
+          "46445cfda422497bbc612f17ed800365": {
+            "status": "committed",
+            "tx": "46445cfda422497bbc612f17ed800365",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 28669,
+            "window_id": 19614
+          }
+        },
+        "pid": 28669,
+        "window_id": 19614,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    },
+    {
+      "mode": "reference_ack",
+      "scenario": "stable",
+      "rep": 4,
+      "terminal": "verified_complete",
+      "strict_pass": true,
+      "writes": 2,
+      "foreground_binding": {
+        "cocoa_front_matches": true,
+        "native_front_matches": true,
+        "registered": true
+      },
+      "decision_ms": 522.5324170023669,
+      "final_values": {
+        "Full name": "Native Person",
+        "Email": "native@example.invalid"
+      },
+      "target_ever_active": false,
+      "competing_input_detected": false,
+      "oracle": {
+        "name": "Native Person",
+        "email": "native@example.invalid",
+        "subscribe": false,
+        "plan": "Basic",
+        "submitted": 0,
+        "counter": 0,
+        "dialog": false,
+        "active": false,
+        "minimized": false,
+        "hidden": false,
+        "applied": 0,
+        "record": "Record A",
+        "submitted_record": null,
+        "submit_label": "Submit",
+        "transactions": {
+          "6c7f2ff653e7446cbc996124d3eb744a": {
+            "status": "committed",
+            "tx": "6c7f2ff653e7446cbc996124d3eb744a",
+            "field": "name",
+            "value": "Native Person",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 29218,
+            "window_id": 19620
+          },
+          "daaf964e4acf4c87a75c01db6001cf71": {
+            "status": "committed",
+            "tx": "daaf964e4acf4c87a75c01db6001cf71",
+            "field": "email",
+            "value": "native@example.invalid",
+            "record": "Record A",
+            "generation": 0,
+            "pid": 29218,
+            "window_id": 19620
+          }
+        },
+        "pid": 29218,
+        "window_id": 19620,
+        "generation": 0,
+        "activation_requests": 0
+      },
+      "foreground_preserved": true,
+      "warmup": false
+    }
+  ],
+  "cleanup_restored": true
+}
