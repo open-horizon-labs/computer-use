@@ -1,7 +1,7 @@
 import asyncio,os,sys,json,time,uuid,hashlib,subprocess,fcntl,threading
 from pathlib import Path
-os.environ['ARC_EVAL_SOURCE']='/tmp/arc-cua-eval-20261005';os.environ['CUA_PROJECTION_SOURCE']='/tmp/cua-supervised-native-20261006'
-packet=Path('/tmp/cua-arc-broad-batch-20261006/libs/cua-driver/experiments/observation-projection-2026-10-06');sys.path.insert(0,str(packet))
+# Candidate paths and provider configuration are supplied by the caller.
+packet=Path(os.environ['CUA_OBSERVATION_FIXTURE_SOURCE']);sys.path.insert(0,str(packet))
 import observe_matrix as m
 from tree_geometry import TreeGeometryDriver
 OUT=Path(__file__).resolve().parent;ROOT=Path(os.environ['CUA_PROJECTION_SOURCE']);BINARY='/tmp/cua-action-latency-target-20261006/release/examples/supervised_host'
@@ -48,7 +48,7 @@ async def trial(c,mode,scenario,rep,sentinel):
   if err:raise RuntimeError('sentinel_activation_failed')
   await asyncio.to_thread(m.h.wait_for,lambda:sentinel.state().get('active'),3)
   if fresh_front()!=sentinel.pid:raise RuntimeError('sentinel_not_foreground')
-  sw=await asyncio.to_thread(m.h.wait_for,lambda:m.h.windows(sentinel.pid).get('Arc Bench Form'))
+  sw=await asyncio.to_thread(m.h.wait_for,lambda:m.h.windows(sentinel.pid).get('Reference Bench Form'))
   row['foreground_binding']=c.request('research/restore_target',{'pid':sentinel.pid,'window_id':sw})
   if not all(row['foreground_binding'].get(k) is True for k in ('registered','cocoa_front_matches','native_front_matches')):raise RuntimeError('foreground_binding_failed')
   observed_active=False;interfered=False;stop=threading.Event()

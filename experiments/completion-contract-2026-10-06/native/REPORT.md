@@ -1,10 +1,10 @@
 # Native completion and supervision experiment
 
-Both approaches and their combination ran through the real current Cua macOS backend with the existing AX batching patch. The combined path reached independently verified application commit in 443 ms versus current Arc's 502 ms, 12% less time. Its supervisor remained owned and running; the full supervision fence finished at 1.49 seconds. These are different milestones, not interchangeable claims of completion.
+Both approaches and their combination ran through the real current Cua macOS backend with the existing AX batching patch. The combined path reached independently verified application commit in 443 ms versus current Reference's 502 ms, 12% less time. Its supervisor remained owned and running; the full supervision fence finished at 1.49 seconds. These are different milestones, not interchangeable claims of completion.
 
 ## Measured result
 
-Owned native AppKit fixture, two explicit text writes, fresh exact targets and record checks before each input, transaction acknowledgments and independent final AX/value proof. No model or JEV calls. Cua main 5227ad637590a15976413b1a33f8693fac0e9a7e plus the broad AX patch and private research patch; actual SDK backend 0.34.0. Arc source 74ffae1108b1cb4b1f6b161084af12646f544ba5, actual server 0.1.1. Upstream checks ran before every scored trial and failed on earlier upstream movement until Cua was rebuilt. See manifest and raw server metadata for exact source/binary identities. Rust 1.97.1; unstripped release build worked around malformed stripped macro-library metadata.
+Owned native AppKit fixture, two explicit text writes, fresh exact targets and record checks before each input, transaction acknowledgments and independent final AX/value proof. No model or JEV calls. Cua main 5227ad637590a15976413b1a33f8693fac0e9a7e plus the broad AX patch and private research patch; actual SDK backend 0.34.0. Reference source 74ffae1108b1cb4b1f6b161084af12646f544ba5, actual server 0.1.1. Upstream checks ran before every scored trial and failed on earlier upstream movement until Cua was rebuilt. See manifest and raw server metadata for exact source/binary identities. Rust 1.97.1; unstripped release build worked around malformed stripped macro-library metadata.
 
 | Native arm | Median task decision | Versus serial | Completion criterion |
 |---|---:|---:|---|
@@ -13,7 +13,7 @@ Owned native AppKit fixture, two explicit text writes, fresh exact targets and r
 | Application evidence alone | 534 ms | 80% less time, 4.94× | Bound application commit acknowledgment plus fresh value proof |
 | Combined, full fence | 1,573 ms | 40% less time, 1.68× | Application proof and completed full supervision |
 
-This first alternating matrix has three scored repetitions per arm after one warmup; 16/16 rows passed values, owned foreground and competing-input checks. The separate acknowledgment-only comparison has four scored alternating pairs after warmup: Cua 435 ms, Arc 517 ms; 10/10 qualified rows. The final combined comparison also has four scored alternating pairs after warmup: combined commit 443 ms, Arc acknowledgment task 502 ms; 10/10 qualified rows. Combined full-fence median in that final run was 1,492 ms. Small samples on one fixture establish feasibility, not general application or model performance.
+This first alternating matrix has three scored repetitions per arm after one warmup; 16/16 rows passed values, owned foreground and competing-input checks. The separate acknowledgment-only comparison has four scored alternating pairs after warmup: Cua 435 ms, Reference 517 ms; 10/10 qualified rows. The final combined comparison also has four scored alternating pairs after warmup: combined commit 443 ms, Reference acknowledgment task 502 ms; 10/10 qualified rows. Combined full-fence median in that final run was 1,492 ms. Small samples on one fixture establish feasibility, not general application or model performance.
 
 ## Why the original concurrency patch saved little
 

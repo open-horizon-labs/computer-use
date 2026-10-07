@@ -1,11 +1,11 @@
 {
   "versions": {
-    "arc_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
-    "arc_version": "0.1.1",
+    "reference_commit": "74ffae1108b1cb4b1f6b161084af12646f544ba5",
+    "reference_version": "0.1.1",
     "native_version": "0.34.0",
     "native_latest_version": "0.34.0",
     "native_release": "https://github.com/trycua/cua/releases/tag/cua-driver-rs-v0.34.0",
-    "arc_upstream_checked_at": "2026-10-06T22:20:54.929865+00:00",
+    "reference_upstream_checked_at": "2026-10-06T22:20:54.929865+00:00",
     "candidates_checked_at": "2026-10-06T22:20:53Z",
     "macos": "27.0.1",
     "python": "3.12.12"
@@ -76,7 +76,7 @@
       "warmup": true
     },
     {
-      "mode": "arc_ack",
+      "mode": "reference_ack",
       "scenario": "stable",
       "rep": 0,
       "terminal": "verified_complete",
@@ -140,7 +140,7 @@
       "warmup": true
     },
     {
-      "mode": "arc_ack",
+      "mode": "reference_ack",
       "scenario": "stable",
       "rep": 1,
       "terminal": "verified_complete",
@@ -332,7 +332,7 @@
       "warmup": false
     },
     {
-      "mode": "arc_ack",
+      "mode": "reference_ack",
       "scenario": "stable",
       "rep": 2,
       "terminal": "verified_complete",
@@ -396,7 +396,7 @@
       "warmup": false
     },
     {
-      "mode": "arc_ack",
+      "mode": "reference_ack",
       "scenario": "stable",
       "rep": 3,
       "terminal": "verified_complete",
@@ -588,7 +588,7 @@
       "warmup": false
     },
     {
-      "mode": "arc_ack",
+      "mode": "reference_ack",
       "scenario": "stable",
       "rep": 4,
       "terminal": "verified_complete",

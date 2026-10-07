@@ -1,8 +1,8 @@
 # Review
 
-Aim: measure separately owned supervision and qualified application completion evidence on current patched Cua, independently and together, against current Arc, without weakening binding or concealing failure.
+Aim: measure separately owned supervision and qualified application completion evidence on current patched Cua, independently and together, against current Reference, without weakening binding or concealing failure.
 
-Decision: research qualification complete; production implementation remains unqualified. The packet contains actual native inputs, exact backend/source identities, alternating matched trials and adversarial refusals. The final combined commit milestone is 443 ms against Arc's 502 ms; the same combined task's full supervision fence is 1,492 ms. The mechanism is clear: release action locks after dispatch and own the remaining watcher separately, while a bound application acknowledgment and fresh AX proof establish value commitment.
+Decision: research qualification complete; production implementation remains unqualified. The packet contains actual native inputs, exact backend/source identities, alternating matched trials and adversarial refusals. The final combined commit milestone is 443 ms against Reference's 502 ms; the same combined task's full supervision fence is 1,492 ms. The mechanism is clear: release action locks after dispatch and own the remaining watcher separately, while a bound application acknowledgment and fresh AX proof establish value commitment.
 
 The important rejected alternative is evidence-only as a generic default: its delayed activation control stole foreground despite successful value commitment. Supervision-only also falsely accepted late rejection and missing acknowledgment. Combined guards cover different failures. The original callback restore failure is preserved rather than omitted from the positive native qualification.
 

@@ -1,5 +1,5 @@
 {
-  "scope": "Offline protocol fixture, 100 ms simulated supervision horizon, 25 ms app commit delay; NOT Cua/Arc driver performance",
+  "scope": "Offline protocol fixture, 100 ms simulated supervision horizon, 25 ms app commit delay; NOT Cua/Reference driver performance",
   "rows": [
     {
       "mode": "serial",

@@ -1,10 +1,10 @@
 import sys,time,json,os
 from pathlib import Path
-sys.path.insert(0,'/tmp/computer-use-arc-review-20261005/experiments/arc-cua-comparison-2026-10-05')
+sys.path.insert(0,os.environ['REFERENCE_FIXTURE_SOURCE'])
 from fixture import EvalForm,AppKit,Foundation,objc
 class TransactionForm(EvalForm):
  def build(self):
-  objc.super(TransactionForm,self).build();self.transactions={};self.plans={};self.generation=0;self.activation_requests=0
+  objc.super(TransactionForm,self).build();self.window.setTitle_('Reference Bench Form');self.transactions={};self.plans={};self.generation=0;self.activation_requests=0
  def state(self):
   return {**objc.super(TransactionForm,self).state(),'transactions':json.loads(json.dumps(self.transactions)),'pid':os.getpid(),'window_id':int(self.window.windowNumber()),'generation':self.generation,'activation_requests':self.activation_requests}
  def tick_(self,timer):

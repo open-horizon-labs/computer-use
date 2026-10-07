@@ -17,7 +17,7 @@ The application is a separate process reached through a pipe. It echoes values i
 | Application evidence | Refuses rejection | Refuses completion | No watcher in this arm |
 | Combined | Refuses rejection | Refuses completion | Watcher survives |
 
-The independent stable matrix uses ten scored alternating repetitions per approach after one warmup. The fixture uses a 100 ms supervision horizon and 25 ms application commit delay to exercise ordering without long sleeps. See benchmark.json for measured decision times and all 44 rows. Those timings include process startup/transport overhead and are **not Cua or Arc performance measurements**, nor a prediction of production gains. Serial waiting has two horizons; overlapping/combined supervision has overlapping horizons; application evidence waits for two committed acknowledgements without a generic timer. No comparison candidate version claim is made because neither driver executes these experiments.
+The independent stable matrix uses ten scored alternating repetitions per approach after one warmup. The fixture uses a 100 ms supervision horizon and 25 ms application commit delay to exercise ordering without long sleeps. See benchmark.json for measured decision times and all 44 rows. Those timings include process startup/transport overhead and are **not Cua or Reference performance measurements**, nor a prediction of production gains. Serial waiting has two horizons; overlapping/combined supervision has overlapping horizons; application evidence waits for two committed acknowledgements without a generic timer. No comparison candidate version claim is made because neither driver executes these experiments.
 
 ## Declared scope and checks
 
